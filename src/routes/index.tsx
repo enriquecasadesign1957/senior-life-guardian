@@ -85,7 +85,7 @@ function Hero() {
             <Shield className="w-4 h-4" fill="currentColor" />
             <span>Más que una app, una red de cuidado</span>
           </div>
-          <h1 className="text-[42px] md:text-[58px] lg:text-[68px] font-bold leading-[1.02] tracking-tight">
+          <h1 className="text-[42px] md:text-[58px] lg:text-[68px] font-bold leading-[1.02] tracking-tight text-[#91f132]">
             SENIOR LIFE
           </h1>
           <p className="mt-4 text-2xl md:text-3xl text-white/90 font-light italic">
@@ -284,7 +284,7 @@ function Beneficios() {
 const plans = [
   {
     name: "Básico",
-    price: "9",
+    price: "7.900",
     desc: "Protección esencial para empezar.",
     features: ["Botón de emergencia", "WhatsApp + SMS", "Hasta 3 contactos", "Ubicación GPS"],
     highlight: false,
@@ -398,7 +398,7 @@ function Contacto() {
               <>
                 <Field label="Nombre" placeholder="María García" />
                 <Field label="Email" type="email" placeholder="maria@ejemplo.com" />
-                <Field label="Teléfono" type="tel" placeholder="+34 ..." />
+                <Field label="Teléfono" type="tel" placeholder="+569 ..." />
                 <button type="submit" className="mt-2 inline-flex items-center justify-center gap-2 py-4 rounded-full text-white text-base font-bold transition" style={{ background: BLUE }}>
                   Enviar mensaje
                   <ArrowRight className="w-4 h-4" />
