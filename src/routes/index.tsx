@@ -85,7 +85,7 @@ function Hero() {
             <Shield className="w-4 h-4" fill="currentColor" />
             <span>Más que una app, una red de cuidado</span>
           </div>
-          <h1 className="text-[42px] md:text-[58px] lg:text-[68px] font-bold leading-[1.02] tracking-tight text-[#91f132]">
+          <h1 className="text-[42px] md:text-[58px] lg:text-[68px] font-bold leading-[1.02] tracking-tight text-[#44ff00]">
             SENIOR LIFE
           </h1>
           <p className="mt-4 text-2xl md:text-3xl text-white/90 font-light italic">
@@ -340,7 +340,7 @@ function Planes() {
                   <span className={p.highlight ? "text-white/80" : "text-muted-foreground"}>/mes</span>
                 </div>
                 <div className={`mt-2 text-sm ${p.highlight ? "text-white/80" : "text-muted-foreground"}`}>
-                  o <strong className={p.highlight ? "text-white" : "text-foreground"}>${p.yearly}</strong> /año
+                  o <strong className={p.highlight ? "text-white" : "text-foreground"}>${p.yearly}</strong> +56 971404580
                 </div>
               </div>
               <ul className="space-y-3 mb-10">
