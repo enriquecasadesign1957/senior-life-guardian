@@ -284,14 +284,16 @@ function Beneficios() {
 const plans = [
   {
     name: "Básico",
-    price: "7.900",
+    price: "5.900",
+    yearly: "65.000",
     desc: "Protección esencial para empezar.",
     features: ["Botón de emergencia", "WhatsApp + SMS", "Hasta 3 contactos", "Ubicación GPS"],
     highlight: false,
   },
   {
     name: "Premium",
-    price: "19",
+    price: "7.900",
+    yearly: "85.000",
     desc: "Tranquilidad completa para toda la familia.",
     features: [
       "Todo lo del plan Básico",
@@ -332,9 +334,14 @@ function Planes() {
               )}
               <h3 className={`text-sm font-bold uppercase tracking-wider mb-2 ${p.highlight ? "text-white/80" : ""}`} style={!p.highlight ? { color: BLUE } : undefined}>{p.name}</h3>
               <p className={`text-base mb-7 ${p.highlight ? "text-white/85" : "text-muted-foreground"}`}>{p.desc}</p>
-              <div className="mb-8 flex items-baseline gap-1">
-                <span className="text-6xl font-bold tracking-tight">${p.price}</span>
-                <span className={p.highlight ? "text-white/80" : "text-muted-foreground"}>/mes</span>
+              <div className="mb-8">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-6xl font-bold tracking-tight">${p.price}</span>
+                  <span className={p.highlight ? "text-white/80" : "text-muted-foreground"}>/mes</span>
+                </div>
+                <div className={`mt-2 text-sm ${p.highlight ? "text-white/80" : "text-muted-foreground"}`}>
+                  o <strong className={p.highlight ? "text-white" : "text-foreground"}>${p.yearly}</strong> /año
+                </div>
               </div>
               <ul className="space-y-3 mb-10">
                 {p.features.map((f) => (
