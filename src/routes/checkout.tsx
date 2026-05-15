@@ -1,11 +1,12 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { z } from "zod";
 import {
   Shield, Lock, CreditCard, Clock, CheckCircle2, ArrowRight,
-  Bell, MapPin, MessageCircle, Phone, Users, Heart, X,
+  Bell, MapPin, MessageCircle, Phone, Users, Heart, X, Loader2, AlertCircle,
 } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
