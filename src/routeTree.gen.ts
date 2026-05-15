@@ -13,6 +13,7 @@ import { Route as TerminosRouteImport } from './routes/terminos'
 import { Route as PrivacidadRouteImport } from './routes/privacidad'
 import { Route as PlanesRouteImport } from './routes/planes'
 import { Route as CheckoutRouteImport } from './routes/checkout'
+import { Route as ActivacionRouteImport } from './routes/activacion'
 import { Route as IndexRouteImport } from './routes/index'
 
 const TerminosRoute = TerminosRouteImport.update({
@@ -35,6 +36,11 @@ const CheckoutRoute = CheckoutRouteImport.update({
   path: '/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ActivacionRoute = ActivacionRouteImport.update({
+  id: '/activacion',
+  path: '/activacion',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -43,6 +49,7 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/activacion': typeof ActivacionRoute
   '/checkout': typeof CheckoutRoute
   '/planes': typeof PlanesRoute
   '/privacidad': typeof PrivacidadRoute
@@ -50,6 +57,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/activacion': typeof ActivacionRoute
   '/checkout': typeof CheckoutRoute
   '/planes': typeof PlanesRoute
   '/privacidad': typeof PrivacidadRoute
@@ -58,6 +66,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/activacion': typeof ActivacionRoute
   '/checkout': typeof CheckoutRoute
   '/planes': typeof PlanesRoute
   '/privacidad': typeof PrivacidadRoute
@@ -65,14 +74,34 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/checkout' | '/planes' | '/privacidad' | '/terminos'
+  fullPaths:
+    | '/'
+    | '/activacion'
+    | '/checkout'
+    | '/planes'
+    | '/privacidad'
+    | '/terminos'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/checkout' | '/planes' | '/privacidad' | '/terminos'
-  id: '__root__' | '/' | '/checkout' | '/planes' | '/privacidad' | '/terminos'
+  to:
+    | '/'
+    | '/activacion'
+    | '/checkout'
+    | '/planes'
+    | '/privacidad'
+    | '/terminos'
+  id:
+    | '__root__'
+    | '/'
+    | '/activacion'
+    | '/checkout'
+    | '/planes'
+    | '/privacidad'
+    | '/terminos'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ActivacionRoute: typeof ActivacionRoute
   CheckoutRoute: typeof CheckoutRoute
   PlanesRoute: typeof PlanesRoute
   PrivacidadRoute: typeof PrivacidadRoute
@@ -109,6 +138,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/activacion': {
+      id: '/activacion'
+      path: '/activacion'
+      fullPath: '/activacion'
+      preLoaderRoute: typeof ActivacionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -121,6 +157,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ActivacionRoute: ActivacionRoute,
   CheckoutRoute: CheckoutRoute,
   PlanesRoute: PlanesRoute,
   PrivacidadRoute: PrivacidadRoute,
