@@ -61,18 +61,21 @@ const schema = z.object({
 const fmt = (n: number) => n.toLocaleString("es-CL");
 
 function CheckoutPage() {
+  const navigate = useNavigate();
   const [planKey, setPlanKey] = useState<"basico" | "premium">("premium");
   const [yearly, setYearly] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", address: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [done, setDone] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const plan = PLANS[planKey];
   const price = yearly ? plan.yearly : plan.monthly;
   const savings = useMemo(() => plan.monthly * 12 - plan.yearly, [plan]);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError(null);
     const r = schema.safeParse(form);
     if (!r.success) {
       const errs: Record<string, string> = {};
@@ -81,7 +84,55 @@ function CheckoutPage() {
       return;
     }
     setErrors({});
-    setDone(true);
+    setLoading(true);
+    try {
+      const trialEnd = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data, error } = await supabase
+        .from("trial_signups")
+        .insert({
+          nombre: r.data.name,
+          email: r.data.email.toLowerCase(),
+          telefono: r.data.phone,
+          direccion: r.data.address || null,
+          plan: planKey,
+          periodo: yearly ? "anual" : "mensual",
+          trial_active: true,
+          trial_end: trialEnd,
+          payment_status: "trial",
+        })
+        .select()
+        .single();
+
+      if (error) {
+        if (error.code === "23505" || /duplicate|unique/i.test(error.message)) {
+          setSubmitError("Este correo ya tiene una cuenta. Revisa tu email para continuar.");
+        } else {
+          setSubmitError("No pudimos crear tu cuenta. Verifica tu conexión e intenta de nuevo.");
+        }
+        setLoading(false);
+        return;
+      }
+
+      // Pasar datos a la página de activación
+      try {
+        sessionStorage.setItem("seniorsafe_user", JSON.stringify({
+          id: data.id,
+          nombre: data.nombre,
+          email: data.email,
+          telefono: data.telefono,
+          plan: data.plan,
+          periodo: data.periodo,
+          trial_active: data.trial_active,
+          trial_end: data.trial_end,
+        }));
+      } catch { /* ignore storage errors */ }
+
+      navigate({ to: "/activacion" });
+    } catch (err) {
+      console.error("Trial signup error:", err);
+      setSubmitError("Error de conexión. Intenta nuevamente en unos segundos.");
+      setLoading(false);
+    }
   };
 
   return (
