@@ -21,7 +21,7 @@ const WelcomeTrialEmail = ({ nombre, plan, trialDays = 7 }: WelcomeTrialProps) =
   return (
     <Html lang="es" dir="ltr">
       <Head />
-      <Preview>Tu prueba gratuita de {trialDays} días ya está activa</Preview>
+      <Preview>{`Tu prueba gratuita de ${trialDays} días ya está activa`}</Preview>
       <Body style={main}>
         <Container style={container}>
           <Section style={header}>
