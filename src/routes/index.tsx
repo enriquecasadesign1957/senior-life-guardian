@@ -41,10 +41,10 @@ function Hero() {
           <p className="text-xl md:text-2xl text-white/90 font-light italic mb-6">
             Seguridad inteligente para adultos mayores
           </p>
-          <h1 className="text-[38px] md:text-[54px] lg:text-[62px] font-bold leading-[1.05] tracking-tight">
+          <h1 className="text-[38px] md:text-[54px] lg:text-[62px] font-bold leading-[1.05] tracking-tight animate-fade-in">
             Protección inmediata <br />para quienes <span className="text-[#ffd66b]">más quieres</span>.
           </h1>
-          <p className="mt-7 text-lg md:text-xl text-white/85 leading-relaxed max-w-xl">
+          <p className="mt-7 text-lg md:text-xl text-white/85 leading-relaxed max-w-xl animate-fade-in" style={{ animationDelay: "120ms", animationFillMode: "both" }}>
             Senior Safe conecta automáticamente a adultos mayores con sus familiares mediante alertas inteligentes, ubicación GPS, llamadas, SMS y WhatsApp.
           </p>
           <div className="mt-9 flex flex-col sm:flex-row gap-4">
