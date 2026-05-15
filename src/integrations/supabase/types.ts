@@ -14,7 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      trial_signups: {
+        Row: {
+          created_at: string
+          direccion: string | null
+          email: string
+          id: string
+          nombre: string
+          payment_status: string
+          periodo: string
+          plan: string
+          telefono: string
+          trial_active: boolean
+          trial_end: string
+          updated_at: string
+          webpay_token: string | null
+        }
+        Insert: {
+          created_at?: string
+          direccion?: string | null
+          email: string
+          id?: string
+          nombre: string
+          payment_status?: string
+          periodo?: string
+          plan?: string
+          telefono: string
+          trial_active?: boolean
+          trial_end?: string
+          updated_at?: string
+          webpay_token?: string | null
+        }
+        Update: {
+          created_at?: string
+          direccion?: string | null
+          email?: string
+          id?: string
+          nombre?: string
+          payment_status?: string
+          periodo?: string
+          plan?: string
+          telefono?: string
+          trial_active?: boolean
+          trial_end?: string
+          updated_at?: string
+          webpay_token?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
