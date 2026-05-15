@@ -29,12 +29,36 @@ const STEPS = [
   { icon: Bell, color: RED, title: "Probar el botón de emergencia", desc: "Una prueba simple para asegurarnos que todo funciona." },
 ];
 
+type TrialUser = {
+  id: string;
+  nombre: string;
+  email: string;
+  telefono: string;
+  plan: string;
+  periodo: string;
+  trial_active: boolean;
+  trial_end: string;
+};
+
 function ActivacionPage() {
+  const [user, setUser] = useState<TrialUser | null>(null);
   const [completed, setCompleted] = useState<boolean[]>(Array(STEPS.length).fill(false));
   const total = STEPS.length;
   const doneCount = completed.filter(Boolean).length;
   const progress = useMemo(() => Math.round((doneCount / total) * 100), [doneCount, total]);
   const allDone = doneCount === total;
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("seniorsafe_user");
+      if (raw) setUser(JSON.parse(raw) as TrialUser);
+    } catch { /* ignore */ }
+  }, []);
+
+  const firstName = user?.nombre?.split(" ")[0] ?? "";
+  const daysLeft = user?.trial_end
+    ? Math.max(0, Math.ceil((new Date(user.trial_end).getTime() - Date.now()) / 86400000))
+    : 7;
 
   const toggle = (i: number) => setCompleted((c) => c.map((v, idx) => (idx === i ? !v : v)));
 
