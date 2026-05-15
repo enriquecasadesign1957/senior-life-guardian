@@ -332,23 +332,3 @@ function Trust({ icon: Icon, title, sub }: { icon: typeof Shield; title: string;
   );
 }
 
-function SuccessCard({ form, plan, yearly, price }: { form: { name: string; email: string }; plan: { name: string }; yearly: boolean; price: number }) {
-  return (
-    <div className="max-w-xl mx-auto bg-card border border-border rounded-3xl p-8 md:p-10 text-center shadow-xl">
-      <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center text-white mb-5" style={{ background: GREEN }}>
-        <CheckCircle2 className="w-8 h-8" />
-      </div>
-      <h2 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">¡Bienvenido(a), {form.name.split(" ")[0]}!</h2>
-      <p className="mt-3 text-muted-foreground">
-        Tu prueba gratuita de 7 días del plan <strong className="text-foreground">{plan.name}</strong> está activa.
-        Te enviamos las instrucciones a <strong className="text-foreground">{form.email}</strong>.
-      </p>
-      <div className="mt-6 p-4 rounded-2xl bg-muted text-sm text-foreground">
-        Después del período de prueba: <strong>${fmt(price)} /{yearly ? "año" : "mes"}</strong>. Sin permanencia.
-      </div>
-      <Link to="/" className="mt-7 inline-flex items-center gap-2 px-6 py-3 rounded-full text-white font-semibold" style={{ background: DEEP }}>
-        Volver al inicio
-      </Link>
-    </div>
-  );
-}
