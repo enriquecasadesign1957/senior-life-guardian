@@ -152,10 +152,7 @@ function CheckoutPage() {
             </p>
           </div>
 
-          {done ? (
-            <SuccessCard form={form} plan={plan} yearly={yearly} price={price} />
-          ) : (
-            <div className="grid lg:grid-cols-[1fr_420px] gap-8">
+          <div className="grid lg:grid-cols-[1fr_420px] gap-8">
               {/* FORM */}
               <form onSubmit={onSubmit} className="bg-card border border-border rounded-3xl p-6 md:p-8 shadow-sm space-y-7">
                 {/* Plan selector */}
