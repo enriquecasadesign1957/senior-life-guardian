@@ -144,7 +144,8 @@ export const Route = createFileRoute('/api/public/send-welcome-trial')({
           payload: {
             message_id: messageId,
             to: normalizedEmail,
-            from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+            from: `${SITE_NAME} <hola@${FROM_DOMAIN}>`,
+            reply_to: `hola@${FROM_DOMAIN}`,
             sender_domain: SENDER_DOMAIN,
             subject, html, text,
             purpose: 'transactional',
