@@ -72,11 +72,17 @@ function ActivacionPage() {
             <div className="w-20 h-20 mx-auto rounded-3xl flex items-center justify-center text-white mb-5 shadow-lg" style={{ background: `linear-gradient(135deg, ${DEEP}, ${PETROL})` }}>
               <Shield className="w-10 h-10" />
             </div>
+            {user?.trial_active && (
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-4" style={{ background: "color-mix(in oklab, #16a34a 14%, white)", color: GREEN }}>
+                <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: GREEN }} />
+                Trial activo · {daysLeft} días restantes
+              </div>
+            )}
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground leading-[1.1]">
-              Bienvenido a Senior Safe
+              {firstName ? <>Bienvenido(a), <span style={{ color: DEEP }}>{firstName}</span></> : "Bienvenido a Senior Safe"}
             </h1>
             <p className="mt-4 text-lg md:text-2xl text-muted-foreground">
-              Tu red de cuidado familiar ya está lista.
+              {user ? `Tu plan ${user.plan} está activo. Configuremos tu red de cuidado.` : "Tu red de cuidado familiar ya está lista."}
             </p>
           </div>
 
