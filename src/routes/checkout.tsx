@@ -206,10 +206,30 @@ function CheckoutPage() {
                   </div>
                 </div>
 
-                {/* Submit */}
-                <button type="submit" className="w-full inline-flex items-center justify-center gap-3 px-6 py-5 rounded-full text-white font-bold text-base hover:scale-[1.01] transition shadow-xl" style={{ background: DEEP }}>
-                  Comenzar prueba gratuita
-                  <ArrowRight className="w-5 h-5" />
+                {submitError && (
+                  <div className="flex items-start gap-3 p-4 rounded-2xl border border-destructive/30 bg-destructive/5 text-sm text-destructive">
+                    <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
+                    <span>{submitError}</span>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full inline-flex items-center justify-center gap-3 px-6 py-5 rounded-full text-white font-bold text-base hover:scale-[1.01] transition shadow-xl disabled:opacity-80 disabled:cursor-wait disabled:hover:scale-100"
+                  style={{ background: DEEP }}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Creando tu cuenta…
+                    </>
+                  ) : (
+                    <>
+                      Comenzar prueba gratuita
+                      <ArrowRight className="w-5 h-5" />
+                    </>
+                  )}
                 </button>
 
                 <p className="text-center text-xs text-muted-foreground -mt-2">
@@ -271,7 +291,6 @@ function CheckoutPage() {
                 </div>
               </aside>
             </div>
-          )}
         </div>
       </main>
       <SiteFooter />
