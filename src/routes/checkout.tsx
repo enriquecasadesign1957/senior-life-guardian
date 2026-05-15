@@ -113,12 +113,18 @@ function CheckoutPage() {
         return;
       }
 
-      // Disparar email de bienvenida (no bloquea el flujo si falla)
+      // Disparar email + WhatsApp de bienvenida (no bloquean el flujo si fallan)
       fetch("/api/public/send-welcome-trial", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ signupId: data.id }),
       }).catch((e) => console.warn("welcome email trigger failed", e));
+
+      fetch("/api/public/send-welcome-whatsapp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ signupId: data.id }),
+      }).catch((e) => console.warn("welcome whatsapp trigger failed", e));
 
       // Pasar datos a la página de activación
       try {
