@@ -54,9 +54,9 @@ export function SiteFooter() {
             Tecnología con corazón. Cuidando a quienes nos cuidaron toda la vida.
           </p>
           <div className="mt-5 space-y-2 text-sm text-white/85">
-            <div className="flex items-center gap-2"><Globe className="w-4 h-4" /> alarmaseniorsafe.cl</div>
-            <div className="flex items-center gap-2"><Mail className="w-4 h-4" /> hola@alarmaseniorsafe.cl</div>
-            <div className="flex items-center gap-2"><Phone className="w-4 h-4" /> +56 9 7140 4580</div>
+            <div className="flex items-center gap-2"><Globe className="w-4 h-4" /><span>alarmaseniorsafe.cl</span></div>
+            <div className="flex items-center gap-2"><Mail className="w-4 h-4" /><span>hola@alarmaseniorsafe.cl</span></div>
+            <div className="flex items-center gap-2"><Phone className="w-4 h-4" /><span>+56 9 7140 4580</span></div>
           </div>
         </div>
         <div>
