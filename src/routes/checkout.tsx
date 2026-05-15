@@ -113,6 +113,13 @@ function CheckoutPage() {
         return;
       }
 
+      // Disparar email de bienvenida (no bloquea el flujo si falla)
+      fetch("/api/public/send-welcome-trial", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ signupId: data.id }),
+      }).catch((e) => console.warn("welcome email trigger failed", e));
+
       // Pasar datos a la página de activación
       try {
         sessionStorage.setItem("seniorsafe_user", JSON.stringify({
