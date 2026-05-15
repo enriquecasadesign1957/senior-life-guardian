@@ -41,10 +41,10 @@ function Hero() {
           <p className="text-xl md:text-2xl text-white/90 font-light italic mb-6">
             Seguridad inteligente para adultos mayores
           </p>
-          <h1 className="text-[38px] md:text-[54px] lg:text-[62px] font-bold leading-[1.05] tracking-tight">
+          <h1 className="text-[38px] md:text-[54px] lg:text-[62px] font-bold leading-[1.05] tracking-tight animate-fade-in">
             Protección inmediata <br />para quienes <span className="text-[#ffd66b]">más quieres</span>.
           </h1>
-          <p className="mt-7 text-lg md:text-xl text-white/85 leading-relaxed max-w-xl">
+          <p className="mt-7 text-lg md:text-xl text-white/85 leading-relaxed max-w-xl animate-fade-in" style={{ animationDelay: "120ms", animationFillMode: "both" }}>
             Senior Safe conecta automáticamente a adultos mayores con sus familiares mediante alertas inteligentes, ubicación GPS, llamadas, SMS y WhatsApp.
           </p>
           <div className="mt-9 flex flex-col sm:flex-row gap-4">
@@ -61,8 +61,8 @@ function Hero() {
             <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Cancelación simple</div>
           </div>
         </div>
-        <div className="relative">
-          <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white/20">
+        <div className="relative animate-fade-in" style={{ animationDelay: "240ms", animationFillMode: "both" }}>
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white/20 hover-scale">
             <img src={emergencyButton} alt="Botón de emergencia Senior Safe" className="w-full aspect-square object-cover" />
           </div>
           <div className="absolute -bottom-6 -left-6 bg-white text-foreground p-4 rounded-2xl shadow-2xl flex items-center gap-3 max-w-[260px]">
