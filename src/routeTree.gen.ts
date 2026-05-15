@@ -22,6 +22,7 @@ import { Route as ActivacionRouteImport } from './routes/activacion'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as ApiPublicSendWelcomeWhatsappRouteImport } from './routes/api/public/send-welcome-whatsapp'
 import { Route as ApiPublicSendWelcomeTrialRouteImport } from './routes/api/public/send-welcome-trial'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
@@ -92,6 +93,12 @@ const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   path: '/lovable/email/suppression',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSendWelcomeWhatsappRoute =
+  ApiPublicSendWelcomeWhatsappRouteImport.update({
+    id: '/api/public/send-welcome-whatsapp',
+    path: '/api/public/send-welcome-whatsapp',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicSendWelcomeTrialRoute =
   ApiPublicSendWelcomeTrialRouteImport.update({
     id: '/api/public/send-welcome-trial',
@@ -131,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/unsubscribe': typeof UnsubscribeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
+  '/api/public/send-welcome-whatsapp': typeof ApiPublicSendWelcomeWhatsappRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -150,6 +158,7 @@ export interface FileRoutesByTo {
   '/unsubscribe': typeof UnsubscribeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
+  '/api/public/send-welcome-whatsapp': typeof ApiPublicSendWelcomeWhatsappRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -170,6 +179,7 @@ export interface FileRoutesById {
   '/unsubscribe': typeof UnsubscribeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
+  '/api/public/send-welcome-whatsapp': typeof ApiPublicSendWelcomeWhatsappRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -191,6 +201,7 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/email/unsubscribe'
     | '/api/public/send-welcome-trial'
+    | '/api/public/send-welcome-whatsapp'
     | '/lovable/email/suppression'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -210,6 +221,7 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/email/unsubscribe'
     | '/api/public/send-welcome-trial'
+    | '/api/public/send-welcome-whatsapp'
     | '/lovable/email/suppression'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -229,6 +241,7 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/email/unsubscribe'
     | '/api/public/send-welcome-trial'
+    | '/api/public/send-welcome-whatsapp'
     | '/lovable/email/suppression'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -249,6 +262,7 @@ export interface RootRouteChildren {
   UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   ApiPublicSendWelcomeTrialRoute: typeof ApiPublicSendWelcomeTrialRoute
+  ApiPublicSendWelcomeWhatsappRoute: typeof ApiPublicSendWelcomeWhatsappRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
@@ -348,6 +362,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailSuppressionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/send-welcome-whatsapp': {
+      id: '/api/public/send-welcome-whatsapp'
+      path: '/api/public/send-welcome-whatsapp'
+      fullPath: '/api/public/send-welcome-whatsapp'
+      preLoaderRoute: typeof ApiPublicSendWelcomeWhatsappRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/send-welcome-trial': {
       id: '/api/public/send-welcome-trial'
       path: '/api/public/send-welcome-trial'
@@ -393,6 +414,7 @@ const rootRouteChildren: RootRouteChildren = {
   UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   ApiPublicSendWelcomeTrialRoute: ApiPublicSendWelcomeTrialRoute,
+  ApiPublicSendWelcomeWhatsappRoute: ApiPublicSendWelcomeWhatsappRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
@@ -401,13 +423,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
