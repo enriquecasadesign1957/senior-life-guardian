@@ -1,11 +1,12 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { z } from "zod";
 import {
   Shield, Lock, CreditCard, Clock, CheckCircle2, ArrowRight,
-  Bell, MapPin, MessageCircle, Phone, Users, Heart, X,
+  Bell, MapPin, MessageCircle, Phone, Users, Heart, X, Loader2, AlertCircle,
 } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -60,18 +61,21 @@ const schema = z.object({
 const fmt = (n: number) => n.toLocaleString("es-CL");
 
 function CheckoutPage() {
+  const navigate = useNavigate();
   const [planKey, setPlanKey] = useState<"basico" | "premium">("premium");
   const [yearly, setYearly] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", address: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [done, setDone] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const plan = PLANS[planKey];
   const price = yearly ? plan.yearly : plan.monthly;
   const savings = useMemo(() => plan.monthly * 12 - plan.yearly, [plan]);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError(null);
     const r = schema.safeParse(form);
     if (!r.success) {
       const errs: Record<string, string> = {};
@@ -80,7 +84,55 @@ function CheckoutPage() {
       return;
     }
     setErrors({});
-    setDone(true);
+    setLoading(true);
+    try {
+      const trialEnd = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data, error } = await supabase
+        .from("trial_signups")
+        .insert({
+          nombre: r.data.name,
+          email: r.data.email.toLowerCase(),
+          telefono: r.data.phone,
+          direccion: r.data.address || null,
+          plan: planKey,
+          periodo: yearly ? "anual" : "mensual",
+          trial_active: true,
+          trial_end: trialEnd,
+          payment_status: "trial",
+        })
+        .select()
+        .single();
+
+      if (error) {
+        if (error.code === "23505" || /duplicate|unique/i.test(error.message)) {
+          setSubmitError("Este correo ya tiene una cuenta. Revisa tu email para continuar.");
+        } else {
+          setSubmitError("No pudimos crear tu cuenta. Verifica tu conexión e intenta de nuevo.");
+        }
+        setLoading(false);
+        return;
+      }
+
+      // Pasar datos a la página de activación
+      try {
+        sessionStorage.setItem("seniorsafe_user", JSON.stringify({
+          id: data.id,
+          nombre: data.nombre,
+          email: data.email,
+          telefono: data.telefono,
+          plan: data.plan,
+          periodo: data.periodo,
+          trial_active: data.trial_active,
+          trial_end: data.trial_end,
+        }));
+      } catch { /* ignore storage errors */ }
+
+      navigate({ to: "/activacion" });
+    } catch (err) {
+      console.error("Trial signup error:", err);
+      setSubmitError("Error de conexión. Intenta nuevamente en unos segundos.");
+      setLoading(false);
+    }
   };
 
   return (
@@ -100,10 +152,7 @@ function CheckoutPage() {
             </p>
           </div>
 
-          {done ? (
-            <SuccessCard form={form} plan={plan} yearly={yearly} price={price} />
-          ) : (
-            <div className="grid lg:grid-cols-[1fr_420px] gap-8">
+          <div className="grid lg:grid-cols-[1fr_420px] gap-8">
               {/* FORM */}
               <form onSubmit={onSubmit} className="bg-card border border-border rounded-3xl p-6 md:p-8 shadow-sm space-y-7">
                 {/* Plan selector */}
@@ -157,10 +206,30 @@ function CheckoutPage() {
                   </div>
                 </div>
 
-                {/* Submit */}
-                <button type="submit" className="w-full inline-flex items-center justify-center gap-3 px-6 py-5 rounded-full text-white font-bold text-base hover:scale-[1.01] transition shadow-xl" style={{ background: DEEP }}>
-                  Comenzar prueba gratuita
-                  <ArrowRight className="w-5 h-5" />
+                {submitError && (
+                  <div className="flex items-start gap-3 p-4 rounded-2xl border border-destructive/30 bg-destructive/5 text-sm text-destructive">
+                    <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
+                    <span>{submitError}</span>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full inline-flex items-center justify-center gap-3 px-6 py-5 rounded-full text-white font-bold text-base hover:scale-[1.01] transition shadow-xl disabled:opacity-80 disabled:cursor-wait disabled:hover:scale-100"
+                  style={{ background: DEEP }}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Creando tu cuenta…
+                    </>
+                  ) : (
+                    <>
+                      Comenzar prueba gratuita
+                      <ArrowRight className="w-5 h-5" />
+                    </>
+                  )}
                 </button>
 
                 <p className="text-center text-xs text-muted-foreground -mt-2">
@@ -222,7 +291,6 @@ function CheckoutPage() {
                 </div>
               </aside>
             </div>
-          )}
         </div>
       </main>
       <SiteFooter />
@@ -264,23 +332,3 @@ function Trust({ icon: Icon, title, sub }: { icon: typeof Shield; title: string;
   );
 }
 
-function SuccessCard({ form, plan, yearly, price }: { form: { name: string; email: string }; plan: { name: string }; yearly: boolean; price: number }) {
-  return (
-    <div className="max-w-xl mx-auto bg-card border border-border rounded-3xl p-8 md:p-10 text-center shadow-xl">
-      <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center text-white mb-5" style={{ background: GREEN }}>
-        <CheckCircle2 className="w-8 h-8" />
-      </div>
-      <h2 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">¡Bienvenido(a), {form.name.split(" ")[0]}!</h2>
-      <p className="mt-3 text-muted-foreground">
-        Tu prueba gratuita de 7 días del plan <strong className="text-foreground">{plan.name}</strong> está activa.
-        Te enviamos las instrucciones a <strong className="text-foreground">{form.email}</strong>.
-      </p>
-      <div className="mt-6 p-4 rounded-2xl bg-muted text-sm text-foreground">
-        Después del período de prueba: <strong>${fmt(price)} /{yearly ? "año" : "mes"}</strong>. Sin permanencia.
-      </div>
-      <Link to="/" className="mt-7 inline-flex items-center gap-2 px-6 py-3 rounded-full text-white font-semibold" style={{ background: DEEP }}>
-        Volver al inicio
-      </Link>
-    </div>
-  );
-}

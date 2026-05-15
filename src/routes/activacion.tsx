@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CheckCircle2, Download, Smartphone, Apple, KeyRound, Users,
   MapPin, Bell, ArrowRight, Shield,
@@ -29,12 +29,36 @@ const STEPS = [
   { icon: Bell, color: RED, title: "Probar el botón de emergencia", desc: "Una prueba simple para asegurarnos que todo funciona." },
 ];
 
+type TrialUser = {
+  id: string;
+  nombre: string;
+  email: string;
+  telefono: string;
+  plan: string;
+  periodo: string;
+  trial_active: boolean;
+  trial_end: string;
+};
+
 function ActivacionPage() {
+  const [user, setUser] = useState<TrialUser | null>(null);
   const [completed, setCompleted] = useState<boolean[]>(Array(STEPS.length).fill(false));
   const total = STEPS.length;
   const doneCount = completed.filter(Boolean).length;
   const progress = useMemo(() => Math.round((doneCount / total) * 100), [doneCount, total]);
   const allDone = doneCount === total;
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("seniorsafe_user");
+      if (raw) setUser(JSON.parse(raw) as TrialUser);
+    } catch { /* ignore */ }
+  }, []);
+
+  const firstName = user?.nombre?.split(" ")[0] ?? "";
+  const daysLeft = user?.trial_end
+    ? Math.max(0, Math.ceil((new Date(user.trial_end).getTime() - Date.now()) / 86400000))
+    : 7;
 
   const toggle = (i: number) => setCompleted((c) => c.map((v, idx) => (idx === i ? !v : v)));
 
@@ -48,11 +72,17 @@ function ActivacionPage() {
             <div className="w-20 h-20 mx-auto rounded-3xl flex items-center justify-center text-white mb-5 shadow-lg" style={{ background: `linear-gradient(135deg, ${DEEP}, ${PETROL})` }}>
               <Shield className="w-10 h-10" />
             </div>
+            {user?.trial_active && (
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-4" style={{ background: "color-mix(in oklab, #16a34a 14%, white)", color: GREEN }}>
+                <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: GREEN }} />
+                Trial activo · {daysLeft} días restantes
+              </div>
+            )}
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground leading-[1.1]">
-              Bienvenido a Senior Safe
+              {firstName ? <>Bienvenido(a), <span style={{ color: DEEP }}>{firstName}</span></> : "Bienvenido a Senior Safe"}
             </h1>
             <p className="mt-4 text-lg md:text-2xl text-muted-foreground">
-              Tu red de cuidado familiar ya está lista.
+              {user ? `Tu plan ${user.plan} está activo. Configuremos tu red de cuidado.` : "Tu red de cuidado familiar ya está lista."}
             </p>
           </div>
 
