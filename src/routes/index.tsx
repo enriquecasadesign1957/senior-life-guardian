@@ -61,8 +61,8 @@ function Hero() {
             <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Cancelación simple</div>
           </div>
         </div>
-        <div className="relative">
-          <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white/20">
+        <div className="relative animate-fade-in" style={{ animationDelay: "240ms", animationFillMode: "both" }}>
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white/20 hover-scale">
             <img src={emergencyButton} alt="Botón de emergencia Senior Safe" className="w-full aspect-square object-cover" />
           </div>
           <div className="absolute -bottom-6 -left-6 bg-white text-foreground p-4 rounded-2xl shadow-2xl flex items-center gap-3 max-w-[260px]">
