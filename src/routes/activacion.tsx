@@ -105,16 +105,34 @@ function ActivacionPage() {
           </div>
 
           {/* Download buttons */}
-          <div className="grid sm:grid-cols-2 gap-4 mb-10">
-            <a href="#" className="inline-flex items-center justify-center gap-3 px-6 py-5 rounded-2xl text-white font-bold text-lg shadow-md hover:scale-[1.02] transition" style={{ background: DEEP }}>
+          <div className="grid sm:grid-cols-2 gap-4 mb-4">
+            <button
+              type="button"
+              onClick={() => setNotifyShown("android")}
+              className="relative inline-flex items-center justify-center gap-3 px-6 py-5 rounded-2xl text-white font-bold text-lg shadow-md hover:scale-[1.02] transition"
+              style={{ background: DEEP }}
+            >
               <Smartphone className="w-6 h-6" />
               Descargar Android
-            </a>
-            <a href="#" className="inline-flex items-center justify-center gap-3 px-6 py-5 rounded-2xl text-white font-bold text-lg shadow-md hover:scale-[1.02] transition bg-foreground">
+              <span className="absolute -top-2 -right-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400 text-amber-950">Próximamente</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setNotifyShown("ios")}
+              className="relative inline-flex items-center justify-center gap-3 px-6 py-5 rounded-2xl text-white font-bold text-lg shadow-md hover:scale-[1.02] transition bg-foreground"
+            >
               <Apple className="w-6 h-6" />
               Descargar iPhone
-            </a>
+              <span className="absolute -top-2 -right-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400 text-amber-950">Próximamente</span>
+            </button>
           </div>
+          {notifyShown && (
+            <div className="mb-10 rounded-2xl border-2 p-4 text-sm md:text-base" style={{ borderColor: PETROL, background: "color-mix(in oklab, var(--brand-petrol) 6%, white)", color: "var(--foreground)" }}>
+              <strong>La app para {notifyShown === "android" ? "Android" : "iPhone"} está en revisión final.</strong>{" "}
+              Te avisaremos por email y WhatsApp ({user?.telefono ?? "tu teléfono registrado"}) en cuanto esté publicada. Mientras tanto, tu servicio 24/7 ya está activo: si necesitas ayuda llama al <a href="tel:+56971404580" className="font-semibold underline" style={{ color: DEEP }}>+56 9 7140 4580</a>.
+            </div>
+          )}
+
 
           {/* Steps */}
           <ol className="space-y-4">
