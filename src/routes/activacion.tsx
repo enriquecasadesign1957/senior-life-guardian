@@ -4,8 +4,9 @@ import confetti from "canvas-confetti";
 import {
   CheckCircle2, Download, Smartphone, Apple, KeyRound, Users,
   MapPin, Bell, ArrowRight, Shield, Plus, Trash2, X, Loader2,
-  ShieldCheck, Sparkles, Heart, Phone, MessageCircle,
+  ShieldCheck, Heart, MessageCircle,
 } from "lucide-react";
+
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { WhatsAppFloat, WhatsAppButton } from "@/components/whatsapp-float";
 import {
@@ -32,7 +33,7 @@ const DEEP = "var(--brand-petrol-deep)";
 const GREEN = "#16a34a";
 const RED = "#dc2626";
 
-type StepKey = "app" | "pin" | "contactos" | "gps" | "emergencia";
+type StepKey = "pin" | "contactos" | "gps" | "emergencia" | "app";
 type TrialUser = {
   id: string;
   nombre: string;
@@ -46,12 +47,13 @@ type TrialUser = {
 type Contact = { id?: string; nombre: string; telefono: string; parentesco: string };
 
 const STEPS: { key: StepKey; icon: any; color: string; title: string; desc: string }[] = [
-  { key: "app", icon: Smartphone, color: PETROL, title: "Acceder a la aplicación", desc: "Abre Senior Safe en tu teléfono o computador." },
   { key: "pin", icon: KeyRound, color: DEEP, title: "Crear tu PIN de seguridad", desc: "Un código de 4 dígitos fácil de recordar." },
   { key: "contactos", icon: Users, color: GREEN, title: "Agregar a tus familiares", desc: "Hasta 5 personas que recibirán las alertas." },
   { key: "gps", icon: MapPin, color: "#f59e0b", title: "Activar el GPS", desc: "Para enviar tu ubicación en emergencias." },
   { key: "emergencia", icon: Bell, color: RED, title: "Probar el botón de emergencia", desc: "Una prueba simple para asegurarnos que todo funciona." },
+  { key: "app", icon: Smartphone, color: PETROL, title: "Descargar la aplicación", desc: "Último paso: abre Senior Safe en tu teléfono y empieza a usarla." },
 ];
+
 
 // Lightweight hash for PIN (not crypto-grade, but avoids plain text)
 async function hashPin(pin: string, salt: string) {
@@ -73,8 +75,9 @@ function fireConfetti() {
 function ActivacionPage() {
   const [user, setUser] = useState<TrialUser | null>(null);
   const [completed, setCompleted] = useState<Record<StepKey, boolean>>({
-    app: false, pin: false, contactos: false, gps: false, emergencia: false,
+    pin: false, contactos: false, gps: false, emergencia: false, app: false,
   });
+
   const [openStep, setOpenStep] = useState<StepKey | null>(null);
   const [showComplete, setShowComplete] = useState(false);
   const completeFiredRef = useRef(false);
@@ -205,25 +208,22 @@ function ActivacionPage() {
             })}
           </ol>
 
-          {/* Help */}
+          {/* Help — WhatsApp 24/7 */}
           <div className="mt-10 bg-card border border-border rounded-3xl p-6 md:p-8 text-center shadow-sm">
-            <h3 className="text-xl md:text-2xl font-bold text-foreground">¿Necesitas ayuda?</h3>
-            <p className="mt-2 text-muted-foreground text-base">Nuestro equipo está disponible 24/7 para acompañarte.</p>
-            <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-              <a
-                href="tel:+56971404580"
-                className="inline-flex items-center justify-center gap-3 px-8 py-5 rounded-full text-white font-bold text-lg shadow-xl hover:scale-[1.02] transition"
-                style={{ background: DEEP }}
-              >
-                <Phone className="w-5 h-5" /> Llamar al +56 9 7140 4580
-              </a>
-              <WhatsAppButton variant="button" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-3" style={{ background: "color-mix(in oklab, #25D366 14%, white)", color: "#128C7E" }}>
+              <MessageCircle className="w-3.5 h-3.5" /> Soporte humano 24/7
+            </div>
+            <h3 className="text-xl md:text-2xl font-bold text-foreground">¿Necesitas ayuda con la configuración?</h3>
+            <p className="mt-2 text-muted-foreground text-base">Escríbenos por WhatsApp. Te respondemos al instante, todos los días.</p>
+            <div className="mt-6 flex justify-center">
+              <WhatsAppButton variant="button" label="Abrir WhatsApp" />
             </div>
           </div>
 
           <div className="mt-8 text-center text-base text-muted-foreground">
-            ¿Dudas? Escríbenos a <a href="mailto:hola@alarmaseniorsafe.cl" className="font-semibold" style={{ color: DEEP }}>hola@alarmaseniorsafe.cl</a>
+            ¿Prefieres email? Escríbenos a <a href="mailto:hola@alarmaseniorsafe.cl" className="font-semibold" style={{ color: DEEP }}>hola@alarmaseniorsafe.cl</a>
           </div>
+
         </div>
       </main>
       <SiteFooter />

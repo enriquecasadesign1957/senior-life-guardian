@@ -138,16 +138,28 @@ function PlanesPage() {
                     </div>
                   )}
 
-                  <a
-                    href="/#prueba"
-                    className={`mt-7 w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full font-bold text-base transition hover:scale-[1.02] ${
-                      p.highlight ? "bg-white" : "text-white"
-                    }`}
-                    style={p.highlight ? { color: DEEP } : { background: DEEP }}
-                  >
-                    Comenzar prueba gratuita
-                    <ArrowRight className="w-4 h-4" />
-                  </a>
+                  <div className="mt-7 space-y-2.5">
+                    <a
+                      href={`/checkout?mode=trial&plan=${p.name.toLowerCase()}&periodo=${yearly ? "anual" : "mensual"}`}
+                      className={`w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full font-bold text-base transition hover:scale-[1.02] ${
+                        p.highlight ? "bg-white" : "text-white"
+                      }`}
+                      style={p.highlight ? { color: DEEP } : { background: DEEP }}
+                    >
+                      Probar gratis 7 días
+                      <ArrowRight className="w-4 h-4" />
+                    </a>
+                    <a
+                      href={`/checkout?mode=contratar&plan=${p.name.toLowerCase()}&periodo=${yearly ? "anual" : "mensual"}`}
+                      className={`w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full font-bold text-sm border-2 transition hover:scale-[1.02] ${
+                        p.highlight ? "border-white/40 text-white" : ""
+                      }`}
+                      style={p.highlight ? undefined : { borderColor: GREEN, color: GREEN }}
+                    >
+                      Contratar ahora
+                    </a>
+                  </div>
+
 
                   <ul className="mt-8 space-y-3.5">
                     {p.features.map((f) => (
