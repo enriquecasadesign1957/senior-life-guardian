@@ -329,6 +329,7 @@ function StepPinModal({ open, onClose, onDone, userId }: { open: boolean; onClos
     if (phase === "create" && pin.length === 4) setTimeout(() => setPhase("confirm"), 200);
   }, [pin, phase]);
 
+  const setPinFn = useServerFn(setUserPin);
   const handleSave = async () => {
     if (confirm !== pin) {
       toast.error("Los PIN no coinciden", { description: "Intenta nuevamente." });
@@ -339,7 +340,7 @@ function StepPinModal({ open, onClose, onDone, userId }: { open: boolean; onClos
     try {
       if (userId) {
         const pin_hash = await hashPin(pin, userId);
-        await supabase.from("user_pins").insert({ trial_signup_id: userId, pin_hash });
+        await setPinFn({ data: { signupId: userId, pinHash: pin_hash } });
       }
       try { localStorage.setItem("seniorsafe_pin_set", "true"); } catch {}
       onDone();
