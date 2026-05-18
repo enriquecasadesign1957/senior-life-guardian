@@ -704,9 +704,16 @@ function CompletionModal({ open, onClose, firstName }: { open: boolean; onClose:
             {firstName ? `${firstName}, ` : ""}tu red de cuidado familiar está completa.
             Respira tranquilo: estaremos contigo las 24 horas, todos los días. <Heart className="w-4 h-4 inline" style={{ color: RED }} />
           </p>
-          <Button onClick={onClose} className="w-full h-12 text-base font-bold rounded-full" style={{ background: DEEP, color: "white" }}>
-            Ir al inicio
+          <Button
+            onClick={() => window.open(APP_URL, "_blank", "noopener,noreferrer")}
+            className="w-full h-12 text-base font-bold rounded-full"
+            style={{ background: DEEP, color: "white" }}
+          >
+            <Download className="w-5 h-5 mr-1" /> Descargar aplicación
           </Button>
+          <p className="text-xs text-muted-foreground px-4">
+            Úsala gratis durante 7 días. Después se activa el cobro mensual o anual según tu plan.
+          </p>
           <Link to="/" className="block text-sm text-muted-foreground hover:underline">Volver más tarde</Link>
         </div>
       </DialogContent>
