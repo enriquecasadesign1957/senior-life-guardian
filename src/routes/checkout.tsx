@@ -1,22 +1,34 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { z } from "zod";
 import {
   Shield, Lock, CreditCard, Clock, CheckCircle2, ArrowRight,
-  Bell, MapPin, MessageCircle, Phone, Users, Heart, X, Loader2, AlertCircle,
+  Bell, MapPin, MessageCircle, Users, Heart, X, Loader2, AlertCircle, Sparkles,
 } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { activateTrialSignup } from "@/lib/trial-signup.functions";
+import { initWebpayTransaction } from "@/lib/webpay.functions";
 import { WhatsAppFloat } from "@/components/whatsapp-float";
+import { toast } from "sonner";
+
+const searchSchema = z.object({
+  mode: z.enum(["trial", "contratar"]).optional().default("trial"),
+  plan: z.enum(["basico", "premium"]).optional().default("premium"),
+  periodo: z.enum(["mensual", "anual"]).optional().default("mensual"),
+});
 
 export const Route = createFileRoute("/checkout")({
-  head: () => ({
-    meta: [
-      { title: "Comenzar prueba gratuita — Senior Safe" },
-      { name: "description", content: "Activa tu prueba gratuita de 7 días de Senior Safe. Sin cobros durante el período de prueba. Pago seguro Webpay." },
-    ],
-  }),
+  validateSearch: (s) => searchSchema.parse(s),
+  head: ({ match }) => {
+    const mode = (match.search as { mode?: string }).mode ?? "trial";
+    return {
+      meta: [
+        { title: mode === "contratar" ? "Contratar Senior Safe — Activación inmediata" : "Comenzar prueba gratuita — Senior Safe" },
+        { name: "description", content: "Activa Senior Safe con prueba gratuita de 7 días o contratación inmediata. Pago seguro Webpay Plus." },
+      ],
+    };
+  },
   component: CheckoutPage,
 });
 
@@ -33,9 +45,9 @@ const PLANS = {
     features: [
       { icon: Bell, label: "Botón de emergencia" },
       { icon: MessageCircle, label: "WhatsApp + SMS automáticos" },
-      { icon: Phone, label: "Llamada automática" },
-      { icon: MapPin, label: "Ubicación GPS" },
+      { icon: MapPin, label: "Ubicación GPS en tiempo real" },
       { icon: Users, label: "1 familiar conectado" },
+      { icon: MessageCircle, label: "Soporte WhatsApp" },
     ],
   },
   premium: {
@@ -47,8 +59,8 @@ const PLANS = {
       { icon: CheckCircle2, label: "Todo lo del plan Básico" },
       { icon: Users, label: "Múltiples familiares conectados" },
       { icon: Heart, label: "Monitoreo de inactividad" },
-      { icon: Clock, label: "Historial de alertas" },
-      { icon: Shield, label: "Soporte prioritario 24/7" },
+      { icon: Clock, label: "Historial completo de alertas" },
+      { icon: Shield, label: "Soporte prioritario WhatsApp 24/7" },
     ],
   },
 } as const;
@@ -64,9 +76,13 @@ const fmt = (n: number) => n.toLocaleString("es-CL");
 
 function CheckoutPage() {
   const navigate = useNavigate();
+  const search = useSearch({ from: "/checkout" });
   const activateTrial = useServerFn(activateTrialSignup);
-  const [planKey, setPlanKey] = useState<"basico" | "premium">("premium");
-  const [yearly, setYearly] = useState(false);
+  const initWebpay = useServerFn(initWebpayTransaction);
+
+  const [mode, setMode] = useState<"trial" | "contratar">(search.mode);
+  const [planKey, setPlanKey] = useState<"basico" | "premium">(search.plan);
+  const [yearly, setYearly] = useState(search.periodo === "anual");
   const [form, setForm] = useState({ name: "", email: "", phone: "", address: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -75,6 +91,7 @@ function CheckoutPage() {
   const plan = PLANS[planKey];
   const price = yearly ? plan.yearly : plan.monthly;
   const savings = useMemo(() => plan.monthly * 12 - plan.yearly, [plan]);
+  const isContratar = mode === "contratar";
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,7 +116,7 @@ function CheckoutPage() {
       } });
       const data = result.signup;
 
-      // Disparar email + WhatsApp de bienvenida (no bloquean el flujo si fallan)
+      // Welcome triggers (no bloquean)
       fetch("/api/public/send-welcome-trial", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -110,23 +127,49 @@ function CheckoutPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ signupId: data.id }),
-      })
-        .then(() => console.info("[whatsapp] welcome trigger ok"))
-        .catch((e) => console.warn("welcome whatsapp trigger failed", e));
+      }).catch((e) => console.warn("welcome whatsapp trigger failed", e));
 
-      // Pasar datos a la página de activación
       try {
         sessionStorage.setItem("seniorsafe_user", JSON.stringify({
-          id: data.id,
-          nombre: data.nombre,
-          email: data.email,
-          telefono: data.telefono,
-          plan: data.plan,
-          periodo: data.periodo,
-          trial_active: data.trial_active,
-          trial_end: data.trial_end,
+          id: data.id, nombre: data.nombre, email: data.email, telefono: data.telefono,
+          plan: data.plan, periodo: data.periodo,
+          trial_active: data.trial_active, trial_end: data.trial_end,
         }));
-      } catch { /* ignore storage errors */ }
+      } catch { /* ignore */ }
+
+      // Contratar ahora: iniciar Webpay (stub por ahora)
+      if (isContratar) {
+        try {
+          const wp = await initWebpay({ data: {
+            signupId: data.id,
+            plan: planKey,
+            periodo: yearly ? "anual" : "mensual",
+          } });
+          if (wp.url && wp.token) {
+            // Producción: redirigir a Webpay
+            const f = document.createElement("form");
+            f.method = "POST";
+            f.action = wp.url;
+            const i = document.createElement("input");
+            i.name = "token_ws";
+            i.value = wp.token;
+            f.appendChild(i);
+            document.body.appendChild(f);
+            f.submit();
+            return;
+          }
+          // Stub: avisar y continuar a activación
+          toast.info("Pago Webpay en preparación", {
+            description: "Tu cuenta está creada. Te contactaremos por WhatsApp para activar el cobro cuando esté disponible.",
+            duration: 6000,
+          });
+        } catch (wpErr) {
+          console.error("[webpay] init failed", wpErr);
+          toast.warning("No pudimos iniciar el pago", {
+            description: "Tu cuenta quedó creada como prueba gratis. Te contactaremos por WhatsApp.",
+          });
+        }
+      }
 
       navigate({ to: "/activacion" });
     } catch (err) {
@@ -141,22 +184,43 @@ function CheckoutPage() {
       <SiteHeader />
       <main className="flex-1" style={{ background: "var(--gradient-soft)" }}>
         <div className="max-w-6xl mx-auto px-6 py-12 md:py-16">
-          <div className="text-center mb-10 max-w-2xl mx-auto">
+          <div className="text-center mb-8 max-w-2xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold" style={{ background: "color-mix(in oklab, var(--brand-petrol) 12%, white)", color: DEEP }}>
-              <Lock className="w-4 h-4" /> Pago seguro · Sin cobro durante 7 días
+              <Lock className="w-4 h-4" /> Pago seguro Webpay Plus
             </div>
             <h1 className="mt-5 text-3xl md:text-5xl font-bold tracking-tight text-foreground leading-[1.1]">
-              Comienza tu prueba gratuita
+              {isContratar ? "Contrata Senior Safe" : "Comienza tu prueba gratuita"}
             </h1>
             <p className="mt-4 text-base md:text-lg text-muted-foreground">
-              Activa Senior Safe en menos de 2 minutos. Cancela cuando quieras.
+              {isContratar
+                ? "Activación inmediata. Sin permanencia. Cancela cuando quieras."
+                : "7 días gratis. Sin cobro durante la prueba. Cancela en 1 clic."}
             </p>
+          </div>
+
+          {/* Mode tabs */}
+          <div className="mx-auto mb-8 max-w-md grid grid-cols-2 gap-2 p-1.5 bg-card border border-border rounded-full shadow-sm">
+            <button
+              type="button"
+              onClick={() => setMode("trial")}
+              className={`px-4 py-3 rounded-full text-sm font-bold transition flex items-center justify-center gap-2 ${mode === "trial" ? "text-white shadow" : "text-muted-foreground"}`}
+              style={mode === "trial" ? { background: DEEP } : undefined}
+            >
+              <Sparkles className="w-4 h-4" /> Probar gratis 7 días
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("contratar")}
+              className={`px-4 py-3 rounded-full text-sm font-bold transition flex items-center justify-center gap-2 ${mode === "contratar" ? "text-white shadow" : "text-muted-foreground"}`}
+              style={mode === "contratar" ? { background: GREEN } : undefined}
+            >
+              <CheckCircle2 className="w-4 h-4" /> Contratar ahora
+            </button>
           </div>
 
           <div className="grid lg:grid-cols-[1fr_420px] gap-8">
               {/* FORM */}
               <form onSubmit={onSubmit} className="bg-card border border-border rounded-3xl p-6 md:p-8 shadow-sm space-y-7">
-                {/* Plan selector */}
                 <div>
                   <label className="text-sm font-bold text-foreground mb-3 block">1. Elige tu plan</label>
                   <div className="grid grid-cols-2 gap-3">
@@ -176,13 +240,13 @@ function CheckoutPage() {
                           )}
                           <div className="font-bold text-foreground">{p.name}</div>
                           <div className="text-sm text-muted-foreground">${fmt(p.monthly)} /mes</div>
+                          <div className="text-xs text-muted-foreground">${fmt(p.yearly)} /año</div>
                         </button>
                       );
                     })}
                   </div>
                 </div>
 
-                {/* Period selector */}
                 <div>
                   <label className="text-sm font-bold text-foreground mb-3 block">2. Período de facturación</label>
                   <div className="inline-flex items-center bg-muted rounded-full p-1.5 w-full sm:w-auto">
@@ -191,18 +255,17 @@ function CheckoutPage() {
                     </button>
                     <button type="button" onClick={() => setYearly(true)} className={`flex-1 sm:flex-none px-5 py-2 rounded-full text-sm font-semibold transition flex items-center justify-center gap-2 ${yearly ? "text-white" : "text-muted-foreground"}`} style={yearly ? { background: DEEP } : undefined}>
                       Anual
-                      <span className="px-2 py-0.5 rounded-full text-white text-[10px] font-bold" style={{ background: GREEN }}>-8%</span>
+                      <span className="px-2 py-0.5 rounded-full text-white text-[10px] font-bold" style={{ background: GREEN }}>AHORRA</span>
                     </button>
                   </div>
                 </div>
 
-                {/* Personal info */}
                 <div>
                   <label className="text-sm font-bold text-foreground mb-3 block">3. Tus datos</label>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <Field label="Nombre completo" name="name" value={form.name} onChange={(v) => setForm({ ...form, name: v })} error={errors.name} placeholder="María González" />
                     <Field label="Email" name="email" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} error={errors.email} placeholder="maria@email.cl" />
-                    <Field label="Teléfono" name="phone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} error={errors.phone} placeholder="+56 9 ..." />
+                    <Field label="Teléfono / WhatsApp" name="phone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} error={errors.phone} placeholder="+56 9 ..." />
                     <Field label="Dirección (opcional)" name="address" value={form.address} onChange={(v) => setForm({ ...form, address: v })} error={errors.address} placeholder="Calle, comuna, ciudad" />
                   </div>
                 </div>
@@ -218,12 +281,17 @@ function CheckoutPage() {
                   type="submit"
                   disabled={loading}
                   className="w-full inline-flex items-center justify-center gap-3 px-6 py-5 rounded-full text-white font-bold text-base hover:scale-[1.01] transition shadow-xl disabled:opacity-80 disabled:cursor-wait disabled:hover:scale-100"
-                  style={{ background: DEEP }}
+                  style={{ background: isContratar ? GREEN : DEEP }}
                 >
                   {loading ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      Creando tu cuenta y configurando WhatsApp…
+                      {isContratar ? "Preparando pago Webpay…" : "Creando tu cuenta…"}
+                    </>
+                  ) : isContratar ? (
+                    <>
+                      <CreditCard className="w-5 h-5" />
+                      Pagar con Webpay · ${fmt(price)}
                     </>
                   ) : (
                     <>
@@ -244,8 +312,11 @@ function CheckoutPage() {
                   <div className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground mb-2">Resumen</div>
                   <div className="flex items-baseline justify-between">
                     <h3 className="text-xl font-bold text-foreground">Plan {plan.name}</h3>
-                    <span className="text-xs px-2.5 py-1 rounded-full font-semibold" style={{ background: "color-mix(in oklab, #16a34a 14%, white)", color: GREEN }}>
-                      7 días gratis
+                    <span className="text-xs px-2.5 py-1 rounded-full font-semibold"
+                      style={isContratar
+                        ? { background: "color-mix(in oklab, #16a34a 14%, white)", color: GREEN }
+                        : { background: "color-mix(in oklab, var(--brand-petrol) 14%, white)", color: DEEP }}>
+                      {isContratar ? "Activación inmediata" : "7 días gratis"}
                     </span>
                   </div>
 
@@ -259,13 +330,24 @@ function CheckoutPage() {
                     </div>
                   )}
 
-                  <div className="mt-5 p-4 rounded-2xl border" style={{ borderColor: "color-mix(in oklab, #16a34a 30%, white)", background: "color-mix(in oklab, #16a34a 6%, white)" }}>
+                  <div className="mt-5 p-4 rounded-2xl border"
+                    style={isContratar
+                      ? { borderColor: "color-mix(in oklab, #16a34a 30%, white)", background: "color-mix(in oklab, #16a34a 6%, white)" }
+                      : { borderColor: "color-mix(in oklab, var(--brand-petrol) 30%, white)", background: "color-mix(in oklab, var(--brand-petrol) 6%, white)" }}>
                     <div className="flex items-start gap-3">
-                      <Shield className="w-5 h-5 mt-0.5 shrink-0" style={{ color: GREEN }} />
+                      <Shield className="w-5 h-5 mt-0.5 shrink-0" style={{ color: isContratar ? GREEN : DEEP }} />
                       <div className="text-sm text-foreground leading-relaxed">
-                        <strong>No se realizará cobro durante los primeros 7 días.</strong>
-                        <br />
-                        <span className="text-muted-foreground">Cancela en 1 clic antes que termine la prueba.</span>
+                        {isContratar ? (
+                          <>
+                            <strong>Acceso completo inmediato.</strong><br />
+                            <span className="text-muted-foreground">Renovación automática {yearly ? "anual" : "mensual"}. Cancela cuando quieras.</span>
+                          </>
+                        ) : (
+                          <>
+                            <strong>No se realizará cobro durante los primeros 7 días.</strong><br />
+                            <span className="text-muted-foreground">Cancela en 1 clic antes que termine la prueba.</span>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -285,9 +367,9 @@ function CheckoutPage() {
 
                 {/* Trust */}
                 <div className="bg-card border border-border rounded-3xl p-6 grid grid-cols-2 gap-4 shadow-sm">
-                  <Trust icon={CreditCard} title="Webpay" sub="Pago en pesos CLP" />
+                  <Trust icon={CreditCard} title="Webpay Plus" sub="Pago en CLP" />
                   <Trust icon={Lock} title="SSL 256-bit" sub="Datos cifrados" />
-                  <Trust icon={Shield} title="Pago protegido" sub="Reembolso garantizado" />
+                  <Trust icon={MessageCircle} title="Soporte 24/7" sub="WhatsApp directo" />
                   <Trust icon={X} title="Sin permanencia" sub="Cancela cuando quieras" />
                 </div>
               </aside>
@@ -333,4 +415,3 @@ function Trust({ icon: Icon, title, sub }: { icon: typeof Shield; title: string;
     </div>
   );
 }
-
