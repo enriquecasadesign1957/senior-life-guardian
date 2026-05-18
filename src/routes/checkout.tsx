@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { activateTrialSignup } from "@/lib/trial-signup.functions";
+import { WhatsAppFloat } from "@/components/whatsapp-float";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -294,6 +295,7 @@ function CheckoutPage() {
         </div>
       </main>
       <SiteFooter />
+      <WhatsAppFloat />
     </div>
   );
 }

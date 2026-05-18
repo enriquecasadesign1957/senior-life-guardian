@@ -4,9 +4,10 @@ import confetti from "canvas-confetti";
 import {
   CheckCircle2, Download, Smartphone, Apple, KeyRound, Users,
   MapPin, Bell, ArrowRight, Shield, Plus, Trash2, X, Loader2,
-  ShieldCheck, Sparkles, Heart, Phone,
+  ShieldCheck, Sparkles, Heart, Phone, MessageCircle,
 } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
+import { WhatsAppFloat, WhatsAppButton } from "@/components/whatsapp-float";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
@@ -208,13 +209,16 @@ function ActivacionPage() {
           <div className="mt-10 bg-card border border-border rounded-3xl p-6 md:p-8 text-center shadow-sm">
             <h3 className="text-xl md:text-2xl font-bold text-foreground">¿Necesitas ayuda?</h3>
             <p className="mt-2 text-muted-foreground text-base">Nuestro equipo está disponible 24/7 para acompañarte.</p>
-            <a
-              href="tel:+56971404580"
-              className="mt-6 w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-5 rounded-full text-white font-bold text-lg shadow-xl hover:scale-[1.02] transition"
-              style={{ background: DEEP }}
-            >
-              <Phone className="w-5 h-5" /> Llamar al +56 9 7140 4580
-            </a>
+            <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+              <a
+                href="tel:+56971404580"
+                className="inline-flex items-center justify-center gap-3 px-8 py-5 rounded-full text-white font-bold text-lg shadow-xl hover:scale-[1.02] transition"
+                style={{ background: DEEP }}
+              >
+                <Phone className="w-5 h-5" /> Llamar al +56 9 7140 4580
+              </a>
+              <WhatsAppButton variant="button" />
+            </div>
           </div>
 
           <div className="mt-8 text-center text-base text-muted-foreground">
@@ -233,6 +237,7 @@ function ActivacionPage() {
 
       {/* Completion */}
       <CompletionModal open={showComplete} onClose={() => setShowComplete(false)} firstName={firstName} />
+      <WhatsAppFloat />
     </div>
   );
 }

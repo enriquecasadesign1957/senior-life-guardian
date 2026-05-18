@@ -12,6 +12,7 @@ import seniorPhone from "@/assets/senior-phone.jpg";
 import logo from "@/assets/logo-senior-safe.png";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { activateTrialSignup } from "@/lib/trial-signup.functions";
+import { WhatsAppFloat } from "@/components/whatsapp-float";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -601,9 +602,10 @@ function Contacto() {
           <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight">Hablemos.</h2>
           <p className="mt-4 text-lg text-muted-foreground">Estamos aquí para ayudarte a proteger a tu familia.</p>
         </div>
-        <div className="grid md:grid-cols-3 gap-5">
-          <ContactCard icon={Phone} title="Teléfono" value="+56 9 7140 4580" />
-          <ContactCard icon={Mail} title="Email" value="hola@alarmaseniorsafe.cl" />
+        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-5">
+          <ContactCard icon={Phone} title="Teléfono" value="+56 9 7140 4580" href="tel:+56971404580" />
+          <ContactCard icon={MessageCircle} title="WhatsApp" value="+56 9 7140 4580" href="https://wa.me/56971404580?text=Hola%20Senior%20Safe%2C%20tengo%20una%20consulta" isExternal />
+          <ContactCard icon={Mail} title="Email" value="hola@alarmaseniorsafe.cl" href="mailto:hola@alarmaseniorsafe.cl" />
           <ContactCard icon={Clock} title="Horario" value="Soporte 24/7" />
         </div>
         <p className="text-center mt-12 text-xl md:text-2xl italic text-foreground/80 font-light">
@@ -614,9 +616,9 @@ function Contacto() {
   );
 }
 
-function ContactCard({ icon: Icon, title, value }: { icon: any; title: string; value: string }) {
-  return (
-    <div className="bg-card border border-border rounded-2xl p-7 text-center">
+function ContactCard({ icon: Icon, title, value, href, isExternal }: { icon: any; title: string; value: string; href?: string; isExternal?: boolean }) {
+  const content = (
+    <div className="bg-card border border-border rounded-2xl p-7 text-center hover:shadow-lg transition cursor-pointer">
       <span className="w-12 h-12 mx-auto rounded-xl flex items-center justify-center text-white mb-4" style={{ background: PETROL }}>
         <Icon className="w-6 h-6" />
       </span>
@@ -624,6 +626,14 @@ function ContactCard({ icon: Icon, title, value }: { icon: any; title: string; v
       <div className="font-bold text-foreground">{value}</div>
     </div>
   );
+  if (href) {
+    return (
+      <a href={href} target={isExternal ? "_blank" : undefined} rel={isExternal ? "noopener noreferrer" : undefined}>
+        {content}
+      </a>
+    );
+  }
+  return content;
 }
 
 function Field({ label, type = "text", placeholder, value, onChange }: { label: string; type?: string; placeholder?: string; value?: string; onChange?: (v: string) => void }) {
@@ -661,6 +671,7 @@ function Landing() {
         <Contacto />
       </main>
       <SiteFooter />
+      <WhatsAppFloat />
     </div>
   );
 }
