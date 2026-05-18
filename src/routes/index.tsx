@@ -411,26 +411,26 @@ function Prueba() {
     setLoading(true);
     try {
       const trialEnd = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-      const { data, error } = await supabase
-        .from("trial_signups")
-        .insert({
-          nombre,
-          email,
-          telefono,
-          plan: "premium",
-          periodo: "mensual",
-          trial_active: true,
-          trial_end: trialEnd,
-          payment_status: "trial",
-        })
-        .select()
-        .single();
+      const id = (crypto as any).randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
+      const row = {
+        id,
+        nombre,
+        email,
+        telefono,
+        plan: "premium",
+        periodo: "mensual",
+        trial_active: true,
+        trial_end: trialEnd,
+        payment_status: "trial",
+      };
+      const { error } = await supabase.from("trial_signups").insert(row);
 
-      if (error || !data) {
+      if (error) {
         setErrorMsg("No pudimos crear tu cuenta. Intenta nuevamente.");
         setLoading(false);
         return;
       }
+      const data = row;
 
       // Disparar email + WhatsApp (no bloquean el flujo si fallan)
       fetch("/api/public/send-welcome-trial", {
