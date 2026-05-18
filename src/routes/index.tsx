@@ -391,7 +391,81 @@ function Planes() {
 }
 
 function Prueba() {
-  const [sent, setSent] = useState(false);
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ nombre: "", email: "", telefono: "" });
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+
+    const nombre = form.nombre.trim();
+    const email = form.email.trim().toLowerCase();
+    const telefono = form.telefono.trim();
+
+    if (nombre.length < 2) return setErrorMsg("Ingresa tu nombre completo.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setErrorMsg("Correo inválido.");
+    if (telefono.replace(/\D/g, "").length < 8) return setErrorMsg("Teléfono inválido.");
+
+    setLoading(true);
+    try {
+      const trialEnd = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data, error } = await supabase
+        .from("trial_signups")
+        .insert({
+          nombre,
+          email,
+          telefono,
+          plan: "premium",
+          periodo: "mensual",
+          trial_active: true,
+          trial_end: trialEnd,
+          payment_status: "trial",
+        })
+        .select()
+        .single();
+
+      if (error || !data) {
+        setErrorMsg("No pudimos crear tu cuenta. Intenta nuevamente.");
+        setLoading(false);
+        return;
+      }
+
+      // Disparar email + WhatsApp (no bloquean el flujo si fallan)
+      fetch("/api/public/send-welcome-trial", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ signupId: data.id }),
+      }).catch((err) => console.warn("welcome email trigger failed", err));
+
+      fetch("/api/public/send-welcome-whatsapp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ signupId: data.id }),
+      }).catch((err) => console.warn("welcome whatsapp trigger failed", err));
+
+      try {
+        sessionStorage.setItem("seniorsafe_user", JSON.stringify({
+          id: data.id,
+          nombre: data.nombre,
+          email: data.email,
+          telefono: data.telefono,
+          plan: data.plan,
+          periodo: data.periodo,
+          trial_active: data.trial_active,
+          trial_end: data.trial_end,
+        }));
+      } catch { /* ignore */ }
+
+      navigate({ to: "/activacion" });
+    } catch (err) {
+      console.error("Trial signup error:", err);
+      setErrorMsg("Error de conexión. Intenta nuevamente.");
+      setLoading(false);
+    }
+  };
+
   return (
     <section id="prueba" className="py-20 md:py-24 bg-background">
       <div className="max-w-5xl mx-auto px-6">
@@ -405,37 +479,47 @@ function Prueba() {
               Sin tarjeta de crédito. Sin compromisos. Cancela cuando quieras.
             </p>
             <ul className="space-y-3 text-base">
-              {["Descarga inmediata", "Acceso completo a todas las funciones", "Cancelación simple en 1 clic"].map((t) => (
+              {["Activación inmediata", "Acceso completo a todas las funciones", "Cancelación simple en 1 clic"].map((t) => (
                 <li key={t} className="flex items-center gap-3">
                   <CheckCircle2 className="w-5 h-5 text-white" /> {t}
                 </li>
               ))}
             </ul>
           </div>
-          <form onSubmit={(e) => { e.preventDefault(); setSent(true); }} className="bg-card p-10 md:p-12 flex flex-col gap-5">
-            {sent ? (
-              <div className="flex flex-col items-center justify-center text-center h-full gap-4 py-10">
-                <div className="w-16 h-16 rounded-full flex items-center justify-center text-white" style={{ background: GREEN }}>
-                  <CheckCircle2 className="w-8 h-8" />
-                </div>
-                <h3 className="text-2xl font-bold text-foreground">¡Gracias!</h3>
-                <p className="text-muted-foreground">Te contactaremos en menos de 24 horas con tu acceso.</p>
+          <form onSubmit={onSubmit} className="bg-card p-10 md:p-12 flex flex-col gap-5">
+            <h3 className="text-xl font-bold text-foreground">Comenzar prueba gratis</h3>
+            <Field label="Nombre completo" placeholder="María García" value={form.nombre} onChange={(v) => setForm({ ...form, nombre: v })} />
+            <Field label="Email" type="email" placeholder="maria@ejemplo.com" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
+            <Field label="Teléfono" type="tel" placeholder="+569 ..." value={form.telefono} onChange={(v) => setForm({ ...form, telefono: v })} />
+
+            {errorMsg && (
+              <div className="flex items-start gap-2 text-sm text-destructive">
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                <span>{errorMsg}</span>
               </div>
-            ) : (
-              <>
-                <h3 className="text-xl font-bold text-foreground">Comenzar prueba gratis</h3>
-                <Field label="Nombre completo" placeholder="María García" />
-                <Field label="Email" type="email" placeholder="maria@ejemplo.com" />
-                <Field label="Teléfono" type="tel" placeholder="+569 ..." />
-                <button type="submit" className="mt-2 inline-flex items-center justify-center gap-2 py-4 rounded-full text-white text-base font-bold transition" style={{ background: PETROL }}>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="mt-2 inline-flex items-center justify-center gap-2 py-4 rounded-full text-white text-base font-bold transition disabled:opacity-80 disabled:cursor-wait"
+              style={{ background: PETROL }}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Creando tu cuenta Senior Safe…
+                </>
+              ) : (
+                <>
                   Comenzar prueba gratis
                   <ArrowRight className="w-4 h-4" />
-                </button>
-                <p className="text-xs text-muted-foreground text-center">
-                  Al continuar aceptas nuestros términos y política de privacidad.
-                </p>
-              </>
-            )}
+                </>
+              )}
+            </button>
+            <p className="text-xs text-muted-foreground text-center">
+              Al continuar aceptas nuestros términos y política de privacidad.
+            </p>
           </form>
         </div>
       </div>
