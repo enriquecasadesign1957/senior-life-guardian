@@ -77,6 +77,7 @@ function CheckoutPage() {
   const navigate = useNavigate();
   const search = useSearch({ from: "/checkout" });
   const activateTrial = useServerFn(activateTrialSignup);
+  const createPurchase = useServerFn(createPurchaseSignup);
   const initWebpay = useServerFn(initWebpayTransaction);
 
   const [mode, setMode] = useState<"trial" | "contratar">(search.mode);
