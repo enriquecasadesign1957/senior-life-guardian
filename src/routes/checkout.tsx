@@ -87,21 +87,20 @@ function CheckoutPage() {
     setLoading(true);
     try {
       const trialEnd = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-      const { data, error } = await supabase
-        .from("trial_signups")
-        .insert({
-          nombre: r.data.name,
-          email: r.data.email.toLowerCase(),
-          telefono: r.data.phone,
-          direccion: r.data.address || null,
-          plan: planKey,
-          periodo: yearly ? "anual" : "mensual",
-          trial_active: true,
-          trial_end: trialEnd,
-          payment_status: "trial",
-        })
-        .select()
-        .single();
+      const id = (crypto as any).randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
+      const row = {
+        id,
+        nombre: r.data.name,
+        email: r.data.email.toLowerCase(),
+        telefono: r.data.phone,
+        direccion: r.data.address || null,
+        plan: planKey,
+        periodo: yearly ? "anual" : "mensual",
+        trial_active: true,
+        trial_end: trialEnd,
+        payment_status: "trial",
+      };
+      const { error } = await supabase.from("trial_signups").insert(row);
 
       if (error) {
         if (error.code === "23505" || /duplicate|unique/i.test(error.message)) {
@@ -112,6 +111,7 @@ function CheckoutPage() {
         setLoading(false);
         return;
       }
+      const data = row;
 
       // Disparar email + WhatsApp de bienvenida (no bloquean el flujo si fallan)
       fetch("/api/public/send-welcome-trial", {
