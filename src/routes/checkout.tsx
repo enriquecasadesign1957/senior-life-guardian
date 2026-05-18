@@ -20,17 +20,15 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/checkout")({
   validateSearch: (s) => searchSchema.parse(s),
-  head: ({ match }) => {
-    const mode = (match.search as { mode?: string }).mode ?? "trial";
-    return {
-      meta: [
-        { title: mode === "contratar" ? "Contratar Senior Safe — Activación inmediata" : "Comenzar prueba gratuita — Senior Safe" },
-        { name: "description", content: "Activa Senior Safe con prueba gratuita de 7 días o contratación inmediata. Pago seguro Webpay Plus." },
-      ],
-    };
-  },
+  head: () => ({
+    meta: [
+      { title: "Checkout — Senior Safe" },
+      { name: "description", content: "Activa Senior Safe con prueba gratuita de 7 días o contratación inmediata. Pago seguro Webpay Plus." },
+    ],
+  }),
   component: CheckoutPage,
 });
+
 
 const PETROL = "var(--brand-petrol)";
 const DEEP = "var(--brand-petrol-deep)";
