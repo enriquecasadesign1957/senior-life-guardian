@@ -238,7 +238,7 @@ function ActivacionPage() {
 }
 
 /* ---------------- Step 1: Acceder a la app ---------------- */
-const APP_URL = "https://senior-life-guardian.lovable.app";
+const APP_URL = "https://senior-safe-link.lovable.app";
 
 function StepAppModal({ open, onClose, onDone, userPhone }: { open: boolean; onClose: () => void; onDone: () => void; userPhone: string | null }) {
   const openApp = () => {
