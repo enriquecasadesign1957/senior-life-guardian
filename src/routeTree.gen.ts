@@ -23,6 +23,7 @@ import { Route as ActivacionRouteImport } from './routes/activacion'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WebpayRetornoRouteImport } from './routes/webpay.retorno'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as AdminResetRouteImport } from './routes/admin.reset'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicSendWelcomeWhatsappRouteImport } from './routes/api/public/send-welcome-whatsapp'
 import { Route as ApiPublicSendWelcomeTrialRouteImport } from './routes/api/public/send-welcome-trial'
@@ -100,6 +101,11 @@ const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   path: '/email/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminResetRoute = AdminResetRouteImport.update({
+  id: '/admin/reset',
+  path: '/admin/reset',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   id: '/lovable/email/suppression',
   path: '/lovable/email/suppression',
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/terminos': typeof TerminosRoute
   '/tutorial': typeof TutorialRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/admin/reset': typeof AdminResetRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/webpay/retorno': typeof WebpayRetornoRoute
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
@@ -171,6 +178,7 @@ export interface FileRoutesByTo {
   '/terminos': typeof TerminosRoute
   '/tutorial': typeof TutorialRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/admin/reset': typeof AdminResetRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/webpay/retorno': typeof WebpayRetornoRoute
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
@@ -194,6 +202,7 @@ export interface FileRoutesById {
   '/terminos': typeof TerminosRoute
   '/tutorial': typeof TutorialRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/admin/reset': typeof AdminResetRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/webpay/retorno': typeof WebpayRetornoRoute
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
@@ -218,6 +227,7 @@ export interface FileRouteTypes {
     | '/terminos'
     | '/tutorial'
     | '/unsubscribe'
+    | '/admin/reset'
     | '/email/unsubscribe'
     | '/webpay/retorno'
     | '/api/public/send-welcome-trial'
@@ -240,6 +250,7 @@ export interface FileRouteTypes {
     | '/terminos'
     | '/tutorial'
     | '/unsubscribe'
+    | '/admin/reset'
     | '/email/unsubscribe'
     | '/webpay/retorno'
     | '/api/public/send-welcome-trial'
@@ -262,6 +273,7 @@ export interface FileRouteTypes {
     | '/terminos'
     | '/tutorial'
     | '/unsubscribe'
+    | '/admin/reset'
     | '/email/unsubscribe'
     | '/webpay/retorno'
     | '/api/public/send-welcome-trial'
@@ -285,6 +297,7 @@ export interface RootRouteChildren {
   TerminosRoute: typeof TerminosRoute
   TutorialRoute: typeof TutorialRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
+  AdminResetRoute: typeof AdminResetRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   WebpayRetornoRoute: typeof WebpayRetornoRoute
   ApiPublicSendWelcomeTrialRoute: typeof ApiPublicSendWelcomeTrialRoute
@@ -395,6 +408,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/reset': {
+      id: '/admin/reset'
+      path: '/admin/reset'
+      fullPath: '/admin/reset'
+      preLoaderRoute: typeof AdminResetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/suppression': {
       id: '/lovable/email/suppression'
       path: '/lovable/email/suppression'
@@ -453,6 +473,7 @@ const rootRouteChildren: RootRouteChildren = {
   TerminosRoute: TerminosRoute,
   TutorialRoute: TutorialRoute,
   UnsubscribeRoute: UnsubscribeRoute,
+  AdminResetRoute: AdminResetRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   WebpayRetornoRoute: WebpayRetornoRoute,
   ApiPublicSendWelcomeTrialRoute: ApiPublicSendWelcomeTrialRoute,
