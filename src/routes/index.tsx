@@ -662,6 +662,7 @@ function Landing() {
         <Contacto />
       </main>
       <SiteFooter />
+      <WhatsAppFloat />
     </div>
   );
 }
