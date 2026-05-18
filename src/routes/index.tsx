@@ -50,19 +50,22 @@ function Hero() {
           <p className="mt-7 text-lg md:text-xl text-white/85 leading-relaxed max-w-xl animate-fade-in" style={{ animationDelay: "120ms", animationFillMode: "both" }}>
             Senior Safe conecta automáticamente a adultos mayores con sus familiares mediante alertas inteligentes, ubicación GPS, llamadas, SMS y WhatsApp.
           </p>
-          <div className="mt-9 flex flex-col sm:flex-row gap-4">
-            <a href="#prueba" className="inline-flex items-center justify-center gap-3 px-8 py-5 rounded-full bg-white text-base font-bold shadow-xl hover:scale-[1.02] transition" style={{ color: DEEP }}>
+          <div className="mt-9 flex flex-col sm:flex-row gap-3">
+            <a href="/checkout?mode=trial" className="inline-flex items-center justify-center gap-3 px-7 py-5 rounded-full bg-white text-base font-bold shadow-xl hover:scale-[1.02] transition" style={{ color: DEEP }}>
               Probar gratis 7 días
               <ArrowRight className="w-5 h-5" />
             </a>
-            <a href="#como" className="inline-flex items-center justify-center gap-3 px-8 py-5 rounded-full border-2 border-white/40 text-white text-base font-semibold hover:bg-white/10 transition">
-              Cómo funciona
+            <a href="/checkout?mode=contratar" className="inline-flex items-center justify-center gap-3 px-7 py-5 rounded-full text-base font-bold shadow-xl hover:scale-[1.02] transition text-white" style={{ background: GREEN }}>
+              Contratar ahora
+              <CheckCircle2 className="w-5 h-5" />
             </a>
           </div>
-          <div className="mt-8 flex items-center gap-5 text-sm text-white/80">
+          <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-white/80">
             <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Sin permanencia</div>
             <div className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Cancelación simple</div>
+            <a href="#como" className="underline underline-offset-4 hover:text-white">Cómo funciona</a>
           </div>
+
         </div>
         <div className="relative animate-fade-in" style={{ animationDelay: "240ms", animationFillMode: "both" }}>
           <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white/20 hover-scale">
@@ -373,20 +376,30 @@ function Planes() {
                     </li>
                   ))}
                 </ul>
-                <a
-                  href="#prueba"
-                  className="block text-center py-4 rounded-full font-bold text-base transition"
-                  style={p.highlight ? { background: "white", color: DEEP } : { background: PETROL, color: "white" }}
-                >
-                  {p.cta}
-                </a>
+                <div className="space-y-2">
+                  <a
+                    href={`/checkout?mode=trial&plan=${p.name.toLowerCase()}&periodo=${yearly ? "anual" : "mensual"}`}
+                    className="block text-center py-4 rounded-full font-bold text-base transition"
+                    style={p.highlight ? { background: "white", color: DEEP } : { background: PETROL, color: "white" }}
+                  >
+                    Probar gratis 7 días
+                  </a>
+                  <a
+                    href={`/checkout?mode=contratar&plan=${p.name.toLowerCase()}&periodo=${yearly ? "anual" : "mensual"}`}
+                    className="block text-center py-3.5 rounded-full font-bold text-sm border-2 transition"
+                    style={p.highlight ? { borderColor: "rgba(255,255,255,0.5)", color: "white" } : { borderColor: GREEN, color: GREEN }}
+                  >
+                    Contratar ahora
+                  </a>
+                </div>
               </div>
             );
           })}
         </div>
         <p className="text-center mt-8 text-sm text-muted-foreground">
-          Próximamente con Webpay y Stripe · Pagos 100% seguros
+          Pago seguro con Webpay Plus · Cancela cuando quieras
         </p>
+
       </div>
     </section>
   );
@@ -602,12 +615,12 @@ function Contacto() {
           <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight">Hablemos.</h2>
           <p className="mt-4 text-lg text-muted-foreground">Estamos aquí para ayudarte a proteger a tu familia.</p>
         </div>
-        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-5">
-          <ContactCard icon={Phone} title="Teléfono" value="+56 9 7140 4580" href="tel:+56971404580" />
-          <ContactCard icon={MessageCircle} title="WhatsApp" value="+56 9 7140 4580" href="https://wa.me/56971404580?text=Hola%20Senior%20Safe%2C%20tengo%20una%20consulta" isExternal />
+        <div className="grid sm:grid-cols-3 gap-5">
+          <ContactCard icon={MessageCircle} title="WhatsApp 24/7" value="Escríbenos ahora" href="https://wa.me/56971404580?text=Hola%20Senior%20Safe%2C%20tengo%20una%20consulta" isExternal highlight />
           <ContactCard icon={Mail} title="Email" value="hola@alarmaseniorsafe.cl" href="mailto:hola@alarmaseniorsafe.cl" />
-          <ContactCard icon={Clock} title="Horario" value="Soporte 24/7" />
+          <ContactCard icon={Clock} title="Horario" value="Soporte humano 24/7" />
         </div>
+
         <p className="text-center mt-12 text-xl md:text-2xl italic text-foreground/80 font-light">
           "Más que una app, una red de cuidado"
         </p>
@@ -616,14 +629,22 @@ function Contacto() {
   );
 }
 
-function ContactCard({ icon: Icon, title, value, href, isExternal }: { icon: any; title: string; value: string; href?: string; isExternal?: boolean }) {
+function ContactCard({ icon: Icon, title, value, href, isExternal, highlight }: { icon: any; title: string; value: string; href?: string; isExternal?: boolean; highlight?: boolean }) {
   const content = (
-    <div className="bg-card border border-border rounded-2xl p-7 text-center hover:shadow-lg transition cursor-pointer">
-      <span className="w-12 h-12 mx-auto rounded-xl flex items-center justify-center text-white mb-4" style={{ background: PETROL }}>
+    <div
+      className="border rounded-2xl p-7 text-center hover:shadow-lg transition cursor-pointer"
+      style={highlight
+        ? { background: "linear-gradient(135deg, #25D366, #128C7E)", borderColor: "transparent", color: "white" }
+        : { background: "var(--card)", borderColor: "var(--border)" }}
+    >
+      <span
+        className="w-12 h-12 mx-auto rounded-xl flex items-center justify-center mb-4"
+        style={highlight ? { background: "rgba(255,255,255,0.2)", color: "white" } : { background: PETROL, color: "white" }}
+      >
         <Icon className="w-6 h-6" />
       </span>
-      <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">{title}</div>
-      <div className="font-bold text-foreground">{value}</div>
+      <div className={`text-xs font-bold uppercase tracking-wider mb-1 ${highlight ? "text-white/90" : "text-muted-foreground"}`}>{title}</div>
+      <div className={`font-bold ${highlight ? "text-white" : "text-foreground"}`}>{value}</div>
     </div>
   );
   if (href) {
@@ -635,6 +656,7 @@ function ContactCard({ icon: Icon, title, value, href, isExternal }: { icon: any
   }
   return content;
 }
+
 
 function Field({ label, type = "text", placeholder, value, onChange }: { label: string; type?: string; placeholder?: string; value?: string; onChange?: (v: string) => void }) {
   return (
