@@ -237,6 +237,7 @@ function ActivacionPage() {
 
       {/* Completion */}
       <CompletionModal open={showComplete} onClose={() => setShowComplete(false)} firstName={firstName} />
+      <WhatsAppFloat />
     </div>
   );
 }
