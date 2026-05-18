@@ -4,8 +4,9 @@ import confetti from "canvas-confetti";
 import {
   CheckCircle2, Download, Smartphone, Apple, KeyRound, Users,
   MapPin, Bell, ArrowRight, Shield, Plus, Trash2, X, Loader2,
-  ShieldCheck, Sparkles, Heart, Phone, MessageCircle,
+  ShieldCheck, Heart, MessageCircle,
 } from "lucide-react";
+
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { WhatsAppFloat, WhatsAppButton } from "@/components/whatsapp-float";
 import {
