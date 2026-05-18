@@ -295,6 +295,7 @@ function CheckoutPage() {
         </div>
       </main>
       <SiteFooter />
+      <WhatsAppFloat />
     </div>
   );
 }
