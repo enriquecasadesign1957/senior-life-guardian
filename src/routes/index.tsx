@@ -637,7 +637,7 @@ function ContactCard({ icon: Icon, title, value }: { icon: any; title: string; v
   );
 }
 
-function Field({ label, type = "text", placeholder }: { label: string; type?: string; placeholder?: string }) {
+function Field({ label, type = "text", placeholder, value, onChange }: { label: string; type?: string; placeholder?: string; value?: string; onChange?: (v: string) => void }) {
   return (
     <div>
       <label className="block text-sm font-semibold text-foreground mb-2">{label}</label>
@@ -646,6 +646,8 @@ function Field({ label, type = "text", placeholder }: { label: string; type?: st
         type={type}
         placeholder={placeholder}
         maxLength={120}
+        value={value}
+        onChange={onChange ? (e) => onChange(e.target.value) : undefined}
         className="w-full px-5 py-4 rounded-xl border border-input bg-background text-base focus:outline-none focus:ring-2 focus:ring-[var(--brand-petrol)]/30 transition"
       />
     </div>
