@@ -65,22 +65,14 @@ export const Route = createFileRoute('/api/public/send-welcome-whatsapp')({
           return Response.json({ error: 'Invalid phone' }, { status: 400 })
         }
 
-        const trialEnd = new Date(signup.trial_end).toLocaleDateString('es-CL', {
-          day: '2-digit', month: 'long', year: 'numeric',
+        // Content Template SID aprobado (Twilio)
+        // Variables: {{1}} = nombre, {{2}} = link activación
+        const contentSid = process.env.TWILIO_WHATSAPP_CONTENT_SID || 'HXb5b62575e6e4ff6129ad7c8efe1f983e'
+        const activationLink = 'https://alarmaseniorsafe.cl/activacion'
+        const contentVariables = JSON.stringify({
+          '1': signup.nombre,
+          '2': activationLink,
         })
-
-        const body = [
-          `¡Hola ${signup.nombre}! 👋`,
-          ``,
-          `Bienvenido a *${SITE_NAME}*. Tu prueba gratuita de 7 días está activa hasta el ${trialEnd}.`,
-          ``,
-          `Próximos pasos:`,
-          `1️⃣ Completar tu activación: https://alarmaseniorsafe.cl/activacion`,
-          `2️⃣ Configurar familiares de contacto`,
-          `3️⃣ Probar el botón de emergencia`,
-          ``,
-          `¿Necesitas ayuda? Responde este mensaje o llama al +56 9 7140 4580.`,
-        ].join('\n')
 
         try {
           const resp = await fetch(`${TWILIO_GATEWAY}/Messages.json`, {
@@ -93,7 +85,8 @@ export const Route = createFileRoute('/api/public/send-welcome-whatsapp')({
             body: new URLSearchParams({
               To: `whatsapp:${phone}`,
               From: fromNumber,
-              Body: body,
+              ContentSid: contentSid,
+              ContentVariables: contentVariables,
             }),
           })
 
