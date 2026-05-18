@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { activateTrialSignup } from "@/lib/trial-signup.functions";
+import { createPurchaseSignup } from "@/lib/purchase-signup.functions";
 import { initWebpayTransaction } from "@/lib/webpay.functions";
 import { WhatsAppFloat } from "@/components/whatsapp-float";
 import { toast } from "sonner";
