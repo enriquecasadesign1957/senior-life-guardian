@@ -158,14 +158,24 @@ export type Database = {
           direccion: string | null
           email: string
           id: string
+          last_payment_at: string | null
           nombre: string
           payment_status: string
           periodo: string
           plan: string
+          purchase_mode: string
+          renewal_date: string | null
+          subscription_status: string
           telefono: string
           trial_active: boolean
           trial_end: string
           updated_at: string
+          webpay_amount: number | null
+          webpay_authorization_code: string | null
+          webpay_buy_order: string | null
+          webpay_environment: string | null
+          webpay_response_code: number | null
+          webpay_session_id: string | null
           webpay_token: string | null
         }
         Insert: {
@@ -173,14 +183,24 @@ export type Database = {
           direccion?: string | null
           email: string
           id?: string
+          last_payment_at?: string | null
           nombre: string
           payment_status?: string
           periodo?: string
           plan?: string
+          purchase_mode?: string
+          renewal_date?: string | null
+          subscription_status?: string
           telefono: string
           trial_active?: boolean
           trial_end?: string
           updated_at?: string
+          webpay_amount?: number | null
+          webpay_authorization_code?: string | null
+          webpay_buy_order?: string | null
+          webpay_environment?: string | null
+          webpay_response_code?: number | null
+          webpay_session_id?: string | null
           webpay_token?: string | null
         }
         Update: {
@@ -188,14 +208,24 @@ export type Database = {
           direccion?: string | null
           email?: string
           id?: string
+          last_payment_at?: string | null
           nombre?: string
           payment_status?: string
           periodo?: string
           plan?: string
+          purchase_mode?: string
+          renewal_date?: string | null
+          subscription_status?: string
           telefono?: string
           trial_active?: boolean
           trial_end?: string
           updated_at?: string
+          webpay_amount?: number | null
+          webpay_authorization_code?: string | null
+          webpay_buy_order?: string | null
+          webpay_environment?: string | null
+          webpay_response_code?: number | null
+          webpay_session_id?: string | null
           webpay_token?: string | null
         }
         Relationships: []
@@ -220,6 +250,68 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      webpay_transactions: {
+        Row: {
+          amount: number
+          authorization_code: string | null
+          buy_order: string
+          card_last4: string | null
+          created_at: string
+          environment: string
+          id: string
+          payment_type_code: string | null
+          raw_response: Json | null
+          response_code: number | null
+          session_id: string | null
+          status: string
+          token: string | null
+          trial_signup_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          authorization_code?: string | null
+          buy_order: string
+          card_last4?: string | null
+          created_at?: string
+          environment?: string
+          id?: string
+          payment_type_code?: string | null
+          raw_response?: Json | null
+          response_code?: number | null
+          session_id?: string | null
+          status?: string
+          token?: string | null
+          trial_signup_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          authorization_code?: string | null
+          buy_order?: string
+          card_last4?: string | null
+          created_at?: string
+          environment?: string
+          id?: string
+          payment_type_code?: string | null
+          raw_response?: Json | null
+          response_code?: number | null
+          session_id?: string | null
+          status?: string
+          token?: string | null
+          trial_signup_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webpay_transactions_trial_signup_id_fkey"
+            columns: ["trial_signup_id"]
+            isOneToOne: false
+            referencedRelation: "trial_signups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
