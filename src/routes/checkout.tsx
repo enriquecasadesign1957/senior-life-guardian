@@ -124,7 +124,9 @@ function CheckoutPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ signupId: data.id }),
-      }).catch((e) => console.warn("welcome whatsapp trigger failed", e));
+      })
+        .then(() => console.info("[whatsapp] welcome trigger ok"))
+        .catch((e) => console.warn("welcome whatsapp trigger failed", e));
 
       // Pasar datos a la página de activación
       try {
