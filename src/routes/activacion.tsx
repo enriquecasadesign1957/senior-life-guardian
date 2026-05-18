@@ -43,6 +43,7 @@ type TrialUser = {
 function ActivacionPage() {
   const [user, setUser] = useState<TrialUser | null>(null);
   const [completed, setCompleted] = useState<boolean[]>(Array(STEPS.length).fill(false));
+  const [notifyShown, setNotifyShown] = useState<"android" | "ios" | null>(null);
   const total = STEPS.length;
   const doneCount = completed.filter(Boolean).length;
   const progress = useMemo(() => Math.round((doneCount / total) * 100), [doneCount, total]);
