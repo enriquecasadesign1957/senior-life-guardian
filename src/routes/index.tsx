@@ -602,9 +602,10 @@ function Contacto() {
           <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight">Hablemos.</h2>
           <p className="mt-4 text-lg text-muted-foreground">Estamos aquí para ayudarte a proteger a tu familia.</p>
         </div>
-        <div className="grid md:grid-cols-3 gap-5">
-          <ContactCard icon={Phone} title="Teléfono" value="+56 9 7140 4580" />
-          <ContactCard icon={Mail} title="Email" value="hola@alarmaseniorsafe.cl" />
+        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-5">
+          <ContactCard icon={Phone} title="Teléfono" value="+56 9 7140 4580" href="tel:+56971404580" />
+          <ContactCard icon={MessageCircle} title="WhatsApp" value="+56 9 7140 4580" href="https://wa.me/56971404580?text=Hola%20Senior%20Safe%2C%20tengo%20una%20consulta" isExternal />
+          <ContactCard icon={Mail} title="Email" value="hola@alarmaseniorsafe.cl" href="mailto:hola@alarmaseniorsafe.cl" />
           <ContactCard icon={Clock} title="Horario" value="Soporte 24/7" />
         </div>
         <p className="text-center mt-12 text-xl md:text-2xl italic text-foreground/80 font-light">
