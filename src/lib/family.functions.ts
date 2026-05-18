@@ -81,6 +81,22 @@ export const deleteFamily = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Crea/actualiza el PIN del usuario (hash ya calculado en cliente). */
+export const setUserPin = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z.object({ signupId: idSchema, pinHash: z.string().min(16).max(256) }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { error } = await supabaseAdmin
+      .from("user_pins")
+      .upsert(
+        { trial_signup_id: data.signupId, pin_hash: data.pinHash, updated_at: new Date().toISOString() },
+        { onConflict: "trial_signup_id" },
+      );
+    if (error) throw error;
+    return { ok: true };
+  });
+
 /** Verifica PIN (solo para configuraciones sensibles). */
 export const verifyPin = createServerFn({ method: "POST" })
   .inputValidator((input) =>
