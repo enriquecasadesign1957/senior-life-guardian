@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { CheckCircle2, XCircle, Loader2, ArrowRight, MessageCircle } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
-import { confirmWebpayTransaction } from "@/lib/webpay.functions";
+import { confirmWebpayTransaction, mockApproveWebpay } from "@/lib/webpay.functions";
 
 type SearchParams = {
   token_ws?: string;
@@ -61,6 +61,39 @@ function WebpayReturnPage() {
     buyOrder?: string | null;
     cardLast4?: string | null;
   }>({});
+  const [mockBusy, setMockBusy] = useState(false);
+  const mockApprove = useServerFn(mockApproveWebpay);
+
+  const handleMockApprove = async () => {
+    setMockBusy(true);
+    try {
+      let signupId: string | undefined;
+      try {
+        const raw = sessionStorage.getItem("seniorsafe_user");
+        if (raw) signupId = JSON.parse(raw)?.id;
+      } catch { /* ignore */ }
+      const r = await mockApprove({ data: { token: search.token_ws, signupId } });
+      setInfo({ authorizationCode: r.authorizationCode, buyOrder: r.buyOrder, cardLast4: "6623" });
+      try {
+        const raw = sessionStorage.getItem("seniorsafe_user");
+        if (raw) {
+          const u = JSON.parse(raw);
+          sessionStorage.setItem("seniorsafe_user", JSON.stringify({
+            ...u,
+            trial_active: false,
+            purchase_mode: "contratar",
+            subscription_status: "active",
+          }));
+        }
+      } catch { /* ignore */ }
+      setState("success");
+    } catch (e) {
+      console.error("[webpay/retorno] mock approve error", e);
+      alert("No se pudo aprobar en modo desarrollo: " + ((e as Error)?.message || ""));
+    } finally {
+      setMockBusy(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -182,6 +215,25 @@ function WebpayReturnPage() {
                   >
                     <MessageCircle className="w-5 h-5" style={{ color: "#25D366" }} /> WhatsApp
                   </a>
+                </div>
+
+                <div className="mt-6 pt-6 border-t border-dashed border-border text-left">
+                  <p className="text-xs uppercase tracking-wide font-semibold text-muted-foreground mb-2">
+                    Modo desarrollo (sandbox)
+                  </p>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Si Transbank sandbox está inestable, puedes simular una aprobación
+                    para continuar validando el flujo. No realiza ningún cobro real.
+                  </p>
+                  <button
+                    onClick={handleMockApprove}
+                    disabled={mockBusy}
+                    className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full border-2 font-semibold disabled:opacity-60"
+                    style={{ borderColor: GREEN, color: GREEN, background: "color-mix(in oklab, #16a34a 6%, white)" }}
+                  >
+                    {mockBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                    {mockBusy ? "Aprobando…" : "Aprobar manualmente (mock)"}
+                  </button>
                 </div>
               </>
             )}
