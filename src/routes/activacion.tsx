@@ -418,6 +418,7 @@ function StepContactsModal({ open, onClose, onDone, userId }: { open: boolean; o
     try { localStorage.setItem("seniorsafe_contacts", JSON.stringify(next)); } catch {}
   };
 
+  const addFamilyFn = useServerFn(addFamily);
   const addContact = async () => {
     if (!form.nombre.trim() || !form.telefono.trim() || !form.parentesco.trim()) {
       toast.error("Completa todos los campos");
@@ -427,11 +428,15 @@ function StepContactsModal({ open, onClose, onDone, userId }: { open: boolean; o
     setSaving(true);
     try {
       if (userId) {
-        await supabase.from("emergency_contacts").insert({
-          trial_signup_id: userId,
-          nombre: form.nombre.trim(),
-          telefono: form.telefono.trim(),
-          parentesco: form.parentesco.trim(),
+        await addFamilyFn({
+          data: {
+            signupId: userId,
+            contact: {
+              nombre: form.nombre.trim(),
+              telefono: form.telefono.trim(),
+              parentesco: form.parentesco.trim(),
+            },
+          },
         });
       }
       persist([...contacts, { ...form }]);
