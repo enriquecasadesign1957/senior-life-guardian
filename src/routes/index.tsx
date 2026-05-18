@@ -12,6 +12,7 @@ import seniorPhone from "@/assets/senior-phone.jpg";
 import logo from "@/assets/logo-senior-safe.png";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { activateTrialSignup } from "@/lib/trial-signup.functions";
+import { WhatsAppFloat } from "@/components/whatsapp-float";
 
 export const Route = createFileRoute("/")({
   head: () => ({
