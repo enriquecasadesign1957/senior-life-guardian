@@ -2,18 +2,64 @@
   "name": "Senior Safe — Alarma 24/7",
   "short_name": "Senior Safe",
   "description": "Tu red de cuidado familiar siempre activa. Alertas inmediatas por WhatsApp, SMS y llamada.",
-  "start_url": "/activacion",
+  "start_url": "/activacion?source=pwa",
+  "id": "/activacion",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
-  "background_color": "#ffffff",
+  "background_color": "#0d4f5c",
   "theme_color": "#0d4f5c",
+  "lang": "es-CL",
+  "dir": "ltr",
+  "categories": ["health", "lifestyle", "medical"],
+  "prefer_related_applications": false,
   "icons": [
+    {
+      "src": "https://storage.googleapis.com/gpt-engineer-file-uploads/WEgAKtYLuSfQACezmGynaHiHwV53/social-images/social-1778871881128-Logo_alarma.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "any"
+    },
     {
       "src": "https://storage.googleapis.com/gpt-engineer-file-uploads/WEgAKtYLuSfQACezmGynaHiHwV53/social-images/social-1778871881128-Logo_alarma.webp",
       "sizes": "512x512",
       "type": "image/webp",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "https://storage.googleapis.com/gpt-engineer-file-uploads/WEgAKtYLuSfQACezmGynaHiHwV53/social-images/social-1778871881128-Logo_alarma.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Botón de emergencia",
+      "short_name": "Emergencia",
+      "description": "Enviar alerta inmediata a familiares",
+      "url": "/activacion?sos=1",
+      "icons": [
+        {
+          "src": "https://storage.googleapis.com/gpt-engineer-file-uploads/WEgAKtYLuSfQACezmGynaHiHwV53/social-images/social-1778871881128-Logo_alarma.webp",
+          "sizes": "192x192",
+          "type": "image/webp"
+        }
+      ]
+    },
+    {
+      "name": "Mi configuración",
+      "short_name": "Configurar",
+      "description": "Continuar la activación de Senior Safe",
+      "url": "/activacion",
+      "icons": [
+        {
+          "src": "https://storage.googleapis.com/gpt-engineer-file-uploads/WEgAKtYLuSfQACezmGynaHiHwV53/social-images/social-1778871881128-Logo_alarma.webp",
+          "sizes": "192x192",
+          "type": "image/webp"
+        }
+      ]
     }
   ]
 }
