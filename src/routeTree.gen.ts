@@ -20,6 +20,7 @@ import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as ActivacionRouteImport } from './routes/activacion'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WebpayRetornoRouteImport } from './routes/webpay.retorno'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicSendWelcomeWhatsappRouteImport } from './routes/api/public/send-welcome-whatsapp'
@@ -83,6 +84,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WebpayRetornoRoute = WebpayRetornoRouteImport.update({
+  id: '/webpay/retorno',
+  path: '/webpay/retorno',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
   path: '/email/unsubscribe',
@@ -137,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/tutorial': typeof TutorialRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/webpay/retorno': typeof WebpayRetornoRoute
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
   '/api/public/send-welcome-whatsapp': typeof ApiPublicSendWelcomeWhatsappRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -157,6 +164,7 @@ export interface FileRoutesByTo {
   '/tutorial': typeof TutorialRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/webpay/retorno': typeof WebpayRetornoRoute
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
   '/api/public/send-welcome-whatsapp': typeof ApiPublicSendWelcomeWhatsappRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -178,6 +186,7 @@ export interface FileRoutesById {
   '/tutorial': typeof TutorialRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/webpay/retorno': typeof WebpayRetornoRoute
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
   '/api/public/send-welcome-whatsapp': typeof ApiPublicSendWelcomeWhatsappRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -200,6 +209,7 @@ export interface FileRouteTypes {
     | '/tutorial'
     | '/unsubscribe'
     | '/email/unsubscribe'
+    | '/webpay/retorno'
     | '/api/public/send-welcome-trial'
     | '/api/public/send-welcome-whatsapp'
     | '/lovable/email/suppression'
@@ -220,6 +230,7 @@ export interface FileRouteTypes {
     | '/tutorial'
     | '/unsubscribe'
     | '/email/unsubscribe'
+    | '/webpay/retorno'
     | '/api/public/send-welcome-trial'
     | '/api/public/send-welcome-whatsapp'
     | '/lovable/email/suppression'
@@ -240,6 +251,7 @@ export interface FileRouteTypes {
     | '/tutorial'
     | '/unsubscribe'
     | '/email/unsubscribe'
+    | '/webpay/retorno'
     | '/api/public/send-welcome-trial'
     | '/api/public/send-welcome-whatsapp'
     | '/lovable/email/suppression'
@@ -261,6 +273,7 @@ export interface RootRouteChildren {
   TutorialRoute: typeof TutorialRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  WebpayRetornoRoute: typeof WebpayRetornoRoute
   ApiPublicSendWelcomeTrialRoute: typeof ApiPublicSendWelcomeTrialRoute
   ApiPublicSendWelcomeWhatsappRoute: typeof ApiPublicSendWelcomeWhatsappRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
@@ -348,6 +361,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/webpay/retorno': {
+      id: '/webpay/retorno'
+      path: '/webpay/retorno'
+      fullPath: '/webpay/retorno'
+      preLoaderRoute: typeof WebpayRetornoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/email/unsubscribe': {
       id: '/email/unsubscribe'
       path: '/email/unsubscribe'
@@ -413,6 +433,7 @@ const rootRouteChildren: RootRouteChildren = {
   TutorialRoute: TutorialRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  WebpayRetornoRoute: WebpayRetornoRoute,
   ApiPublicSendWelcomeTrialRoute: ApiPublicSendWelcomeTrialRoute,
   ApiPublicSendWelcomeWhatsappRoute: ApiPublicSendWelcomeWhatsappRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
