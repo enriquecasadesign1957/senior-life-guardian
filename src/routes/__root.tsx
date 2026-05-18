@@ -126,8 +126,6 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
-      <PwaRegister />
-      <PwaInstallPrompt />
       <EmergencyFab />
     </QueryClientProvider>
   );
