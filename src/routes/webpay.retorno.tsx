@@ -216,6 +216,25 @@ function WebpayReturnPage() {
                     <MessageCircle className="w-5 h-5" style={{ color: "#25D366" }} /> WhatsApp
                   </a>
                 </div>
+
+                <div className="mt-6 pt-6 border-t border-dashed border-border text-left">
+                  <p className="text-xs uppercase tracking-wide font-semibold text-muted-foreground mb-2">
+                    Modo desarrollo (sandbox)
+                  </p>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Si Transbank sandbox está inestable, puedes simular una aprobación
+                    para continuar validando el flujo. No realiza ningún cobro real.
+                  </p>
+                  <button
+                    onClick={handleMockApprove}
+                    disabled={mockBusy}
+                    className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full border-2 font-semibold disabled:opacity-60"
+                    style={{ borderColor: GREEN, color: GREEN, background: "color-mix(in oklab, #16a34a 6%, white)" }}
+                  >
+                    {mockBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                    {mockBusy ? "Aprobando…" : "Aprobar manualmente (mock)"}
+                  </button>
+                </div>
               </>
             )}
           </div>
