@@ -45,7 +45,7 @@ type TrialUser = {
 type Contact = { id?: string; nombre: string; telefono: string; parentesco: string };
 
 const STEPS: { key: StepKey; icon: any; color: string; title: string; desc: string }[] = [
-  { key: "app", icon: Download, color: PETROL, title: "Instalar la aplicación", desc: "Úsala desde el navegador hoy mismo." },
+  { key: "app", icon: Smartphone, color: PETROL, title: "Acceder a la aplicación", desc: "Abre Senior Safe en tu teléfono o computador." },
   { key: "pin", icon: KeyRound, color: DEEP, title: "Crear tu PIN de seguridad", desc: "Un código de 4 dígitos fácil de recordar." },
   { key: "contactos", icon: Users, color: GREEN, title: "Agregar a tus familiares", desc: "Hasta 5 personas que recibirán las alertas." },
   { key: "gps", icon: MapPin, color: "#f59e0b", title: "Activar el GPS", desc: "Para enviar tu ubicación en emergencias." },
