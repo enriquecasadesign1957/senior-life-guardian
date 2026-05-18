@@ -244,6 +244,115 @@ export const confirmWebpayTransaction = createServerFn({ method: "POST" })
   });
 
 /**
+ * MOCK: aprueba manualmente una transacción (sandbox/dev) sin pasar por Transbank.
+ * Bloqueado en producción.
+ */
+export const mockApproveWebpay = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z.object({
+      signupId: z.string().uuid().optional(),
+      token: z.string().min(4).max(128).optional(),
+    }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const cfg = getConfig();
+    if (cfg.environment === "production") {
+      throw new Error("Mock approval no está disponible en producción.");
+    }
+    if (!data.signupId && !data.token) {
+      throw new Error("Se requiere signupId o token.");
+    }
+
+    // Resolver transacción
+    let tx: { id: string; trial_signup_id: string | null; buy_order: string; amount: number } | null = null;
+    if (data.token) {
+      const { data: row } = await supabaseAdmin
+        .from("webpay_transactions")
+        .select("id, trial_signup_id, buy_order, amount")
+        .eq("token", data.token)
+        .maybeSingle();
+      tx = (row as any) ?? null;
+    }
+    if (!tx && data.signupId) {
+      const { data: row } = await supabaseAdmin
+        .from("webpay_transactions")
+        .select("id, trial_signup_id, buy_order, amount")
+        .eq("trial_signup_id", data.signupId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      tx = (row as any) ?? null;
+    }
+
+    const signupId = data.signupId ?? tx?.trial_signup_id ?? null;
+    if (!signupId) throw new Error("No se encontró la suscripción a aprobar.");
+
+    const authCode = `MOCK${Date.now().toString().slice(-6)}`;
+    const buyOrder = tx?.buy_order ?? `MOCK-${Date.now().toString(36).toUpperCase()}`;
+
+    if (tx?.id) {
+      await supabaseAdmin
+        .from("webpay_transactions")
+        .update({
+          status: "AUTHORIZED",
+          response_code: 0,
+          authorization_code: authCode,
+          card_last4: "6623",
+          payment_type_code: "VN",
+          raw_response: { mock: true, approved_at: new Date().toISOString() },
+        })
+        .eq("id", tx.id);
+    } else {
+      await supabaseAdmin.from("webpay_transactions").insert({
+        trial_signup_id: signupId,
+        buy_order: buyOrder,
+        amount: 0,
+        status: "AUTHORIZED",
+        environment: cfg.environment,
+        response_code: 0,
+        authorization_code: authCode,
+        card_last4: "6623",
+        payment_type_code: "VN",
+        raw_response: { mock: true, approved_at: new Date().toISOString() },
+      });
+    }
+
+    const { data: signup } = await supabaseAdmin
+      .from("trial_signups")
+      .select("periodo")
+      .eq("id", signupId)
+      .maybeSingle();
+    const periodo = ((signup as any)?.periodo as "mensual" | "anual") || "mensual";
+
+    const now = new Date();
+    const renewal = new Date(now);
+    if (periodo === "anual") renewal.setFullYear(renewal.getFullYear() + 1);
+    else renewal.setMonth(renewal.getMonth() + 1);
+
+    await supabaseAdmin
+      .from("trial_signups")
+      .update({
+        payment_status: "paid",
+        subscription_status: "active",
+        trial_active: false,
+        renewal_date: renewal.toISOString(),
+        last_payment_at: now.toISOString(),
+        webpay_authorization_code: authCode,
+        webpay_response_code: 0,
+      })
+      .eq("id", signupId);
+
+    return {
+      ok: true,
+      mock: true,
+      status: "AUTHORIZED",
+      authorizationCode: authCode,
+      buyOrder,
+      signupId,
+    };
+  });
+
+/**
  * Activación manual de suscripción (uso administrativo / renovaciones).
  */
 export const activateSubscription = createServerFn({ method: "POST" })
