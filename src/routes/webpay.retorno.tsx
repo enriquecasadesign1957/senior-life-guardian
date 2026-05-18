@@ -84,6 +84,19 @@ function WebpayReturnPage() {
             buyOrder: r.buyOrder,
             cardLast4: r.cardLast4,
           });
+          // Marcar suscripción activa en sessionStorage
+          try {
+            const raw = sessionStorage.getItem("seniorsafe_user");
+            if (raw) {
+              const u = JSON.parse(raw);
+              sessionStorage.setItem("seniorsafe_user", JSON.stringify({
+                ...u,
+                trial_active: false,
+                purchase_mode: "contratar",
+                subscription_status: "active",
+              }));
+            }
+          } catch { /* ignore */ }
           setState("success");
         } else {
           setState("failed");
@@ -134,7 +147,7 @@ function WebpayReturnPage() {
                 </div>
 
                 <button
-                  onClick={() => navigate({ to: "/activacion" })}
+                  onClick={() => navigate({ to: "/bienvenida-premium" })}
                   className="mt-7 w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full text-white font-bold shadow-xl"
                   style={{ background: GREEN }}
                 >

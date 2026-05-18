@@ -17,6 +17,7 @@ import { Route as PlanesRouteImport } from './routes/planes'
 import { Route as FlujoRouteImport } from './routes/flujo'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CheckoutRouteImport } from './routes/checkout'
+import { Route as BienvenidaPremiumRouteImport } from './routes/bienvenida-premium'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as ActivacionRouteImport } from './routes/activacion'
 import { Route as IndexRouteImport } from './routes/index'
@@ -67,6 +68,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const CheckoutRoute = CheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BienvenidaPremiumRoute = BienvenidaPremiumRouteImport.update({
+  id: '/bienvenida-premium',
+  path: '/bienvenida-premium',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRoute = AppRouteImport.update({
@@ -134,6 +140,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/activacion': typeof ActivacionRoute
   '/app': typeof AppRoute
+  '/bienvenida-premium': typeof BienvenidaPremiumRoute
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
   '/flujo': typeof FlujoRoute
@@ -155,6 +162,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/activacion': typeof ActivacionRoute
   '/app': typeof AppRoute
+  '/bienvenida-premium': typeof BienvenidaPremiumRoute
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
   '/flujo': typeof FlujoRoute
@@ -177,6 +185,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/activacion': typeof ActivacionRoute
   '/app': typeof AppRoute
+  '/bienvenida-premium': typeof BienvenidaPremiumRoute
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
   '/flujo': typeof FlujoRoute
@@ -200,6 +209,7 @@ export interface FileRouteTypes {
     | '/'
     | '/activacion'
     | '/app'
+    | '/bienvenida-premium'
     | '/checkout'
     | '/dashboard'
     | '/flujo'
@@ -221,6 +231,7 @@ export interface FileRouteTypes {
     | '/'
     | '/activacion'
     | '/app'
+    | '/bienvenida-premium'
     | '/checkout'
     | '/dashboard'
     | '/flujo'
@@ -242,6 +253,7 @@ export interface FileRouteTypes {
     | '/'
     | '/activacion'
     | '/app'
+    | '/bienvenida-premium'
     | '/checkout'
     | '/dashboard'
     | '/flujo'
@@ -264,6 +276,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ActivacionRoute: typeof ActivacionRoute
   AppRoute: typeof AppRoute
+  BienvenidaPremiumRoute: typeof BienvenidaPremiumRoute
   CheckoutRoute: typeof CheckoutRoute
   DashboardRoute: typeof DashboardRoute
   FlujoRoute: typeof FlujoRoute
@@ -338,6 +351,13 @@ declare module '@tanstack/react-router' {
       path: '/checkout'
       fullPath: '/checkout'
       preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bienvenida-premium': {
+      id: '/bienvenida-premium'
+      path: '/bienvenida-premium'
+      fullPath: '/bienvenida-premium'
+      preLoaderRoute: typeof BienvenidaPremiumRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app': {
@@ -424,6 +444,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ActivacionRoute: ActivacionRoute,
   AppRoute: AppRoute,
+  BienvenidaPremiumRoute: BienvenidaPremiumRoute,
   CheckoutRoute: CheckoutRoute,
   DashboardRoute: DashboardRoute,
   FlujoRoute: FlujoRoute,

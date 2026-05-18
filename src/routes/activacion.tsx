@@ -132,12 +132,17 @@ function ActivacionPage() {
               <Shield className="w-10 h-10" />
             </div>
             <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
-              {user?.trial_active && (
+              {user?.trial_active ? (
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider" style={{ background: "color-mix(in oklab, #16a34a 14%, white)", color: GREEN }}>
                   <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: GREEN }} />
                   Trial activo · {daysLeft} días restantes
                 </div>
-              )}
+              ) : user ? (
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider" style={{ background: "color-mix(in oklab, #16a34a 14%, white)", color: GREEN }}>
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Tu plan ya está activo
+                </div>
+              ) : null}
               <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider" style={{ background: "color-mix(in oklab, var(--brand-petrol) 12%, white)", color: DEEP }}>
                 <ShieldCheck className="w-3.5 h-3.5" /> Protección activa 24/7
               </div>

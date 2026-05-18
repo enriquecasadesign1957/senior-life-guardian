@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { activateTrialSignup } from "@/lib/trial-signup.functions";
+import { createPurchaseSignup } from "@/lib/purchase-signup.functions";
 import { initWebpayTransaction } from "@/lib/webpay.functions";
 import { WhatsAppFloat } from "@/components/whatsapp-float";
 import { toast } from "sonner";
@@ -76,6 +77,7 @@ function CheckoutPage() {
   const navigate = useNavigate();
   const search = useSearch({ from: "/checkout" });
   const activateTrial = useServerFn(activateTrialSignup);
+  const createPurchase = useServerFn(createPurchaseSignup);
   const initWebpay = useServerFn(initWebpayTransaction);
 
   const [mode, setMode] = useState<"trial" | "contratar">(search.mode);
@@ -103,18 +105,61 @@ function CheckoutPage() {
     }
     setErrors({});
     setLoading(true);
+
+    const periodo = yearly ? "anual" : "mensual";
+    const baseData = {
+      nombre: r.data.name,
+      email: r.data.email.toLowerCase(),
+      telefono: r.data.phone,
+      direccion: r.data.address || null,
+      plan: planKey,
+      periodo,
+    };
+
     try {
-      const result = await activateTrial({ data: {
-        nombre: r.data.name,
-        email: r.data.email.toLowerCase(),
-        telefono: r.data.phone,
-        direccion: r.data.address || null,
-        plan: planKey,
-        periodo: yearly ? "anual" : "mensual",
-      } });
+      // =========================================================
+      // FLUJO 1: CONTRATAR AHORA → Webpay directo, sin trial
+      // =========================================================
+      if (isContratar) {
+        const { signup } = await createPurchase({ data: baseData });
+        try {
+          sessionStorage.setItem("seniorsafe_user", JSON.stringify({
+            id: signup.id, nombre: signup.nombre, email: signup.email, telefono: signup.telefono,
+            plan: signup.plan, periodo: signup.periodo,
+            trial_active: false, trial_end: null,
+            purchase_mode: "contratar",
+          }));
+        } catch { /* ignore */ }
+
+        const wp = await initWebpay({ data: {
+          signupId: signup.id,
+          plan: planKey,
+          periodo: periodo as "mensual" | "anual",
+        } });
+
+        if (!wp?.url || !wp?.token) {
+          throw new Error("No se recibió la URL de Webpay.");
+        }
+
+        // POST form-redirect a Transbank (sandbox o producción)
+        const f = document.createElement("form");
+        f.method = "POST";
+        f.action = wp.url;
+        const i = document.createElement("input");
+        i.name = "token_ws";
+        i.value = wp.token;
+        f.appendChild(i);
+        document.body.appendChild(f);
+        f.submit();
+        return; // navegación tomó el control
+      }
+
+      // =========================================================
+      // FLUJO 2: PROBAR GRATIS → trial 7 días, sin pago
+      // =========================================================
+      const result = await activateTrial({ data: baseData });
       const data = result.signup;
 
-      // Welcome triggers (no bloquean)
       fetch("/api/public/send-welcome-trial", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -132,47 +177,18 @@ function CheckoutPage() {
           id: data.id, nombre: data.nombre, email: data.email, telefono: data.telefono,
           plan: data.plan, periodo: data.periodo,
           trial_active: data.trial_active, trial_end: data.trial_end,
+          purchase_mode: "trial",
         }));
       } catch { /* ignore */ }
 
-      // Contratar ahora: iniciar Webpay (stub por ahora)
-      if (isContratar) {
-        try {
-          const wp = await initWebpay({ data: {
-            signupId: data.id,
-            plan: planKey,
-            periodo: yearly ? "anual" : "mensual",
-          } });
-          if (wp.url && wp.token) {
-            // Producción: redirigir a Webpay
-            const f = document.createElement("form");
-            f.method = "POST";
-            f.action = wp.url;
-            const i = document.createElement("input");
-            i.name = "token_ws";
-            i.value = wp.token;
-            f.appendChild(i);
-            document.body.appendChild(f);
-            f.submit();
-            return;
-          }
-          // Stub: avisar y continuar a activación
-          toast.info("Pago Webpay en preparación", {
-            description: "Tu cuenta está creada. Te contactaremos por WhatsApp para activar el cobro cuando esté disponible.",
-            duration: 6000,
-          });
-        } catch (wpErr) {
-          console.error("[webpay] init failed", wpErr);
-          toast.warning("No pudimos iniciar el pago", {
-            description: "Tu cuenta quedó creada como prueba gratis. Te contactaremos por WhatsApp.",
-          });
-        }
-      }
-
       navigate({ to: "/activacion" });
     } catch (err) {
-      console.error("Trial signup error:", err);
-      setSubmitError("Error de conexión. Intenta nuevamente en unos segundos.");
+      console.error("Checkout error:", err);
+      setSubmitError(
+        isContratar
+          ? "No pudimos iniciar el pago con Webpay. Intenta nuevamente o contáctanos por WhatsApp."
+          : "Error de conexión. Intenta nuevamente en unos segundos."
+      );
       setLoading(false);
     }
   };
