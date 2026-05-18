@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { z } from "zod";
 import {
@@ -6,7 +7,7 @@ import {
   Bell, MapPin, MessageCircle, Phone, Users, Heart, X, Loader2, AlertCircle,
 } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
-import { supabase } from "@/integrations/supabase/client";
+import { activateTrialSignup } from "@/lib/trial-signup.functions";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -62,6 +63,7 @@ const fmt = (n: number) => n.toLocaleString("es-CL");
 
 function CheckoutPage() {
   const navigate = useNavigate();
+  const activateTrial = useServerFn(activateTrialSignup);
   const [planKey, setPlanKey] = useState<"basico" | "premium">("premium");
   const [yearly, setYearly] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", address: "" });
@@ -86,32 +88,15 @@ function CheckoutPage() {
     setErrors({});
     setLoading(true);
     try {
-      const trialEnd = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-      const id = (crypto as any).randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
-      const row = {
-        id,
+      const result = await activateTrial({ data: {
         nombre: r.data.name,
         email: r.data.email.toLowerCase(),
         telefono: r.data.phone,
         direccion: r.data.address || null,
         plan: planKey,
         periodo: yearly ? "anual" : "mensual",
-        trial_active: true,
-        trial_end: trialEnd,
-        payment_status: "trial",
-      };
-      const { error } = await supabase.from("trial_signups").insert(row);
-
-      if (error) {
-        if (error.code === "23505" || /duplicate|unique/i.test(error.message)) {
-          setSubmitError("Este correo ya tiene una cuenta. Revisa tu email para continuar.");
-        } else {
-          setSubmitError("No pudimos crear tu cuenta. Verifica tu conexión e intenta de nuevo.");
-        }
-        setLoading(false);
-        return;
-      }
-      const data = row;
+      } });
+      const data = result.signup;
 
       // Disparar email + WhatsApp de bienvenida (no bloquean el flujo si fallan)
       fetch("/api/public/send-welcome-trial", {
