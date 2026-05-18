@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import {
   Shield, Phone, MessageCircle, MapPin, Bell, CheckCircle2,
@@ -10,7 +11,7 @@ import seniorCouple from "@/assets/senior-couple.jpg";
 import seniorPhone from "@/assets/senior-phone.jpg";
 import logo from "@/assets/logo-senior-safe.png";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
-import { supabase } from "@/integrations/supabase/client";
+import { activateTrialSignup } from "@/lib/trial-signup.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -392,6 +393,7 @@ function Planes() {
 
 function Prueba() {
   const navigate = useNavigate();
+  const activateTrial = useServerFn(activateTrialSignup);
   const [form, setForm] = useState({ nombre: "", email: "", telefono: "" });
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -410,27 +412,14 @@ function Prueba() {
 
     setLoading(true);
     try {
-      const trialEnd = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-      const id = (crypto as any).randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
-      const row = {
-        id,
+      const result = await activateTrial({ data: {
         nombre,
         email,
         telefono,
         plan: "premium",
         periodo: "mensual",
-        trial_active: true,
-        trial_end: trialEnd,
-        payment_status: "trial",
-      };
-      const { error } = await supabase.from("trial_signups").insert(row);
-
-      if (error) {
-        setErrorMsg("No pudimos crear tu cuenta. Intenta nuevamente.");
-        setLoading(false);
-        return;
-      }
-      const data = row;
+      } });
+      const data = result.signup;
 
       // Disparar email + WhatsApp (no bloquean el flujo si fallan)
       fetch("/api/public/send-welcome-trial", {
