@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
+import { PwaRegister, PwaInstallPrompt, EmergencyFab } from "@/components/pwa";
 
 function NotFoundComponent() {
   return (
@@ -84,11 +85,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:description", content: "Senior Life provides immediate safety alerts for seniors to their families via WhatsApp, SMS, and calls." },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/WEgAKtYLuSfQACezmGynaHiHwV53/social-images/social-1778871881128-Logo_alarma.webp" },
       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/WEgAKtYLuSfQACezmGynaHiHwV53/social-images/social-1778871881128-Logo_alarma.webp" },
+      { name: "theme-color", content: "#0d4f5c" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "Senior Safe" },
+      { name: "application-name", content: "Senior Safe" },
+      { name: "format-detection", content: "telephone=yes" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/manifest.json" },
       { rel: "apple-touch-icon", href: "https://storage.googleapis.com/gpt-engineer-file-uploads/WEgAKtYLuSfQACezmGynaHiHwV53/social-images/social-1778871881128-Logo_alarma.webp" },
+      { rel: "icon", type: "image/webp", href: "https://storage.googleapis.com/gpt-engineer-file-uploads/WEgAKtYLuSfQACezmGynaHiHwV53/social-images/social-1778871881128-Logo_alarma.webp" },
     ],
   }),
   shellComponent: RootShell,
@@ -117,6 +126,9 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
+      <PwaRegister />
+      <PwaInstallPrompt />
+      <EmergencyFab />
     </QueryClientProvider>
   );
 }
