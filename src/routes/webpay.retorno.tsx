@@ -61,6 +61,39 @@ function WebpayReturnPage() {
     buyOrder?: string | null;
     cardLast4?: string | null;
   }>({});
+  const [mockBusy, setMockBusy] = useState(false);
+  const mockApprove = useServerFn(mockApproveWebpay);
+
+  const handleMockApprove = async () => {
+    setMockBusy(true);
+    try {
+      let signupId: string | undefined;
+      try {
+        const raw = sessionStorage.getItem("seniorsafe_user");
+        if (raw) signupId = JSON.parse(raw)?.id;
+      } catch { /* ignore */ }
+      const r = await mockApprove({ data: { token: search.token_ws, signupId } });
+      setInfo({ authorizationCode: r.authorizationCode, buyOrder: r.buyOrder, cardLast4: "6623" });
+      try {
+        const raw = sessionStorage.getItem("seniorsafe_user");
+        if (raw) {
+          const u = JSON.parse(raw);
+          sessionStorage.setItem("seniorsafe_user", JSON.stringify({
+            ...u,
+            trial_active: false,
+            purchase_mode: "contratar",
+            subscription_status: "active",
+          }));
+        }
+      } catch { /* ignore */ }
+      setState("success");
+    } catch (e) {
+      console.error("[webpay/retorno] mock approve error", e);
+      alert("No se pudo aprobar en modo desarrollo: " + ((e as Error)?.message || ""));
+    } finally {
+      setMockBusy(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
