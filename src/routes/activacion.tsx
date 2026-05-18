@@ -15,7 +15,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { setUserPin, addFamily } from "@/lib/family.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/activacion")({
@@ -328,6 +329,7 @@ function StepPinModal({ open, onClose, onDone, userId }: { open: boolean; onClos
     if (phase === "create" && pin.length === 4) setTimeout(() => setPhase("confirm"), 200);
   }, [pin, phase]);
 
+  const setPinFn = useServerFn(setUserPin);
   const handleSave = async () => {
     if (confirm !== pin) {
       toast.error("Los PIN no coinciden", { description: "Intenta nuevamente." });
@@ -338,7 +340,7 @@ function StepPinModal({ open, onClose, onDone, userId }: { open: boolean; onClos
     try {
       if (userId) {
         const pin_hash = await hashPin(pin, userId);
-        await supabase.from("user_pins").insert({ trial_signup_id: userId, pin_hash });
+        await setPinFn({ data: { signupId: userId, pinHash: pin_hash } });
       }
       try { localStorage.setItem("seniorsafe_pin_set", "true"); } catch {}
       onDone();
@@ -416,6 +418,7 @@ function StepContactsModal({ open, onClose, onDone, userId }: { open: boolean; o
     try { localStorage.setItem("seniorsafe_contacts", JSON.stringify(next)); } catch {}
   };
 
+  const addFamilyFn = useServerFn(addFamily);
   const addContact = async () => {
     if (!form.nombre.trim() || !form.telefono.trim() || !form.parentesco.trim()) {
       toast.error("Completa todos los campos");
@@ -425,11 +428,15 @@ function StepContactsModal({ open, onClose, onDone, userId }: { open: boolean; o
     setSaving(true);
     try {
       if (userId) {
-        await supabase.from("emergency_contacts").insert({
-          trial_signup_id: userId,
-          nombre: form.nombre.trim(),
-          telefono: form.telefono.trim(),
-          parentesco: form.parentesco.trim(),
+        await addFamilyFn({
+          data: {
+            signupId: userId,
+            contact: {
+              nombre: form.nombre.trim(),
+              telefono: form.telefono.trim(),
+              parentesco: form.parentesco.trim(),
+            },
+          },
         });
       }
       persist([...contacts, { ...form }]);
