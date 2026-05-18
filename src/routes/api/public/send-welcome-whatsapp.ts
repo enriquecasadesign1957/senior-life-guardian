@@ -98,7 +98,14 @@ export const Route = createFileRoute('/api/public/send-welcome-whatsapp')({
             status: resp.ok ? 'sent' : 'failed',
             message_id: data?.sid ?? null,
             error_message: resp.ok ? null : `Twilio ${resp.status}: ${JSON.stringify(data)}`,
-            metadata: { signup_id: signup.id, channel: 'whatsapp' },
+            metadata: {
+              signup_id: signup.id,
+              channel: 'whatsapp',
+              event: resp.ok ? 'whatsapp_sent' : 'whatsapp_failed',
+              content_sid: contentSid,
+              content_variables: { '1': signup.nombre, '2': activationLink },
+              from: fromNumber,
+            },
           })
 
           if (!resp.ok) {
@@ -111,7 +118,7 @@ export const Route = createFileRoute('/api/public/send-welcome-whatsapp')({
             recipient_email: phone,
             status: 'failed',
             error_message: String(err?.message ?? err),
-            metadata: { signup_id: signup.id, channel: 'whatsapp' },
+            metadata: { signup_id: signup.id, channel: 'whatsapp', event: 'whatsapp_failed' },
           })
           return Response.json({ success: false, error: 'send_failed' }, { status: 500 })
         }
