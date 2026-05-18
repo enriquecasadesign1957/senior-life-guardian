@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
-import { PwaRegister, PwaInstallPrompt, EmergencyFab } from "@/components/pwa";
+import { EmergencyFab } from "@/components/pwa";
 
 function NotFoundComponent() {
   return (
