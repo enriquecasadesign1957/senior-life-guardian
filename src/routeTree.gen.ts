@@ -19,6 +19,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as BienvenidaPremiumRouteImport } from './routes/bienvenida-premium'
 import { Route as AppRouteImport } from './routes/app'
+import { Route as ActivarWhatsappRouteImport } from './routes/activar-whatsapp'
 import { Route as ActivacionRouteImport } from './routes/activacion'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WebpayRetornoRouteImport } from './routes/webpay.retorno'
@@ -79,6 +80,11 @@ const BienvenidaPremiumRoute = BienvenidaPremiumRouteImport.update({
 const AppRoute = AppRouteImport.update({
   id: '/app',
   path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ActivarWhatsappRoute = ActivarWhatsappRouteImport.update({
+  id: '/activar-whatsapp',
+  path: '/activar-whatsapp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ActivacionRoute = ActivacionRouteImport.update({
@@ -145,6 +151,7 @@ const LovableEmailQueueProcessRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/activacion': typeof ActivacionRoute
+  '/activar-whatsapp': typeof ActivarWhatsappRoute
   '/app': typeof AppRoute
   '/bienvenida-premium': typeof BienvenidaPremiumRoute
   '/checkout': typeof CheckoutRoute
@@ -168,6 +175,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/activacion': typeof ActivacionRoute
+  '/activar-whatsapp': typeof ActivarWhatsappRoute
   '/app': typeof AppRoute
   '/bienvenida-premium': typeof BienvenidaPremiumRoute
   '/checkout': typeof CheckoutRoute
@@ -192,6 +200,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/activacion': typeof ActivacionRoute
+  '/activar-whatsapp': typeof ActivarWhatsappRoute
   '/app': typeof AppRoute
   '/bienvenida-premium': typeof BienvenidaPremiumRoute
   '/checkout': typeof CheckoutRoute
@@ -217,6 +226,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/activacion'
+    | '/activar-whatsapp'
     | '/app'
     | '/bienvenida-premium'
     | '/checkout'
@@ -240,6 +250,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/activacion'
+    | '/activar-whatsapp'
     | '/app'
     | '/bienvenida-premium'
     | '/checkout'
@@ -263,6 +274,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/activacion'
+    | '/activar-whatsapp'
     | '/app'
     | '/bienvenida-premium'
     | '/checkout'
@@ -287,6 +299,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ActivacionRoute: typeof ActivacionRoute
+  ActivarWhatsappRoute: typeof ActivarWhatsappRoute
   AppRoute: typeof AppRoute
   BienvenidaPremiumRoute: typeof BienvenidaPremiumRoute
   CheckoutRoute: typeof CheckoutRoute
@@ -380,6 +393,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/activar-whatsapp': {
+      id: '/activar-whatsapp'
+      path: '/activar-whatsapp'
+      fullPath: '/activar-whatsapp'
+      preLoaderRoute: typeof ActivarWhatsappRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/activacion': {
       id: '/activacion'
       path: '/activacion'
@@ -463,6 +483,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ActivacionRoute: ActivacionRoute,
+  ActivarWhatsappRoute: ActivarWhatsappRoute,
   AppRoute: AppRoute,
   BienvenidaPremiumRoute: BienvenidaPremiumRoute,
   CheckoutRoute: CheckoutRoute,
