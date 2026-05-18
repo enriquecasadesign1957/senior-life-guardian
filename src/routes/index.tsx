@@ -1,15 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   Shield, Phone, MessageCircle, MapPin, Bell, CheckCircle2,
   Mail, ArrowRight, Heart, AlertCircle, Users, Zap, Smartphone,
-  Clock, Activity, Cloud, Star, UserCheck, Accessibility, Home,
+  Clock, Activity, Cloud, Star, UserCheck, Accessibility, Home, Loader2,
 } from "lucide-react";
 import emergencyButton from "@/assets/emergency-button.jpg";
 import seniorCouple from "@/assets/senior-couple.jpg";
 import seniorPhone from "@/assets/senior-phone.jpg";
 import logo from "@/assets/logo-senior-safe.png";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   head: () => ({
