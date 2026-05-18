@@ -616,9 +616,9 @@ function Contacto() {
   );
 }
 
-function ContactCard({ icon: Icon, title, value }: { icon: any; title: string; value: string }) {
-  return (
-    <div className="bg-card border border-border rounded-2xl p-7 text-center">
+function ContactCard({ icon: Icon, title, value, href, isExternal }: { icon: any; title: string; value: string; href?: string; isExternal?: boolean }) {
+  const content = (
+    <div className="bg-card border border-border rounded-2xl p-7 text-center hover:shadow-lg transition cursor-pointer">
       <span className="w-12 h-12 mx-auto rounded-xl flex items-center justify-center text-white mb-4" style={{ background: PETROL }}>
         <Icon className="w-6 h-6" />
       </span>
@@ -626,6 +626,14 @@ function ContactCard({ icon: Icon, title, value }: { icon: any; title: string; v
       <div className="font-bold text-foreground">{value}</div>
     </div>
   );
+  if (href) {
+    return (
+      <a href={href} target={isExternal ? "_blank" : undefined} rel={isExternal ? "noopener noreferrer" : undefined}>
+        {content}
+      </a>
+    );
+  }
+  return content;
 }
 
 function Field({ label, type = "text", placeholder, value, onChange }: { label: string; type?: string; placeholder?: string; value?: string; onChange?: (v: string) => void }) {
