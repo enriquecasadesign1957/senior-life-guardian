@@ -134,7 +134,7 @@ function WebpayReturnPage() {
                 </div>
 
                 <button
-                  onClick={() => navigate({ to: "/activacion" })}
+                  onClick={() => navigate({ to: "/bienvenida-premium" })}
                   className="mt-7 w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full text-white font-bold shadow-xl"
                   style={{ background: GREEN }}
                 >
