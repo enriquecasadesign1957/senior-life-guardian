@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { CheckCircle2, XCircle, Loader2, ArrowRight, MessageCircle } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
-import { confirmWebpayTransaction } from "@/lib/webpay.functions";
+import { confirmWebpayTransaction, mockApproveWebpay } from "@/lib/webpay.functions";
 
 type SearchParams = {
   token_ws?: string;
