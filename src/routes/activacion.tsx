@@ -45,7 +45,7 @@ type TrialUser = {
 type Contact = { id?: string; nombre: string; telefono: string; parentesco: string };
 
 const STEPS: { key: StepKey; icon: any; color: string; title: string; desc: string }[] = [
-  { key: "app", icon: Download, color: PETROL, title: "Instalar la aplicación", desc: "Úsala desde el navegador hoy mismo." },
+  { key: "app", icon: Smartphone, color: PETROL, title: "Acceder a la aplicación", desc: "Abre Senior Safe en tu teléfono o computador." },
   { key: "pin", icon: KeyRound, color: DEEP, title: "Crear tu PIN de seguridad", desc: "Un código de 4 dígitos fácil de recordar." },
   { key: "contactos", icon: Users, color: GREEN, title: "Agregar a tus familiares", desc: "Hasta 5 personas que recibirán las alertas." },
   { key: "gps", icon: MapPin, color: "#f59e0b", title: "Activar el GPS", desc: "Para enviar tu ubicación en emergencias." },
@@ -237,32 +237,12 @@ function ActivacionPage() {
   );
 }
 
-/* ---------------- Step 1: App / PWA ---------------- */
+/* ---------------- Step 1: Acceder a la app ---------------- */
+const APP_URL = "https://senior-life-guardian.lovable.app";
+
 function StepAppModal({ open, onClose, onDone, userPhone }: { open: boolean; onClose: () => void; onDone: () => void; userPhone: string | null }) {
-  const [installPrompt, setInstallPrompt] = useState<any>(null);
-  const [installed, setInstalled] = useState(false);
-
-  useEffect(() => {
-    const handler = (e: any) => { e.preventDefault(); setInstallPrompt(e); };
-    window.addEventListener("beforeinstallprompt", handler);
-    const installedHandler = () => setInstalled(true);
-    window.addEventListener("appinstalled", installedHandler);
-    if (window.matchMedia("(display-mode: standalone)").matches) setInstalled(true);
-    return () => {
-      window.removeEventListener("beforeinstallprompt", handler);
-      window.removeEventListener("appinstalled", installedHandler);
-    };
-  }, []);
-
-  const handleInstall = async () => {
-    if (!installPrompt) {
-      toast.info("Para instalar", { description: "Abre el menú de tu navegador y elige 'Agregar a pantalla de inicio'." });
-      return;
-    }
-    installPrompt.prompt();
-    const { outcome } = await installPrompt.userChoice;
-    if (outcome === "accepted") { setInstalled(true); toast.success("¡Senior Safe instalado!"); }
-    setInstallPrompt(null);
+  const openApp = () => {
+    window.open(APP_URL, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -270,35 +250,42 @@ function StepAppModal({ open, onClose, onDone, userPhone }: { open: boolean; onC
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-2" style={{ background: PETROL }}>
-            <Download className="w-7 h-7" />
+            <Smartphone className="w-7 h-7" />
           </div>
-          <DialogTitle className="text-2xl">Instala Senior Safe</DialogTitle>
+          <DialogTitle className="text-2xl">Accede a la aplicación Senior Safe</DialogTitle>
           <DialogDescription className="text-base">
-            Úsala hoy mismo desde tu teléfono o computador. Funciona en Android, iPhone y navegadores modernos.
+            La aplicación de emergencia funciona desde tu navegador en cualquier teléfono o computador.
+            Próximamente estará disponible también en Google Play y App Store.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          <Button onClick={handleInstall} className="w-full h-14 text-lg font-bold rounded-2xl" style={{ background: DEEP, color: "white" }}>
-            <Sparkles className="w-5 h-5 mr-2" />
-            {installed ? "Senior Safe ya está instalado" : "Instalar Senior Safe (Web)"}
+          <Button onClick={openApp} className="w-full h-14 text-lg font-bold rounded-2xl" style={{ background: DEEP, color: "white" }}>
+            <ArrowRight className="w-5 h-5 mr-2" />
+            Abrir la aplicación ahora
           </Button>
+
+          <div className="rounded-2xl p-4 text-sm space-y-2" style={{ background: "color-mix(in oklab, var(--brand-petrol) 6%, white)", color: "var(--foreground)" }}>
+            <p><strong>Guarda el acceso directo:</strong></p>
+            <p>• <strong>Android (Chrome):</strong> abre la app y toca menú ⋮ → "Añadir a pantalla de inicio".</p>
+            <p>• <strong>iPhone (Safari):</strong> abre la app y toca Compartir → "Añadir a pantalla de inicio".</p>
+          </div>
 
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="relative rounded-2xl border-2 border-border p-4 text-center opacity-80">
               <Smartphone className="w-7 h-7 mx-auto mb-2" style={{ color: DEEP }} />
-              <div className="font-bold text-foreground">Android</div>
+              <div className="font-bold text-foreground">Google Play</div>
               <span className="absolute -top-2 -right-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400 text-amber-950">Próximamente</span>
             </div>
             <div className="relative rounded-2xl border-2 border-border p-4 text-center opacity-80">
               <Apple className="w-7 h-7 mx-auto mb-2" />
-              <div className="font-bold text-foreground">iPhone</div>
+              <div className="font-bold text-foreground">App Store</div>
               <span className="absolute -top-2 -right-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400 text-amber-950">Próximamente</span>
             </div>
           </div>
 
-          <div className="rounded-2xl p-4 text-sm" style={{ background: "color-mix(in oklab, var(--brand-petrol) 6%, white)", color: "var(--foreground)" }}>
-            <strong>La app nativa está en revisión final</strong> y estará disponible muy pronto. Te avisaremos por email y WhatsApp ({userPhone ?? "tu teléfono"}) en cuanto se publique. Mientras tanto, la versión web tiene todas las funciones activas.
+          <div className="rounded-2xl p-4 text-sm" style={{ background: "color-mix(in oklab, #16a34a 6%, white)", color: "var(--foreground)" }}>
+            Te avisaremos por email y WhatsApp ({userPhone ?? "tu teléfono"}) en cuanto se publiquen las versiones nativas.
           </div>
         </div>
 

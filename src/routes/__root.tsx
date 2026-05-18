@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
-import { PwaRegister, PwaInstallPrompt, EmergencyFab } from "@/components/pwa";
+import { EmergencyFab } from "@/components/pwa";
 
 function NotFoundComponent() {
   return (
@@ -95,7 +95,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "manifest", href: "/manifest.json" },
+      
       { rel: "apple-touch-icon", href: "https://storage.googleapis.com/gpt-engineer-file-uploads/WEgAKtYLuSfQACezmGynaHiHwV53/social-images/social-1778871881128-Logo_alarma.webp" },
       { rel: "icon", type: "image/webp", href: "https://storage.googleapis.com/gpt-engineer-file-uploads/WEgAKtYLuSfQACezmGynaHiHwV53/social-images/social-1778871881128-Logo_alarma.webp" },
     ],
@@ -126,8 +126,6 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
-      <PwaRegister />
-      <PwaInstallPrompt />
       <EmergencyFab />
     </QueryClientProvider>
   );
