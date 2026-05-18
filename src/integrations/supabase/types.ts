@@ -101,6 +101,33 @@ export type Database = {
         }
         Relationships: []
       }
+      emergency_contacts: {
+        Row: {
+          created_at: string
+          id: string
+          nombre: string
+          parentesco: string
+          telefono: string
+          trial_signup_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nombre: string
+          parentesco: string
+          telefono: string
+          trial_signup_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nombre?: string
+          parentesco?: string
+          telefono?: string
+          trial_signup_id?: string
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string
@@ -170,6 +197,27 @@ export type Database = {
           trial_end?: string
           updated_at?: string
           webpay_token?: string | null
+        }
+        Relationships: []
+      }
+      user_pins: {
+        Row: {
+          created_at: string
+          pin_hash: string
+          trial_signup_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          pin_hash: string
+          trial_signup_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          pin_hash?: string
+          trial_signup_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
