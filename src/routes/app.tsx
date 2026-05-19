@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import {
   listFamily, addFamily, updateFamily, deleteFamily, verifyPin,
 } from "@/lib/family.functions";
+import { WhatsAppActivationButton } from "@/components/whatsapp-activation-button";
 
 export const Route = createFileRoute("/app")({
   head: () => ({
@@ -284,6 +285,10 @@ function AppHome() {
             Para editar tu red pediremos tu PIN. La emergencia nunca pide PIN.
           </p>
         </section>
+
+        <div className="mb-5">
+          <WhatsAppActivationButton />
+        </div>
 
         <nav aria-label="Navegación principal" className="grid grid-cols-3 gap-2 bg-card rounded-3xl p-2 border border-border shadow-sm">
           <NavItem icon={Home} label="Inicio" active />

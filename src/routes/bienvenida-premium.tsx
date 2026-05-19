@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle2, ArrowRight, Sparkles, Shield } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { WhatsAppFloat } from "@/components/whatsapp-float";
+import { WhatsAppActivationButton } from "@/components/whatsapp-activation-button";
 
 export const Route = createFileRoute("/bienvenida-premium")({
   head: () => ({
@@ -57,6 +58,10 @@ function BienvenidaPremiumPage() {
           >
             Comenzar la configuración <ArrowRight className="w-5 h-5" />
           </Link>
+
+          <div className="mt-6 max-w-md mx-auto">
+            <WhatsAppActivationButton />
+          </div>
         </div>
       </main>
       <SiteFooter />

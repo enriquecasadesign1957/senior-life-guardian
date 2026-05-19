@@ -4,6 +4,7 @@ import {
   Battery, Wifi, Clock, CheckCircle2, AlertTriangle, Plus, ChevronRight,
 } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
+import { WhatsAppActivationButton } from "@/components/whatsapp-activation-button";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -102,6 +103,10 @@ function DashboardPage() {
               <MiniStat icon={Clock} label="Activa hace" value="10 min" />
             </div>
           </section>
+
+          <div className="mb-6">
+            <WhatsAppActivationButton />
+          </div>
 
           <div className="grid lg:grid-cols-3 gap-6">
             {/* Map */}
