@@ -57,12 +57,20 @@ interface Props {
 export function InstallAppModal({ open, onClose, signupId, showContinuityHint }: Props) {
   const [deferred, setDeferred] = useState<BIPEvent | null>(null);
   const [installed, setInstalled] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
   const { isIOS, isAndroid, isSafari } = detectPlatform();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const onBIP = (e: Event) => { e.preventDefault(); setDeferred(e as BIPEvent); };
-    const onInstalled = () => { setInstalled(true); setDeferred(null); };
+    const onInstalled = () => {
+      setInstalled(true);
+      setDeferred(null);
+      // Abrir automáticamente la app después de instalar
+      setTimeout(() => {
+        window.location.href = buildAppUrl(signupId);
+      }, 800);
+    };
     window.addEventListener("beforeinstallprompt", onBIP);
     window.addEventListener("appinstalled", onInstalled);
     const isStandalone =
@@ -73,17 +81,35 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
       window.removeEventListener("beforeinstallprompt", onBIP);
       window.removeEventListener("appinstalled", onInstalled);
     };
-  }, []);
-
-  const handleInstallPwa = async () => {
-    if (!deferred) return;
-    await deferred.prompt();
-    await deferred.userChoice;
-    setDeferred(null);
-  };
+  }, [signupId]);
 
   const openWeb = () => {
     window.open(buildAppUrl(signupId), "_blank", "noopener,noreferrer");
+  };
+
+  const handleBigInstall = async () => {
+    // 1) Si PWA install nativo está disponible → dispararlo
+    if (deferred) {
+      try {
+        await deferred.prompt();
+        const choice = await deferred.userChoice;
+        setDeferred(null);
+        if (choice.outcome === "accepted") return;
+      } catch {}
+      return;
+    }
+    // 2) iOS: mostrar guía visual (no hay API de instalación)
+    if (isIOS) {
+      setShowGuide(true);
+      return;
+    }
+    // 3) Android sin evento: mostrar guía + abrir app web como fallback
+    setShowGuide(true);
+    if (isAndroid) {
+      openWeb();
+    } else {
+      openWeb();
+    }
   };
 
   return (
@@ -95,7 +121,7 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
           </div>
           <DialogTitle className="text-2xl">Instalar Senior Safe en tu teléfono</DialogTitle>
           <DialogDescription className="text-base">
-            Sigue estos pasos. Tu cuenta ya está configurada y la app la reconocerá automáticamente.
+            Toca el botón verde de abajo. Tu cuenta ya está configurada.
           </DialogDescription>
         </DialogHeader>
 
@@ -110,11 +136,65 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
         )}
 
         <div className="space-y-3">
+          {/* BOTÓN PRINCIPAL — siempre visible */}
+          {!installed && (
+            <Button
+              onClick={handleBigInstall}
+              className="w-full h-16 text-xl font-bold rounded-2xl shadow-lg"
+              style={{ background: GREEN, color: "white" }}
+            >
+              <Download className="w-6 h-6 mr-2" />
+              📲 Instalar Senior Safe
+            </Button>
+          )}
+
+          {installed && (
+            <>
+              <div className="rounded-2xl p-4 text-sm font-semibold text-center flex items-center justify-center gap-2" style={{ background: "color-mix(in oklab, #16a34a 14%, white)", color: GREEN }}>
+                <CheckCircle2 className="w-5 h-5" /> App instalada — abriendo Senior Safe…
+              </div>
+              <Button
+                onClick={openWeb}
+                className="w-full h-14 text-lg font-bold rounded-2xl"
+                style={{ background: DEEP, color: "white" }}
+              >
+                Abrir Senior Safe
+              </Button>
+            </>
+          )}
+
+          {/* Guía visual — aparece tras tocar el botón si no hay instalación automática */}
+          {showGuide && !deferred && !installed && (
+            <div className="rounded-2xl border-2 p-4 text-sm space-y-2" style={{ borderColor: DEEP }}>
+              {isIOS ? (
+                <>
+                  <div className="font-bold text-foreground flex items-center gap-2 text-base">
+                    <Apple className="w-5 h-5" /> En iPhone (Safari)
+                  </div>
+                  <p className="text-foreground">1. Toca <Share className="inline w-5 h-5 align-text-bottom" /> <b>Compartir</b> abajo.</p>
+                  <p className="text-foreground">2. Elige <Plus className="inline w-5 h-5 align-text-bottom" /> <b>Añadir a pantalla de inicio</b>.</p>
+                  <p className="text-foreground">3. Toca <b>Añadir</b> arriba a la derecha.</p>
+                </>
+              ) : (
+                <>
+                  <div className="font-bold text-foreground flex items-center gap-2 text-base">
+                    <Smartphone className="w-5 h-5" /> En Android (Chrome)
+                  </div>
+                  <p className="text-foreground">1. Abre el menú <b>⋮</b> arriba a la derecha.</p>
+                  <p className="text-foreground">2. Toca <b>Instalar app</b> o <b>Añadir a pantalla de inicio</b>.</p>
+                  <p className="text-foreground">3. Confirma <b>Instalar</b>.</p>
+                  <p className="text-muted-foreground text-xs pt-1">Si no aparece, ya abrimos la versión web en otra pestaña — tu cuenta está lista.</p>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Pasos resumen */}
           <div className="grid gap-2 text-sm">
             {[
-              "Toca Instalar app ahora si aparece el botón.",
-              isAndroid ? "Si Chrome pregunta, toca Instalar o Añadir." : "En iPhone usa Compartir y Añadir a pantalla de inicio.",
-              "Abre Senior Safe: verás tu cuenta lista, sin repetir onboarding.",
+              "Toca el botón verde de arriba.",
+              isAndroid ? "Confirma 'Instalar' si aparece." : (isIOS ? "Sigue los pasos para añadir a inicio." : "Confirma la instalación."),
+              "La app abrirá con tu cuenta lista.",
             ].map((step, i) => (
               <div key={step} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
                 <span className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold shrink-0" style={{ background: i === 2 ? GREEN : DEEP }}>{i + 1}</span>
@@ -122,51 +202,6 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
               </div>
             ))}
           </div>
-
-          {/* PWA install (Android/desktop) */}
-          {deferred && !installed && (
-            <Button
-              onClick={handleInstallPwa}
-              className="w-full h-14 text-lg font-bold rounded-2xl"
-              style={{ background: DEEP, color: "white" }}
-            >
-              <Download className="w-5 h-5 mr-2" />
-              Instalar app ahora
-            </Button>
-          )}
-
-          {/* iOS install instructions */}
-          {isIOS && isSafari && !installed && (
-            <div className="rounded-2xl border-2 border-border p-4 text-sm space-y-1.5">
-              <div className="font-bold text-foreground flex items-center gap-2">
-                <Apple className="w-5 h-5" /> Instalar en iPhone
-              </div>
-              <p className="text-muted-foreground">
-                1. Toca <Share className="inline w-4 h-4 align-text-bottom" /> Compartir en Safari.
-              </p>
-              <p className="text-muted-foreground">
-                2. Selecciona <Plus className="inline w-4 h-4 align-text-bottom" /> "Añadir a pantalla de inicio".
-              </p>
-            </div>
-          )}
-
-          {/* Android fallback if no BIP yet */}
-          {isAndroid && !deferred && !installed && (
-            <div className="rounded-2xl border-2 border-border p-4 text-sm space-y-1.5">
-              <div className="font-bold text-foreground flex items-center gap-2">
-                <Smartphone className="w-5 h-5" /> Instalar en Android
-              </div>
-              <p className="text-muted-foreground">
-                Abre el menú ⋮ de Chrome y toca "Instalar app" o "Añadir a pantalla de inicio".
-              </p>
-            </div>
-          )}
-
-          {installed && (
-            <div className="rounded-2xl p-4 text-sm font-semibold text-center flex items-center justify-center gap-2" style={{ background: "color-mix(in oklab, #16a34a 14%, white)", color: GREEN }}>
-              <CheckCircle2 className="w-5 h-5" /> App ya instalada en este dispositivo
-            </div>
-          )}
 
           {/* Stores próximamente */}
           <div className="grid sm:grid-cols-2 gap-3 pt-1">
@@ -182,7 +217,6 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
             </div>
           </div>
 
-          {/* Open in web — última opción, sin popup intermedio */}
           <button
             type="button"
             onClick={openWeb}
