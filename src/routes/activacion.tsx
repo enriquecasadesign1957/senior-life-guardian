@@ -83,6 +83,7 @@ function ActivacionPage() {
 
   const [openStep, setOpenStep] = useState<StepKey | null>(null);
   const [showComplete, setShowComplete] = useState(false);
+  const [showInstall, setShowInstall] = useState(false);
   const completeFiredRef = useRef(false);
 
   const total = STEPS.length;
