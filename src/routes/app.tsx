@@ -184,6 +184,28 @@ function AppHome() {
     else setPinGateOpen(true);
   };
 
+  const requestGps = () => {
+    if (!("geolocation" in navigator)) { toast.error("GPS no disponible en este teléfono."); return; }
+    navigator.geolocation.getCurrentPosition(
+      () => { setGpsAllowed(true); toast.success("GPS activado."); },
+      () => toast.error("Activa el GPS desde permisos del teléfono."),
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  };
+
+  const requestNotifications = async () => {
+    if (!("Notification" in window)) { toast.error("Notificaciones no disponibles."); return; }
+    const permission = await Notification.requestPermission();
+    setNotificationsAllowed(permission === "granted");
+    if (permission === "granted") toast.success("Notificaciones activadas.");
+    else toast.error("Activa las notificaciones desde permisos del teléfono.");
+  };
+
+  const markBatteryReady = () => {
+    setBatteryChecked(true);
+    toast.success("Listo. Recuerda permitir funcionamiento en segundo plano.");
+  };
+
   return (
     <div className="min-h-dvh flex flex-col" style={{ background: "linear-gradient(180deg, #f8fafc 0%, #eef4f9 100%)" }}>
       <header className="px-5 pt-5 pb-3 flex items-center justify-between max-w-md mx-auto w-full">
@@ -221,6 +243,34 @@ function AppHome() {
             </div>
           </div>
         </section>
+
+        {accountConfigured && (
+          <section aria-label="Configuración recuperada" className="bg-card border-2 rounded-3xl p-5 mb-4 shadow-sm" style={{ borderColor: GREEN }}>
+            <div className="flex items-start gap-3">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shrink-0" style={{ background: GREEN }}>
+                <Shield className="w-6 h-6" aria-hidden="true" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-foreground leading-tight">Tu cuenta ya está configurada</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Cargamos tu nombre, familiares, PIN, WhatsApp y avance de activación. No debes comenzar de nuevo.
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {accountConfigured && (!gpsAllowed || !notificationsAllowed || !batteryChecked) && (
+          <section aria-label="Permisos del teléfono" className="bg-card border border-border rounded-3xl p-4 mb-5 shadow-sm">
+            <h2 className="font-bold text-foreground text-lg mb-1">Solo faltan permisos del teléfono</h2>
+            <p className="text-sm text-muted-foreground mb-3">Son necesarios para protegerte en emergencias.</p>
+            <div className="space-y-2">
+              <PermissionButton icon={MapPin} label="Activar GPS" done={gpsAllowed} onClick={requestGps} />
+              <PermissionButton icon={Bell} label="Activar notificaciones" done={notificationsAllowed} onClick={requestNotifications} />
+              <PermissionButton icon={Battery} label="Revisar batería / segundo plano" done={batteryChecked} onClick={markBatteryReady} />
+            </div>
+          </section>
+        )}
 
         {/* GIANT EMERGENCY BUTTON — sin PIN */}
         <div className="flex-1 flex flex-col items-center justify-center py-4">
