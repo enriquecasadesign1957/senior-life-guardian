@@ -3,12 +3,35 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Smartphone, Apple, Download, Share, Plus, ExternalLink, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { Smartphone, Apple, Download, Share, Plus, ShieldCheck, CheckCircle2 } from "lucide-react";
 
 type BIPEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
+
+const PROMPT_KEY = "__seniorSafeInstallPrompt";
+const PROMPT_BOUND_KEY = "__seniorSafeInstallPromptBound";
+
+function getCapturedInstallPrompt() {
+  if (typeof window === "undefined") return null;
+  return ((window as any)[PROMPT_KEY] as BIPEvent | null) ?? null;
+}
+
+function clearCapturedInstallPrompt() {
+  if (typeof window !== "undefined") (window as any)[PROMPT_KEY] = null;
+}
+
+function ensureInstallPromptCapture() {
+  if (typeof window === "undefined" || (window as any)[PROMPT_BOUND_KEY]) return;
+  (window as any)[PROMPT_BOUND_KEY] = true;
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    (window as any)[PROMPT_KEY] = event as BIPEvent;
+  });
+}
+
+ensureInstallPromptCapture();
 
 const DEEP = "var(--brand-petrol-deep)";
 const PETROL = "var(--brand-petrol)";
@@ -16,6 +39,17 @@ const GREEN = "#16a34a";
 
 /** URL de la app móvil (PWA). Se le adjunta el signupId para continuidad. */
 const APP_BASE_URL = "https://senior-safe-link.lovable.app";
+const APK_CANDIDATES = ["/senior-life-guardian.apk", "/SeniorLifeGuardian.apk", "/app-release.apk"];
+
+async function findAvailableApk() {
+  for (const path of APK_CANDIDATES) {
+    try {
+      const response = await fetch(path, { method: "HEAD", cache: "no-store" });
+      if (response.ok) return path;
+    } catch {}
+  }
+  return null;
+}
 
 function buildAppUrl(signupId: string | null) {
   let resolvedSignupId = signupId;
@@ -55,13 +89,16 @@ interface Props {
  * y como último recurso abrir versión web (con signupId para continuidad).
  */
 export function InstallAppModal({ open, onClose, signupId, showContinuityHint }: Props) {
-  const [deferred, setDeferred] = useState<BIPEvent | null>(null);
+  const [deferred, setDeferred] = useState<BIPEvent | null>(() => getCapturedInstallPrompt());
   const [installed, setInstalled] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
+  const [installing, setInstalling] = useState(false);
   const { isIOS, isAndroid, isSafari } = detectPlatform();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    ensureInstallPromptCapture();
+    setDeferred(getCapturedInstallPrompt());
     const onBIP = (e: Event) => { e.preventDefault(); setDeferred(e as BIPEvent); };
     const onInstalled = () => {
       setInstalled(true);
@@ -79,23 +116,38 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
     };
   }, [signupId]);
 
-  const openWeb = () => {
-    window.open(buildAppUrl(signupId), "_blank", "noopener,noreferrer");
+  const openInstalledApp = () => {
+    window.location.href = buildAppUrl(signupId);
   };
 
   const handleBigInstall = async () => {
-    // 1) PWA install nativo disponible → dispararlo directamente (sin abrir web)
-    if (deferred) {
+    setInstalling(true);
+    // 1) APK real publicado en /public → descarga directa, no acceso directo de Chrome
+    if (isAndroid) {
+      const apkUrl = await findAvailableApk();
+      if (apkUrl) {
+        window.location.href = apkUrl;
+        setInstalling(false);
+        return;
+      }
+    }
+    // 2) Instalación Android/PWA nativa → usa manifest /app, no /activacion
+    const installPrompt = deferred ?? getCapturedInstallPrompt();
+    if (installPrompt) {
       try {
-        await deferred.prompt();
-        const choice = await deferred.userChoice;
+        await installPrompt.prompt();
+        const choice = await installPrompt.userChoice;
         setDeferred(null);
+        clearCapturedInstallPrompt();
+        setInstalling(false);
         if (choice.outcome === "accepted") return;
       } catch {}
+      setInstalling(false);
       return;
     }
-    // 2) Sin evento nativo: mostrar guía visual paso a paso (NO abrir web automáticamente)
+    // 3) Sin evento nativo: guía visual simple, sin abrir dashboard ni web automáticamente
     setShowGuide(true);
+    setInstalling(false);
   };
 
   return (
@@ -107,7 +159,7 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
           </div>
           <DialogTitle className="text-2xl">Instalar Senior Safe en tu teléfono</DialogTitle>
           <DialogDescription className="text-base">
-            Toca el botón verde de abajo. Tu cuenta ya está configurada.
+            Toca el botón verde. Instalará Senior Life Guardian, no un acceso directo de esta pantalla.
           </DialogDescription>
         </DialogHeader>
 
@@ -126,11 +178,12 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
           {!installed && (
             <Button
               onClick={handleBigInstall}
+              disabled={installing}
               className="w-full h-16 text-xl font-bold rounded-2xl shadow-lg"
               style={{ background: GREEN, color: "white" }}
             >
               <Download className="w-6 h-6 mr-2" />
-              📲 Instalar Senior Safe
+              {installing ? "Preparando instalación…" : "📲 Instalar Senior Safe"}
             </Button>
           )}
 
@@ -140,7 +193,7 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
                 <CheckCircle2 className="w-5 h-5" /> App instalada — abriendo Senior Safe…
               </div>
               <Button
-                onClick={openWeb}
+                onClick={openInstalledApp}
                 className="w-full h-14 text-lg font-bold rounded-2xl"
                 style={{ background: DEEP, color: "white" }}
               >
@@ -166,9 +219,11 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
                   <div className="font-bold text-foreground flex items-center gap-2 text-base">
                     <Smartphone className="w-5 h-5" /> En Android (Chrome)
                   </div>
-                  <p className="text-foreground">1. Abre el menú <b>⋮</b> arriba a la derecha.</p>
-                  <p className="text-foreground">2. Toca <b>Instalar app</b> o <b>Añadir a pantalla de inicio</b>.</p>
-                  <p className="text-foreground">3. Confirma <b>Instalar</b>.</p>
+                  <p className="text-foreground">1. Si aparece una ventana, toca <b>Instalar</b>.</p>
+                  <p className="text-foreground">2. Si no aparece, abre el menú <b>⋮</b> arriba a la derecha.</p>
+                  <p className="text-foreground">3. Toca solo <b>Instalar app</b>.</p>
+                  <p className="text-foreground">4. Confirma <b>Instalar</b>.</p>
+                  <p className="text-foreground">Si dice <b>Crear acceso directo</b>, no lo uses.</p>
                   <p className="text-muted-foreground text-xs pt-1">Tu cuenta ya está lista — la app abrirá con todo configurado.</p>
                 </>
               )}
@@ -202,14 +257,6 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
               <span className="absolute -top-2 -right-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400 text-amber-950">Próximamente</span>
             </div>
           </div>
-
-          <button
-            type="button"
-            onClick={openWeb}
-            className="w-full text-sm text-muted-foreground hover:text-foreground inline-flex items-center justify-center gap-1.5 py-2"
-          >
-            <ExternalLink className="w-4 h-4" /> Abrir versión web mientras tanto
-          </button>
         </div>
       </DialogContent>
     </Dialog>
