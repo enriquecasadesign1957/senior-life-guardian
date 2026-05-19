@@ -1,9 +1,9 @@
 {
-  "name": "Senior Safe — Alarma 24/7",
-  "short_name": "Senior Safe",
+  "name": "Senior Life Guardian",
+  "short_name": "Senior Life",
   "description": "Tu red de cuidado familiar siempre activa. Alertas inmediatas por WhatsApp, SMS y llamada.",
   "start_url": "/app?source=pwa",
-  "id": "/app",
+  "id": "senior-life-guardian",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
