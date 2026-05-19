@@ -692,7 +692,7 @@ function StepEmergencyModal({ open, onClose, onDone, userName }: { open: boolean
 }
 
 /* ---------------- Completion ---------------- */
-function CompletionModal({ open, onClose, firstName }: { open: boolean; onClose: () => void; firstName: string }) {
+function CompletionModal({ open, onClose, firstName, onDownload }: { open: boolean; onClose: () => void; firstName: string; onDownload: () => void }) {
   useEffect(() => { if (open) fireConfetti(); }, [open]);
 
   return (
@@ -714,7 +714,7 @@ function CompletionModal({ open, onClose, firstName }: { open: boolean; onClose:
             Respira tranquilo: estaremos contigo las 24 horas, todos los días. <Heart className="w-4 h-4 inline" style={{ color: RED }} />
           </p>
           <Button
-            onClick={() => window.open(APP_URL, "_blank", "noopener,noreferrer")}
+            onClick={onDownload}
             className="w-full h-12 text-base font-bold rounded-full"
             style={{ background: DEEP, color: "white" }}
           >
