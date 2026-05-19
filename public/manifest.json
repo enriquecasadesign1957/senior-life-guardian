@@ -2,8 +2,8 @@
   "name": "Senior Safe — Alarma 24/7",
   "short_name": "Senior Safe",
   "description": "Tu red de cuidado familiar siempre activa. Alertas inmediatas por WhatsApp, SMS y llamada.",
-  "start_url": "/activacion?source=pwa",
-  "id": "/activacion",
+  "start_url": "/app?source=pwa",
+  "id": "/app",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
@@ -39,7 +39,7 @@
       "name": "Botón de emergencia",
       "short_name": "Emergencia",
       "description": "Enviar alerta inmediata a familiares",
-      "url": "/activacion?sos=1",
+      "url": "/app?sos=1",
       "icons": [
         {
           "src": "https://storage.googleapis.com/gpt-engineer-file-uploads/WEgAKtYLuSfQACezmGynaHiHwV53/social-images/social-1778871881128-Logo_alarma.webp",
@@ -51,8 +51,8 @@
     {
       "name": "Mi configuración",
       "short_name": "Configurar",
-      "description": "Continuar la activación de Senior Safe",
-      "url": "/activacion",
+      "description": "Abrir Senior Safe",
+      "url": "/app",
       "icons": [
         {
           "src": "https://storage.googleapis.com/gpt-engineer-file-uploads/WEgAKtYLuSfQACezmGynaHiHwV53/social-images/social-1778871881128-Logo_alarma.webp",
