@@ -17,6 +17,8 @@ import {
   getAppConfiguration, listFamily, addFamily, updateFamily, deleteFamily, verifyPin,
 } from "@/lib/family.functions";
 import { WhatsAppActivationButton } from "@/components/whatsapp-activation-button";
+import { InstallAppModal } from "@/components/install-app-modal";
+import { Download } from "lucide-react";
 
 export const Route = createFileRoute("/app")({
   head: () => ({
