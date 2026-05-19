@@ -122,7 +122,7 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
 
   const handleBigInstall = async () => {
     setInstalling(true);
-    // 1) APK real publicado en /public → descarga directa, no acceso directo de Chrome
+    // 1) APK real publicado → descarga directa de Senior Life Guardian
     if (isAndroid) {
       const apkUrl = await findAvailableApk();
       if (apkUrl) {
@@ -131,23 +131,14 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
         return;
       }
     }
-    // 2) Instalación Android/PWA nativa → usa manifest /app, no /activacion
-    const installPrompt = deferred ?? getCapturedInstallPrompt();
-    if (installPrompt) {
-      try {
-        await installPrompt.prompt();
-        const choice = await installPrompt.userChoice;
-        setDeferred(null);
-        clearCapturedInstallPrompt();
-        setInstalling(false);
-        if (choice.outcome === "accepted") return;
-      } catch {}
-      setInstalling(false);
-      return;
-    }
-    // 3) Sin evento nativo: guía visual simple, sin abrir dashboard ni web automáticamente
-    setShowGuide(true);
+    // 2) Sin APK: redirigir SIEMPRE al dominio de la app real (NO instalar el sitio comercial).
+    //    Desde ese dominio el usuario instala la PWA real "Senior Life Guardian".
+    //    Nunca disparamos deferred.prompt() aquí porque instalaría alarmaseniorsafe.cl/activacion.
+    const appUrl = buildAppUrl(signupId);
+    window.location.href = appUrl;
     setInstalling(false);
+    // 3) Guía visual de respaldo si el navegador bloquea la navegación
+    setShowGuide(true);
   };
 
   return (
