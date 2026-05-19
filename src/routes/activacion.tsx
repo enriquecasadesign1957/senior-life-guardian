@@ -10,6 +10,7 @@ import {
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { WhatsAppFloat, WhatsAppButton } from "@/components/whatsapp-float";
 import { WhatsAppActivationButton } from "@/components/whatsapp-activation-button";
+import { InstallAppModal } from "@/components/install-app-modal";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
