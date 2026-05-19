@@ -68,28 +68,64 @@ function AppHome() {
   const [userName, setUserName] = useState<string>("");
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loadingContacts, setLoadingContacts] = useState(true);
+  const [configReady, setConfigReady] = useState(false);
+  const [accountConfigured, setAccountConfigured] = useState(false);
 
   const [manageOpen, setManageOpen] = useState(false);
   const [pinGateOpen, setPinGateOpen] = useState(false);
   const [pinUnlocked, setPinUnlocked] = useState(false);
 
   const list = useServerFn(listFamily);
+  const loadConfig = useServerFn(getAppConfiguration);
 
-  // Load user from sessionStorage
+  // Load account from onboarding handoff or saved session, then hydrate app config.
   useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem("seniorsafe_user");
-      if (raw) {
-        const u = JSON.parse(raw);
-        if (u?.id) setUserId(u.id);
-        if (u?.nombre) setUserName(String(u.nombre).split(" ")[0]);
+    let alive = true;
+    (async () => {
+      setLoadingContacts(true);
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const signupId = params.get("ss") || undefined;
+        let stored: Partial<TrialUser> | null = null;
+        const raw = sessionStorage.getItem("seniorsafe_user") || localStorage.getItem("seniorsafe_user_backup");
+        if (raw) stored = JSON.parse(raw);
+
+        const res = await loadConfig({
+          data: {
+            signupId: signupId || stored?.id || undefined,
+            email: stored?.email || undefined,
+            telefono: stored?.telefono || undefined,
+          },
+        });
+        if (!alive) return;
+
+        if (res.configured && res.user) {
+          const user = res.user as TrialUser;
+          setUserId(user.id);
+          setUserName(String(user.nombre ?? "").split(" ")[0]);
+          setContacts(res.contacts as Contact[]);
+          setAccountConfigured(true);
+          sessionStorage.setItem("seniorsafe_user", JSON.stringify(user));
+          localStorage.setItem("seniorsafe_user_backup", JSON.stringify(user));
+          localStorage.setItem("seniorsafe_account_configured", "1");
+          localStorage.setItem("seniorsafe_progress", JSON.stringify({ pin: res.pinConfigured, contactos: (res.contacts?.length ?? 0) > 0, gps: false, emergencia: false, app: true }));
+        } else if (stored?.id) {
+          setUserId(stored.id);
+          if (stored.nombre) setUserName(String(stored.nombre).split(" ")[0]);
+        }
+      } catch (e) {
+        console.error(e);
+        toast.error("No pudimos cargar tu configuración previa.");
+      } finally {
+        if (alive) { setLoadingContacts(false); setConfigReady(true); }
       }
-    } catch {}
-  }, []);
+    })();
+    return () => { alive = false; };
+  }, [loadConfig]);
 
   // Load contacts when userId is ready
   useEffect(() => {
-    if (!userId) { setLoadingContacts(false); return; }
+    if (!configReady || !userId || contacts.length > 0) return;
     let alive = true;
     (async () => {
       setLoadingContacts(true);
@@ -104,7 +140,7 @@ function AppHome() {
       }
     })();
     return () => { alive = false; };
-  }, [userId, list]);
+  }, [configReady, userId, contacts.length, list]);
 
   const familyCount = contacts.length;
 
