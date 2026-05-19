@@ -265,58 +265,42 @@ function StepAppModal({ open, onClose, onDone, userPhone, signupId }: { open: bo
   const openInstall = () => setShowInstall(true);
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-2" style={{ background: PETROL }}>
-            <Smartphone className="w-7 h-7" />
-          </div>
-          <DialogTitle className="text-2xl">Accede a la aplicación Senior Safe</DialogTitle>
-          <DialogDescription className="text-base">
-            La aplicación de emergencia funciona desde tu navegador en cualquier teléfono o computador.
-            Próximamente estará disponible también en Google Play y App Store.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          <Button onClick={openApp} className="w-full h-14 text-lg font-bold rounded-2xl" style={{ background: DEEP, color: "white" }}>
-            <ArrowRight className="w-5 h-5 mr-2" />
-            Abrir la aplicación ahora
-          </Button>
-
-          <div className="rounded-2xl p-4 text-sm space-y-2" style={{ background: "color-mix(in oklab, var(--brand-petrol) 6%, white)", color: "var(--foreground)" }}>
-            <p><strong>Guarda el acceso directo:</strong></p>
-            <p>• <strong>Android (Chrome):</strong> abre la app y toca menú ⋮ → "Añadir a pantalla de inicio".</p>
-            <p>• <strong>iPhone (Safari):</strong> abre la app y toca Compartir → "Añadir a pantalla de inicio".</p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-3">
-            <div className="relative rounded-2xl border-2 border-border p-4 text-center opacity-80">
-              <Smartphone className="w-7 h-7 mx-auto mb-2" style={{ color: DEEP }} />
-              <div className="font-bold text-foreground">Google Play</div>
-              <span className="absolute -top-2 -right-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400 text-amber-950">Próximamente</span>
+    <>
+      <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-2" style={{ background: PETROL }}>
+              <Smartphone className="w-7 h-7" />
             </div>
-            <div className="relative rounded-2xl border-2 border-border p-4 text-center opacity-80">
-              <Apple className="w-7 h-7 mx-auto mb-2" />
-              <div className="font-bold text-foreground">App Store</div>
-              <span className="absolute -top-2 -right-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400 text-amber-950">Próximamente</span>
+            <DialogTitle className="text-2xl">Instala la aplicación Senior Safe</DialogTitle>
+            <DialogDescription className="text-base">
+              Instálala directamente en tu teléfono. Tu nombre, familiares, PIN y WhatsApp ya configurados se cargarán automáticamente.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <Button onClick={openInstall} className="w-full h-14 text-lg font-bold rounded-2xl" style={{ background: DEEP, color: "white" }}>
+              <Download className="w-5 h-5 mr-2" />
+              Descargar e instalar
+            </Button>
+
+            <div className="rounded-2xl p-4 text-sm" style={{ background: "color-mix(in oklab, #16a34a 6%, white)", color: "var(--foreground)" }}>
+              Te avisaremos por WhatsApp ({userPhone ?? "tu teléfono"}) en cuanto estén las versiones de Google Play y App Store.
             </div>
           </div>
 
-          <div className="rounded-2xl p-4 text-sm" style={{ background: "color-mix(in oklab, #16a34a 6%, white)", color: "var(--foreground)" }}>
-            Te avisaremos por email y WhatsApp ({userPhone ?? "tu teléfono"}) en cuanto se publiquen las versiones nativas.
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button onClick={onDone} className="w-full h-12 text-base font-bold rounded-full" style={{ background: GREEN, color: "white" }}>
-            <CheckCircle2 className="w-5 h-5 mr-2" /> Listo, continuar
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter>
+            <Button onClick={onDone} className="w-full h-12 text-base font-bold rounded-full" style={{ background: GREEN, color: "white" }}>
+              <CheckCircle2 className="w-5 h-5 mr-2" /> Listo, continuar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <InstallAppModal open={showInstall} onClose={() => setShowInstall(false)} signupId={signupId} showContinuityHint />
+    </>
   );
 }
+
 
 /* ---------------- Step 2: PIN ---------------- */
 function StepPinModal({ open, onClose, onDone, userId }: { open: boolean; onClose: () => void; onDone: () => void; userId: string | null }) {
