@@ -10,6 +10,7 @@ import {
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { WhatsAppFloat, WhatsAppButton } from "@/components/whatsapp-float";
 import { WhatsAppActivationButton } from "@/components/whatsapp-activation-button";
+import { InstallAppModal } from "@/components/install-app-modal";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
@@ -82,6 +83,7 @@ function ActivacionPage() {
 
   const [openStep, setOpenStep] = useState<StepKey | null>(null);
   const [showComplete, setShowComplete] = useState(false);
+  const [showInstall, setShowInstall] = useState(false);
   const completeFiredRef = useRef(false);
 
   const total = STEPS.length;
@@ -241,14 +243,15 @@ function ActivacionPage() {
       <SiteFooter />
 
       {/* Step Modals */}
-      <StepAppModal open={openStep === "app"} onClose={() => setOpenStep(null)} onDone={() => markDone("app")} userPhone={user?.telefono ?? null} />
+      <StepAppModal open={openStep === "app"} onClose={() => setOpenStep(null)} onDone={() => markDone("app")} userPhone={user?.telefono ?? null} signupId={user?.id ?? null} />
       <StepPinModal open={openStep === "pin"} onClose={() => setOpenStep(null)} onDone={() => markDone("pin")} userId={user?.id ?? null} />
       <StepContactsModal open={openStep === "contactos"} onClose={() => setOpenStep(null)} onDone={() => markDone("contactos")} userId={user?.id ?? null} />
       <StepGpsModal open={openStep === "gps"} onClose={() => setOpenStep(null)} onDone={() => markDone("gps")} />
       <StepEmergencyModal open={openStep === "emergencia"} onClose={() => setOpenStep(null)} onDone={() => markDone("emergencia")} userName={firstName} />
 
       {/* Completion */}
-      <CompletionModal open={showComplete} onClose={() => setShowComplete(false)} firstName={firstName} />
+      <CompletionModal open={showComplete} onClose={() => setShowComplete(false)} firstName={firstName} onDownload={() => { setShowComplete(false); setShowInstall(true); }} />
+      <InstallAppModal open={showInstall} onClose={() => setShowInstall(false)} signupId={user?.id ?? null} showContinuityHint />
       <WhatsAppFloat />
     </div>
   );
@@ -257,64 +260,47 @@ function ActivacionPage() {
 /* ---------------- Step 1: Acceder a la app ---------------- */
 const APP_URL = "https://senior-safe-link.lovable.app";
 
-function StepAppModal({ open, onClose, onDone, userPhone }: { open: boolean; onClose: () => void; onDone: () => void; userPhone: string | null }) {
-  const openApp = () => {
-    window.open(APP_URL, "_blank", "noopener,noreferrer");
-  };
+function StepAppModal({ open, onClose, onDone, userPhone, signupId }: { open: boolean; onClose: () => void; onDone: () => void; userPhone: string | null; signupId: string | null }) {
+  const [showInstall, setShowInstall] = useState(false);
+  const openInstall = () => setShowInstall(true);
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-2" style={{ background: PETROL }}>
-            <Smartphone className="w-7 h-7" />
-          </div>
-          <DialogTitle className="text-2xl">Accede a la aplicación Senior Safe</DialogTitle>
-          <DialogDescription className="text-base">
-            La aplicación de emergencia funciona desde tu navegador en cualquier teléfono o computador.
-            Próximamente estará disponible también en Google Play y App Store.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          <Button onClick={openApp} className="w-full h-14 text-lg font-bold rounded-2xl" style={{ background: DEEP, color: "white" }}>
-            <ArrowRight className="w-5 h-5 mr-2" />
-            Abrir la aplicación ahora
-          </Button>
-
-          <div className="rounded-2xl p-4 text-sm space-y-2" style={{ background: "color-mix(in oklab, var(--brand-petrol) 6%, white)", color: "var(--foreground)" }}>
-            <p><strong>Guarda el acceso directo:</strong></p>
-            <p>• <strong>Android (Chrome):</strong> abre la app y toca menú ⋮ → "Añadir a pantalla de inicio".</p>
-            <p>• <strong>iPhone (Safari):</strong> abre la app y toca Compartir → "Añadir a pantalla de inicio".</p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-3">
-            <div className="relative rounded-2xl border-2 border-border p-4 text-center opacity-80">
-              <Smartphone className="w-7 h-7 mx-auto mb-2" style={{ color: DEEP }} />
-              <div className="font-bold text-foreground">Google Play</div>
-              <span className="absolute -top-2 -right-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400 text-amber-950">Próximamente</span>
+    <>
+      <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-2" style={{ background: PETROL }}>
+              <Smartphone className="w-7 h-7" />
             </div>
-            <div className="relative rounded-2xl border-2 border-border p-4 text-center opacity-80">
-              <Apple className="w-7 h-7 mx-auto mb-2" />
-              <div className="font-bold text-foreground">App Store</div>
-              <span className="absolute -top-2 -right-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400 text-amber-950">Próximamente</span>
+            <DialogTitle className="text-2xl">Instala la aplicación Senior Safe</DialogTitle>
+            <DialogDescription className="text-base">
+              Instálala directamente en tu teléfono. Tu nombre, familiares, PIN y WhatsApp ya configurados se cargarán automáticamente.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <Button onClick={openInstall} className="w-full h-14 text-lg font-bold rounded-2xl" style={{ background: DEEP, color: "white" }}>
+              <Download className="w-5 h-5 mr-2" />
+              Descargar e instalar
+            </Button>
+
+            <div className="rounded-2xl p-4 text-sm" style={{ background: "color-mix(in oklab, #16a34a 6%, white)", color: "var(--foreground)" }}>
+              Te avisaremos por WhatsApp ({userPhone ?? "tu teléfono"}) en cuanto estén las versiones de Google Play y App Store.
             </div>
           </div>
 
-          <div className="rounded-2xl p-4 text-sm" style={{ background: "color-mix(in oklab, #16a34a 6%, white)", color: "var(--foreground)" }}>
-            Te avisaremos por email y WhatsApp ({userPhone ?? "tu teléfono"}) en cuanto se publiquen las versiones nativas.
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button onClick={onDone} className="w-full h-12 text-base font-bold rounded-full" style={{ background: GREEN, color: "white" }}>
-            <CheckCircle2 className="w-5 h-5 mr-2" /> Listo, continuar
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter>
+            <Button onClick={onDone} className="w-full h-12 text-base font-bold rounded-full" style={{ background: GREEN, color: "white" }}>
+              <CheckCircle2 className="w-5 h-5 mr-2" /> Listo, continuar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <InstallAppModal open={showInstall} onClose={() => setShowInstall(false)} signupId={signupId} showContinuityHint />
+    </>
   );
 }
+
 
 /* ---------------- Step 2: PIN ---------------- */
 function StepPinModal({ open, onClose, onDone, userId }: { open: boolean; onClose: () => void; onDone: () => void; userId: string | null }) {
@@ -706,7 +692,7 @@ function StepEmergencyModal({ open, onClose, onDone, userName }: { open: boolean
 }
 
 /* ---------------- Completion ---------------- */
-function CompletionModal({ open, onClose, firstName }: { open: boolean; onClose: () => void; firstName: string }) {
+function CompletionModal({ open, onClose, firstName, onDownload }: { open: boolean; onClose: () => void; firstName: string; onDownload: () => void }) {
   useEffect(() => { if (open) fireConfetti(); }, [open]);
 
   return (
@@ -728,7 +714,7 @@ function CompletionModal({ open, onClose, firstName }: { open: boolean; onClose:
             Respira tranquilo: estaremos contigo las 24 horas, todos los días. <Heart className="w-4 h-4 inline" style={{ color: RED }} />
           </p>
           <Button
-            onClick={() => window.open(APP_URL, "_blank", "noopener,noreferrer")}
+            onClick={onDownload}
             className="w-full h-12 text-base font-bold rounded-full"
             style={{ background: DEEP, color: "white" }}
           >
