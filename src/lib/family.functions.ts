@@ -9,6 +9,55 @@ const contactInput = z.object({
   parentesco: z.string().min(1).max(60),
 });
 
+const appConfigInput = z.object({
+  signupId: idSchema.optional(),
+  email: z.string().email().max(255).optional(),
+  telefono: z.string().min(4).max(40).optional(),
+}).refine((data) => Boolean(data.signupId || data.email || data.telefono), {
+  message: "Se requiere una cuenta para cargar la configuración.",
+});
+
+/** Carga la configuración existente para que la app no reinicie el onboarding. */
+export const getAppConfiguration = createServerFn({ method: "POST" })
+  .inputValidator((input) => appConfigInput.parse(input))
+  .handler(async ({ data }) => {
+    let query = supabaseAdmin
+      .from("trial_signups")
+      .select("id,nombre,email,telefono,plan,periodo,trial_active,trial_end,purchase_mode,subscription_status,payment_status")
+      .limit(1);
+
+    if (data.signupId) query = query.eq("id", data.signupId);
+    else if (data.email) query = query.eq("email", data.email.trim().toLowerCase());
+    else if (data.telefono) query = query.eq("telefono", data.telefono.trim());
+
+    const { data: user, error: userError } = await query.maybeSingle();
+    if (userError) throw userError;
+    if (!user) return { configured: false, user: null, contacts: [], pinConfigured: false };
+
+    const [{ data: contacts, error: contactsError }, { data: pin, error: pinError }] = await Promise.all([
+      supabaseAdmin
+        .from("emergency_contacts")
+        .select("id,nombre,telefono,parentesco,created_at")
+        .eq("trial_signup_id", user.id)
+        .order("created_at", { ascending: true }),
+      supabaseAdmin
+        .from("user_pins")
+        .select("trial_signup_id")
+        .eq("trial_signup_id", user.id)
+        .maybeSingle(),
+    ]);
+
+    if (contactsError) throw contactsError;
+    if (pinError) throw pinError;
+
+    return {
+      configured: true,
+      user,
+      contacts: contacts ?? [],
+      pinConfigured: Boolean(pin),
+    };
+  });
+
 /** Lista familiares del usuario (por trial_signup_id). */
 export const listFamily = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ signupId: idSchema }).parse(input))
