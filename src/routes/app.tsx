@@ -17,6 +17,8 @@ import {
   getAppConfiguration, listFamily, addFamily, updateFamily, deleteFamily, verifyPin,
 } from "@/lib/family.functions";
 import { WhatsAppActivationButton } from "@/components/whatsapp-activation-button";
+import { InstallAppModal } from "@/components/install-app-modal";
+import { Download } from "lucide-react";
 
 export const Route = createFileRoute("/app")({
   head: () => ({
@@ -77,6 +79,21 @@ function AppHome() {
   const [manageOpen, setManageOpen] = useState(false);
   const [pinGateOpen, setPinGateOpen] = useState(false);
   const [pinUnlocked, setPinUnlocked] = useState(false);
+  const [installOpen, setInstallOpen] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const check = () =>
+      setIsInstalled(
+        window.matchMedia?.("(display-mode: standalone)").matches ||
+          (window.navigator as any).standalone === true,
+      );
+    check();
+    const onInstalled = () => setIsInstalled(true);
+    window.addEventListener("appinstalled", onInstalled);
+    return () => window.removeEventListener("appinstalled", onInstalled);
+  }, []);
 
   const list = useServerFn(listFamily);
   const loadConfig = useServerFn(getAppConfiguration);
@@ -243,6 +260,32 @@ function AppHome() {
             </div>
           </div>
         </section>
+
+        {/* Install app banner — visible only when not installed */}
+        {!isInstalled && (
+          <section aria-label="Descargar la app" className="mb-5">
+            <button
+              type="button"
+              onClick={() => setInstallOpen(true)}
+              className="w-full rounded-3xl p-5 text-white text-left shadow-xl active:scale-[0.99] transition focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300"
+              style={{ background: `linear-gradient(135deg, ${GREEN}, #15803d)` }}
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+                  <Download className="w-7 h-7" aria-hidden="true" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xl font-extrabold leading-tight">📲 DESCARGAR APP SENIOR SAFE</div>
+                  <div className="text-sm text-white/95 mt-1">
+                    Instala Senior Safe para acceso rápido y alertas más confiables.
+                  </div>
+                </div>
+              </div>
+            </button>
+          </section>
+        )}
+
+
 
         {accountConfigured && (
           <section aria-label="Configuración recuperada" className="bg-card border-2 rounded-3xl p-5 mb-4 shadow-sm" style={{ borderColor: GREEN }}>
@@ -575,6 +618,8 @@ function AppHome() {
           </div>
         </div>
       )}
+
+      <InstallAppModal open={installOpen} onClose={() => setInstallOpen(false)} signupId={userId} />
     </div>
   );
 }
