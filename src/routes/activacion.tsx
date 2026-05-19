@@ -9,6 +9,7 @@ import {
 
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { WhatsAppFloat, WhatsAppButton } from "@/components/whatsapp-float";
+import { WhatsAppActivationButton } from "@/components/whatsapp-activation-button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
@@ -175,6 +176,11 @@ function ActivacionPage() {
             <div className="mt-3 text-sm text-muted-foreground">
               {doneCount} de {total} pasos completados
             </div>
+          </div>
+
+          {/* Acceso rápido: activar alertas WhatsApp */}
+          <div className="mb-6">
+            <WhatsAppActivationButton />
           </div>
 
           {/* Steps */}
