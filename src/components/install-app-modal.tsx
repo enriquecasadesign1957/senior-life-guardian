@@ -10,6 +10,29 @@ type BIPEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
+const PROMPT_KEY = "__seniorSafeInstallPrompt";
+const PROMPT_BOUND_KEY = "__seniorSafeInstallPromptBound";
+
+function getCapturedInstallPrompt() {
+  if (typeof window === "undefined") return null;
+  return ((window as any)[PROMPT_KEY] as BIPEvent | null) ?? null;
+}
+
+function clearCapturedInstallPrompt() {
+  if (typeof window !== "undefined") (window as any)[PROMPT_KEY] = null;
+}
+
+function ensureInstallPromptCapture() {
+  if (typeof window === "undefined" || (window as any)[PROMPT_BOUND_KEY]) return;
+  (window as any)[PROMPT_BOUND_KEY] = true;
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    (window as any)[PROMPT_KEY] = event as BIPEvent;
+  });
+}
+
+ensureInstallPromptCapture();
+
 const DEEP = "var(--brand-petrol-deep)";
 const PETROL = "var(--brand-petrol)";
 const GREEN = "#16a34a";
@@ -66,7 +89,7 @@ interface Props {
  * y como último recurso abrir versión web (con signupId para continuidad).
  */
 export function InstallAppModal({ open, onClose, signupId, showContinuityHint }: Props) {
-  const [deferred, setDeferred] = useState<BIPEvent | null>(null);
+  const [deferred, setDeferred] = useState<BIPEvent | null>(() => getCapturedInstallPrompt());
   const [installed, setInstalled] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [installing, setInstalling] = useState(false);
@@ -74,6 +97,8 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    ensureInstallPromptCapture();
+    setDeferred(getCapturedInstallPrompt());
     const onBIP = (e: Event) => { e.preventDefault(); setDeferred(e as BIPEvent); };
     const onInstalled = () => {
       setInstalled(true);
@@ -107,11 +132,13 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
       }
     }
     // 2) Instalación Android/PWA nativa → usa manifest /app, no /activacion
-    if (deferred) {
+    const installPrompt = deferred ?? getCapturedInstallPrompt();
+    if (installPrompt) {
       try {
-        await deferred.prompt();
-        const choice = await deferred.userChoice;
+        await installPrompt.prompt();
+        const choice = await installPrompt.userChoice;
         setDeferred(null);
+        clearCapturedInstallPrompt();
         setInstalling(false);
         if (choice.outcome === "accepted") return;
       } catch {}
