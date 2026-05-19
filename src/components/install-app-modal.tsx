@@ -3,7 +3,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Smartphone, Apple, Download, Share, Plus, ExternalLink, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { Smartphone, Apple, Download, Share, Plus, ShieldCheck, CheckCircle2 } from "lucide-react";
 
 type BIPEvent = Event & {
   prompt: () => Promise<void>;
@@ -91,8 +91,8 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
     };
   }, [signupId]);
 
-  const openWeb = () => {
-    window.open(buildAppUrl(signupId), "_blank", "noopener,noreferrer");
+  const openInstalledApp = () => {
+    window.location.href = buildAppUrl(signupId);
   };
 
   const handleBigInstall = async () => {
@@ -166,7 +166,7 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
                 <CheckCircle2 className="w-5 h-5" /> App instalada — abriendo Senior Safe…
               </div>
               <Button
-                onClick={openWeb}
+                onClick={openInstalledApp}
                 className="w-full h-14 text-lg font-bold rounded-2xl"
                 style={{ background: DEEP, color: "white" }}
               >
@@ -230,14 +230,6 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
               <span className="absolute -top-2 -right-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400 text-amber-950">Próximamente</span>
             </div>
           </div>
-
-          <button
-            type="button"
-            onClick={openWeb}
-            className="w-full text-sm text-muted-foreground hover:text-foreground inline-flex items-center justify-center gap-1.5 py-2"
-          >
-            <ExternalLink className="w-4 h-4" /> Abrir versión web mientras tanto
-          </button>
         </div>
       </DialogContent>
     </Dialog>
