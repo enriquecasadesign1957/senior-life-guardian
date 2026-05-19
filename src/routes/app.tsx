@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
-  listFamily, addFamily, updateFamily, deleteFamily, verifyPin,
+  getAppConfiguration, listFamily, addFamily, updateFamily, deleteFamily, verifyPin,
 } from "@/lib/family.functions";
 import { WhatsAppActivationButton } from "@/components/whatsapp-activation-button";
 
@@ -35,6 +35,19 @@ const RED = "#dc2626";
 
 type Stage = "idle" | "confirm" | "sending" | "sent";
 type Contact = { id: string; nombre: string; parentesco: string; telefono: string };
+type TrialUser = {
+  id: string;
+  nombre: string;
+  email?: string | null;
+  telefono?: string | null;
+  plan?: string | null;
+  periodo?: string | null;
+  trial_active?: boolean | null;
+  trial_end?: string | null;
+  purchase_mode?: string | null;
+  subscription_status?: string | null;
+  payment_status?: string | null;
+};
 
 const PALETTE = ["#0ea5e9", "#a855f7", "#f59e0b", "#16a34a", "#dc2626"];
 const colorFor = (i: number) => PALETTE[i % PALETTE.length];
