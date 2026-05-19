@@ -593,6 +593,26 @@ function NavItem({ icon: Icon, label, active, onClick }: { icon: any; label: str
   );
 }
 
+function PermissionButton({ icon: Icon, label, done, onClick }: { icon: any; label: string; done: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={done}
+      className="w-full min-h-14 rounded-2xl border border-border px-4 py-3 flex items-center justify-between gap-3 text-left disabled:opacity-100"
+      style={done ? { background: "color-mix(in oklab, #16a34a 8%, white)", borderColor: GREEN } : undefined}
+    >
+      <span className="inline-flex items-center gap-3 min-w-0">
+        <span className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0" style={{ background: done ? GREEN : PETROL }}>
+          {done ? <CheckCircle2 className="w-5 h-5" aria-hidden="true" /> : <Icon className="w-5 h-5" aria-hidden="true" />}
+        </span>
+        <span className="font-bold text-foreground text-base leading-tight">{done ? "Listo: " : ""}{label}</span>
+      </span>
+      {!done && <span className="text-sm font-bold text-muted-foreground">Tocar</span>}
+    </button>
+  );
+}
+
 /* ---------- PIN Gate ---------- */
 function PinGateDialog({
   open, onClose, signupId, onSuccess,
