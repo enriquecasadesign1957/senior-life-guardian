@@ -169,7 +169,7 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
                   <p className="text-foreground">1. Abre el menú <b>⋮</b> arriba a la derecha.</p>
                   <p className="text-foreground">2. Toca <b>Instalar app</b> o <b>Añadir a pantalla de inicio</b>.</p>
                   <p className="text-foreground">3. Confirma <b>Instalar</b>.</p>
-                  <p className="text-muted-foreground text-xs pt-1">Si no aparece, ya abrimos la versión web en otra pestaña — tu cuenta está lista.</p>
+                  <p className="text-muted-foreground text-xs pt-1">Tu cuenta ya está lista — la app abrirá con todo configurado.</p>
                 </>
               )}
             </div>
