@@ -66,10 +66,6 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
     const onInstalled = () => {
       setInstalled(true);
       setDeferred(null);
-      // Abrir automáticamente la app después de instalar
-      setTimeout(() => {
-        window.location.href = buildAppUrl(signupId);
-      }, 800);
     };
     window.addEventListener("beforeinstallprompt", onBIP);
     window.addEventListener("appinstalled", onInstalled);
@@ -88,7 +84,7 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
   };
 
   const handleBigInstall = async () => {
-    // 1) Si PWA install nativo está disponible → dispararlo
+    // 1) PWA install nativo disponible → dispararlo directamente (sin abrir web)
     if (deferred) {
       try {
         await deferred.prompt();
@@ -98,18 +94,8 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
       } catch {}
       return;
     }
-    // 2) iOS: mostrar guía visual (no hay API de instalación)
-    if (isIOS) {
-      setShowGuide(true);
-      return;
-    }
-    // 3) Android sin evento: mostrar guía + abrir app web como fallback
+    // 2) Sin evento nativo: mostrar guía visual paso a paso (NO abrir web automáticamente)
     setShowGuide(true);
-    if (isAndroid) {
-      openWeb();
-    } else {
-      openWeb();
-    }
   };
 
   return (
@@ -183,7 +169,7 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
                   <p className="text-foreground">1. Abre el menú <b>⋮</b> arriba a la derecha.</p>
                   <p className="text-foreground">2. Toca <b>Instalar app</b> o <b>Añadir a pantalla de inicio</b>.</p>
                   <p className="text-foreground">3. Confirma <b>Instalar</b>.</p>
-                  <p className="text-muted-foreground text-xs pt-1">Si no aparece, ya abrimos la versión web en otra pestaña — tu cuenta está lista.</p>
+                  <p className="text-muted-foreground text-xs pt-1">Tu cuenta ya está lista — la app abrirá con todo configurado.</p>
                 </>
               )}
             </div>
