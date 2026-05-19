@@ -79,6 +79,21 @@ function AppHome() {
   const [manageOpen, setManageOpen] = useState(false);
   const [pinGateOpen, setPinGateOpen] = useState(false);
   const [pinUnlocked, setPinUnlocked] = useState(false);
+  const [installOpen, setInstallOpen] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const check = () =>
+      setIsInstalled(
+        window.matchMedia?.("(display-mode: standalone)").matches ||
+          (window.navigator as any).standalone === true,
+      );
+    check();
+    const onInstalled = () => setIsInstalled(true);
+    window.addEventListener("appinstalled", onInstalled);
+    return () => window.removeEventListener("appinstalled", onInstalled);
+  }, []);
 
   const list = useServerFn(listFamily);
   const loadConfig = useServerFn(getAppConfiguration);
