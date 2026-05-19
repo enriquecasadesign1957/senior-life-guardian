@@ -260,10 +260,9 @@ function ActivacionPage() {
 /* ---------------- Step 1: Acceder a la app ---------------- */
 const APP_URL = "https://senior-safe-link.lovable.app";
 
-function StepAppModal({ open, onClose, onDone, userPhone }: { open: boolean; onClose: () => void; onDone: () => void; userPhone: string | null }) {
-  const openApp = () => {
-    window.open(APP_URL, "_blank", "noopener,noreferrer");
-  };
+function StepAppModal({ open, onClose, onDone, userPhone, signupId }: { open: boolean; onClose: () => void; onDone: () => void; userPhone: string | null; signupId: string | null }) {
+  const [showInstall, setShowInstall] = useState(false);
+  const openInstall = () => setShowInstall(true);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
