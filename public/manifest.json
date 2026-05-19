@@ -16,19 +16,19 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "https://storage.googleapis.com/gpt-engineer-file-uploads/WEgAKtYLuSfQACezmGynaHiHwV53/social-images/social-1778871881128-Logo_alarma.webp",
+      "src": "/senior-life-guardian-192.webp",
       "sizes": "192x192",
       "type": "image/webp",
       "purpose": "any"
     },
     {
-      "src": "https://storage.googleapis.com/gpt-engineer-file-uploads/WEgAKtYLuSfQACezmGynaHiHwV53/social-images/social-1778871881128-Logo_alarma.webp",
+      "src": "/senior-life-guardian-512.webp",
       "sizes": "512x512",
       "type": "image/webp",
       "purpose": "any"
     },
     {
-      "src": "https://storage.googleapis.com/gpt-engineer-file-uploads/WEgAKtYLuSfQACezmGynaHiHwV53/social-images/social-1778871881128-Logo_alarma.webp",
+      "src": "/senior-life-guardian-512.webp",
       "sizes": "512x512",
       "type": "image/webp",
       "purpose": "maskable"
@@ -42,7 +42,7 @@
       "url": "/app?sos=1",
       "icons": [
         {
-          "src": "https://storage.googleapis.com/gpt-engineer-file-uploads/WEgAKtYLuSfQACezmGynaHiHwV53/social-images/social-1778871881128-Logo_alarma.webp",
+          "src": "/senior-life-guardian-192.webp",
           "sizes": "192x192",
           "type": "image/webp"
         }
@@ -55,7 +55,7 @@
       "url": "/app",
       "icons": [
         {
-          "src": "https://storage.googleapis.com/gpt-engineer-file-uploads/WEgAKtYLuSfQACezmGynaHiHwV53/social-images/social-1778871881128-Logo_alarma.webp",
+          "src": "/senior-life-guardian-192.webp",
           "sizes": "192x192",
           "type": "image/webp"
         }
