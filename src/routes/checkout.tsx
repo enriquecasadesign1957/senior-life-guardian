@@ -123,12 +123,14 @@ function CheckoutPage() {
       if (isContratar) {
         const { signup } = await createPurchase({ data: baseData });
         try {
-          sessionStorage.setItem("seniorsafe_user", JSON.stringify({
+          const userPayload = {
             id: signup.id, nombre: signup.nombre, email: signup.email, telefono: signup.telefono,
             plan: signup.plan, periodo: signup.periodo,
             trial_active: false, trial_end: null,
             purchase_mode: "contratar",
-          }));
+          };
+          sessionStorage.setItem("seniorsafe_user", JSON.stringify(userPayload));
+          localStorage.setItem("seniorsafe_user_backup", JSON.stringify(userPayload));
         } catch { /* ignore */ }
 
         const wp = await initWebpay({ data: {
@@ -173,12 +175,14 @@ function CheckoutPage() {
       }).catch((e) => console.warn("welcome whatsapp trigger failed", e));
 
       try {
-        sessionStorage.setItem("seniorsafe_user", JSON.stringify({
+        const userPayload = {
           id: data.id, nombre: data.nombre, email: data.email, telefono: data.telefono,
           plan: data.plan, periodo: data.periodo,
           trial_active: data.trial_active, trial_end: data.trial_end,
           purchase_mode: "trial",
-        }));
+        };
+        sessionStorage.setItem("seniorsafe_user", JSON.stringify(userPayload));
+        localStorage.setItem("seniorsafe_user_backup", JSON.stringify(userPayload));
       } catch { /* ignore */ }
 
       navigate({ to: "/activacion" });

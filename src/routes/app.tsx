@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
-  listFamily, addFamily, updateFamily, deleteFamily, verifyPin,
+  getAppConfiguration, listFamily, addFamily, updateFamily, deleteFamily, verifyPin,
 } from "@/lib/family.functions";
 import { WhatsAppActivationButton } from "@/components/whatsapp-activation-button";
 
@@ -35,6 +35,19 @@ const RED = "#dc2626";
 
 type Stage = "idle" | "confirm" | "sending" | "sent";
 type Contact = { id: string; nombre: string; parentesco: string; telefono: string };
+type TrialUser = {
+  id: string;
+  nombre: string;
+  email?: string | null;
+  telefono?: string | null;
+  plan?: string | null;
+  periodo?: string | null;
+  trial_active?: boolean | null;
+  trial_end?: string | null;
+  purchase_mode?: string | null;
+  subscription_status?: string | null;
+  payment_status?: string | null;
+};
 
 const PALETTE = ["#0ea5e9", "#a855f7", "#f59e0b", "#16a34a", "#dc2626"];
 const colorFor = (i: number) => PALETTE[i % PALETTE.length];
@@ -55,28 +68,71 @@ function AppHome() {
   const [userName, setUserName] = useState<string>("");
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loadingContacts, setLoadingContacts] = useState(true);
+  const [configReady, setConfigReady] = useState(false);
+  const [accountConfigured, setAccountConfigured] = useState(false);
+  const [gpsAllowed, setGpsAllowed] = useState(false);
+  const [notificationsAllowed, setNotificationsAllowed] = useState(false);
+  const [batteryChecked, setBatteryChecked] = useState(false);
 
   const [manageOpen, setManageOpen] = useState(false);
   const [pinGateOpen, setPinGateOpen] = useState(false);
   const [pinUnlocked, setPinUnlocked] = useState(false);
 
   const list = useServerFn(listFamily);
+  const loadConfig = useServerFn(getAppConfiguration);
 
-  // Load user from sessionStorage
+  // Load account from onboarding handoff or saved session, then hydrate app config.
   useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem("seniorsafe_user");
-      if (raw) {
-        const u = JSON.parse(raw);
-        if (u?.id) setUserId(u.id);
-        if (u?.nombre) setUserName(String(u.nombre).split(" ")[0]);
+    let alive = true;
+    (async () => {
+      setLoadingContacts(true);
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const signupId = params.get("ss") || undefined;
+        let stored: Partial<TrialUser> | null = null;
+        const raw = sessionStorage.getItem("seniorsafe_user") || localStorage.getItem("seniorsafe_user_backup");
+        if (raw) stored = JSON.parse(raw);
+
+        const lookup = {
+          signupId: signupId || stored?.id || undefined,
+          email: stored?.email || undefined,
+          telefono: stored?.telefono || undefined,
+        };
+        if (!lookup.signupId && !lookup.email && !lookup.telefono) return;
+
+        const res = await loadConfig({ data: lookup });
+        if (!alive) return;
+
+        if (res.configured && res.user) {
+          const user = res.user as TrialUser;
+          setUserId(user.id);
+          setUserName(String(user.nombre ?? "").split(" ")[0]);
+          setContacts(res.contacts as Contact[]);
+          setAccountConfigured(true);
+          try { sessionStorage.setItem("seniorsafe_user", JSON.stringify(user)); } catch {}
+          try { localStorage.setItem("seniorsafe_user_backup", JSON.stringify(user)); } catch {}
+          try { localStorage.setItem("seniorsafe_account_configured", "1"); } catch {}
+          try {
+            const hasContacts = Array.isArray(res.contacts) && res.contacts.length > 0;
+            localStorage.setItem("seniorsafe_progress", JSON.stringify({ pin: res.pinConfigured, contactos: hasContacts, gps: false, emergencia: false, app: true }));
+          } catch {}
+        } else if (stored?.id) {
+          setUserId(stored.id);
+          if (stored.nombre) setUserName(String(stored.nombre).split(" ")[0]);
+        }
+      } catch (e) {
+        console.error(e);
+        toast.error("No pudimos cargar tu configuración previa.");
+      } finally {
+        if (alive) { setLoadingContacts(false); setConfigReady(true); }
       }
-    } catch {}
-  }, []);
+    })();
+    return () => { alive = false; };
+  }, [loadConfig]);
 
   // Load contacts when userId is ready
   useEffect(() => {
-    if (!userId) { setLoadingContacts(false); return; }
+    if (!configReady || !userId || contacts.length > 0) return;
     let alive = true;
     (async () => {
       setLoadingContacts(true);
@@ -91,7 +147,7 @@ function AppHome() {
       }
     })();
     return () => { alive = false; };
-  }, [userId, list]);
+  }, [configReady, userId, contacts.length, list]);
 
   const familyCount = contacts.length;
 
@@ -126,6 +182,28 @@ function AppHome() {
   const requestManage = () => {
     if (pinUnlocked) setManageOpen(true);
     else setPinGateOpen(true);
+  };
+
+  const requestGps = () => {
+    if (!("geolocation" in navigator)) { toast.error("GPS no disponible en este teléfono."); return; }
+    navigator.geolocation.getCurrentPosition(
+      () => { setGpsAllowed(true); toast.success("GPS activado."); },
+      () => toast.error("Activa el GPS desde permisos del teléfono."),
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  };
+
+  const requestNotifications = async () => {
+    if (!("Notification" in window)) { toast.error("Notificaciones no disponibles."); return; }
+    const permission = await Notification.requestPermission();
+    setNotificationsAllowed(permission === "granted");
+    if (permission === "granted") toast.success("Notificaciones activadas.");
+    else toast.error("Activa las notificaciones desde permisos del teléfono.");
+  };
+
+  const markBatteryReady = () => {
+    setBatteryChecked(true);
+    toast.success("Listo. Recuerda permitir funcionamiento en segundo plano.");
   };
 
   return (
@@ -165,6 +243,34 @@ function AppHome() {
             </div>
           </div>
         </section>
+
+        {accountConfigured && (
+          <section aria-label="Configuración recuperada" className="bg-card border-2 rounded-3xl p-5 mb-4 shadow-sm" style={{ borderColor: GREEN }}>
+            <div className="flex items-start gap-3">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shrink-0" style={{ background: GREEN }}>
+                <Shield className="w-6 h-6" aria-hidden="true" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-foreground leading-tight">Tu cuenta ya está configurada</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Cargamos tu nombre, familiares, PIN, WhatsApp y avance de activación. No debes comenzar de nuevo.
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {accountConfigured && (!gpsAllowed || !notificationsAllowed || !batteryChecked) && (
+          <section aria-label="Permisos del teléfono" className="bg-card border border-border rounded-3xl p-4 mb-5 shadow-sm">
+            <h2 className="font-bold text-foreground text-lg mb-1">Solo faltan permisos del teléfono</h2>
+            <p className="text-sm text-muted-foreground mb-3">Son necesarios para protegerte en emergencias.</p>
+            <div className="space-y-2">
+              <PermissionButton icon={MapPin} label="Activar GPS" done={gpsAllowed} onClick={requestGps} />
+              <PermissionButton icon={Bell} label="Activar notificaciones" done={notificationsAllowed} onClick={requestNotifications} />
+              <PermissionButton icon={Battery} label="Revisar batería / segundo plano" done={batteryChecked} onClick={markBatteryReady} />
+            </div>
+          </section>
+        )}
 
         {/* GIANT EMERGENCY BUTTON — sin PIN */}
         <div className="flex-1 flex flex-col items-center justify-center py-4">
@@ -483,6 +589,26 @@ function NavItem({ icon: Icon, label, active, onClick }: { icon: any; label: str
     >
       <Icon className="w-5 h-5" aria-hidden="true" />
       {label}
+    </button>
+  );
+}
+
+function PermissionButton({ icon: Icon, label, done, onClick }: { icon: any; label: string; done: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={done}
+      className="w-full min-h-14 rounded-2xl border border-border px-4 py-3 flex items-center justify-between gap-3 text-left disabled:opacity-100"
+      style={done ? { background: "color-mix(in oklab, #16a34a 8%, white)", borderColor: GREEN } : undefined}
+    >
+      <span className="inline-flex items-center gap-3 min-w-0">
+        <span className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0" style={{ background: done ? GREEN : PETROL }}>
+          {done ? <CheckCircle2 className="w-5 h-5" aria-hidden="true" /> : <Icon className="w-5 h-5" aria-hidden="true" />}
+        </span>
+        <span className="font-bold text-foreground text-base leading-tight">{done ? "Listo: " : ""}{label}</span>
+      </span>
+      {!done && <span className="text-sm font-bold text-muted-foreground">Tocar</span>}
     </button>
   );
 }
