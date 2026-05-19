@@ -70,6 +70,9 @@ function AppHome() {
   const [loadingContacts, setLoadingContacts] = useState(true);
   const [configReady, setConfigReady] = useState(false);
   const [accountConfigured, setAccountConfigured] = useState(false);
+  const [gpsAllowed, setGpsAllowed] = useState(false);
+  const [notificationsAllowed, setNotificationsAllowed] = useState(false);
+  const [batteryChecked, setBatteryChecked] = useState(false);
 
   const [manageOpen, setManageOpen] = useState(false);
   const [pinGateOpen, setPinGateOpen] = useState(false);
@@ -90,13 +93,14 @@ function AppHome() {
         const raw = sessionStorage.getItem("seniorsafe_user") || localStorage.getItem("seniorsafe_user_backup");
         if (raw) stored = JSON.parse(raw);
 
-        const res = await loadConfig({
-          data: {
-            signupId: signupId || stored?.id || undefined,
-            email: stored?.email || undefined,
-            telefono: stored?.telefono || undefined,
-          },
-        });
+        const lookup = {
+          signupId: signupId || stored?.id || undefined,
+          email: stored?.email || undefined,
+          telefono: stored?.telefono || undefined,
+        };
+        if (!lookup.signupId && !lookup.email && !lookup.telefono) return;
+
+        const res = await loadConfig({ data: lookup });
         if (!alive) return;
 
         if (res.configured && res.user) {
@@ -105,10 +109,13 @@ function AppHome() {
           setUserName(String(user.nombre ?? "").split(" ")[0]);
           setContacts(res.contacts as Contact[]);
           setAccountConfigured(true);
-          sessionStorage.setItem("seniorsafe_user", JSON.stringify(user));
-          localStorage.setItem("seniorsafe_user_backup", JSON.stringify(user));
-          localStorage.setItem("seniorsafe_account_configured", "1");
-          localStorage.setItem("seniorsafe_progress", JSON.stringify({ pin: res.pinConfigured, contactos: (res.contacts?.length ?? 0) > 0, gps: false, emergencia: false, app: true }));
+          try { sessionStorage.setItem("seniorsafe_user", JSON.stringify(user)); } catch {}
+          try { localStorage.setItem("seniorsafe_user_backup", JSON.stringify(user)); } catch {}
+          try { localStorage.setItem("seniorsafe_account_configured", "1"); } catch {}
+          try {
+            const hasContacts = Array.isArray(res.contacts) && res.contacts.length > 0;
+            localStorage.setItem("seniorsafe_progress", JSON.stringify({ pin: res.pinConfigured, contactos: hasContacts, gps: false, emergencia: false, app: true }));
+          } catch {}
         } else if (stored?.id) {
           setUserId(stored.id);
           if (stored.nombre) setUserName(String(stored.nombre).split(" ")[0]);
