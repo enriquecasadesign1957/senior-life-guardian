@@ -195,8 +195,8 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
                   <p className="text-foreground">1. Si aparece una ventana, toca <b>Instalar</b>.</p>
                   <p className="text-foreground">2. Si no aparece, abre el menú <b>⋮</b> arriba a la derecha.</p>
                   <p className="text-foreground">3. Toca solo <b>Instalar app</b>.</p>
-                  <p className="text-foreground">4. Si dice <b>Crear acceso directo</b>, no lo uses.</p>
-                  <p className="text-foreground">3. Confirma <b>Instalar</b>.</p>
+                  <p className="text-foreground">4. Confirma <b>Instalar</b>.</p>
+                  <p className="text-foreground">Si dice <b>Crear acceso directo</b>, no lo uses.</p>
                   <p className="text-muted-foreground text-xs pt-1">Tu cuenta ya está lista — la app abrirá con todo configurado.</p>
                 </>
               )}
