@@ -243,14 +243,15 @@ function ActivacionPage() {
       <SiteFooter />
 
       {/* Step Modals */}
-      <StepAppModal open={openStep === "app"} onClose={() => setOpenStep(null)} onDone={() => markDone("app")} userPhone={user?.telefono ?? null} />
+      <StepAppModal open={openStep === "app"} onClose={() => setOpenStep(null)} onDone={() => markDone("app")} userPhone={user?.telefono ?? null} signupId={user?.id ?? null} />
       <StepPinModal open={openStep === "pin"} onClose={() => setOpenStep(null)} onDone={() => markDone("pin")} userId={user?.id ?? null} />
       <StepContactsModal open={openStep === "contactos"} onClose={() => setOpenStep(null)} onDone={() => markDone("contactos")} userId={user?.id ?? null} />
       <StepGpsModal open={openStep === "gps"} onClose={() => setOpenStep(null)} onDone={() => markDone("gps")} />
       <StepEmergencyModal open={openStep === "emergencia"} onClose={() => setOpenStep(null)} onDone={() => markDone("emergencia")} userName={firstName} />
 
       {/* Completion */}
-      <CompletionModal open={showComplete} onClose={() => setShowComplete(false)} firstName={firstName} />
+      <CompletionModal open={showComplete} onClose={() => setShowComplete(false)} firstName={firstName} onDownload={() => { setShowComplete(false); setShowInstall(true); }} />
+      <InstallAppModal open={showInstall} onClose={() => setShowInstall(false)} signupId={user?.id ?? null} showContinuityHint />
       <WhatsAppFloat />
     </div>
   );
