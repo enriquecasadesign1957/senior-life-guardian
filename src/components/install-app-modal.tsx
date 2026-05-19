@@ -3,7 +3,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Smartphone, Apple, Download, Share, Plus, ExternalLink, ShieldCheck } from "lucide-react";
+import { Smartphone, Apple, Download, Share, Plus, ExternalLink, ShieldCheck, CheckCircle2 } from "lucide-react";
 
 type BIPEvent = Event & {
   prompt: () => Promise<void>;
@@ -18,9 +18,16 @@ const GREEN = "#16a34a";
 const APP_BASE_URL = "https://senior-safe-link.lovable.app";
 
 function buildAppUrl(signupId: string | null) {
-  if (!signupId) return APP_BASE_URL;
+  let resolvedSignupId = signupId;
+  if (!resolvedSignupId && typeof window !== "undefined") {
+    try {
+      const raw = sessionStorage.getItem("seniorsafe_user") || localStorage.getItem("seniorsafe_user_backup");
+      resolvedSignupId = raw ? JSON.parse(raw)?.id ?? null : null;
+    } catch {}
+  }
+  if (!resolvedSignupId) return APP_BASE_URL;
   const u = new URL(APP_BASE_URL);
-  u.searchParams.set("ss", signupId);
+  u.searchParams.set("ss", resolvedSignupId);
   u.searchParams.set("source", "onboarding");
   return u.toString();
 }
@@ -88,7 +95,7 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
           </div>
           <DialogTitle className="text-2xl">Instalar Senior Safe en tu teléfono</DialogTitle>
           <DialogDescription className="text-base">
-            Elige cómo prefieres instalar la app. No es necesario volver a configurar nada.
+            Sigue estos pasos. Tu cuenta ya está configurada y la app la reconocerá automáticamente.
           </DialogDescription>
         </DialogHeader>
 
@@ -103,6 +110,19 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
         )}
 
         <div className="space-y-3">
+          <div className="grid gap-2 text-sm">
+            {[
+              "Toca Instalar app ahora si aparece el botón.",
+              isAndroid ? "Si Chrome pregunta, toca Instalar o Añadir." : "En iPhone usa Compartir y Añadir a pantalla de inicio.",
+              "Abre Senior Safe: verás tu cuenta lista, sin repetir onboarding.",
+            ].map((step, i) => (
+              <div key={step} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
+                <span className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold shrink-0" style={{ background: i === 2 ? GREEN : DEEP }}>{i + 1}</span>
+                <span className="font-semibold text-foreground">{step}</span>
+              </div>
+            ))}
+          </div>
+
           {/* PWA install (Android/desktop) */}
           {deferred && !installed && (
             <Button
@@ -143,8 +163,8 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
           )}
 
           {installed && (
-            <div className="rounded-2xl p-4 text-sm font-semibold text-center" style={{ background: "color-mix(in oklab, #16a34a 14%, white)", color: GREEN }}>
-              ✅ App ya instalada en este dispositivo
+            <div className="rounded-2xl p-4 text-sm font-semibold text-center flex items-center justify-center gap-2" style={{ background: "color-mix(in oklab, #16a34a 14%, white)", color: GREEN }}>
+              <CheckCircle2 className="w-5 h-5" /> App ya instalada en este dispositivo
             </div>
           )}
 
