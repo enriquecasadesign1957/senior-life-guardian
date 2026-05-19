@@ -618,6 +618,8 @@ function AppHome() {
           </div>
         </div>
       )}
+
+      <InstallAppModal open={installOpen} onClose={() => setInstallOpen(false)} signupId={userId} />
     </div>
   );
 }
