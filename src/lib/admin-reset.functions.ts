@@ -51,3 +51,60 @@ export const resetTestData = createServerFn({ method: "POST" })
 
     return { deleted: ids.length, emails, message: `Eliminados ${ids.length} registros de prueba.` };
   });
+
+/**
+ * Resetea SOLO los datos de prueba de una cuenta (la mía), sin tocar:
+ *  - el registro trial_signups (se mantiene)
+ *  - webpay_transactions / pagos
+ *  - otras cuentas
+ *
+ * Borra: emergency_contacts, user_pins, alert_logs.
+ * Resetea flags: onboarding_completed=false, whatsapp_activated=false.
+ */
+export const resetMyAccountData = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z.object({
+      confirm: z.literal("RESET"),
+      email: z.string().email().max(255),
+    }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const email = data.email.trim().toLowerCase();
+
+    const { data: signup, error: selErr } = await supabaseAdmin
+      .from("trial_signups")
+      .select("id,email,nombre,payment_status,subscription_status")
+      .eq("email", email)
+      .maybeSingle();
+    if (selErr) throw selErr;
+    if (!signup) {
+      return { ok: false, message: `No se encontró ninguna cuenta con el email ${email}.` };
+    }
+
+    const id = signup.id;
+
+    const [{ error: ecErr, count: ecCount }, { error: pinErr, count: pinCount }, { error: alErr, count: alCount }] = await Promise.all([
+      supabaseAdmin.from("emergency_contacts").delete({ count: "exact" }).eq("trial_signup_id", id),
+      supabaseAdmin.from("user_pins").delete({ count: "exact" }).eq("trial_signup_id", id),
+      supabaseAdmin.from("alert_logs").delete({ count: "exact" }).eq("trial_signup_id", id),
+    ]);
+    if (ecErr) throw ecErr;
+    if (pinErr) throw pinErr;
+    if (alErr) throw alErr;
+
+    const { error: updErr } = await supabaseAdmin
+      .from("trial_signups")
+      .update({ onboarding_completed: false, whatsapp_activated: false, updated_at: new Date().toISOString() })
+      .eq("id", id);
+    if (updErr) throw updErr;
+
+    return {
+      ok: true,
+      email: signup.email,
+      nombre: signup.nombre,
+      contactsDeleted: ecCount ?? 0,
+      pinsDeleted: pinCount ?? 0,
+      alertsDeleted: alCount ?? 0,
+      message: `Cuenta ${signup.email} lista para repetir pruebas. Mantenida en backend (pagos intactos).`,
+    };
+  });
