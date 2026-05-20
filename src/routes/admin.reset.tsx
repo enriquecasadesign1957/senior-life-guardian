@@ -14,9 +14,42 @@ export const Route = createFileRoute("/admin/reset")({
 
 function AdminResetPage() {
   const reset = useServerFn(resetTestData);
+  const resetMine = useServerFn(resetMyAccountData);
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ deleted: number; emails: string[]; message: string } | null>(null);
+  const [myEmail, setMyEmail] = useState("");
+  const [myConfirm, setMyConfirm] = useState("");
+  const [myLoading, setMyLoading] = useState(false);
+  const [myResult, setMyResult] = useState<any>(null);
+
+  const handleResetMine = async () => {
+    if (myConfirm !== "RESET") return toast.error("Escribe RESET para confirmar");
+    if (!myEmail.trim()) return toast.error("Ingresa tu email");
+    setMyLoading(true);
+    try {
+      const res = await resetMine({ data: { confirm: "RESET", email: myEmail.trim() } });
+      setMyResult(res);
+      if (res.ok) {
+        // limpiar sesión local del mismo navegador
+        try {
+          Object.keys(localStorage).forEach((k) => {
+            if (k.startsWith("seniorsafe") || k.startsWith("ss_")) localStorage.removeItem(k);
+          });
+          Object.keys(sessionStorage).forEach((k) => {
+            if (k.startsWith("seniorsafe") || k.startsWith("ss_")) sessionStorage.removeItem(k);
+          });
+        } catch {}
+        toast.success(res.message);
+      } else {
+        toast.error(res.message);
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "Error al resetear cuenta");
+    } finally {
+      setMyLoading(false);
+    }
+  };
 
   const handleReset = async () => {
     if (confirm !== "RESET") {
