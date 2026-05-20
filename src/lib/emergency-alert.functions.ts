@@ -57,9 +57,11 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const lovableKey = process.env.LOVABLE_API_KEY;
     const twilioKey = process.env.TWILIO_API_KEY;
-    const waFrom = process.env.TWILIO_WHATSAPP_FROM || "whatsapp:+14155238886";
+    // WhatsApp SIEMPRE desde el sandbox oficial Twilio. Nunca usar número chileno.
+    const waFrom = "whatsapp:+14155238886";
     const smsFrom = process.env.TWILIO_SMS_FROM || "";
     const voiceFrom = process.env.TWILIO_VOICE_FROM || smsFrom;
+
 
     // Resolver usuario + familiares
     const { data: user, error: userErr } = await supabaseAdmin
