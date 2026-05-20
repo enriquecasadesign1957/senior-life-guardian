@@ -52,7 +52,7 @@
       "name": "Mi configuración",
       "short_name": "Configurar",
       "description": "Abrir Senior Safe",
-      "url": "/app",
+      "url": "/native",
       "icons": [
         {
           "src": "/senior-life-guardian-192.webp",
