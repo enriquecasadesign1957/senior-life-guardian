@@ -39,7 +39,7 @@
       "name": "Botón de emergencia",
       "short_name": "Emergencia",
       "description": "Enviar alerta inmediata a familiares",
-      "url": "/app?sos=1",
+      "url": "/native?sos=1",
       "icons": [
         {
           "src": "/senior-life-guardian-192.webp",
