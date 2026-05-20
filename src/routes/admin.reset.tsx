@@ -107,6 +107,52 @@ function AdminResetPage() {
           </p>
         </div>
 
+        <Card className="p-6 space-y-4 border-primary/40">
+          <div>
+            <h2 className="font-semibold text-foreground mb-2">🔁 Resetear SOLO mi cuenta (para repetir pruebas)</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Borra <strong>familiares, PIN y alertas</strong> de tu cuenta, y reinicia el onboarding y la activación de WhatsApp.
+              <br />
+              <strong className="text-foreground">No toca</strong> pagos, Webpay, otras cuentas ni configuraciones.
+            </p>
+            <Input
+              type="email"
+              value={myEmail}
+              onChange={(e) => setMyEmail(e.target.value)}
+              placeholder="tu-email@ejemplo.com"
+              className="mb-3"
+            />
+            <Input
+              value={myConfirm}
+              onChange={(e) => setMyConfirm(e.target.value)}
+              placeholder='Escribe "RESET" para confirmar'
+              className="mb-3"
+            />
+            <Button
+              onClick={handleResetMine}
+              disabled={myLoading || myConfirm !== "RESET" || !myEmail.trim()}
+              className="w-full"
+            >
+              {myLoading ? "Reseteando…" : "Resetear mi cuenta"}
+            </Button>
+          </div>
+
+          {myResult && (
+            <div className="mt-4 p-4 bg-muted rounded-lg text-sm space-y-1">
+              <p className="font-medium">{myResult.message}</p>
+              {myResult.ok && (
+                <ul className="list-disc pl-5 text-muted-foreground">
+                  <li>Familiares eliminados: {myResult.contactsDeleted}</li>
+                  <li>PIN eliminado: {myResult.pinsDeleted}</li>
+                  <li>Alertas eliminadas: {myResult.alertsDeleted}</li>
+                  <li>Onboarding y WhatsApp reiniciados</li>
+                </ul>
+              )}
+            </div>
+          )}
+        </Card>
+
+
         <Card className="p-6 space-y-4 border-destructive/30">
           <div>
             <h2 className="font-semibold text-foreground mb-2">⚠️ Eliminar datos de prueba en backend</h2>
