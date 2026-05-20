@@ -14,6 +14,7 @@ import { Route as TutorialRouteImport } from './routes/tutorial'
 import { Route as TerminosRouteImport } from './routes/terminos'
 import { Route as PrivacidadRouteImport } from './routes/privacidad'
 import { Route as PlanesRouteImport } from './routes/planes'
+import { Route as NativeRouteImport } from './routes/native'
 import { Route as FlujoRouteImport } from './routes/flujo'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CheckoutRouteImport } from './routes/checkout'
@@ -55,6 +56,11 @@ const PrivacidadRoute = PrivacidadRouteImport.update({
 const PlanesRoute = PlanesRouteImport.update({
   id: '/planes',
   path: '/planes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NativeRoute = NativeRouteImport.update({
+  id: '/native',
+  path: '/native',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FlujoRoute = FlujoRouteImport.update({
@@ -157,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
   '/flujo': typeof FlujoRoute
+  '/native': typeof NativeRoute
   '/planes': typeof PlanesRoute
   '/privacidad': typeof PrivacidadRoute
   '/terminos': typeof TerminosRoute
@@ -181,6 +188,7 @@ export interface FileRoutesByTo {
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
   '/flujo': typeof FlujoRoute
+  '/native': typeof NativeRoute
   '/planes': typeof PlanesRoute
   '/privacidad': typeof PrivacidadRoute
   '/terminos': typeof TerminosRoute
@@ -206,6 +214,7 @@ export interface FileRoutesById {
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
   '/flujo': typeof FlujoRoute
+  '/native': typeof NativeRoute
   '/planes': typeof PlanesRoute
   '/privacidad': typeof PrivacidadRoute
   '/terminos': typeof TerminosRoute
@@ -232,6 +241,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/dashboard'
     | '/flujo'
+    | '/native'
     | '/planes'
     | '/privacidad'
     | '/terminos'
@@ -256,6 +266,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/dashboard'
     | '/flujo'
+    | '/native'
     | '/planes'
     | '/privacidad'
     | '/terminos'
@@ -280,6 +291,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/dashboard'
     | '/flujo'
+    | '/native'
     | '/planes'
     | '/privacidad'
     | '/terminos'
@@ -305,6 +317,7 @@ export interface RootRouteChildren {
   CheckoutRoute: typeof CheckoutRoute
   DashboardRoute: typeof DashboardRoute
   FlujoRoute: typeof FlujoRoute
+  NativeRoute: typeof NativeRoute
   PlanesRoute: typeof PlanesRoute
   PrivacidadRoute: typeof PrivacidadRoute
   TerminosRoute: typeof TerminosRoute
@@ -356,6 +369,13 @@ declare module '@tanstack/react-router' {
       path: '/planes'
       fullPath: '/planes'
       preLoaderRoute: typeof PlanesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/native': {
+      id: '/native'
+      path: '/native'
+      fullPath: '/native'
+      preLoaderRoute: typeof NativeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/flujo': {
@@ -489,6 +509,7 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutRoute: CheckoutRoute,
   DashboardRoute: DashboardRoute,
   FlujoRoute: FlujoRoute,
+  NativeRoute: NativeRoute,
   PlanesRoute: PlanesRoute,
   PrivacidadRoute: PrivacidadRoute,
   TerminosRoute: TerminosRoute,
