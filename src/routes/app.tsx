@@ -384,12 +384,15 @@ function AppHome() {
             </span>
           </button>
           <p className="mt-4 text-center text-sm text-muted-foreground max-w-[18rem]">
-            {familyCount > 0 ? (
+            {loadingContacts || !configReady ? (
+              <>Cargando tu red familiar…</>
+            ) : familyCount > 0 ? (
               <>Avisaremos a <strong className="text-foreground">{familyCount} familiar{familyCount === 1 ? "" : "es"}</strong> con tu ubicación exacta.</>
             ) : (
               <>Agrega un familiar en <strong className="text-foreground">Tu red familiar</strong> para que reciba tus alertas.</>
             )}
           </p>
+
         </div>
 
         {/* GPS card */}
