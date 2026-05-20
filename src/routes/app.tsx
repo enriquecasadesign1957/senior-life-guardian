@@ -184,18 +184,63 @@ function AppHome() {
     return () => clearInterval(id);
   }, [stage]);
 
+  const sendAlert = useServerFn(sendEmergencyAlert);
+  const [alertSummary, setAlertSummary] = useState<{ delivered: number; total: number; status: string } | null>(null);
+
   useEffect(() => {
     if (stage !== "sending") return;
+    let cancelled = false;
     setDeliveredTo(0);
+    setAlertSummary(null);
     if ("vibrate" in navigator) navigator.vibrate?.([100, 60, 100]);
+
+    // Progreso visual mientras se ejecuta el envío real
     const total = Math.max(1, familyCount);
     const ticks: ReturnType<typeof setTimeout>[] = [];
     for (let i = 0; i < total; i++) {
-      ticks.push(setTimeout(() => setDeliveredTo(i + 1), 500 + i * 450));
+      ticks.push(setTimeout(() => setDeliveredTo((d) => Math.min(total, d + 1)), 400 + i * 350));
     }
-    ticks.push(setTimeout(() => setStage("sent"), 500 + total * 450 + 300));
-    return () => ticks.forEach(clearTimeout);
-  }, [stage, familyCount]);
+
+    (async () => {
+      if (!userId) {
+        toast.error("Sesión no encontrada. No pudimos enviar la alerta.");
+        if (!cancelled) setStage("sent");
+        return;
+      }
+
+      // 1) Obtener GPS real (con timeout corto, no bloquea el envío)
+      const gps = await new Promise<{ lat: number; lng: number; accuracy?: number } | null>((resolve) => {
+        if (!("geolocation" in navigator)) return resolve(null);
+        const to = setTimeout(() => resolve(null), 6000);
+        navigator.geolocation.getCurrentPosition(
+          (pos) => { clearTimeout(to); resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }); },
+          () => { clearTimeout(to); resolve(null); },
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: 30000 },
+        );
+      });
+
+      try {
+        const res: any = await sendAlert({ data: { signupId: userId, gps } });
+        if (cancelled) return;
+        const sent = (res?.results ?? []).filter((r: any) => r.status === "sent").length;
+        setAlertSummary({ delivered: sent, total: res?.results?.length ?? 0, status: res?.status ?? "unknown" });
+        if (res?.status === "delivered") toast.success("Alerta enviada a tu familia.");
+        else if (res?.status === "partial") toast.warning("Alerta enviada parcialmente.");
+        else if (res?.status === "no_recipients") toast.error("No hay familiares configurados.");
+        else toast.error("No pudimos enviar la alerta. Llama directamente.");
+      } catch (e) {
+        console.error(e);
+        if (!cancelled) toast.error("Error enviando la alerta.");
+      } finally {
+        if (!cancelled) {
+          setDeliveredTo(total);
+          setStage("sent");
+        }
+      }
+    })();
+
+    return () => { cancelled = true; ticks.forEach(clearTimeout); };
+  }, [stage, familyCount, userId, sendAlert]);
 
   const requestManage = () => {
     if (pinUnlocked) setManageOpen(true);
