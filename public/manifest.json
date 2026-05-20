@@ -2,7 +2,7 @@
   "name": "Senior Life Guardian",
   "short_name": "Senior Life",
   "description": "Tu red de cuidado familiar siempre activa. Alertas inmediatas por WhatsApp, SMS y llamada.",
-  "start_url": "/app?source=pwa",
+  "start_url": "/native?source=pwa",
   "id": "senior-life-guardian",
   "scope": "/",
   "display": "standalone",
@@ -39,7 +39,7 @@
       "name": "Botón de emergencia",
       "short_name": "Emergencia",
       "description": "Enviar alerta inmediata a familiares",
-      "url": "/app?sos=1",
+      "url": "/native?sos=1",
       "icons": [
         {
           "src": "/senior-life-guardian-192.webp",
@@ -52,7 +52,7 @@
       "name": "Mi configuración",
       "short_name": "Configurar",
       "description": "Abrir Senior Safe",
-      "url": "/app",
+      "url": "/native",
       "icons": [
         {
           "src": "/senior-life-guardian-192.webp",

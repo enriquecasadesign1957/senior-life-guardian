@@ -1,8 +1,12 @@
-# 📱 Compilar APK Android — Senior Life Guardian
+# 📱 Compilar APK Android — Senior Safe (app limpia)
 
-Esta guía genera **SeniorLifeGuardian.apk** real, instalable, en modo standalone (sin barra de navegador). No modifica onboarding, Supabase, WhatsApp, Webpay ni alertas: la app envuelve el sitio publicado `https://alarmaseniorsafe.cl`.
+La app Android es un binario **independiente** de la web `alarmaseniorsafe.cl`.
+Carga su propio bundle (`dist/`) y abre **directamente la pantalla `/native`**:
+solo botón de emergencia, "Estoy bien", estado de protección y guardianes
+conectados — sin onboarding, sin Chrome, sin barra de URL.
 
----
+La web sigue siendo registro, onboarding, pagos y configuración.
+La app sólo pide el correo registrado la primera vez para vincular la cuenta.
 
 ## Requisitos previos (una sola vez)
 
