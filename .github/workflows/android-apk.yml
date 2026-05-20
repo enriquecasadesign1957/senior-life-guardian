@@ -1,0 +1,97 @@
+name: Build Android APK
+
+# Compila automáticamente el APK de Senior Safe sin Android Studio.
+# Se ejecuta en cada push a main o manualmente desde la pestaña Actions.
+# El APK queda disponible como artifact descargable y, en pushes con tag v*,
+# se publica como GitHub Release.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Tag opcional para crear un Release (ej: v1.0.3)'
+        required: false
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Install Capacitor
+        run: |
+          bun add @capacitor/core @capacitor/cli @capacitor/android \
+                  @capacitor/splash-screen @capacitor/local-notifications \
+                  @capacitor/geolocation
+
+      - name: Build web bundle
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
+        run: bun run build
+
+      - name: Add Android platform (si no existe)
+        run: |
+          if [ ! -d "android" ]; then
+            bunx cap add android
+          fi
+          bunx cap sync android
+
+      - name: Build APK (debug)
+        working-directory: android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Rename APK
+        run: |
+          mkdir -p artifacts
+          cp android/app/build/outputs/apk/debug/app-debug.apk \
+             artifacts/SeniorSafe-${{ github.run_number }}.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SeniorSafe-APK
+          path: artifacts/*.apk
+          retention-days: 90
+
+      - name: Publish Release (solo en tags)
+        if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.release_tag != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.release_tag || github.ref_name }}
+          name: Senior Safe ${{ github.event.inputs.release_tag || github.ref_name }}
+          files: artifacts/*.apk
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
