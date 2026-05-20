@@ -57,9 +57,11 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const lovableKey = process.env.LOVABLE_API_KEY;
     const twilioKey = process.env.TWILIO_API_KEY;
-    const waFrom = process.env.TWILIO_WHATSAPP_FROM || "whatsapp:+14155238886";
+    // WhatsApp SIEMPRE desde el sandbox oficial Twilio. Nunca usar número chileno.
+    const waFrom = "whatsapp:+14155238886";
     const smsFrom = process.env.TWILIO_SMS_FROM || "";
     const voiceFrom = process.env.TWILIO_VOICE_FROM || smsFrom;
+
 
     // Resolver usuario + familiares
     const { data: user, error: userErr } = await supabaseAdmin
@@ -95,8 +97,8 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
       `Por favor contacta inmediatamente al usuario.`;
 
     const voiceText =
-      `Urgente alerta Senior. ${user.nombre} necesita ayuda. ` +
-      `Revise WhatsApp o S M S para ver la ubicación.`;
+      `Urgente. Alerta Senior. ${user.nombre} necesita ayuda. ` +
+      `Revise WhatsApp o mensaje de texto para ver la ubicación. Repito: Urgente alerta Senior.`;
     const twiml =
       `<?xml version="1.0" encoding="UTF-8"?>` +
       `<Response><Pause length="1"/>` +
@@ -104,6 +106,7 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
       `<Pause length="1"/>` +
       `<Say language="es-MX" voice="Polly.Mia">${voiceText}</Say>` +
       `</Response>`;
+
 
     // Crear log inicial (pending)
     const { data: logRow } = await supabaseAdmin
