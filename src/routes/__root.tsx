@@ -124,6 +124,19 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+
+  // Si la app corre dentro de Capacitor (APK/iOS), redirigir SIEMPRE a /native.
+  // En navegador web normal no hace nada (Capacitor no está definido).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const isCapacitor = Boolean((window as any).Capacitor?.isNativePlatform?.());
+    if (!isCapacitor) return;
+    const path = window.location.pathname;
+    if (path === "/" || path === "" || path === "/index.html") {
+      router.navigate({ to: "/native" });
+    }
+  }, [router]);
 
   return (
     <QueryClientProvider client={queryClient}>
