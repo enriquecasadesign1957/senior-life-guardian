@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { resetTestData } from "@/lib/admin-reset.functions";
+import { resetTestData, resetMyAccountData } from "@/lib/admin-reset.functions";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,9 +14,42 @@ export const Route = createFileRoute("/admin/reset")({
 
 function AdminResetPage() {
   const reset = useServerFn(resetTestData);
+  const resetMine = useServerFn(resetMyAccountData);
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ deleted: number; emails: string[]; message: string } | null>(null);
+  const [myEmail, setMyEmail] = useState("");
+  const [myConfirm, setMyConfirm] = useState("");
+  const [myLoading, setMyLoading] = useState(false);
+  const [myResult, setMyResult] = useState<any>(null);
+
+  const handleResetMine = async () => {
+    if (myConfirm !== "RESET") return toast.error("Escribe RESET para confirmar");
+    if (!myEmail.trim()) return toast.error("Ingresa tu email");
+    setMyLoading(true);
+    try {
+      const res = await resetMine({ data: { confirm: "RESET", email: myEmail.trim() } });
+      setMyResult(res);
+      if (res.ok) {
+        // limpiar sesión local del mismo navegador
+        try {
+          Object.keys(localStorage).forEach((k) => {
+            if (k.startsWith("seniorsafe") || k.startsWith("ss_")) localStorage.removeItem(k);
+          });
+          Object.keys(sessionStorage).forEach((k) => {
+            if (k.startsWith("seniorsafe") || k.startsWith("ss_")) sessionStorage.removeItem(k);
+          });
+        } catch {}
+        toast.success(res.message);
+      } else {
+        toast.error(res.message);
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "Error al resetear cuenta");
+    } finally {
+      setMyLoading(false);
+    }
+  };
 
   const handleReset = async () => {
     if (confirm !== "RESET") {
@@ -73,6 +106,52 @@ function AdminResetPage() {
             <strong className="text-foreground">No toca</strong> cuentas pagadas ni suscripciones activas.
           </p>
         </div>
+
+        <Card className="p-6 space-y-4 border-primary/40">
+          <div>
+            <h2 className="font-semibold text-foreground mb-2">🔁 Resetear SOLO mi cuenta (para repetir pruebas)</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Borra <strong>familiares, PIN y alertas</strong> de tu cuenta, y reinicia el onboarding y la activación de WhatsApp.
+              <br />
+              <strong className="text-foreground">No toca</strong> pagos, Webpay, otras cuentas ni configuraciones.
+            </p>
+            <Input
+              type="email"
+              value={myEmail}
+              onChange={(e) => setMyEmail(e.target.value)}
+              placeholder="tu-email@ejemplo.com"
+              className="mb-3"
+            />
+            <Input
+              value={myConfirm}
+              onChange={(e) => setMyConfirm(e.target.value)}
+              placeholder='Escribe "RESET" para confirmar'
+              className="mb-3"
+            />
+            <Button
+              onClick={handleResetMine}
+              disabled={myLoading || myConfirm !== "RESET" || !myEmail.trim()}
+              className="w-full"
+            >
+              {myLoading ? "Reseteando…" : "Resetear mi cuenta"}
+            </Button>
+          </div>
+
+          {myResult && (
+            <div className="mt-4 p-4 bg-muted rounded-lg text-sm space-y-1">
+              <p className="font-medium">{myResult.message}</p>
+              {myResult.ok && (
+                <ul className="list-disc pl-5 text-muted-foreground">
+                  <li>Familiares eliminados: {myResult.contactsDeleted}</li>
+                  <li>PIN eliminado: {myResult.pinsDeleted}</li>
+                  <li>Alertas eliminadas: {myResult.alertsDeleted}</li>
+                  <li>Onboarding y WhatsApp reiniciados</li>
+                </ul>
+              )}
+            </div>
+          )}
+        </Card>
+
 
         <Card className="p-6 space-y-4 border-destructive/30">
           <div>
