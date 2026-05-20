@@ -637,10 +637,12 @@ function AppHome() {
                   </div>
                 </div>
                 <h2 id="emergency-dialog-title" className="text-3xl font-bold text-foreground tracking-tight">
-                  Ayuda en camino
+                  {alertSummary && alertSummary.delivered > 0 ? "Ayuda en camino" : "Alerta procesada"}
                 </h2>
                 <p className="mt-3 text-lg text-muted-foreground">
-                  Tu familia recibió la alerta con tu ubicación.
+                  {alertSummary
+                    ? `WhatsApp, SMS y llamada: ${alertSummary.delivered} de ${alertSummary.total} envíos correctos.`
+                    : "Tu familia recibió la alerta con tu ubicación."}
                 </p>
 
                 <div className="mt-5 rounded-2xl bg-muted p-4 text-left">
