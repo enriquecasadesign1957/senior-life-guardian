@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      alert_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          event_type: string
+          gps_accuracy: number | null
+          gps_lat: number | null
+          gps_lng: number | null
+          id: string
+          metadata: Json | null
+          recipients: Json | null
+          status: string
+          trial_signup_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          event_type: string
+          gps_accuracy?: number | null
+          gps_lat?: number | null
+          gps_lng?: number | null
+          id?: string
+          metadata?: Json | null
+          recipients?: Json | null
+          status?: string
+          trial_signup_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          event_type?: string
+          gps_accuracy?: number | null
+          gps_lat?: number | null
+          gps_lng?: number | null
+          id?: string
+          metadata?: Json | null
+          recipients?: Json | null
+          status?: string
+          trial_signup_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_logs_trial_signup_id_fkey"
+            columns: ["trial_signup_id"]
+            isOneToOne: false
+            referencedRelation: "trial_signups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -160,6 +210,7 @@ export type Database = {
           id: string
           last_payment_at: string | null
           nombre: string
+          onboarding_completed: boolean
           payment_status: string
           periodo: string
           plan: string
@@ -177,6 +228,7 @@ export type Database = {
           webpay_response_code: number | null
           webpay_session_id: string | null
           webpay_token: string | null
+          whatsapp_activated: boolean
         }
         Insert: {
           created_at?: string
@@ -185,6 +237,7 @@ export type Database = {
           id?: string
           last_payment_at?: string | null
           nombre: string
+          onboarding_completed?: boolean
           payment_status?: string
           periodo?: string
           plan?: string
@@ -202,6 +255,7 @@ export type Database = {
           webpay_response_code?: number | null
           webpay_session_id?: string | null
           webpay_token?: string | null
+          whatsapp_activated?: boolean
         }
         Update: {
           created_at?: string
@@ -210,6 +264,7 @@ export type Database = {
           id?: string
           last_payment_at?: string | null
           nombre?: string
+          onboarding_completed?: boolean
           payment_status?: string
           periodo?: string
           plan?: string
@@ -227,6 +282,7 @@ export type Database = {
           webpay_response_code?: number | null
           webpay_session_id?: string | null
           webpay_token?: string | null
+          whatsapp_activated?: boolean
         }
         Relationships: []
       }
