@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import {
   getAppConfiguration, listFamily, addFamily, updateFamily, deleteFamily, verifyPin,
 } from "@/lib/family.functions";
+import { sendEmergencyAlert } from "@/lib/emergency-alert.functions";
 import { WhatsAppActivationButton } from "@/components/whatsapp-activation-button";
 import { InstallAppModal } from "@/components/install-app-modal";
 import { Download } from "lucide-react";
