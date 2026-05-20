@@ -97,8 +97,8 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
       `Por favor contacta inmediatamente al usuario.`;
 
     const voiceText =
-      `Urgente alerta Senior. ${user.nombre} necesita ayuda. ` +
-      `Revise WhatsApp o S M S para ver la ubicación.`;
+      `Urgente. Alerta Senior. ${user.nombre} necesita ayuda. ` +
+      `Revise WhatsApp o mensaje de texto para ver la ubicación. Repito: Urgente alerta Senior.`;
     const twiml =
       `<?xml version="1.0" encoding="UTF-8"?>` +
       `<Response><Pause length="1"/>` +
@@ -106,6 +106,7 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
       `<Pause length="1"/>` +
       `<Say language="es-MX" voice="Polly.Mia">${voiceText}</Say>` +
       `</Response>`;
+
 
     // Crear log inicial (pending)
     const { data: logRow } = await supabaseAdmin
