@@ -10,7 +10,6 @@ import {
 import { useEffect } from "react";
 
 import appCss from "../styles.css?url";
-import { EmergencyFab } from "@/components/pwa";
 
 function NotFoundComponent() {
   return (
@@ -141,7 +140,6 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
-      <EmergencyFab />
     </QueryClientProvider>
   );
 }

@@ -86,10 +86,7 @@ function DashboardPage() {
                 </p>
               </div>
               <div className="flex md:flex-col gap-3 md:items-stretch">
-                <a href="tel:+56971404580" className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-full bg-white font-bold shadow-lg hover:scale-[1.02] transition" style={{ color: DEEP }}>
-                  <Phone className="w-4 h-4" /> Llamar
-                </a>
-                <a href="https://wa.me/56971404580" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-full text-white font-bold shadow-lg hover:scale-[1.02] transition" style={{ background: "#25D366" }}>
+                <a href="https://wa.me/56971404580?text=Hola%20Senior%20Safe%2C%20necesito%20ayuda" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-full text-white font-bold shadow-lg hover:scale-[1.02] transition" style={{ background: "#25D366" }}>
                   <MessageCircle className="w-4 h-4" /> WhatsApp
                 </a>
               </div>
