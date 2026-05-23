@@ -16,6 +16,11 @@ export type Database = {
     Tables: {
       alert_logs: {
         Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          acknowledgement_by_name: string | null
+          acknowledgement_expires_at: string | null
+          acknowledgement_token: string | null
           created_at: string
           error_message: string | null
           event_type: string
@@ -29,6 +34,11 @@ export type Database = {
           trial_signup_id: string | null
         }
         Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          acknowledgement_by_name?: string | null
+          acknowledgement_expires_at?: string | null
+          acknowledgement_token?: string | null
           created_at?: string
           error_message?: string | null
           event_type: string
@@ -42,6 +52,11 @@ export type Database = {
           trial_signup_id?: string | null
         }
         Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          acknowledgement_by_name?: string | null
+          acknowledgement_expires_at?: string | null
+          acknowledgement_token?: string | null
           created_at?: string
           error_message?: string | null
           event_type?: string
@@ -63,6 +78,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      device_status: {
+        Row: {
+          app_version: string | null
+          battery_level: number | null
+          gps_enabled: boolean | null
+          internet_connected: boolean | null
+          last_lat: number | null
+          last_lng: number | null
+          last_seen_at: string
+          trial_signup_id: string
+          updated_at: string
+        }
+        Insert: {
+          app_version?: string | null
+          battery_level?: number | null
+          gps_enabled?: boolean | null
+          internet_connected?: boolean | null
+          last_lat?: number | null
+          last_lng?: number | null
+          last_seen_at?: string
+          trial_signup_id: string
+          updated_at?: string
+        }
+        Update: {
+          app_version?: string | null
+          battery_level?: number | null
+          gps_enabled?: boolean | null
+          internet_connected?: boolean | null
+          last_lat?: number | null
+          last_lng?: number | null
+          last_seen_at?: string
+          trial_signup_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       email_send_log: {
         Row: {
@@ -153,28 +204,142 @@ export type Database = {
       }
       emergency_contacts: {
         Row: {
+          activo: boolean
           created_at: string
           id: string
           nombre: string
           parentesco: string
+          prioridad: number
+          recibe_llamada: boolean
+          recibe_sms: boolean
+          recibe_whatsapp: boolean
           telefono: string
+          tipo_contacto: string
           trial_signup_id: string
+          whatsapp: string | null
         }
         Insert: {
+          activo?: boolean
           created_at?: string
           id?: string
           nombre: string
           parentesco: string
+          prioridad?: number
+          recibe_llamada?: boolean
+          recibe_sms?: boolean
+          recibe_whatsapp?: boolean
           telefono: string
+          tipo_contacto?: string
           trial_signup_id: string
+          whatsapp?: string | null
         }
         Update: {
+          activo?: boolean
           created_at?: string
           id?: string
           nombre?: string
           parentesco?: string
+          prioridad?: number
+          recibe_llamada?: boolean
+          recibe_sms?: boolean
+          recibe_whatsapp?: boolean
+          telefono?: string
+          tipo_contacto?: string
+          trial_signup_id?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      family_access_log: {
+        Row: {
+          action: string
+          created_at: string
+          family_member_id: string | null
+          id: string
+          metadata: Json | null
+          trial_signup_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          family_member_id?: string | null
+          id?: string
+          metadata?: Json | null
+          trial_signup_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          family_member_id?: string | null
+          id?: string
+          metadata?: Json | null
+          trial_signup_id?: string | null
+        }
+        Relationships: []
+      }
+      family_login_codes: {
+        Row: {
+          attempts: number
+          code_hash: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          telefono: string
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          telefono: string
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          telefono?: string
+        }
+        Relationships: []
+      }
+      family_members: {
+        Row: {
+          activo: boolean
+          created_at: string
+          email: string | null
+          id: string
+          nombre: string
+          parentesco: string | null
+          telefono: string
+          trial_signup_id: string
+          updated_at: string
+        }
+        Insert: {
+          activo?: boolean
+          created_at?: string
+          email?: string | null
+          id?: string
+          nombre: string
+          parentesco?: string | null
+          telefono: string
+          trial_signup_id: string
+          updated_at?: string
+        }
+        Update: {
+          activo?: boolean
+          created_at?: string
+          email?: string | null
+          id?: string
+          nombre?: string
+          parentesco?: string | null
           telefono?: string
           trial_signup_id?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -307,6 +472,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          family_member_id: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          trial_signup_id: string
+        }
+        Insert: {
+          created_at?: string
+          family_member_id?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          trial_signup_id: string
+        }
+        Update: {
+          created_at?: string
+          family_member_id?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          trial_signup_id?: string
+        }
+        Relationships: []
+      }
       webpay_transactions: {
         Row: {
           amount: number
@@ -401,7 +590,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "senior" | "family_member" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -528,6 +717,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["senior", "family_member", "admin"],
+    },
   },
 } as const

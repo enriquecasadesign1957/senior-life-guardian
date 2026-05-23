@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getAppConfiguration, listFamily } from "@/lib/family.functions";
 import { sendEmergencyAlert } from "@/lib/emergency-alert.functions";
+import { upsertHeartbeat } from "@/lib/heartbeat.functions";
+import { checkLastAlertAck } from "@/lib/family-portal.functions";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/native")({
   head: () => ({
@@ -31,6 +34,9 @@ function NativeApp() {
   const loadConfig = useServerFn(getAppConfiguration);
   const list = useServerFn(listFamily);
   const sendAlert = useServerFn(sendEmergencyAlert);
+  const heartbeat = useServerFn(upsertHeartbeat);
+  const checkAck = useServerFn(checkLastAlertAck);
+  const [ackInfo, setAckInfo] = useState<{ at: string; name: string | null } | null>(null);
 
   const [bootLoading, setBootLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
@@ -83,6 +89,53 @@ function NativeApp() {
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 },
     );
   }, [userId]);
+
+  // 2b) Heartbeat cada 60s — solo si pestaña visible + online + sesión
+  useEffect(() => {
+    if (!userId) return;
+    let alive = true;
+    const ping = async () => {
+      if (!alive) return;
+      if (typeof document !== "undefined" && document.hidden) return;
+      if (typeof navigator !== "undefined" && navigator.onLine === false) return;
+      try {
+        const bat: any = await (navigator as any).getBattery?.().catch(() => null);
+        await heartbeat({
+          data: {
+            signupId: userId,
+            battery_level: bat ? Math.round(bat.level * 100) : null,
+            gps_enabled: gpsOk,
+            internet_connected: typeof navigator !== "undefined" ? navigator.onLine : null,
+            app_version: "native-1.0",
+          },
+        });
+      } catch { /* silencioso */ }
+    };
+    ping();
+    const id = setInterval(ping, 60_000);
+    return () => { alive = false; clearInterval(id); };
+  }, [userId, gpsOk, heartbeat]);
+
+  // 2c) Tras enviar alerta, verificar ack durante 60s (sin polling permanente)
+  useEffect(() => {
+    if (stage !== "sent" || !userId) return;
+    let alive = true;
+    let attempts = 0;
+    const poll = async () => {
+      if (!alive || attempts >= 6) return;
+      attempts++;
+      try {
+        const r = await checkAck({ data: { signupId: userId } });
+        if (r.alert?.acknowledged_at) {
+          setAckInfo({ at: r.alert.acknowledged_at, name: r.alert.acknowledgement_by_name });
+          return;
+        }
+      } catch { /* silencioso */ }
+      setTimeout(poll, 10_000);
+    };
+    poll();
+    return () => { alive = false; };
+  }, [stage, userId, checkAck]);
 
   // 3) Refrescar familiares en background
   useEffect(() => {
@@ -302,7 +355,31 @@ function NativeApp() {
         >
           <Heart className="w-6 h-6" /> Estoy bien
         </button>
+
+        {/* Banner ack: tu familia ya fue notificada (no bloqueante) */}
+        {ackInfo && (
+          <div
+            className="mt-3 rounded-2xl p-3 text-sm flex items-center gap-2 border"
+            style={{ background: "#ecfdf5", borderColor: "#a7f3d0", color: "#065f46" }}
+            role="status"
+          >
+            <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+            <span>
+              Tu familia ya fue notificada ✓
+              {ackInfo.name ? ` por ${ackInfo.name}` : ""}
+            </span>
+          </div>
+        )}
+
+        {/* Acceso a Mis Guardianes (discreto, no compite con SOS) */}
+        <Link
+          to="/familia/guardianes"
+          className="mt-3 w-full h-12 rounded-2xl border text-foreground text-sm font-semibold flex items-center justify-center gap-2 bg-white/70"
+        >
+          <Users className="w-4 h-4" /> Mis Guardianes
+        </Link>
       </main>
+
 
       {/* MODAL CONFIRMACIÓN */}
       {stage === "confirm" && (
