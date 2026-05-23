@@ -125,8 +125,10 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
         gps_lng: data.gps?.lng ?? null,
         gps_accuracy: data.gps?.accuracy ?? null,
         recipients: recipients.map((r) => ({ id: r.id, nombre: r.nombre, telefono: r.phone, parentesco: r.parentesco })),
-        metadata: { maps_link: mapsLink, timestamp },
-      })
+        metadata: { maps_link: mapsLink, timestamp, ack_url: ackUrl },
+        acknowledgement_token: ackToken,
+        acknowledgement_expires_at: ackExpiresAt,
+      } as never)
       .select("id")
       .single();
 
