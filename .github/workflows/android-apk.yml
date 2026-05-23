@@ -135,7 +135,6 @@ jobs:
             </body>
           </html>
           HTML
-          fi
           ls -la dist/ | head -20
           test -f dist/index.html || (echo "❌ dist/index.html no existe" && exit 1)
 
