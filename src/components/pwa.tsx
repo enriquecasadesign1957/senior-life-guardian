@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Download, X, Share, Plus, Phone } from "lucide-react";
+import { Download, X, Share, Plus } from "lucide-react";
 
 type BIPEvent = Event & {
   prompt: () => Promise<void>;
@@ -130,35 +130,3 @@ export function PwaInstallPrompt() {
   );
 }
 
-/** Botón flotante de emergencia (acceso rápido tipo app). */
-export function EmergencyFab() {
-  const [confirm, setConfirm] = useState(false);
-  const trigger = () => {
-    if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.([100, 50, 100]);
-    window.location.href = "tel:+56971404580";
-  };
-  return (
-    <>
-      <button
-        onClick={() => setConfirm(true)}
-        aria-label="Botón de emergencia"
-        className="fixed bottom-5 right-5 z-50 w-16 h-16 rounded-full bg-red-600 text-white shadow-2xl flex items-center justify-center active:scale-95 transition-transform"
-        style={{ boxShadow: "0 10px 30px -5px rgba(220,38,38,0.55), 0 0 0 6px rgba(220,38,38,0.18)" }}
-      >
-        <Phone className="w-7 h-7" />
-      </button>
-      {confirm && (
-        <div className="fixed inset-0 z-[70] bg-black/60 flex items-end sm:items-center justify-center p-4" onClick={() => setConfirm(false)}>
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-foreground">¿Llamar a emergencia?</h3>
-            <p className="text-sm text-muted-foreground mt-1">Se llamará al equipo Senior Safe 24/7 al +56 9 7140 4580.</p>
-            <div className="mt-5 flex gap-2">
-              <button onClick={() => setConfirm(false)} className="flex-1 py-3 rounded-xl border border-border font-semibold text-sm">Cancelar</button>
-              <button onClick={trigger} className="flex-1 py-3 rounded-xl bg-red-600 text-white font-semibold text-sm">Llamar ahora</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
