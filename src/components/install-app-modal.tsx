@@ -37,19 +37,17 @@ const DEEP = "var(--brand-petrol-deep)";
 const PETROL = "var(--brand-petrol)";
 const GREEN = "#16a34a";
 
-/** URL de la app móvil (PWA). Se le adjunta el signupId para continuidad. */
-const APP_BASE_URL = "https://senior-safe-link.lovable.app";
-const APK_CANDIDATES = ["/senior-life-guardian.apk", "/SeniorLifeGuardian.apk", "/app-release.apk"];
+/**
+ * URL ÚNICA Y OFICIAL de la APK Senior Safe.
+ * Archivo servido estáticamente desde /public/SeniorSafe.apk.
+ * Esta APK abre directamente /native (ver capacitor.config.ts).
+ * No agregar fallbacks ni rutas alternativas: garantiza que todos
+ * los usuarios descarguen siempre la misma versión vigente.
+ */
+const APK_DOWNLOAD_URL = "https://alarmaseniorsafe.cl/SeniorSafe.apk";
 
-async function findAvailableApk() {
-  for (const path of APK_CANDIDATES) {
-    try {
-      const response = await fetch(path, { method: "HEAD", cache: "no-store" });
-      if (response.ok) return path;
-    } catch {}
-  }
-  return null;
-}
+/** Pantalla nativa publicada. Se usa solo como fallback web (no-Android). */
+const APP_BASE_URL = "https://alarmaseniorsafe.cl/native";
 
 function buildAppUrl(signupId: string | null) {
   let resolvedSignupId = signupId;
