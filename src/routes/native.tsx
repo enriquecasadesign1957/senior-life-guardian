@@ -90,6 +90,53 @@ function NativeApp() {
     );
   }, [userId]);
 
+  // 2b) Heartbeat cada 60s — solo si pestaña visible + online + sesión
+  useEffect(() => {
+    if (!userId) return;
+    let alive = true;
+    const ping = async () => {
+      if (!alive) return;
+      if (typeof document !== "undefined" && document.hidden) return;
+      if (typeof navigator !== "undefined" && navigator.onLine === false) return;
+      try {
+        const bat: any = await (navigator as any).getBattery?.().catch(() => null);
+        await heartbeat({
+          data: {
+            signupId: userId,
+            battery_level: bat ? Math.round(bat.level * 100) : null,
+            gps_enabled: gpsOk,
+            internet_connected: typeof navigator !== "undefined" ? navigator.onLine : null,
+            app_version: "native-1.0",
+          },
+        });
+      } catch { /* silencioso */ }
+    };
+    ping();
+    const id = setInterval(ping, 60_000);
+    return () => { alive = false; clearInterval(id); };
+  }, [userId, gpsOk, heartbeat]);
+
+  // 2c) Tras enviar alerta, verificar ack durante 60s (sin polling permanente)
+  useEffect(() => {
+    if (stage !== "sent" || !userId) return;
+    let alive = true;
+    let attempts = 0;
+    const poll = async () => {
+      if (!alive || attempts >= 6) return;
+      attempts++;
+      try {
+        const r = await checkAck({ data: { signupId: userId } });
+        if (r.alert?.acknowledged_at) {
+          setAckInfo({ at: r.alert.acknowledged_at, name: r.alert.acknowledgement_by_name });
+          return;
+        }
+      } catch { /* silencioso */ }
+      setTimeout(poll, 10_000);
+    };
+    poll();
+    return () => { alive = false; };
+  }, [stage, userId, checkAck]);
+
   // 3) Refrescar familiares en background
   useEffect(() => {
     if (!userId) return;
