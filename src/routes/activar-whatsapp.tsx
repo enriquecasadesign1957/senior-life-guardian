@@ -15,9 +15,9 @@ export const Route = createFileRoute("/activar-whatsapp")({
   component: ActivarWhatsAppPage,
 });
 
-// Número oficial Senior Safe — preparado para reemplazo por WhatsApp Business
-const WA_NUMBER_DISPLAY = "+56 9 7140 4580";
-const WA_NUMBER_E164 = "56971404580";
+// Número oficial Senior Safe (WhatsApp). Usamos el sender Twilio verificado.
+const WA_NUMBER_DISPLAY = "+1 415 523 8886";
+const WA_NUMBER_E164 = "14155238886";
 const KEYWORD = "ACTIVAR";
 const WA_LINK = `https://wa.me/${WA_NUMBER_E164}?text=${encodeURIComponent(KEYWORD)}`;
 const STORAGE_KEY = "ss_whatsapp_activated";
@@ -29,6 +29,16 @@ function ActivarWhatsAppPage() {
   useEffect(() => {
     try {
       if (localStorage.getItem(STORAGE_KEY) === "1") setActivated(true);
+    } catch {}
+    // Auto-abrir WhatsApp si el usuario llega con ?auto=1 (desde la APK / CTA)
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("auto") === "1" && localStorage.getItem(STORAGE_KEY) !== "1") {
+        setTimeout(() => {
+          setOpened(true);
+          window.location.href = WA_LINK;
+        }, 600);
+      }
     } catch {}
   }, []);
 

@@ -97,8 +97,7 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
       `Por favor contacta inmediatamente al usuario.`;
 
     const voiceText =
-      `Urgente. Alerta Senior. ${user.nombre} necesita ayuda. ` +
-      `Revise WhatsApp o mensaje de texto para ver la ubicación. Repito: Urgente alerta Senior.`;
+      `Urgente. Alerta Senior. ${user.nombre} necesita ayuda inmediata. Repito: Urgente. Alerta Senior. ${user.nombre} necesita ayuda inmediata.`;
     const twiml =
       `<?xml version="1.0" encoding="UTF-8"?>` +
       `<Response><Pause length="1"/>` +
