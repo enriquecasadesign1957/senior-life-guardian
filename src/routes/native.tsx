@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getAppConfiguration, listFamily } from "@/lib/family.functions";
 import { sendEmergencyAlert } from "@/lib/emergency-alert.functions";
+import { upsertHeartbeat } from "@/lib/heartbeat.functions";
+import { checkLastAlertAck } from "@/lib/family-portal.functions";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/native")({
   head: () => ({
