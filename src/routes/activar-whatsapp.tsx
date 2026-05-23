@@ -30,6 +30,16 @@ function ActivarWhatsAppPage() {
     try {
       if (localStorage.getItem(STORAGE_KEY) === "1") setActivated(true);
     } catch {}
+    // Auto-abrir WhatsApp si el usuario llega con ?auto=1 (desde la APK / CTA)
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("auto") === "1" && localStorage.getItem(STORAGE_KEY) !== "1") {
+        setTimeout(() => {
+          setOpened(true);
+          window.location.href = WA_LINK;
+        }, 600);
+      }
+    } catch {}
   }, []);
 
   const markActivated = () => {
