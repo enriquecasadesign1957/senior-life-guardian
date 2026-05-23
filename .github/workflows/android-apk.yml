@@ -64,12 +64,14 @@ jobs:
       # así que generamos un shell estático que carga directamente la pantalla
       # /native publicada. El backend (Supabase / Twilio / Webpay / server fns)
       # sigue viviendo en Lovable Cloud, intacto.
-      - name: Garantizar dist/index.html para Capacitor
+      - name: Forzar dist/index.html con shell /native (fallback)
         run: |
           mkdir -p dist
-          if [ ! -f "dist/index.html" ]; then
-            echo "⚠️  No hay dist/index.html del build SSR. Creando shell con fallback multi-origen..."
-            cat > dist/index.html <<'HTML'
+          # SIEMPRE sobrescribimos. La APK usa server.url de capacitor.config.ts
+          # para cargar /native directo, pero si alguna build fuera offline,
+          # este shell garantiza que NUNCA se abra la landing web antigua.
+          echo "⚠️  Escribiendo shell estático que fuerza /native..."
+          cat > dist/index.html <<'HTML'
           <!doctype html>
           <html lang="es">
             <head>
@@ -133,7 +135,6 @@ jobs:
             </body>
           </html>
           HTML
-          fi
           ls -la dist/ | head -20
           test -f dist/index.html || (echo "❌ dist/index.html no existe" && exit 1)
 

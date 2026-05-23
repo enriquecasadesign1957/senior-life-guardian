@@ -13,6 +13,14 @@ const config: CapacitorConfig = {
   appId: 'cl.alarmaseniorsafe.app',
   appName: 'Senior Safe',
   webDir: 'dist',
+  // La APK debe abrir DIRECTAMENTE la pantalla nativa de emergencia,
+  // NO la landing/onboarding web. Capacitor carga este URL al arrancar
+  // y nunca cae en dist/index.html (que podría contener la web antigua).
+  server: {
+    url: 'https://alarmaseniorsafe.cl/native?source=apk',
+    androidScheme: 'https',
+    cleartext: false,
+  },
   android: {
     allowMixedContent: false,
     backgroundColor: '#0d4f5c',
