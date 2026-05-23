@@ -89,12 +89,19 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
       ? `https://maps.google.com/?q=${data.gps.lat},${data.gps.lng}`
       : "Ubicación no disponible";
 
+    // Acknowledgement token (link de un solo uso, expira en 24h)
+    const ackToken = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`)
+      .replace(/-/g, "") + Math.random().toString(36).slice(2, 10);
+    const ackExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const ackUrl = `https://alarmaseniorsafe.cl/familia/ack/${ackToken}`;
+
     const textMessage =
       `🚨 URGENTE ALERTA SENIOR\n\n` +
       `${user.nombre} necesita ayuda.\n\n` +
       `📍 Ubicación:\n${mapsLink}\n\n` +
       `⏰ Hora:\n${timestamp}\n\n` +
-      `Por favor contacta inmediatamente al usuario.`;
+      `Por favor contacta inmediatamente al usuario.\n\n` +
+      `Confirma que recibiste esta alerta:\n${ackUrl}`;
 
     const voiceText =
       `Urgente. Alerta Senior. ${user.nombre} necesita ayuda inmediata. Repito: Urgente. Alerta Senior. ${user.nombre} necesita ayuda inmediata.`;

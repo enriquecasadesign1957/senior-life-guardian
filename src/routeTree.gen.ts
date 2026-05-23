@@ -16,6 +16,7 @@ import { Route as PrivacidadRouteImport } from './routes/privacidad'
 import { Route as PlanesRouteImport } from './routes/planes'
 import { Route as NativeRouteImport } from './routes/native'
 import { Route as FlujoRouteImport } from './routes/flujo'
+import { Route as FamiliaRouteImport } from './routes/familia'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as BienvenidaPremiumRouteImport } from './routes/bienvenida-premium'
@@ -24,9 +25,12 @@ import { Route as ActivarWhatsappRouteImport } from './routes/activar-whatsapp'
 import { Route as ActivacionRouteImport } from './routes/activacion'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WebpayRetornoRouteImport } from './routes/webpay.retorno'
+import { Route as FamiliaGuardianesRouteImport } from './routes/familia.guardianes'
+import { Route as FamiliaDashboardRouteImport } from './routes/familia.dashboard'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AdminResetRouteImport } from './routes/admin.reset'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as FamiliaAckTokenRouteImport } from './routes/familia.ack.$token'
 import { Route as ApiPublicTwilioWhatsappWebhookRouteImport } from './routes/api/public/twilio-whatsapp-webhook'
 import { Route as ApiPublicSendWelcomeWhatsappRouteImport } from './routes/api/public/send-welcome-whatsapp'
 import { Route as ApiPublicSendWelcomeTrialRouteImport } from './routes/api/public/send-welcome-trial'
@@ -69,6 +73,11 @@ const FlujoRoute = FlujoRouteImport.update({
   path: '/flujo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FamiliaRoute = FamiliaRouteImport.update({
+  id: '/familia',
+  path: '/familia',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -109,6 +118,16 @@ const WebpayRetornoRoute = WebpayRetornoRouteImport.update({
   path: '/webpay/retorno',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FamiliaGuardianesRoute = FamiliaGuardianesRouteImport.update({
+  id: '/guardianes',
+  path: '/guardianes',
+  getParentRoute: () => FamiliaRoute,
+} as any)
+const FamiliaDashboardRoute = FamiliaDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => FamiliaRoute,
+} as any)
 const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
   path: '/email/unsubscribe',
@@ -123,6 +142,11 @@ const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   id: '/lovable/email/suppression',
   path: '/lovable/email/suppression',
   getParentRoute: () => rootRouteImport,
+} as any)
+const FamiliaAckTokenRoute = FamiliaAckTokenRouteImport.update({
+  id: '/ack/$token',
+  path: '/ack/$token',
+  getParentRoute: () => FamiliaRoute,
 } as any)
 const ApiPublicTwilioWhatsappWebhookRoute =
   ApiPublicTwilioWhatsappWebhookRouteImport.update({
@@ -169,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/bienvenida-premium': typeof BienvenidaPremiumRoute
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
+  '/familia': typeof FamiliaRouteWithChildren
   '/flujo': typeof FlujoRoute
   '/native': typeof NativeRoute
   '/planes': typeof PlanesRoute
@@ -178,10 +203,13 @@ export interface FileRoutesByFullPath {
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/reset': typeof AdminResetRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/familia/dashboard': typeof FamiliaDashboardRoute
+  '/familia/guardianes': typeof FamiliaGuardianesRoute
   '/webpay/retorno': typeof WebpayRetornoRoute
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
   '/api/public/send-welcome-whatsapp': typeof ApiPublicSendWelcomeWhatsappRoute
   '/api/public/twilio-whatsapp-webhook': typeof ApiPublicTwilioWhatsappWebhookRoute
+  '/familia/ack/$token': typeof FamiliaAckTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -195,6 +223,7 @@ export interface FileRoutesByTo {
   '/bienvenida-premium': typeof BienvenidaPremiumRoute
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
+  '/familia': typeof FamiliaRouteWithChildren
   '/flujo': typeof FlujoRoute
   '/native': typeof NativeRoute
   '/planes': typeof PlanesRoute
@@ -204,10 +233,13 @@ export interface FileRoutesByTo {
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/reset': typeof AdminResetRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/familia/dashboard': typeof FamiliaDashboardRoute
+  '/familia/guardianes': typeof FamiliaGuardianesRoute
   '/webpay/retorno': typeof WebpayRetornoRoute
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
   '/api/public/send-welcome-whatsapp': typeof ApiPublicSendWelcomeWhatsappRoute
   '/api/public/twilio-whatsapp-webhook': typeof ApiPublicTwilioWhatsappWebhookRoute
+  '/familia/ack/$token': typeof FamiliaAckTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -222,6 +254,7 @@ export interface FileRoutesById {
   '/bienvenida-premium': typeof BienvenidaPremiumRoute
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
+  '/familia': typeof FamiliaRouteWithChildren
   '/flujo': typeof FlujoRoute
   '/native': typeof NativeRoute
   '/planes': typeof PlanesRoute
@@ -231,10 +264,13 @@ export interface FileRoutesById {
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/reset': typeof AdminResetRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
+  '/familia/dashboard': typeof FamiliaDashboardRoute
+  '/familia/guardianes': typeof FamiliaGuardianesRoute
   '/webpay/retorno': typeof WebpayRetornoRoute
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
   '/api/public/send-welcome-whatsapp': typeof ApiPublicSendWelcomeWhatsappRoute
   '/api/public/twilio-whatsapp-webhook': typeof ApiPublicTwilioWhatsappWebhookRoute
+  '/familia/ack/$token': typeof FamiliaAckTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
@@ -250,6 +286,7 @@ export interface FileRouteTypes {
     | '/bienvenida-premium'
     | '/checkout'
     | '/dashboard'
+    | '/familia'
     | '/flujo'
     | '/native'
     | '/planes'
@@ -259,10 +296,13 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/admin/reset'
     | '/email/unsubscribe'
+    | '/familia/dashboard'
+    | '/familia/guardianes'
     | '/webpay/retorno'
     | '/api/public/send-welcome-trial'
     | '/api/public/send-welcome-whatsapp'
     | '/api/public/twilio-whatsapp-webhook'
+    | '/familia/ack/$token'
     | '/lovable/email/suppression'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -276,6 +316,7 @@ export interface FileRouteTypes {
     | '/bienvenida-premium'
     | '/checkout'
     | '/dashboard'
+    | '/familia'
     | '/flujo'
     | '/native'
     | '/planes'
@@ -285,10 +326,13 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/admin/reset'
     | '/email/unsubscribe'
+    | '/familia/dashboard'
+    | '/familia/guardianes'
     | '/webpay/retorno'
     | '/api/public/send-welcome-trial'
     | '/api/public/send-welcome-whatsapp'
     | '/api/public/twilio-whatsapp-webhook'
+    | '/familia/ack/$token'
     | '/lovable/email/suppression'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -302,6 +346,7 @@ export interface FileRouteTypes {
     | '/bienvenida-premium'
     | '/checkout'
     | '/dashboard'
+    | '/familia'
     | '/flujo'
     | '/native'
     | '/planes'
@@ -311,10 +356,13 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/admin/reset'
     | '/email/unsubscribe'
+    | '/familia/dashboard'
+    | '/familia/guardianes'
     | '/webpay/retorno'
     | '/api/public/send-welcome-trial'
     | '/api/public/send-welcome-whatsapp'
     | '/api/public/twilio-whatsapp-webhook'
+    | '/familia/ack/$token'
     | '/lovable/email/suppression'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
@@ -329,6 +377,7 @@ export interface RootRouteChildren {
   BienvenidaPremiumRoute: typeof BienvenidaPremiumRoute
   CheckoutRoute: typeof CheckoutRoute
   DashboardRoute: typeof DashboardRoute
+  FamiliaRoute: typeof FamiliaRouteWithChildren
   FlujoRoute: typeof FlujoRoute
   NativeRoute: typeof NativeRoute
   PlanesRoute: typeof PlanesRoute
@@ -399,6 +448,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FlujoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/familia': {
+      id: '/familia'
+      path: '/familia'
+      fullPath: '/familia'
+      preLoaderRoute: typeof FamiliaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -455,6 +511,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WebpayRetornoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/familia/guardianes': {
+      id: '/familia/guardianes'
+      path: '/guardianes'
+      fullPath: '/familia/guardianes'
+      preLoaderRoute: typeof FamiliaGuardianesRouteImport
+      parentRoute: typeof FamiliaRoute
+    }
+    '/familia/dashboard': {
+      id: '/familia/dashboard'
+      path: '/dashboard'
+      fullPath: '/familia/dashboard'
+      preLoaderRoute: typeof FamiliaDashboardRouteImport
+      parentRoute: typeof FamiliaRoute
+    }
     '/email/unsubscribe': {
       id: '/email/unsubscribe'
       path: '/email/unsubscribe'
@@ -475,6 +545,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/lovable/email/suppression'
       preLoaderRoute: typeof LovableEmailSuppressionRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/familia/ack/$token': {
+      id: '/familia/ack/$token'
+      path: '/ack/$token'
+      fullPath: '/familia/ack/$token'
+      preLoaderRoute: typeof FamiliaAckTokenRouteImport
+      parentRoute: typeof FamiliaRoute
     }
     '/api/public/twilio-whatsapp-webhook': {
       id: '/api/public/twilio-whatsapp-webhook'
@@ -521,6 +598,21 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface FamiliaRouteChildren {
+  FamiliaDashboardRoute: typeof FamiliaDashboardRoute
+  FamiliaGuardianesRoute: typeof FamiliaGuardianesRoute
+  FamiliaAckTokenRoute: typeof FamiliaAckTokenRoute
+}
+
+const FamiliaRouteChildren: FamiliaRouteChildren = {
+  FamiliaDashboardRoute: FamiliaDashboardRoute,
+  FamiliaGuardianesRoute: FamiliaGuardianesRoute,
+  FamiliaAckTokenRoute: FamiliaAckTokenRoute,
+}
+
+const FamiliaRouteWithChildren =
+  FamiliaRoute._addFileChildren(FamiliaRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ActivacionRoute: ActivacionRoute,
@@ -529,6 +621,7 @@ const rootRouteChildren: RootRouteChildren = {
   BienvenidaPremiumRoute: BienvenidaPremiumRoute,
   CheckoutRoute: CheckoutRoute,
   DashboardRoute: DashboardRoute,
+  FamiliaRoute: FamiliaRouteWithChildren,
   FlujoRoute: FlujoRoute,
   NativeRoute: NativeRoute,
   PlanesRoute: PlanesRoute,
