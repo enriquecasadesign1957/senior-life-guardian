@@ -355,7 +355,31 @@ function NativeApp() {
         >
           <Heart className="w-6 h-6" /> Estoy bien
         </button>
+
+        {/* Banner ack: tu familia ya fue notificada (no bloqueante) */}
+        {ackInfo && (
+          <div
+            className="mt-3 rounded-2xl p-3 text-sm flex items-center gap-2 border"
+            style={{ background: "#ecfdf5", borderColor: "#a7f3d0", color: "#065f46" }}
+            role="status"
+          >
+            <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+            <span>
+              Tu familia ya fue notificada ✓
+              {ackInfo.name ? ` por ${ackInfo.name}` : ""}
+            </span>
+          </div>
+        )}
+
+        {/* Acceso a Mis Guardianes (discreto, no compite con SOS) */}
+        <Link
+          to="/familia/guardianes"
+          className="mt-3 w-full h-12 rounded-2xl border text-foreground text-sm font-semibold flex items-center justify-center gap-2 bg-white/70"
+        >
+          <Users className="w-4 h-4" /> Mis Guardianes
+        </Link>
       </main>
+
 
       {/* MODAL CONFIRMACIÓN */}
       {stage === "confirm" && (
