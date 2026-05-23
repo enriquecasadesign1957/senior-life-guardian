@@ -120,22 +120,15 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
 
   const handleBigInstall = async () => {
     setInstalling(true);
-    // 1) APK real publicado → descarga directa de Senior Life Guardian
+    // 1) Android → descarga directa de la APK oficial vigente.
     if (isAndroid) {
-      const apkUrl = await findAvailableApk();
-      if (apkUrl) {
-        window.location.href = apkUrl;
-        setInstalling(false);
-        return;
-      }
+      window.location.href = APK_DOWNLOAD_URL;
+      setInstalling(false);
+      return;
     }
-    // 2) Sin APK: redirigir SIEMPRE al dominio de la app real (NO instalar el sitio comercial).
-    //    Desde ese dominio el usuario instala la PWA real "Senior Life Guardian".
-    //    Nunca disparamos deferred.prompt() aquí porque instalaría alarmaseniorsafe.cl/activacion.
-    const appUrl = buildAppUrl(signupId);
-    window.location.href = appUrl;
+    // 2) Resto de plataformas (iOS/desktop): abrir la pantalla nativa publicada.
+    window.location.href = buildAppUrl(signupId);
     setInstalling(false);
-    // 3) Guía visual de respaldo si el navegador bloquea la navegación
     setShowGuide(true);
   };
 
