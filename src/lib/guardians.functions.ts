@@ -86,7 +86,7 @@ export const updateGuardian = createServerFn({ method: "POST" })
     }
     const { error } = await supabaseAdmin
       .from("emergency_contacts")
-      .update(patch)
+      .update(patch as never)
       .eq("id", data.id)
       .eq("trial_signup_id", data.signupId);
     if (error) throw error;
