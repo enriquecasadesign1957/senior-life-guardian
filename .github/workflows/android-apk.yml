@@ -15,6 +15,9 @@ on:
         description: 'Tag opcional para crear un Release (ej: v1.0.3)'
         required: false
 
+permissions:
+  contents: write
+
 jobs:
   build-apk:
     runs-on: ubuntu-latest
