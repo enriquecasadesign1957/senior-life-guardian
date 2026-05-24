@@ -28,6 +28,7 @@ import { Route as WebpayRetornoRouteImport } from './routes/webpay.retorno'
 import { Route as FamiliaGuardianesRouteImport } from './routes/familia.guardianes'
 import { Route as FamiliaDashboardRouteImport } from './routes/familia.dashboard'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as DownloadsSeniorSafeDotapkRouteImport } from './routes/downloads.SeniorSafe[.]apk'
 import { Route as AdminResetRouteImport } from './routes/admin.reset'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as FamiliaAckTokenRouteImport } from './routes/familia.ack.$token'
@@ -136,6 +137,12 @@ const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   path: '/email/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DownloadsSeniorSafeDotapkRoute =
+  DownloadsSeniorSafeDotapkRouteImport.update({
+    id: '/downloads/SeniorSafe.apk',
+    path: '/downloads/SeniorSafe.apk',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminResetRoute = AdminResetRouteImport.update({
   id: '/admin/reset',
   path: '/admin/reset',
@@ -223,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/tutorial': typeof TutorialRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/reset': typeof AdminResetRoute
+  '/downloads/SeniorSafe.apk': typeof DownloadsSeniorSafeDotapkRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/familia/dashboard': typeof FamiliaDashboardRoute
   '/familia/guardianes': typeof FamiliaGuardianesRoute
@@ -256,6 +264,7 @@ export interface FileRoutesByTo {
   '/tutorial': typeof TutorialRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/reset': typeof AdminResetRoute
+  '/downloads/SeniorSafe.apk': typeof DownloadsSeniorSafeDotapkRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/familia/dashboard': typeof FamiliaDashboardRoute
   '/familia/guardianes': typeof FamiliaGuardianesRoute
@@ -290,6 +299,7 @@ export interface FileRoutesById {
   '/tutorial': typeof TutorialRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/reset': typeof AdminResetRoute
+  '/downloads/SeniorSafe.apk': typeof DownloadsSeniorSafeDotapkRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/familia/dashboard': typeof FamiliaDashboardRoute
   '/familia/guardianes': typeof FamiliaGuardianesRoute
@@ -325,6 +335,7 @@ export interface FileRouteTypes {
     | '/tutorial'
     | '/unsubscribe'
     | '/admin/reset'
+    | '/downloads/SeniorSafe.apk'
     | '/email/unsubscribe'
     | '/familia/dashboard'
     | '/familia/guardianes'
@@ -358,6 +369,7 @@ export interface FileRouteTypes {
     | '/tutorial'
     | '/unsubscribe'
     | '/admin/reset'
+    | '/downloads/SeniorSafe.apk'
     | '/email/unsubscribe'
     | '/familia/dashboard'
     | '/familia/guardianes'
@@ -391,6 +403,7 @@ export interface FileRouteTypes {
     | '/tutorial'
     | '/unsubscribe'
     | '/admin/reset'
+    | '/downloads/SeniorSafe.apk'
     | '/email/unsubscribe'
     | '/familia/dashboard'
     | '/familia/guardianes'
@@ -425,6 +438,7 @@ export interface RootRouteChildren {
   TutorialRoute: typeof TutorialRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   AdminResetRoute: typeof AdminResetRoute
+  DownloadsSeniorSafeDotapkRoute: typeof DownloadsSeniorSafeDotapkRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   WebpayRetornoRoute: typeof WebpayRetornoRoute
   ApiPublicSendWelcomeTrialRoute: typeof ApiPublicSendWelcomeTrialRoute
@@ -574,6 +588,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/downloads/SeniorSafe.apk': {
+      id: '/downloads/SeniorSafe.apk'
+      path: '/downloads/SeniorSafe.apk'
+      fullPath: '/downloads/SeniorSafe.apk'
+      preLoaderRoute: typeof DownloadsSeniorSafeDotapkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/reset': {
       id: '/admin/reset'
       path: '/admin/reset'
@@ -693,6 +714,7 @@ const rootRouteChildren: RootRouteChildren = {
   TutorialRoute: TutorialRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   AdminResetRoute: AdminResetRoute,
+  DownloadsSeniorSafeDotapkRoute: DownloadsSeniorSafeDotapkRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   WebpayRetornoRoute: WebpayRetornoRoute,
   ApiPublicSendWelcomeTrialRoute: ApiPublicSendWelcomeTrialRoute,
