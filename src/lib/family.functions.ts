@@ -82,17 +82,29 @@ export const addFamily = createServerFn({ method: "POST" })
       .eq("trial_signup_id", data.signupId);
     if ((count ?? 0) >= 5) throw new Error("Máximo 5 familiares.");
 
+    const telefono = data.contact.telefono.trim();
+    const { data: existing } = await supabaseAdmin
+      .from("emergency_contacts")
+      .select("id")
+      .eq("trial_signup_id", data.signupId)
+      .eq("telefono", telefono)
+      .maybeSingle();
+    if (existing) throw new Error("Ya existe un familiar con ese teléfono.");
+
     const { data: row, error } = await supabaseAdmin
       .from("emergency_contacts")
       .insert({
         trial_signup_id: data.signupId,
         nombre: data.contact.nombre.trim(),
-        telefono: data.contact.telefono.trim(),
+        telefono,
         parentesco: data.contact.parentesco.trim(),
       })
       .select("id,nombre,telefono,parentesco,created_at")
       .single();
-    if (error) throw error;
+    if (error) {
+      if ((error as any).code === "23505") throw new Error("Ya existe un familiar con ese teléfono.");
+      throw error;
+    }
     return { contact: row };
   });
 
