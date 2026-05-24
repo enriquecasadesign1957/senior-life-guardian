@@ -189,23 +189,26 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           set -euo pipefail
+
           if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
             echo "❌ Faltan secrets SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY en el repo."
             exit 1
           fi
+
           URL="${SUPABASE_URL%/}/storage/v1/object/apk/SeniorSafe.apk"
-          echo "⬆️  Subiendo APK a $URL"
-   HTTP_CODE=$(curl -sS -o /tmp/upload.out -w "%{http_code}" \
-  -X PUT "$URL" \
-  -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
-  -H "Content-Type: application/vnd.android.package-archive" \
-  -H "Cache-Control: no-cache, max-age=0" \
-  --data-binary @artifacts/SeniorSafe.apk)
+          echo "⬆️ Subiendo APK a $URL"
 
-echo "HTTP $HTTP_CODE"
-cat /tmp/upload.out || true
+          HTTP_CODE=$(curl -sS -o /tmp/upload.out -w "%{http_code}" \
+            -X PUT "$URL" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/vnd.android.package-archive" \
+            -H "Cache-Control: no-cache, max-age=0" \
+            --data-binary @artifacts/SeniorSafe.apk)
 
-if [ "$HTTP_CODE" -ge 300 ]; then
-  echo "❌ Falló la subida al bucket apk"
-  exit 1
-fi
+          echo "HTTP $HTTP_CODE"
+          cat /tmp/upload.out || true
+
+          if [ "$HTTP_CODE" -ge 300 ]; then
+            echo "❌ Falló la subida al bucket apk"
+            exit 1
+          fi
