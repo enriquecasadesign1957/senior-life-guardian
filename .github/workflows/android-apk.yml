@@ -155,9 +155,12 @@ jobs:
           chmod +x ./gradlew
           ./gradlew assembleDebug --no-daemon
 
-      - name: Rename APK
+      - name: Rename APK (nombre fijo + versionado)
         run: |
           mkdir -p artifacts
+          # Nombre FIJO requerido por el botón "Descargar App":
+          cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/SeniorSafe.apk
+          # Copia versionada adicional para histórico:
           cp android/app/build/outputs/apk/debug/app-debug.apk \
              artifacts/SeniorSafe-${{ github.run_number }}.apk
 
@@ -168,7 +171,27 @@ jobs:
           path: artifacts/*.apk
           retention-days: 90
 
-      - name: Publish Release (solo en tags)
+      # Publica SIEMPRE (push a main o dispatch manual) una release con tag
+      # fijo `latest-apk`, sobrescribiendo el asset SeniorSafe.apk. Así el botón
+      # "Descargar App" apunta SIEMPRE a:
+      #   https://github.com/<OWNER>/<REPO>/releases/latest/download/SeniorSafe.apk
+      - name: Publish rolling release (latest-apk)
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-apk
+          name: Senior Safe APK (latest)
+          files: artifacts/SeniorSafe.apk
+          prerelease: false
+          make_latest: 'true'
+          body: |
+            APK rolling de Senior Safe. Se actualiza automáticamente en cada build.
+            Build #${{ github.run_number }} — commit ${{ github.sha }}.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Releases versionadas con tags v* (histórico oficial).
+      - name: Publish versioned Release (tags v*)
         if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.release_tag != ''
         uses: softprops/action-gh-release@v2
         with:
