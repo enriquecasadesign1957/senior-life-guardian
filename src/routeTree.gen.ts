@@ -32,6 +32,7 @@ import { Route as AdminResetRouteImport } from './routes/admin.reset'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as FamiliaAckTokenRouteImport } from './routes/familia.ack.$token'
 import { Route as ApiPublicTwilioWhatsappWebhookRouteImport } from './routes/api/public/twilio-whatsapp-webhook'
+import { Route as ApiPublicTwilioSmsWebhookRouteImport } from './routes/api/public/twilio-sms-webhook'
 import { Route as ApiPublicSendWelcomeWhatsappRouteImport } from './routes/api/public/send-welcome-whatsapp'
 import { Route as ApiPublicSendWelcomeTrialRouteImport } from './routes/api/public/send-welcome-trial'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
@@ -154,6 +155,12 @@ const ApiPublicTwilioWhatsappWebhookRoute =
     path: '/api/public/twilio-whatsapp-webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicTwilioSmsWebhookRoute =
+  ApiPublicTwilioSmsWebhookRouteImport.update({
+    id: '/api/public/twilio-sms-webhook',
+    path: '/api/public/twilio-sms-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicSendWelcomeWhatsappRoute =
   ApiPublicSendWelcomeWhatsappRouteImport.update({
     id: '/api/public/send-welcome-whatsapp',
@@ -208,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/webpay/retorno': typeof WebpayRetornoRoute
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
   '/api/public/send-welcome-whatsapp': typeof ApiPublicSendWelcomeWhatsappRoute
+  '/api/public/twilio-sms-webhook': typeof ApiPublicTwilioSmsWebhookRoute
   '/api/public/twilio-whatsapp-webhook': typeof ApiPublicTwilioWhatsappWebhookRoute
   '/familia/ack/$token': typeof FamiliaAckTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -238,6 +246,7 @@ export interface FileRoutesByTo {
   '/webpay/retorno': typeof WebpayRetornoRoute
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
   '/api/public/send-welcome-whatsapp': typeof ApiPublicSendWelcomeWhatsappRoute
+  '/api/public/twilio-sms-webhook': typeof ApiPublicTwilioSmsWebhookRoute
   '/api/public/twilio-whatsapp-webhook': typeof ApiPublicTwilioWhatsappWebhookRoute
   '/familia/ack/$token': typeof FamiliaAckTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -269,6 +278,7 @@ export interface FileRoutesById {
   '/webpay/retorno': typeof WebpayRetornoRoute
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
   '/api/public/send-welcome-whatsapp': typeof ApiPublicSendWelcomeWhatsappRoute
+  '/api/public/twilio-sms-webhook': typeof ApiPublicTwilioSmsWebhookRoute
   '/api/public/twilio-whatsapp-webhook': typeof ApiPublicTwilioWhatsappWebhookRoute
   '/familia/ack/$token': typeof FamiliaAckTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -301,6 +311,7 @@ export interface FileRouteTypes {
     | '/webpay/retorno'
     | '/api/public/send-welcome-trial'
     | '/api/public/send-welcome-whatsapp'
+    | '/api/public/twilio-sms-webhook'
     | '/api/public/twilio-whatsapp-webhook'
     | '/familia/ack/$token'
     | '/lovable/email/suppression'
@@ -331,6 +342,7 @@ export interface FileRouteTypes {
     | '/webpay/retorno'
     | '/api/public/send-welcome-trial'
     | '/api/public/send-welcome-whatsapp'
+    | '/api/public/twilio-sms-webhook'
     | '/api/public/twilio-whatsapp-webhook'
     | '/familia/ack/$token'
     | '/lovable/email/suppression'
@@ -361,6 +373,7 @@ export interface FileRouteTypes {
     | '/webpay/retorno'
     | '/api/public/send-welcome-trial'
     | '/api/public/send-welcome-whatsapp'
+    | '/api/public/twilio-sms-webhook'
     | '/api/public/twilio-whatsapp-webhook'
     | '/familia/ack/$token'
     | '/lovable/email/suppression'
@@ -390,6 +403,7 @@ export interface RootRouteChildren {
   WebpayRetornoRoute: typeof WebpayRetornoRoute
   ApiPublicSendWelcomeTrialRoute: typeof ApiPublicSendWelcomeTrialRoute
   ApiPublicSendWelcomeWhatsappRoute: typeof ApiPublicSendWelcomeWhatsappRoute
+  ApiPublicTwilioSmsWebhookRoute: typeof ApiPublicTwilioSmsWebhookRoute
   ApiPublicTwilioWhatsappWebhookRoute: typeof ApiPublicTwilioWhatsappWebhookRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -560,6 +574,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicTwilioWhatsappWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/twilio-sms-webhook': {
+      id: '/api/public/twilio-sms-webhook'
+      path: '/api/public/twilio-sms-webhook'
+      fullPath: '/api/public/twilio-sms-webhook'
+      preLoaderRoute: typeof ApiPublicTwilioSmsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/send-welcome-whatsapp': {
       id: '/api/public/send-welcome-whatsapp'
       path: '/api/public/send-welcome-whatsapp'
@@ -634,6 +655,7 @@ const rootRouteChildren: RootRouteChildren = {
   WebpayRetornoRoute: WebpayRetornoRoute,
   ApiPublicSendWelcomeTrialRoute: ApiPublicSendWelcomeTrialRoute,
   ApiPublicSendWelcomeWhatsappRoute: ApiPublicSendWelcomeWhatsappRoute,
+  ApiPublicTwilioSmsWebhookRoute: ApiPublicTwilioSmsWebhookRoute,
   ApiPublicTwilioWhatsappWebhookRoute: ApiPublicTwilioWhatsappWebhookRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
