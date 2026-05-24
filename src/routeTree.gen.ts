@@ -32,6 +32,8 @@ import { Route as AdminResetRouteImport } from './routes/admin.reset'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as FamiliaAckTokenRouteImport } from './routes/familia.ack.$token'
 import { Route as ApiPublicTwilioWhatsappWebhookRouteImport } from './routes/api/public/twilio-whatsapp-webhook'
+import { Route as ApiPublicTwilioVoiceWebhookRouteImport } from './routes/api/public/twilio-voice-webhook'
+import { Route as ApiPublicTwilioStatusCallbackRouteImport } from './routes/api/public/twilio-status-callback'
 import { Route as ApiPublicTwilioSmsWebhookRouteImport } from './routes/api/public/twilio-sms-webhook'
 import { Route as ApiPublicSendWelcomeWhatsappRouteImport } from './routes/api/public/send-welcome-whatsapp'
 import { Route as ApiPublicSendWelcomeTrialRouteImport } from './routes/api/public/send-welcome-trial'
@@ -155,6 +157,18 @@ const ApiPublicTwilioWhatsappWebhookRoute =
     path: '/api/public/twilio-whatsapp-webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicTwilioVoiceWebhookRoute =
+  ApiPublicTwilioVoiceWebhookRouteImport.update({
+    id: '/api/public/twilio-voice-webhook',
+    path: '/api/public/twilio-voice-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicTwilioStatusCallbackRoute =
+  ApiPublicTwilioStatusCallbackRouteImport.update({
+    id: '/api/public/twilio-status-callback',
+    path: '/api/public/twilio-status-callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicTwilioSmsWebhookRoute =
   ApiPublicTwilioSmsWebhookRouteImport.update({
     id: '/api/public/twilio-sms-webhook',
@@ -216,6 +230,8 @@ export interface FileRoutesByFullPath {
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
   '/api/public/send-welcome-whatsapp': typeof ApiPublicSendWelcomeWhatsappRoute
   '/api/public/twilio-sms-webhook': typeof ApiPublicTwilioSmsWebhookRoute
+  '/api/public/twilio-status-callback': typeof ApiPublicTwilioStatusCallbackRoute
+  '/api/public/twilio-voice-webhook': typeof ApiPublicTwilioVoiceWebhookRoute
   '/api/public/twilio-whatsapp-webhook': typeof ApiPublicTwilioWhatsappWebhookRoute
   '/familia/ack/$token': typeof FamiliaAckTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -247,6 +263,8 @@ export interface FileRoutesByTo {
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
   '/api/public/send-welcome-whatsapp': typeof ApiPublicSendWelcomeWhatsappRoute
   '/api/public/twilio-sms-webhook': typeof ApiPublicTwilioSmsWebhookRoute
+  '/api/public/twilio-status-callback': typeof ApiPublicTwilioStatusCallbackRoute
+  '/api/public/twilio-voice-webhook': typeof ApiPublicTwilioVoiceWebhookRoute
   '/api/public/twilio-whatsapp-webhook': typeof ApiPublicTwilioWhatsappWebhookRoute
   '/familia/ack/$token': typeof FamiliaAckTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -279,6 +297,8 @@ export interface FileRoutesById {
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
   '/api/public/send-welcome-whatsapp': typeof ApiPublicSendWelcomeWhatsappRoute
   '/api/public/twilio-sms-webhook': typeof ApiPublicTwilioSmsWebhookRoute
+  '/api/public/twilio-status-callback': typeof ApiPublicTwilioStatusCallbackRoute
+  '/api/public/twilio-voice-webhook': typeof ApiPublicTwilioVoiceWebhookRoute
   '/api/public/twilio-whatsapp-webhook': typeof ApiPublicTwilioWhatsappWebhookRoute
   '/familia/ack/$token': typeof FamiliaAckTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -312,6 +332,8 @@ export interface FileRouteTypes {
     | '/api/public/send-welcome-trial'
     | '/api/public/send-welcome-whatsapp'
     | '/api/public/twilio-sms-webhook'
+    | '/api/public/twilio-status-callback'
+    | '/api/public/twilio-voice-webhook'
     | '/api/public/twilio-whatsapp-webhook'
     | '/familia/ack/$token'
     | '/lovable/email/suppression'
@@ -343,6 +365,8 @@ export interface FileRouteTypes {
     | '/api/public/send-welcome-trial'
     | '/api/public/send-welcome-whatsapp'
     | '/api/public/twilio-sms-webhook'
+    | '/api/public/twilio-status-callback'
+    | '/api/public/twilio-voice-webhook'
     | '/api/public/twilio-whatsapp-webhook'
     | '/familia/ack/$token'
     | '/lovable/email/suppression'
@@ -374,6 +398,8 @@ export interface FileRouteTypes {
     | '/api/public/send-welcome-trial'
     | '/api/public/send-welcome-whatsapp'
     | '/api/public/twilio-sms-webhook'
+    | '/api/public/twilio-status-callback'
+    | '/api/public/twilio-voice-webhook'
     | '/api/public/twilio-whatsapp-webhook'
     | '/familia/ack/$token'
     | '/lovable/email/suppression'
@@ -404,6 +430,8 @@ export interface RootRouteChildren {
   ApiPublicSendWelcomeTrialRoute: typeof ApiPublicSendWelcomeTrialRoute
   ApiPublicSendWelcomeWhatsappRoute: typeof ApiPublicSendWelcomeWhatsappRoute
   ApiPublicTwilioSmsWebhookRoute: typeof ApiPublicTwilioSmsWebhookRoute
+  ApiPublicTwilioStatusCallbackRoute: typeof ApiPublicTwilioStatusCallbackRoute
+  ApiPublicTwilioVoiceWebhookRoute: typeof ApiPublicTwilioVoiceWebhookRoute
   ApiPublicTwilioWhatsappWebhookRoute: typeof ApiPublicTwilioWhatsappWebhookRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -574,6 +602,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicTwilioWhatsappWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/twilio-voice-webhook': {
+      id: '/api/public/twilio-voice-webhook'
+      path: '/api/public/twilio-voice-webhook'
+      fullPath: '/api/public/twilio-voice-webhook'
+      preLoaderRoute: typeof ApiPublicTwilioVoiceWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/twilio-status-callback': {
+      id: '/api/public/twilio-status-callback'
+      path: '/api/public/twilio-status-callback'
+      fullPath: '/api/public/twilio-status-callback'
+      preLoaderRoute: typeof ApiPublicTwilioStatusCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/twilio-sms-webhook': {
       id: '/api/public/twilio-sms-webhook'
       path: '/api/public/twilio-sms-webhook'
@@ -656,6 +698,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSendWelcomeTrialRoute: ApiPublicSendWelcomeTrialRoute,
   ApiPublicSendWelcomeWhatsappRoute: ApiPublicSendWelcomeWhatsappRoute,
   ApiPublicTwilioSmsWebhookRoute: ApiPublicTwilioSmsWebhookRoute,
+  ApiPublicTwilioStatusCallbackRoute: ApiPublicTwilioStatusCallbackRoute,
+  ApiPublicTwilioVoiceWebhookRoute: ApiPublicTwilioVoiceWebhookRoute,
   ApiPublicTwilioWhatsappWebhookRoute: ApiPublicTwilioWhatsappWebhookRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
@@ -665,3 +709,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
