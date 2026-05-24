@@ -39,12 +39,12 @@ const GREEN = "#16a34a";
 
 /**
  * URL ÚNICA Y OFICIAL de la APK Senior Safe.
- * Archivo servido estáticamente desde /public/SeniorSafe.apk.
- * Esta APK abre directamente /native (ver capacitor.config.ts).
- * No agregar fallbacks ni rutas alternativas: garantiza que todos
- * los usuarios descarguen siempre la misma versión vigente.
+ * Sirve un 302 hacia el objeto público en Lovable Cloud Storage
+ * (bucket `apk`, archivo SeniorSafe.apk). Definida en
+ * src/routes/downloads.SeniorSafe[.]apk.ts — la URL nunca cambia
+ * aunque cambie el backend de almacenamiento.
  */
-const APK_DOWNLOAD_URL = "https://alarmaseniorsafe.cl/SeniorSafe.apk";
+const APK_DOWNLOAD_URL = "https://alarmaseniorsafe.cl/downloads/SeniorSafe.apk";
 
 /** Pantalla nativa publicada. Se usa solo como fallback web (no-Android). */
 const APP_BASE_URL = "https://alarmaseniorsafe.cl/native";
