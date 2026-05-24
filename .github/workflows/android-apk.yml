@@ -174,33 +174,40 @@ jobs:
           path: artifacts/*.apk
           retention-days: 90
 
-      # Publica SIEMPRE (push a main o dispatch manual) una release con tag
-      # fijo `latest-apk`, sobrescribiendo el asset SeniorSafe.apk. Así el botón
-      # "Descargar App" apunta SIEMPRE a:
-      #   https://github.com/<OWNER>/<REPO>/releases/latest/download/SeniorSafe.apk
-      - name: Publish rolling release (latest-apk)
+      # Sube SIEMPRE la APK al bucket público `apk` de Lovable Cloud Storage,
+      # reemplazando el objeto `SeniorSafe.apk` en cada build. El botón
+      # "Descargar App" apunta a https://alarmaseniorsafe.cl/downloads/SeniorSafe.apk
+      # (server route que redirige al objeto público del bucket).
+      #
+      # Requiere estos secrets en el repo GitHub:
+      #   - SUPABASE_URL                 (ej: https://mjdjfjxehnfroqyfzkyk.supabase.co)
+      #   - SUPABASE_SERVICE_ROLE_KEY    (service_role key — NO el anon key)
+      - name: Upload APK to Lovable Cloud Storage (bucket apk)
         if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: latest-apk
-          name: Senior Safe APK (latest)
-          files: artifacts/SeniorSafe.apk
-          prerelease: false
-          make_latest: 'true'
-          body: |
-            APK rolling de Senior Safe. Se actualiza automáticamente en cada build.
-            Build #${{ github.run_number }} — commit ${{ github.sha }}.
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
+            echo "❌ Faltan secrets SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY en el repo."
+            exit 1
+          fi
+          URL="${SUPABASE_URL%/}/storage/v1/object/apk/SeniorSafe.apk"
+          echo "⬆️  Subiendo APK a $URL"
+          HTTP_CODE=$(curl -sS -o /tmp/upload.out -w "%{http_code}" \
+            -X POST "$URL?upsert=true" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "x-upsert: true" \
+            -H "Content-Type: application/vnd.android.package-archive" \
+            -H "Cache-Control: no-cache, max-age=0" \
+            --data-binary @artifacts/SeniorSafe.apk)
+          echo "HTTP $HTTP_CODE"
+          cat /tmp/upload.out || true
+          if [ "$HTTP_CODE" -ge 300 ]; then
+            echo "❌ Falló la subida al bucket apk"
+            exit 1
+          fi
+          echo "✅ APK publicada en: ${SUPABASE_URL%/}/storage/v1/object/public/apk/SeniorSafe.apk"
+          echo "✅ URL pública estable: https://alarmaseniorsafe.cl/downloads/SeniorSafe.apk"
 
-      # Releases versionadas con tags v* (histórico oficial).
-      - name: Publish versioned Release (tags v*)
-        if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.release_tag != ''
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.event.inputs.release_tag || github.ref_name }}
-          name: Senior Safe ${{ github.event.inputs.release_tag || github.ref_name }}
-          files: artifacts/*.apk
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
