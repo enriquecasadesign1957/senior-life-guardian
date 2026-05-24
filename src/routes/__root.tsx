@@ -129,6 +129,23 @@ function RootComponent() {
   // En navegador web normal no hace nada (Capacitor no está definido).
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    // Captura global y temprana del prompt nativo de instalación PWA
+    // (Chrome/Edge mini-infobar). Llamar preventDefault suprime el banner
+    // automático en cualquier ruta — el evento queda guardado en window y
+    // solo se usa cuando el usuario toca explícitamente "Instalar" dentro
+    // del InstallAppModal (post-onboarding). Esto evita que el landing en
+    // móvil interrumpa el flujo con un prompt de instalación.
+    const PROMPT_KEY = "__seniorSafeInstallPrompt";
+    const BOUND_KEY = "__seniorSafeInstallPromptBound";
+    if (!(window as any)[BOUND_KEY]) {
+      (window as any)[BOUND_KEY] = true;
+      window.addEventListener("beforeinstallprompt", (event) => {
+        event.preventDefault();
+        (window as any)[PROMPT_KEY] = event;
+      });
+    }
+
     const isCapacitor = Boolean((window as any).Capacitor?.isNativePlatform?.());
     if (!isCapacitor) return;
     const path = window.location.pathname;
@@ -136,6 +153,7 @@ function RootComponent() {
       router.navigate({ to: "/native" });
     }
   }, [router]);
+
 
   return (
     <QueryClientProvider client={queryClient}>
