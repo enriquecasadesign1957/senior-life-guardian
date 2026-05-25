@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { readFamilyPortalSession } from "@/lib/family-session.client";
 import {
   listGuardians, addGuardian, updateGuardian, deleteGuardian, toggleGuardianActive,
 } from "@/lib/guardians.functions";
@@ -55,12 +56,12 @@ function GuardiansPage() {
 
   useEffect(() => {
     try {
-      const fam = localStorage.getItem("seniorsafe_family_session");
-      if (fam) { setSignupId(JSON.parse(fam).trial_signup_id); return; }
+      const fam = readFamilyPortalSession();
+      if (fam) { setSignupId(fam.trial_signup_id); return; }
       const sn = localStorage.getItem("seniorsafe_native_user");
       if (sn) { setSignupId(JSON.parse(sn).id); return; }
-      navigate({ to: "/familia" });
-    } catch { navigate({ to: "/familia" }); }
+      navigate({ to: "/familia", search: { redirect: "/familia/guardianes" }, replace: true });
+    } catch { navigate({ to: "/familia", search: { redirect: "/familia/guardianes" }, replace: true }); }
   }, [navigate]);
 
   const reload = async (id: string) => {
