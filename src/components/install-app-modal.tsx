@@ -120,16 +120,36 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
 
   const handleBigInstall = async () => {
     setInstalling(true);
-    // 1) Android → descarga directa de la APK oficial vigente.
-    if (isAndroid) {
-      window.location.href = APK_DOWNLOAD_URL;
+    try {
+      // 1) PWA instalable (Chrome/Edge en Android o desktop) → prompt nativo.
+      if (deferred) {
+        try {
+          await deferred.prompt();
+          const choice = await deferred.userChoice;
+          clearCapturedInstallPrompt();
+          setDeferred(null);
+          if (choice.outcome === "accepted") {
+            setInstalled(true);
+            return;
+          }
+          // Usuario canceló → mostrar guía manual
+          setShowGuide(true);
+          return;
+        } catch {
+          // Si el prompt falla, seguir con fallback
+        }
+      }
+      // 2) Android sin prompt → descargar APK en pestaña nueva (no congela el modal).
+      if (isAndroid) {
+        window.open(APK_DOWNLOAD_URL, "_blank", "noopener");
+        setShowGuide(true);
+        return;
+      }
+      // 3) iOS / desktop sin prompt → mostrar guía visual paso a paso.
+      setShowGuide(true);
+    } finally {
       setInstalling(false);
-      return;
     }
-    // 2) Resto de plataformas (iOS/desktop): abrir la pantalla nativa publicada.
-    window.location.href = buildAppUrl(signupId);
-    setInstalling(false);
-    setShowGuide(true);
   };
 
   return (
@@ -185,7 +205,7 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
           )}
 
           {/* Guía visual — aparece tras tocar el botón si no hay instalación automática */}
-          {showGuide && !deferred && !installed && (
+          {showGuide && !installed && (
             <div className="rounded-2xl border-2 p-4 text-sm space-y-2" style={{ borderColor: DEEP }}>
               {isIOS ? (
                 <>
