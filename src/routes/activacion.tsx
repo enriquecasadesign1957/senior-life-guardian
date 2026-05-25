@@ -411,6 +411,10 @@ function StepContactsModal({ open, onClose, onDone, userId }: { open: boolean; o
   };
 
   const addFamilyFn = useServerFn(addFamily);
+  const resendInvite = useServerFn(resendFamilyInvite);
+  const [resendingId, setResendingId] = useState<string | null>(null);
+  const PORTAL_URL = "https://alarmaseniorsafe.cl/familia";
+
   const addContact = async () => {
     if (!form.nombre.trim() || !form.telefono.trim() || !form.parentesco.trim()) {
       toast.error("Completa todos los campos");
@@ -419,8 +423,9 @@ function StepContactsModal({ open, onClose, onDone, userId }: { open: boolean; o
     if (contacts.length >= 5) { toast.error("Máximo 5 contactos"); return; }
     setSaving(true);
     try {
+      let createdId: string | undefined;
       if (userId) {
-        await addFamilyFn({
+        const res = await addFamilyFn({
           data: {
             signupId: userId,
             contact: {
@@ -430,16 +435,44 @@ function StepContactsModal({ open, onClose, onDone, userId }: { open: boolean; o
             },
           },
         });
+        createdId = (res as any)?.contact?.id;
       }
-      persist([...contacts, { ...form }]);
+      persist([...contacts, { ...form, id: createdId }]);
       setForm({ nombre: "", telefono: "", parentesco: "" });
-      toast.success("Contacto agregado");
+      toast.success("Contacto agregado", {
+        description: "Le enviamos la invitación al Portal Familia por WhatsApp y SMS.",
+      });
     } catch (e) {
       console.error(e);
       persist([...contacts, { ...form }]);
       setForm({ nombre: "", telefono: "", parentesco: "" });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleResend = async (c: Contact) => {
+    if (!userId || !c.id) {
+      toast.error("Aún no podemos reenviar esta invitación.");
+      return;
+    }
+    setResendingId(c.id);
+    try {
+      await resendInvite({ data: { signupId: userId, contactId: c.id } });
+      toast.success(`Invitación reenviada a ${c.nombre}`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "No se pudo reenviar la invitación.");
+    } finally {
+      setResendingId(null);
+    }
+  };
+
+  const copyPortal = async () => {
+    try {
+      await navigator.clipboard.writeText(PORTAL_URL);
+      toast.success("Link copiado");
+    } catch {
+      toast.error("No se pudo copiar. Cópialo manualmente.");
     }
   };
 
