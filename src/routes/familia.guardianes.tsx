@@ -9,7 +9,11 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { readFamilyPortalSession } from "@/lib/family-session.client";
 import {
-  listGuardians, addGuardian, updateGuardian, deleteGuardian, toggleGuardianActive,
+  listGuardians,
+  addGuardian,
+  updateGuardian,
+  deleteGuardian,
+  toggleGuardianActive,
 } from "@/lib/guardians.functions";
 
 export const Route = createFileRoute("/familia/guardianes")({
@@ -50,18 +54,33 @@ function GuardiansPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<Guardian>>({
-    nombre: "", telefono: "", parentesco: "", prioridad: 1, activo: true,
-    tipo_contacto: "familiar", recibe_sms: true, recibe_whatsapp: true, recibe_llamada: true,
+    nombre: "",
+    telefono: "",
+    parentesco: "",
+    prioridad: 1,
+    activo: true,
+    tipo_contacto: "familiar",
+    recibe_sms: true,
+    recibe_whatsapp: true,
+    recibe_llamada: true,
   });
 
   useEffect(() => {
     try {
       const fam = readFamilyPortalSession();
-      if (fam) { setSignupId(fam.trial_signup_id); return; }
+      if (fam) {
+        setSignupId(fam.trial_signup_id);
+        return;
+      }
       const sn = localStorage.getItem("seniorsafe_native_user");
-      if (sn) { setSignupId(JSON.parse(sn).id); return; }
+      if (sn) {
+        setSignupId(JSON.parse(sn).id);
+        return;
+      }
       navigate({ to: "/familia", search: { redirect: "/familia/guardianes" }, replace: true });
-    } catch { navigate({ to: "/familia", search: { redirect: "/familia/guardianes" }, replace: true }); }
+    } catch {
+      navigate({ to: "/familia", search: { redirect: "/familia/guardianes" }, replace: true });
+    }
   }, [navigate]);
 
   const reload = async (id: string) => {
@@ -75,10 +94,18 @@ function GuardiansPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signupId]);
 
-  const resetForm = () => setForm({
-    nombre: "", telefono: "", parentesco: "", prioridad: 1, activo: true,
-    tipo_contacto: "familiar", recibe_sms: true, recibe_whatsapp: true, recibe_llamada: true,
-  });
+  const resetForm = () =>
+    setForm({
+      nombre: "",
+      telefono: "",
+      parentesco: "",
+      prioridad: 1,
+      activo: true,
+      tipo_contacto: "familiar",
+      recibe_sms: true,
+      recibe_whatsapp: true,
+      recibe_llamada: true,
+    });
 
   const handleAdd = async () => {
     if (!signupId || !form.nombre || !form.telefono || !form.parentesco) {
@@ -87,7 +114,9 @@ function GuardiansPage() {
     try {
       await add({ data: { signupId, guardian: form as any } });
       toast.success("Guardián agregado");
-      setShowAdd(false); resetForm(); reload(signupId);
+      setShowAdd(false);
+      resetForm();
+      reload(signupId);
     } catch (e: any) {
       toast.error(e?.message ?? "Error al agregar.");
     }
@@ -98,7 +127,9 @@ function GuardiansPage() {
     try {
       await update({ data: { signupId, id, guardian: form as any } });
       toast.success("Actualizado");
-      setEditing(null); resetForm(); reload(signupId);
+      setEditing(null);
+      resetForm();
+      reload(signupId);
     } catch (e: any) {
       toast.error(e?.message ?? "Error al guardar.");
     }
@@ -107,8 +138,12 @@ function GuardiansPage() {
   const handleDelete = async (id: string) => {
     if (!signupId) return;
     if (!confirm("¿Eliminar este guardián?")) return;
-    try { await del({ data: { signupId, id } }); reload(signupId); }
-    catch (e: any) { toast.error(e?.message ?? "Error."); }
+    try {
+      await del({ data: { signupId, id } });
+      reload(signupId);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Error.");
+    }
   };
 
   const handleToggle = async (id: string, activo: boolean) => {
@@ -118,7 +153,11 @@ function GuardiansPage() {
   };
 
   if (loading) {
-    return <div className="min-h-dvh flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin" /></div>;
+    return (
+      <div className="min-h-dvh flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin" />
+      </div>
+    );
   }
 
   return (
@@ -129,7 +168,14 @@ function GuardiansPage() {
             <ArrowLeft className="w-4 h-4" /> Volver
           </Link>
           <h1 className="font-bold">Mis Guardianes</h1>
-          <Button size="sm" onClick={() => { resetForm(); setShowAdd(true); setEditing(null); }}>
+          <Button
+            size="sm"
+            onClick={() => {
+              resetForm();
+              setShowAdd(true);
+              setEditing(null);
+            }}
+          >
             <Plus className="w-4 h-4 mr-1" /> Agregar
           </Button>
         </div>
@@ -138,8 +184,12 @@ function GuardiansPage() {
       <main className="max-w-2xl mx-auto p-4 space-y-3">
         {showAdd && (
           <GuardianForm
-            form={form} setForm={setForm}
-            onCancel={() => { setShowAdd(false); resetForm(); }}
+            form={form}
+            setForm={setForm}
+            onCancel={() => {
+              setShowAdd(false);
+              resetForm();
+            }}
             onSave={handleAdd}
             title="Nuevo guardián"
           />
@@ -154,21 +204,36 @@ function GuardiansPage() {
         {guardians.map((g) =>
           editing === g.id ? (
             <GuardianForm
-              key={g.id} form={form} setForm={setForm}
-              onCancel={() => { setEditing(null); resetForm(); }}
+              key={g.id}
+              form={form}
+              setForm={setForm}
+              onCancel={() => {
+                setEditing(null);
+                resetForm();
+              }}
               onSave={() => handleSave(g.id)}
               title={`Editar ${g.nombre}`}
             />
           ) : (
-            <div key={g.id} className={`bg-white rounded-2xl p-4 shadow-sm ${!g.activo ? "opacity-60" : ""}`}>
+            <div
+              key={g.id}
+              className={`bg-white rounded-2xl p-4 shadow-sm ${!g.activo ? "opacity-60" : ""}`}
+            >
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-bold">{g.nombre}</span>
-                    <span className="text-xs px-2 py-0.5 bg-slate-100 rounded-full">{g.parentesco}</span>
-                    <span className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full">P{g.prioridad}</span>
+                    <span className="text-xs px-2 py-0.5 bg-slate-100 rounded-full">
+                      {g.parentesco}
+                    </span>
+                    <span className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full">
+                      P{g.prioridad}
+                    </span>
                   </div>
-                  <div className="text-sm text-muted-foreground mt-1">📱 {g.telefono}{g.whatsapp && g.whatsapp !== g.telefono ? ` • WA ${g.whatsapp}` : ""}</div>
+                  <div className="text-sm text-muted-foreground mt-1">
+                    📱 {g.telefono}
+                    {g.whatsapp && g.whatsapp !== g.telefono ? ` • WA ${g.whatsapp}` : ""}
+                  </div>
                   <div className="flex gap-2 mt-2 text-xs">
                     {g.recibe_whatsapp && <Badge>WhatsApp</Badge>}
                     {g.recibe_sms && <Badge>SMS</Badge>}
@@ -178,7 +243,15 @@ function GuardiansPage() {
                 <div className="flex flex-col items-end gap-2">
                   <Switch checked={g.activo} onCheckedChange={(v) => handleToggle(g.id, v)} />
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => { setForm(g); setEditing(g.id); setShowAdd(false); }}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setForm(g);
+                        setEditing(g.id);
+                        setShowAdd(false);
+                      }}
+                    >
                       <Edit2 className="w-4 h-4" />
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(g.id)}>
@@ -188,7 +261,7 @@ function GuardiansPage() {
                 </div>
               </div>
             </div>
-          )
+          ),
         )}
       </main>
     </div>
@@ -196,12 +269,26 @@ function GuardiansPage() {
 }
 
 function Badge({ children }: { children: React.ReactNode }) {
-  return <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full inline-flex items-center gap-1"><Check className="w-3 h-3" />{children}</span>;
+  return (
+    <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full inline-flex items-center gap-1">
+      <Check className="w-3 h-3" />
+      {children}
+    </span>
+  );
 }
 
-function GuardianForm({ form, setForm, onCancel, onSave, title }: {
-  form: Partial<Guardian>; setForm: (f: Partial<Guardian>) => void;
-  onCancel: () => void; onSave: () => void; title: string;
+function GuardianForm({
+  form,
+  setForm,
+  onCancel,
+  onSave,
+  title,
+}: {
+  form: Partial<Guardian>;
+  setForm: (f: Partial<Guardian>) => void;
+  onCancel: () => void;
+  onSave: () => void;
+  title: string;
 }) {
   return (
     <div className="bg-white rounded-2xl p-4 shadow-sm border-2 border-primary/30">
@@ -209,43 +296,91 @@ function GuardianForm({ form, setForm, onCancel, onSave, title }: {
       <div className="grid grid-cols-1 gap-3">
         <div>
           <Label>Nombre</Label>
-          <Input value={form.nombre ?? ""} onChange={(e) => setForm({ ...form, nombre: e.target.value })} />
+          <Input
+            value={form.nombre ?? ""}
+            onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+          />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label>Parentesco</Label>
-            <Input value={form.parentesco ?? ""} onChange={(e) => setForm({ ...form, parentesco: e.target.value })} placeholder="Hijo, esposa..." />
+            <Input
+              value={form.parentesco ?? ""}
+              onChange={(e) => setForm({ ...form, parentesco: e.target.value })}
+              placeholder="Hijo, esposa..."
+            />
           </div>
           <div>
             <Label>Prioridad (1-10)</Label>
-            <Input type="number" min={1} max={10} value={form.prioridad ?? 1}
-              onChange={(e) => setForm({ ...form, prioridad: Number(e.target.value) })} />
+            <Input
+              type="number"
+              min={1}
+              max={10}
+              value={form.prioridad ?? 1}
+              onChange={(e) => setForm({ ...form, prioridad: Number(e.target.value) })}
+            />
           </div>
         </div>
         <div>
           <Label>Teléfono</Label>
-          <Input value={form.telefono ?? ""} onChange={(e) => setForm({ ...form, telefono: e.target.value })} placeholder="+56 9 ..." />
+          <Input
+            value={form.telefono ?? ""}
+            onChange={(e) => setForm({ ...form, telefono: e.target.value })}
+            placeholder="+56 9 ..."
+          />
         </div>
         <div>
           <Label>WhatsApp (si es distinto)</Label>
-          <Input value={form.whatsapp ?? ""} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} placeholder="Opcional" />
+          <Input
+            value={form.whatsapp ?? ""}
+            onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
+            placeholder="Opcional"
+          />
         </div>
         <div className="space-y-2 pt-2">
-          <ToggleRow label="Recibir WhatsApp" value={form.recibe_whatsapp ?? true} onChange={(v) => setForm({ ...form, recibe_whatsapp: v })} />
-          <ToggleRow label="Recibir SMS" value={form.recibe_sms ?? true} onChange={(v) => setForm({ ...form, recibe_sms: v })} />
-          <ToggleRow label="Recibir llamada" value={form.recibe_llamada ?? true} onChange={(v) => setForm({ ...form, recibe_llamada: v })} />
-          <ToggleRow label="Activo" value={form.activo ?? true} onChange={(v) => setForm({ ...form, activo: v })} />
+          <ToggleRow
+            label="Recibir WhatsApp"
+            value={form.recibe_whatsapp ?? true}
+            onChange={(v) => setForm({ ...form, recibe_whatsapp: v })}
+          />
+          <ToggleRow
+            label="Recibir SMS"
+            value={form.recibe_sms ?? true}
+            onChange={(v) => setForm({ ...form, recibe_sms: v })}
+          />
+          <ToggleRow
+            label="Recibir llamada"
+            value={form.recibe_llamada ?? true}
+            onChange={(v) => setForm({ ...form, recibe_llamada: v })}
+          />
+          <ToggleRow
+            label="Activo"
+            value={form.activo ?? true}
+            onChange={(v) => setForm({ ...form, activo: v })}
+          />
         </div>
         <div className="flex gap-2 pt-2">
-          <Button variant="outline" className="flex-1" onClick={onCancel}><X className="w-4 h-4 mr-1" /> Cancelar</Button>
-          <Button className="flex-1" onClick={onSave}><Save className="w-4 h-4 mr-1" /> Guardar</Button>
+          <Button variant="outline" className="flex-1" onClick={onCancel}>
+            <X className="w-4 h-4 mr-1" /> Cancelar
+          </Button>
+          <Button className="flex-1" onClick={onSave}>
+            <Save className="w-4 h-4 mr-1" /> Guardar
+          </Button>
         </div>
       </div>
     </div>
   );
 }
 
-function ToggleRow({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
+function ToggleRow({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: boolean;
+  onChange: (v: boolean) => void;
+}) {
   return (
     <div className="flex items-center justify-between">
       <span className="text-sm">{label}</span>

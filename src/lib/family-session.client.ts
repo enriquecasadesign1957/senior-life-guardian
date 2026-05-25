@@ -13,10 +13,10 @@ export function isFamilyPortalSession(value: unknown): value is FamilyPortalSess
   if (!value || typeof value !== "object") return false;
   const session = value as Record<string, unknown>;
   return (
-    typeof session.family_member_id === "string"
-    && UUID_RE.test(session.family_member_id)
-    && typeof session.trial_signup_id === "string"
-    && UUID_RE.test(session.trial_signup_id)
+    typeof session.family_member_id === "string" &&
+    UUID_RE.test(session.family_member_id) &&
+    typeof session.trial_signup_id === "string" &&
+    UUID_RE.test(session.trial_signup_id)
   );
 }
 

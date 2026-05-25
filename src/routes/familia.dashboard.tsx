@@ -1,18 +1,30 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import { CheckCircle2, AlertTriangle, WifiOff, MapPinOff, MapPin, Battery, Clock, Loader2, LogOut, Users } from "lucide-react";
+import {
+  CheckCircle2,
+  AlertTriangle,
+  WifiOff,
+  MapPinOff,
+  MapPin,
+  Battery,
+  Clock,
+  Loader2,
+  LogOut,
+  Users,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { getFamilyDashboard } from "@/lib/family-portal.functions";
-import { clearFamilyPortalSession, readFamilyPortalSession, type FamilyPortalSession } from "@/lib/family-session.client";
+import {
+  clearFamilyPortalSession,
+  readFamilyPortalSession,
+  type FamilyPortalSession,
+} from "@/lib/family-session.client";
 
 export const Route = createFileRoute("/familia/dashboard")({
   head: () => ({
-    meta: [
-      { title: "Estado — Portal Familia" },
-      { name: "robots", content: "noindex,nofollow" },
-    ],
+    meta: [{ title: "Estado — Portal Familia" }, { name: "robots", content: "noindex,nofollow" }],
   }),
   component: FamilyDashboard,
 });
@@ -39,7 +51,12 @@ function FamilyDashboard() {
     let alive = true;
     const fetchData = async () => {
       try {
-        const res = await loadDashboard({ data: { family_member_id: session.family_member_id, trial_signup_id: session.trial_signup_id } });
+        const res = await loadDashboard({
+          data: {
+            family_member_id: session.family_member_id,
+            trial_signup_id: session.trial_signup_id,
+          },
+        });
         if (alive) {
           setData(res);
           setError(null);
@@ -59,7 +76,10 @@ function FamilyDashboard() {
     fetchData();
     // refresco suave cada 60s (sin polling agresivo)
     const id = setInterval(fetchData, 60_000);
-    return () => { alive = false; clearInterval(id); };
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
   }, [session, loadDashboard, navigate]);
 
   const handleLogout = () => {
@@ -83,9 +103,24 @@ function FamilyDashboard() {
 
   const statusConfig = {
     ok: { label: "Bien", color: "#16a34a", icon: CheckCircle2, desc: "Todo en orden" },
-    alert: { label: "Alerta activa", color: "#dc2626", icon: AlertTriangle, desc: "Se envió una alerta de emergencia" },
-    disconnected: { label: "Desconectado", color: "#64748b", icon: WifiOff, desc: "El dispositivo no se reporta hace más de 10 min" },
-    no_gps: { label: "Sin GPS", color: "#f59e0b", icon: MapPinOff, desc: "GPS desactivado en el dispositivo" },
+    alert: {
+      label: "Alerta activa",
+      color: "#dc2626",
+      icon: AlertTriangle,
+      desc: "Se envió una alerta de emergencia",
+    },
+    disconnected: {
+      label: "Desconectado",
+      color: "#64748b",
+      icon: WifiOff,
+      desc: "El dispositivo no se reporta hace más de 10 min",
+    },
+    no_gps: {
+      label: "Sin GPS",
+      color: "#f59e0b",
+      icon: MapPinOff,
+      desc: "GPS desactivado en el dispositivo",
+    },
   }[status];
 
   const StatusIcon = statusConfig.icon;
@@ -101,7 +136,9 @@ function FamilyDashboard() {
           </div>
           <div className="flex gap-2">
             <Link to="/familia/guardianes">
-              <Button variant="outline" size="sm"><Users className="w-4 h-4 mr-1" /> Guardianes</Button>
+              <Button variant="outline" size="sm">
+                <Users className="w-4 h-4 mr-1" /> Guardianes
+              </Button>
             </Link>
             <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="w-4 h-4 mr-1" /> Salir
@@ -114,7 +151,9 @@ function FamilyDashboard() {
         {/* Estado principal grande */}
         <section
           className="rounded-3xl p-6 text-white shadow-xl"
-          style={{ background: `linear-gradient(135deg, ${statusConfig.color}, ${statusConfig.color}cc)` }}
+          style={{
+            background: `linear-gradient(135deg, ${statusConfig.color}, ${statusConfig.color}cc)`,
+          }}
         >
           <div className="flex items-center gap-4">
             <div className="w-20 h-20 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
@@ -137,9 +176,29 @@ function FamilyDashboard() {
         {/* Métricas dispositivo */}
         <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Metric icon={Clock} label="Última conexión" value={lastSeen ? timeAgo(lastSeen) : "—"} />
-          <Metric icon={Battery} label="Batería" value={device?.battery_level != null ? `${device.battery_level}%` : "—"} />
-          <Metric icon={MapPin} label="GPS" value={device?.gps_enabled ? "Activo" : device?.gps_enabled === false ? "Desactivado" : "—"} />
-          <Metric icon={WifiOff} label="Internet" value={device?.internet_connected ? "Conectado" : device?.internet_connected === false ? "Sin conexión" : "—"} />
+          <Metric
+            icon={Battery}
+            label="Batería"
+            value={device?.battery_level != null ? `${device.battery_level}%` : "—"}
+          />
+          <Metric
+            icon={MapPin}
+            label="GPS"
+            value={
+              device?.gps_enabled ? "Activo" : device?.gps_enabled === false ? "Desactivado" : "—"
+            }
+          />
+          <Metric
+            icon={WifiOff}
+            label="Internet"
+            value={
+              device?.internet_connected
+                ? "Conectado"
+                : device?.internet_connected === false
+                  ? "Sin conexión"
+                  : "—"
+            }
+          />
         </section>
 
         {/* Última ubicación */}
@@ -148,7 +207,8 @@ function FamilyDashboard() {
             <h2 className="font-bold mb-2">Última ubicación conocida</h2>
             <a
               href={`https://maps.google.com/?q=${device.last_lat},${device.last_lng}`}
-              target="_blank" rel="noreferrer"
+              target="_blank"
+              rel="noreferrer"
               className="text-primary underline text-sm break-all"
             >
               Ver en Google Maps
@@ -168,17 +228,21 @@ function FamilyDashboard() {
                   <div>
                     <div className="font-semibold text-sm">{eventLabel(a.event_type)}</div>
                     <div className="text-xs text-muted-foreground">
-                      {new Date(a.created_at).toLocaleString("es-CL", { timeZone: "America/Santiago" })}
+                      {new Date(a.created_at).toLocaleString("es-CL", {
+                        timeZone: "America/Santiago",
+                      })}
                     </div>
                     {a.acknowledged_at && (
                       <div className="text-xs text-green-700 mt-1">
-                        ✓ Recibido{a.acknowledgement_by_name ? ` por ${a.acknowledgement_by_name}` : ""}
+                        ✓ Recibido
+                        {a.acknowledgement_by_name ? ` por ${a.acknowledgement_by_name}` : ""}
                       </div>
                     )}
                     {a.gps_lat != null && a.gps_lng != null && (
                       <a
                         href={`https://maps.google.com/?q=${a.gps_lat},${a.gps_lng}`}
-                        target="_blank" rel="noreferrer"
+                        target="_blank"
+                        rel="noreferrer"
                         className="text-xs text-primary underline"
                       >
                         Ver ubicación
@@ -221,14 +285,19 @@ function StatusBadge({ status }: { status: string }) {
 
 function eventLabel(e: string) {
   switch (e) {
-    case "emergency_pressed": return "🚨 Botón de emergencia (SOS)";
+    case "emergency_pressed":
+      return "🚨 Botón de emergencia (SOS)";
     case "wellness_check":
     case "im_ok":
-    case "estoy_bien": return "✅ Estoy bien";
+    case "estoy_bien":
+      return "✅ Estoy bien";
     case "call_initiated":
-    case "call": return "📞 Llamada";
-    case "acknowledged": return "✓ Confirmación recibida";
-    default: return e;
+    case "call":
+      return "📞 Llamada";
+    case "acknowledged":
+      return "✓ Confirmación recibida";
+    default:
+      return e;
   }
 }
 
