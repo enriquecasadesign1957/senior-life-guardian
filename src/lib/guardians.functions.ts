@@ -5,6 +5,68 @@ import { normalizePhoneE164 } from "@/lib/phone-utils";
 
 const idSchema = z.string().uuid();
 
+const TWILIO_GATEWAY = "https://connector-gateway.lovable.dev/twilio";
+const PORTAL_FAMILIA_URL = "https://alarmaseniorsafe.cl/familia";
+
+async function twilioSend(to: string, body: string, channel: "whatsapp" | "sms"): Promise<boolean> {
+  const lovableKey = process.env.LOVABLE_API_KEY;
+  const twilioKey = process.env.TWILIO_API_KEY;
+  if (!lovableKey || !twilioKey) return false;
+  const from = channel === "whatsapp" ? "whatsapp:+14155238886" : process.env.TWILIO_SMS_FROM || "";
+  if (!from) return false;
+  const To = channel === "whatsapp" ? `whatsapp:${to}` : to;
+  try {
+    const resp = await fetch(`${TWILIO_GATEWAY}/Messages.json`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${lovableKey}`,
+        "X-Connection-Api-Key": twilioKey,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({ To, From: from, Body: body }),
+    });
+    return resp.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function sendGuardianInvite(opts: {
+  guardianTel: string;
+  guardianWa: string | null;
+  guardianName: string;
+  seniorName: string;
+  parentesco: string;
+  signupId: string;
+  guardianId: string;
+}) {
+  const body =
+    `Hola ${opts.guardianName}, ${opts.seniorName} te ha designado como su guardián en Senior Safe ` +
+    `(como ${opts.parentesco}). Recibirás alertas de emergencia y podrás ver su estado en el Portal Familia: ` +
+    `${PORTAL_FAMILIA_URL} — Ingresa con este número de teléfono para recibir tu código de acceso.`;
+
+  const waNumber = opts.guardianWa || opts.guardianTel;
+  const okWA = await twilioSend(waNumber, body, "whatsapp");
+  const okSMS = await twilioSend(opts.guardianTel, body, "sms");
+
+  try {
+    await supabaseAdmin.from("family_access_log").insert({
+      family_member_id: null,
+      trial_signup_id: opts.signupId,
+      action: "guardian_invite_sent",
+      metadata: {
+        guardian_contact_id: opts.guardianId,
+        telefono: opts.guardianTel,
+        whatsapp_ok: okWA,
+        sms_ok: okSMS,
+        portal_url: PORTAL_FAMILIA_URL,
+      } as never,
+    });
+  } catch {
+    /* silencioso */
+  }
+}
+
 const guardianInput = z.object({
   nombre: z.string().trim().min(1).max(160),
   telefono: z.string().trim().min(4).max(40),
@@ -67,6 +129,47 @@ export const addGuardian = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw error;
+
+    // Pre-registrar como family_member para que pueda hacer OTP login en el Portal Familia.
+    try {
+      const { data: existing } = await supabaseAdmin
+        .from("family_members")
+        .select("id")
+        .eq("trial_signup_id", data.signupId)
+        .eq("telefono", tel)
+        .maybeSingle();
+      if (!existing) {
+        await supabaseAdmin.from("family_members").insert({
+          trial_signup_id: data.signupId,
+          nombre: data.guardian.nombre,
+          telefono: tel,
+          parentesco: data.guardian.parentesco,
+        });
+      }
+    } catch {
+      /* no bloquear si falla */
+    }
+
+    // Enviar invitación con link al Portal Familia (no bloqueante para la respuesta UI).
+    try {
+      const { data: senior } = await supabaseAdmin
+        .from("trial_signups")
+        .select("nombre")
+        .eq("id", data.signupId)
+        .maybeSingle();
+      await sendGuardianInvite({
+        guardianTel: tel,
+        guardianWa: wa,
+        guardianName: data.guardian.nombre,
+        seniorName: senior?.nombre ?? "Tu familiar",
+        parentesco: data.guardian.parentesco,
+        signupId: data.signupId,
+        guardianId: row.id,
+      });
+    } catch {
+      /* la invitación es best-effort */
+    }
+
     return { id: row.id };
   });
 
