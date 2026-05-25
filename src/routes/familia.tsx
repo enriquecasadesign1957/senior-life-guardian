@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { Shield, Loader2, ArrowLeft } from "lucide-react";
@@ -39,8 +39,11 @@ function safeFamilyRedirect(redirect?: string) {
   return "/familia/dashboard";
 }
 
+function errorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
 function FamiliaLogin() {
-  const navigate = useNavigate();
   const search = Route.useSearch();
   const reqCode = useServerFn(requestFamilyCode);
   const verifyCode = useServerFn(verifyFamilyCode);
@@ -63,8 +66,8 @@ function FamiliaLogin() {
     // Navegación dura para garantizar el cambio de pantalla y limpiar cualquier estado pegado.
     try {
       window.location.replace(safeRedirect);
-    } catch {
-      navigate({ to: safeRedirect as any, replace: true });
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -83,8 +86,8 @@ function FamiliaLogin() {
       await reqCode({ data: { telefono } });
       toast.success("Te enviamos un código por WhatsApp/SMS.");
       setStep("code");
-    } catch (e: any) {
-      toast.error(e?.message ?? "No pudimos enviar el código.");
+    } catch (e: unknown) {
+      toast.error(errorMessage(e, "No pudimos enviar el código."));
     } finally {
       setBusy(false);
     }
@@ -98,8 +101,8 @@ function FamiliaLogin() {
       const session = writeFamilyPortalSession(res.session);
       toast.success(`Bienvenido${session.nombre ? `, ${session.nombre}` : ""}`);
       goToDestination();
-    } catch (e: any) {
-      toast.error(e?.message ?? "No pudimos verificar el código.");
+    } catch (e: unknown) {
+      toast.error(errorMessage(e, "No pudimos verificar el código."));
       setBusy(false);
     }
   };
