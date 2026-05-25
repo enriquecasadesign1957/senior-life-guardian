@@ -53,9 +53,9 @@ function ActivarWhatsAppPage() {
   const copyKeyword = async () => {
     try {
       await navigator.clipboard.writeText(KEYWORD);
-      toast.success("Palabra copiada: ACTIVAR");
+      toast.success("Mensaje copiado: ACTIVAR");
     } catch {
-      toast.error("No se pudo copiar. Escríbela manualmente: ACTIVAR");
+      toast.error("No se pudo copiar. Escríbelo manualmente: ACTIVAR");
     }
   };
 
