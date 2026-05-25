@@ -84,7 +84,8 @@ export const addFamily = createServerFn({ method: "POST" })
       .eq("trial_signup_id", data.signupId);
     if ((count ?? 0) >= 5) throw new Error("Máximo 5 familiares.");
 
-    const telefono = data.contact.telefono.trim();
+    const rawTel = data.contact.telefono.trim();
+    const telefono = normalizePhoneE164(rawTel) || rawTel;
     const { data: existing } = await supabaseAdmin
       .from("emergency_contacts")
       .select("id")
@@ -107,6 +108,43 @@ export const addFamily = createServerFn({ method: "POST" })
       if ((error as any).code === "23505") throw new Error("Ya existe un familiar con ese teléfono.");
       throw error;
     }
+
+    // Pre-registrar como family_member para OTP del Portal Familia (best-effort).
+    try {
+      const { data: existingFm } = await supabaseAdmin
+        .from("family_members")
+        .select("id")
+        .eq("trial_signup_id", data.signupId)
+        .eq("telefono", telefono)
+        .maybeSingle();
+      if (!existingFm) {
+        await supabaseAdmin.from("family_members").insert({
+          trial_signup_id: data.signupId,
+          nombre: data.contact.nombre.trim(),
+          telefono,
+          parentesco: data.contact.parentesco.trim(),
+        });
+      }
+    } catch { /* silencioso */ }
+
+    // Enviar invitación al Portal Familia (best-effort, no bloquea la UI del onboarding).
+    try {
+      const { data: senior } = await supabaseAdmin
+        .from("trial_signups")
+        .select("nombre")
+        .eq("id", data.signupId)
+        .maybeSingle();
+      await sendGuardianInvite({
+        guardianTel: telefono,
+        guardianWa: null,
+        guardianName: data.contact.nombre.trim(),
+        seniorName: (senior as any)?.nombre ?? "Tu familiar",
+        parentesco: data.contact.parentesco.trim(),
+        signupId: data.signupId,
+        guardianId: row.id,
+      });
+    } catch { /* best-effort */ }
+
     return { contact: row };
   });
 
