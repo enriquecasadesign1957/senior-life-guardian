@@ -9,7 +9,7 @@ export const Route = createFileRoute("/activar-whatsapp")({
   head: () => ({
     meta: [
       { title: "Activa tus alertas WhatsApp — Senior Safe" },
-      { name: "description", content: "Activa las alertas por WhatsApp en 2 pasos: envía la palabra ACTIVAR a nuestro número oficial y listo." },
+      { name: "description", content: "Activa las alertas por WhatsApp en 2 pasos: abre WhatsApp, envía el mensaje que aparece y listo." },
     ],
   }),
   component: ActivarWhatsAppPage,
@@ -53,9 +53,9 @@ function ActivarWhatsAppPage() {
   const copyKeyword = async () => {
     try {
       await navigator.clipboard.writeText(KEYWORD);
-      toast.success("Palabra copiada: ACTIVAR");
+      toast.success("Mensaje copiado: ACTIVAR");
     } catch {
-      toast.error("No se pudo copiar. Escríbela manualmente: ACTIVAR");
+      toast.error("No se pudo copiar. Escríbelo manualmente: ACTIVAR");
     }
   };
 
@@ -144,9 +144,9 @@ function ActivarWhatsAppPage() {
                 ¿No se abre? Hazlo manualmente:
               </div>
               <div>
-                <div className="text-sm text-muted-foreground mb-1">Envía la palabra:</div>
+                <div className="text-sm text-muted-foreground mb-1">Envía este mensaje:</div>
                 <div className="flex items-center justify-between gap-3 bg-background rounded-xl border-2 border-border px-4 py-3">
-                  <span className="text-2xl font-extrabold tracking-wider">{KEYWORD}</span>
+                  <span className="text-2xl font-extrabold tracking-wider">ACTIVAR</span>
                   <Button variant="outline" size="sm" onClick={copyKeyword} className="h-10">
                     <Copy className="w-4 h-4 mr-1" /> Copiar
                   </Button>
@@ -173,7 +173,7 @@ function ActivarWhatsAppPage() {
               <h2 className="text-2xl font-bold">Confirma aquí cuando lo hayas enviado</h2>
             </div>
             <p className="text-lg text-muted-foreground mb-5">
-              Cuando hayas enviado la palabra <strong>ACTIVAR</strong>, vuelve a esta pantalla
+              Cuando hayas enviado el mensaje, vuelve a esta pantalla
               y toca el botón de abajo.
             </p>
             <Button
