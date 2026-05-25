@@ -2,8 +2,10 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { CheckCircle2, AlertTriangle, WifiOff, MapPinOff, MapPin, Battery, Clock, Loader2, LogOut, Users } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { getFamilyDashboard } from "@/lib/family-portal.functions";
+import { clearFamilyPortalSession, readFamilyPortalSession, type FamilyPortalSession } from "@/lib/family-session.client";
 
 export const Route = createFileRoute("/familia/dashboard")({
   head: () => ({
@@ -15,21 +17,21 @@ export const Route = createFileRoute("/familia/dashboard")({
   component: FamilyDashboard,
 });
 
-type Session = { family_member_id: string; trial_signup_id: string; nombre?: string };
-
 function FamilyDashboard() {
   const navigate = useNavigate();
   const loadDashboard = useServerFn(getFamilyDashboard);
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<FamilyPortalSession | null>(null);
   const [data, setData] = useState<Awaited<ReturnType<typeof loadDashboard>> | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("seniorsafe_family_session");
-      if (!raw) { navigate({ to: "/familia" }); return; }
-      setSession(JSON.parse(raw));
-    } catch { navigate({ to: "/familia" }); }
+    const stored = readFamilyPortalSession();
+    if (!stored) {
+      navigate({ to: "/familia", search: { redirect: "/familia/dashboard" }, replace: true });
+      return;
+    }
+    setSession(stored);
   }, [navigate]);
 
   useEffect(() => {
@@ -38,10 +40,18 @@ function FamilyDashboard() {
     const fetchData = async () => {
       try {
         const res = await loadDashboard({ data: { family_member_id: session.family_member_id, trial_signup_id: session.trial_signup_id } });
-        if (alive) setData(res);
+        if (alive) {
+          setData(res);
+          setError(null);
+        }
       } catch (e) {
         console.error(e);
-        navigate({ to: "/familia" });
+        if (!alive) return;
+        const message = e instanceof Error ? e.message : "No pudimos cargar el Portal Familia.";
+        setError(message);
+        clearFamilyPortalSession();
+        toast.error(message);
+        navigate({ to: "/familia", search: { redirect: "/familia/dashboard" }, replace: true });
       } finally {
         if (alive) setLoading(false);
       }
@@ -53,14 +63,16 @@ function FamilyDashboard() {
   }, [session, loadDashboard, navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem("seniorsafe_family_session");
-    navigate({ to: "/familia" });
+    clearFamilyPortalSession();
+    navigate({ to: "/familia", replace: true });
   };
 
   if (loading || !data) {
     return (
-      <div className="min-h-dvh flex items-center justify-center bg-background">
+      <div className="min-h-dvh flex flex-col items-center justify-center gap-3 bg-background p-6 text-center">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">Conectando con el Portal Familia…</p>
+        {error && <p className="max-w-sm text-sm text-destructive">{error}</p>}
       </div>
     );
   }
