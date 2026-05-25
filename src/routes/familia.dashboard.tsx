@@ -201,8 +201,16 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function eventLabel(e: string) {
-  if (e === "emergency_pressed") return "Botón de emergencia";
-  return e;
+  switch (e) {
+    case "emergency_pressed": return "🚨 Botón de emergencia (SOS)";
+    case "wellness_check":
+    case "im_ok":
+    case "estoy_bien": return "✅ Estoy bien";
+    case "call_initiated":
+    case "call": return "📞 Llamada";
+    case "acknowledged": return "✓ Confirmación recibida";
+    default: return e;
+  }
 }
 
 function timeAgo(d: Date): string {
