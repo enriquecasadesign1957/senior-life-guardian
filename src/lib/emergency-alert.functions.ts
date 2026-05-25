@@ -140,10 +140,42 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
       results.push({ channel: "sms", to: "-", status: "failed", error: err, event: "sms_failed", at: new Date().toISOString() });
       results.push({ channel: "call", to: "-", status: "failed", error: err, event: "call_failed", at: new Date().toISOString() });
     } else {
+      const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
+
+      // FASE 1 — SMS inmediato a todos los guardianes
       for (const c of recipients) {
         const to = c.phone;
+        if (!smsFrom) {
+          results.push({ channel: "sms", to, status: "skipped", error: "missing TWILIO_SMS_FROM", event: "sms_skipped", at: new Date().toISOString() });
+          continue;
+        }
+        try {
+          const r = await twilioPost(
+            "/Messages.json",
+            { To: to, From: smsFrom, Body: textMessage },
+            lovableKey,
+            twilioKey,
+          );
+          results.push({
+            channel: "sms",
+            to,
+            status: r.ok ? "sent" : "failed",
+            sid: r.data?.sid ?? null,
+            error: r.ok ? null : `Twilio ${r.status}: ${JSON.stringify(r.data)}`,
+            event: r.ok ? "sms_sent" : "sms_failed",
+            at: new Date().toISOString(),
+          });
+        } catch (e: any) {
+          results.push({ channel: "sms", to, status: "failed", error: String(e?.message ?? e), event: "sms_failed", at: new Date().toISOString() });
+        }
+      }
 
-        // 1) WhatsApp
+      // Espera 15s antes de WhatsApp
+      if (recipients.length > 0) await sleep(15000);
+
+      // FASE 2 — WhatsApp
+      for (const c of recipients) {
+        const to = c.phone;
         try {
           const r = await twilioPost(
             "/Messages.json",
@@ -163,58 +195,40 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
         } catch (e: any) {
           results.push({ channel: "whatsapp", to, status: "failed", error: String(e?.message ?? e), event: "whatsapp_failed", at: new Date().toISOString() });
         }
+      }
 
-        // 2) SMS
-        if (smsFrom) {
-          try {
-            const r = await twilioPost(
-              "/Messages.json",
-              { To: to, From: smsFrom, Body: textMessage },
-              lovableKey,
-              twilioKey,
-            );
-            results.push({
-              channel: "sms",
-              to,
-              status: r.ok ? "sent" : "failed",
-              sid: r.data?.sid ?? null,
-              error: r.ok ? null : `Twilio ${r.status}: ${JSON.stringify(r.data)}`,
-              event: r.ok ? "sms_sent" : "sms_failed",
-              at: new Date().toISOString(),
-            });
-          } catch (e: any) {
-            results.push({ channel: "sms", to, status: "failed", error: String(e?.message ?? e), event: "sms_failed", at: new Date().toISOString() });
-          }
-        } else {
-          results.push({ channel: "sms", to, status: "skipped", error: "missing TWILIO_SMS_FROM", event: "sms_skipped", at: new Date().toISOString() });
-        }
+      // Espera 20s antes de la llamada
+      if (recipients.length > 0) await sleep(20000);
 
-        // 3) Llamada automática
-        if (voiceFrom) {
-          try {
-            const r = await twilioPost(
-              "/Calls.json",
-              { To: to, From: voiceFrom, Twiml: twiml },
-              lovableKey,
-              twilioKey,
-            );
-            results.push({
-              channel: "call",
-              to,
-              status: r.ok ? "sent" : "failed",
-              sid: r.data?.sid ?? null,
-              error: r.ok ? null : `Twilio ${r.status}: ${JSON.stringify(r.data)}`,
-              event: r.ok ? "call_started" : "call_failed",
-              at: new Date().toISOString(),
-            });
-          } catch (e: any) {
-            results.push({ channel: "call", to, status: "failed", error: String(e?.message ?? e), event: "call_failed", at: new Date().toISOString() });
-          }
-        } else {
+      // FASE 3 — Llamada automática
+      for (const c of recipients) {
+        const to = c.phone;
+        if (!voiceFrom) {
           results.push({ channel: "call", to, status: "skipped", error: "missing TWILIO_VOICE_FROM", event: "call_skipped", at: new Date().toISOString() });
+          continue;
+        }
+        try {
+          const r = await twilioPost(
+            "/Calls.json",
+            { To: to, From: voiceFrom, Twiml: twiml },
+            lovableKey,
+            twilioKey,
+          );
+          results.push({
+            channel: "call",
+            to,
+            status: r.ok ? "sent" : "failed",
+            sid: r.data?.sid ?? null,
+            error: r.ok ? null : `Twilio ${r.status}: ${JSON.stringify(r.data)}`,
+            event: r.ok ? "call_started" : "call_failed",
+            at: new Date().toISOString(),
+          });
+        } catch (e: any) {
+          results.push({ channel: "call", to, status: "failed", error: String(e?.message ?? e), event: "call_failed", at: new Date().toISOString() });
         }
       }
     }
+
 
     const anySent = results.some((r) => r.status === "sent");
     const finalStatus = recipients.length === 0
