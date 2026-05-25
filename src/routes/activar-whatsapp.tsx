@@ -173,7 +173,7 @@ function ActivarWhatsAppPage() {
               <h2 className="text-2xl font-bold">Confirma aquí cuando lo hayas enviado</h2>
             </div>
             <p className="text-lg text-muted-foreground mb-5">
-              Cuando hayas enviado la palabra <strong>ACTIVAR</strong>, vuelve a esta pantalla
+              Cuando hayas enviado el mensaje, vuelve a esta pantalla
               y toca el botón de abajo.
             </p>
             <Button
