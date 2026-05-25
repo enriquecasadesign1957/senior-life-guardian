@@ -4,7 +4,7 @@ import confetti from "canvas-confetti";
 import {
   CheckCircle2, Download, Smartphone, Apple, KeyRound, Users,
   MapPin, Bell, ArrowRight, Shield, Plus, Trash2, X, Loader2,
-  ShieldCheck, Heart, MessageCircle,
+  ShieldCheck, Heart, MessageCircle, Copy, Send,
 } from "lucide-react";
 
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
