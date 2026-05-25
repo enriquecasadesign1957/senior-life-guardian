@@ -35,8 +35,10 @@ function NativeApp() {
   const loadConfig = useServerFn(getAppConfiguration);
   const list = useServerFn(listFamily);
   const sendAlert = useServerFn(sendEmergencyAlert);
+  const sendWellness = useServerFn(sendWellnessNotice);
   const heartbeat = useServerFn(upsertHeartbeat);
   const checkAck = useServerFn(checkLastAlertAck);
+  const [wellnessBusy, setWellnessBusy] = useState(false);
   const [ackInfo, setAckInfo] = useState<{ at: string; name: string | null } | null>(null);
 
   const [bootLoading, setBootLoading] = useState(true);
