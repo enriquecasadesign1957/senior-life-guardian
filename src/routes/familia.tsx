@@ -27,6 +27,7 @@ const DEEP = "var(--brand-petrol-deep)";
 
 function FamiliaLogin() {
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const reqCode = useServerFn(requestFamilyCode);
   const verifyCode = useServerFn(verifyFamilyCode);
 
@@ -35,13 +36,31 @@ function FamiliaLogin() {
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
 
-  // Si ya hay sesión, ir directo al dashboard.
+  // Destino post-login: respeta deep-link ?redirect=... si es seguro (mismo origen, ruta /familia).
+  const safeRedirect = (() => {
+    const r = search.redirect;
+    if (!r || typeof r !== "string") return "/familia/dashboard";
+    if (r.startsWith("/familia")) return r;
+    return "/familia/dashboard";
+  })();
+
+  const goToDestination = () => {
+    // Navegación dura para garantizar el cambio de pantalla y limpiar cualquier estado pegado.
+    try {
+      window.location.assign(safeRedirect);
+    } catch {
+      navigate({ to: safeRedirect as any });
+    }
+  };
+
+  // Si ya hay sesión, ir directo al destino.
   useEffect(() => {
     try {
       const raw = localStorage.getItem("seniorsafe_family_session");
-      if (raw) navigate({ to: "/familia/dashboard" });
+      if (raw) goToDestination();
     } catch {}
-  }, [navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleRequest = async () => {
     if (!telefono.trim()) return toast.error("Ingresa tu teléfono.");
@@ -64,10 +83,10 @@ function FamiliaLogin() {
       const res = await verifyCode({ data: { telefono, code } });
       localStorage.setItem("seniorsafe_family_session", JSON.stringify(res.session));
       toast.success(`Bienvenido${res.session.nombre ? `, ${res.session.nombre}` : ""}`);
-      navigate({ to: "/familia/dashboard" });
+      // Pequeño delay para que el toast aparezca y la escritura a localStorage se persista
+      setTimeout(goToDestination, 50);
     } catch (e: any) {
       toast.error(e?.message ?? "No pudimos verificar el código.");
-    } finally {
       setBusy(false);
     }
   };
