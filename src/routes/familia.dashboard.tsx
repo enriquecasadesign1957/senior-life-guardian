@@ -111,6 +111,13 @@ function FamilyDashboard() {
             <div>
               <div className="text-4xl font-extrabold leading-tight">{statusConfig.label}</div>
               <div className="text-white/90 mt-1">{statusConfig.desc}</div>
+              {lastSeen && (
+                <div className="text-white/80 text-sm mt-1">
+                  {status === "ok" && Date.now() - lastSeen.getTime() < 5 * 60 * 1000
+                    ? "🟢 Activo ahora"
+                    : `Última actividad hace ${timeAgo(lastSeen)}`}
+                </div>
+              )}
             </div>
           </div>
         </section>
