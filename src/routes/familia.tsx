@@ -9,6 +9,9 @@ import { Label } from "@/components/ui/label";
 import { requestFamilyCode, verifyFamilyCode } from "@/lib/family-portal.functions";
 
 export const Route = createFileRoute("/familia")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    redirect: typeof search.redirect === "string" ? search.redirect : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Portal Familia — Senior Safe" },
