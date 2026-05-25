@@ -18,7 +18,9 @@ export const Route = createFileRoute("/activar-whatsapp")({
 // Número oficial Senior Safe (WhatsApp). Usamos el sender Twilio verificado.
 const WA_NUMBER_DISPLAY = "+1 415 523 8886";
 const WA_NUMBER_E164 = "14155238886";
-const KEYWORD = "ACTIVAR";
+// Código del sandbox Twilio. Debe enviarse EXACTAMENTE así para que Twilio
+// registre el número del usuario y pueda recibir alertas.
+const KEYWORD = "join ask-he";
 const WA_LINK = `https://wa.me/${WA_NUMBER_E164}?text=${encodeURIComponent(KEYWORD)}`;
 const STORAGE_KEY = "ss_whatsapp_activated";
 

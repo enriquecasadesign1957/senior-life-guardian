@@ -64,7 +64,15 @@ export const Route = createFileRoute('/api/public/twilio-whatsapp-webhook')({
           })
         } catch {}
 
-        if (!text.includes('ACTIVAR')) {
+        // Aceptamos cualquiera de estas palabras como activación:
+        //  - "join ask-he" (código sandbox Twilio — lo envía nuestro CTA)
+        //  - "ACTIVAR" (compatibilidad con usuarios que escriben manual)
+        const isActivation =
+          text.includes('ACTIVAR') ||
+          text.includes('JOIN ASK-HE') ||
+          text.includes('ASK-HE');
+
+        if (!isActivation) {
           return twiml(
             'Senior Safe 🛡️\n\nPara activar tus alertas por WhatsApp responde con la palabra: ACTIVAR',
           )
