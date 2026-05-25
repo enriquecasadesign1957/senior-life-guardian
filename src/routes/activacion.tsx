@@ -494,19 +494,51 @@ function StepContactsModal({ open, onClose, onDone, userId }: { open: boolean; o
         {contacts.length > 0 && (
           <div className="space-y-2">
             {contacts.map((c, i) => (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold" style={{ background: GREEN }}>
-                  {c.nombre[0]?.toUpperCase()}
+              <div key={i} className="flex flex-col gap-2 p-3 rounded-xl border border-border bg-card">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold" style={{ background: GREEN }}>
+                    {c.nombre[0]?.toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-foreground truncate">{c.nombre}</div>
+                    <div className="text-sm text-muted-foreground truncate">{c.parentesco} · {c.telefono}</div>
+                  </div>
+                  <button onClick={() => removeContact(i)} className="p-2 rounded-full hover:bg-muted text-muted-foreground">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-bold text-foreground truncate">{c.nombre}</div>
-                  <div className="text-sm text-muted-foreground truncate">{c.parentesco} · {c.telefono}</div>
+                <div className="flex flex-wrap items-center gap-2 pl-13">
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full" style={{ background: "color-mix(in oklab, #16a34a 12%, white)", color: "#15803d" }}>
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Invitación Portal Familia enviada
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={!c.id || resendingId === c.id}
+                    onClick={() => handleResend(c)}
+                    className="h-8 px-3 text-xs rounded-full"
+                  >
+                    {resendingId === c.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Send className="w-3.5 h-3.5 mr-1" /> Reenviar invitación</>}
+                  </Button>
                 </div>
-                <button onClick={() => removeContact(i)} className="p-2 rounded-full hover:bg-muted text-muted-foreground">
-                  <Trash2 className="w-4 h-4" />
-                </button>
               </div>
             ))}
+          </div>
+        )}
+
+        {contacts.length > 0 && (
+          <div className="mt-2 rounded-xl border border-border bg-muted/40 p-3 space-y-2">
+            <div className="text-xs font-bold text-foreground">Portal Familia (para tus guardianes)</div>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 truncate text-xs bg-background border border-border rounded-md px-2 py-1">{PORTAL_URL}</code>
+              <Button type="button" size="sm" variant="outline" onClick={copyPortal} className="h-8 px-3">
+                <Copy className="w-3.5 h-3.5 mr-1" /> Copiar
+              </Button>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Tus familiares ingresan con su número de teléfono y reciben un código por WhatsApp/SMS.
+            </p>
           </div>
         )}
 
