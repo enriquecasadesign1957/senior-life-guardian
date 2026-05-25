@@ -9,7 +9,7 @@ export const Route = createFileRoute("/activar-whatsapp")({
   head: () => ({
     meta: [
       { title: "Activa tus alertas WhatsApp — Senior Safe" },
-      { name: "description", content: "Activa las alertas por WhatsApp en 2 pasos: envía la palabra ACTIVAR a nuestro número oficial y listo." },
+      { name: "description", content: "Activa las alertas por WhatsApp en 2 pasos: abre WhatsApp, envía el mensaje que aparece y listo." },
     ],
   }),
   component: ActivarWhatsAppPage,
