@@ -21,6 +21,7 @@ import {
   readFamilyPortalSession,
   type FamilyPortalSession,
 } from "@/lib/family-session.client";
+import type { LucideIcon } from "lucide-react";
 
 export const Route = createFileRoute("/familia/dashboard")({
   head: () => ({
@@ -260,7 +261,7 @@ function FamilyDashboard() {
   );
 }
 
-function Metric({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+function Metric({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
     <div className="bg-white rounded-2xl p-3 shadow-sm">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
