@@ -31,7 +31,7 @@ async function twilioSend(to: string, body: string, channel: "whatsapp" | "sms")
   }
 }
 
-async function sendGuardianInvite(opts: {
+export async function sendGuardianInvite(opts: {
   guardianTel: string;
   guardianWa: string | null;
   guardianName: string;
