@@ -40,6 +40,10 @@ type Guardian = {
   recibe_llamada: boolean;
 };
 
+function errorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
 function GuardiansPage() {
   const navigate = useNavigate();
   const list = useServerFn(listGuardians);
@@ -112,26 +116,26 @@ function GuardiansPage() {
       return toast.error("Completa nombre, teléfono y parentesco.");
     }
     try {
-      await add({ data: { signupId, guardian: form as any } });
+      await add({ data: { signupId, guardian: form } });
       toast.success("Guardián agregado");
       setShowAdd(false);
       resetForm();
       reload(signupId);
-    } catch (e: any) {
-      toast.error(e?.message ?? "Error al agregar.");
+    } catch (e: unknown) {
+      toast.error(errorMessage(e, "Error al agregar."));
     }
   };
 
   const handleSave = async (id: string) => {
     if (!signupId) return;
     try {
-      await update({ data: { signupId, id, guardian: form as any } });
+      await update({ data: { signupId, id, guardian: form } });
       toast.success("Actualizado");
       setEditing(null);
       resetForm();
       reload(signupId);
-    } catch (e: any) {
-      toast.error(e?.message ?? "Error al guardar.");
+    } catch (e: unknown) {
+      toast.error(errorMessage(e, "Error al guardar."));
     }
   };
 
@@ -141,8 +145,8 @@ function GuardiansPage() {
     try {
       await del({ data: { signupId, id } });
       reload(signupId);
-    } catch (e: any) {
-      toast.error(e?.message ?? "Error.");
+    } catch (e: unknown) {
+      toast.error(errorMessage(e, "Error."));
     }
   };
 
