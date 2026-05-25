@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { normalizePhoneE164 } from "@/lib/phone-utils";
+import { sendGuardianInvite } from "@/lib/guardians.functions";
 
 const idSchema = z.string().uuid();
 const contactInput = z.object({
