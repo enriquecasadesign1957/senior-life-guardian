@@ -205,7 +205,7 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
           )}
 
           {/* Guía visual — aparece tras tocar el botón si no hay instalación automática */}
-          {showGuide && !deferred && !installed && (
+          {showGuide && !installed && (
             <div className="rounded-2xl border-2 p-4 text-sm space-y-2" style={{ borderColor: DEEP }}>
               {isIOS ? (
                 <>
