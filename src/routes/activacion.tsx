@@ -4,7 +4,7 @@ import confetti from "canvas-confetti";
 import {
   CheckCircle2, Download, Smartphone, Apple, KeyRound, Users,
   MapPin, Bell, ArrowRight, Shield, Plus, Trash2, X, Loader2,
-  ShieldCheck, Heart, MessageCircle,
+  ShieldCheck, Heart, MessageCircle, Copy, Send,
 } from "lucide-react";
 
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useServerFn } from "@tanstack/react-start";
-import { setUserPin, addFamily } from "@/lib/family.functions";
+import { setUserPin, addFamily, resendFamilyInvite } from "@/lib/family.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/activacion")({
@@ -411,6 +411,10 @@ function StepContactsModal({ open, onClose, onDone, userId }: { open: boolean; o
   };
 
   const addFamilyFn = useServerFn(addFamily);
+  const resendInvite = useServerFn(resendFamilyInvite);
+  const [resendingId, setResendingId] = useState<string | null>(null);
+  const PORTAL_URL = "https://alarmaseniorsafe.cl/familia";
+
   const addContact = async () => {
     if (!form.nombre.trim() || !form.telefono.trim() || !form.parentesco.trim()) {
       toast.error("Completa todos los campos");
@@ -419,8 +423,9 @@ function StepContactsModal({ open, onClose, onDone, userId }: { open: boolean; o
     if (contacts.length >= 5) { toast.error("Máximo 5 contactos"); return; }
     setSaving(true);
     try {
+      let createdId: string | undefined;
       if (userId) {
-        await addFamilyFn({
+        const res = await addFamilyFn({
           data: {
             signupId: userId,
             contact: {
@@ -430,16 +435,44 @@ function StepContactsModal({ open, onClose, onDone, userId }: { open: boolean; o
             },
           },
         });
+        createdId = (res as any)?.contact?.id;
       }
-      persist([...contacts, { ...form }]);
+      persist([...contacts, { ...form, id: createdId }]);
       setForm({ nombre: "", telefono: "", parentesco: "" });
-      toast.success("Contacto agregado");
+      toast.success("Contacto agregado", {
+        description: "Le enviamos la invitación al Portal Familia por WhatsApp y SMS.",
+      });
     } catch (e) {
       console.error(e);
       persist([...contacts, { ...form }]);
       setForm({ nombre: "", telefono: "", parentesco: "" });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleResend = async (c: Contact) => {
+    if (!userId || !c.id) {
+      toast.error("Aún no podemos reenviar esta invitación.");
+      return;
+    }
+    setResendingId(c.id);
+    try {
+      await resendInvite({ data: { signupId: userId, contactId: c.id } });
+      toast.success(`Invitación reenviada a ${c.nombre}`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "No se pudo reenviar la invitación.");
+    } finally {
+      setResendingId(null);
+    }
+  };
+
+  const copyPortal = async () => {
+    try {
+      await navigator.clipboard.writeText(PORTAL_URL);
+      toast.success("Link copiado");
+    } catch {
+      toast.error("No se pudo copiar. Cópialo manualmente.");
     }
   };
 
@@ -461,19 +494,51 @@ function StepContactsModal({ open, onClose, onDone, userId }: { open: boolean; o
         {contacts.length > 0 && (
           <div className="space-y-2">
             {contacts.map((c, i) => (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold" style={{ background: GREEN }}>
-                  {c.nombre[0]?.toUpperCase()}
+              <div key={i} className="flex flex-col gap-2 p-3 rounded-xl border border-border bg-card">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold" style={{ background: GREEN }}>
+                    {c.nombre[0]?.toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-foreground truncate">{c.nombre}</div>
+                    <div className="text-sm text-muted-foreground truncate">{c.parentesco} · {c.telefono}</div>
+                  </div>
+                  <button onClick={() => removeContact(i)} className="p-2 rounded-full hover:bg-muted text-muted-foreground">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-bold text-foreground truncate">{c.nombre}</div>
-                  <div className="text-sm text-muted-foreground truncate">{c.parentesco} · {c.telefono}</div>
+                <div className="flex flex-wrap items-center gap-2 pl-13">
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full" style={{ background: "color-mix(in oklab, #16a34a 12%, white)", color: "#15803d" }}>
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Invitación Portal Familia enviada
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={!c.id || resendingId === c.id}
+                    onClick={() => handleResend(c)}
+                    className="h-8 px-3 text-xs rounded-full"
+                  >
+                    {resendingId === c.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Send className="w-3.5 h-3.5 mr-1" /> Reenviar invitación</>}
+                  </Button>
                 </div>
-                <button onClick={() => removeContact(i)} className="p-2 rounded-full hover:bg-muted text-muted-foreground">
-                  <Trash2 className="w-4 h-4" />
-                </button>
               </div>
             ))}
+          </div>
+        )}
+
+        {contacts.length > 0 && (
+          <div className="mt-2 rounded-xl border border-border bg-muted/40 p-3 space-y-2">
+            <div className="text-xs font-bold text-foreground">Portal Familia (para tus guardianes)</div>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 truncate text-xs bg-background border border-border rounded-md px-2 py-1">{PORTAL_URL}</code>
+              <Button type="button" size="sm" variant="outline" onClick={copyPortal} className="h-8 px-3">
+                <Copy className="w-3.5 h-3.5 mr-1" /> Copiar
+              </Button>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Tus familiares ingresan con su número de teléfono y reciben un código por WhatsApp/SMS.
+            </p>
           </div>
         )}
 

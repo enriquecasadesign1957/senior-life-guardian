@@ -1,0 +1,128 @@
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
+/**
+ * Flujo INDEPENDIENTE del botón "Estoy bien".
+ * - NO usa la lógica de emergencia.
+ * - NO realiza llamadas automáticas.
+ * - NO usa plantilla SOS ni escalamiento.
+ * - Solo envía un único mensaje informativo (WhatsApp + SMS best-effort) a los
+ *   guardianes activos del adulto mayor.
+ * - Registra el evento en alert_logs con event_type = 'wellness_ok' para trazabilidad.
+ */
+
+const TWILIO_GATEWAY = "https://connector-gateway.lovable.dev/twilio";
+
+const Schema = z.object({
+  signupId: z.string().uuid(),
+  gps: z
+    .object({ lat: z.number(), lng: z.number(), accuracy: z.number().optional() })
+    .nullable()
+    .optional(),
+});
+
+function normalizePhone(raw: string): string | null {
+  const trimmed = (raw ?? "").replace(/[^\d+]/g, "");
+  if (!trimmed) return null;
+  if (trimmed.startsWith("+")) return trimmed;
+  if (/^\d{8,9}$/.test(trimmed)) return `+56${trimmed}`;
+  return `+${trimmed}`;
+}
+
+async function twilioMessage(
+  to: string,
+  body: string,
+  channel: "whatsapp" | "sms",
+): Promise<{ ok: boolean; sid?: string | null; error?: string | null }> {
+  const lovableKey = process.env.LOVABLE_API_KEY;
+  const twilioKey = process.env.TWILIO_API_KEY;
+  if (!lovableKey || !twilioKey) return { ok: false, error: "twilio_not_configured" };
+  const from =
+    channel === "whatsapp" ? "whatsapp:+14155238886" : process.env.TWILIO_SMS_FROM || "";
+  if (!from) return { ok: false, error: `missing_from_${channel}` };
+  const To = channel === "whatsapp" ? `whatsapp:${to}` : to;
+  try {
+    const resp = await fetch(`${TWILIO_GATEWAY}/Messages.json`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${lovableKey}`,
+        "X-Connection-Api-Key": twilioKey,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({ To, From: from, Body: body }),
+    });
+    const data: any = await resp.json().catch(() => ({}));
+    return {
+      ok: resp.ok,
+      sid: data?.sid ?? null,
+      error: resp.ok ? null : `Twilio ${resp.status}: ${JSON.stringify(data)}`,
+    };
+  } catch (e: any) {
+    return { ok: false, error: String(e?.message ?? e) };
+  }
+}
+
+export const sendWellnessNotice = createServerFn({ method: "POST" })
+  .inputValidator((input) => Schema.parse(input))
+  .handler(async ({ data }) => {
+    const { data: user } = await supabaseAdmin
+      .from("trial_signups")
+      .select("id, nombre")
+      .eq("id", data.signupId)
+      .maybeSingle();
+    if (!user) return { ok: false, error: "user_not_found", recipients: 0 };
+
+    const { data: contacts } = await supabaseAdmin
+      .from("emergency_contacts")
+      .select("id, nombre, telefono, parentesco, activo")
+      .eq("trial_signup_id", user.id);
+
+    const recipients = (contacts ?? [])
+      .filter((c) => c.activo !== false)
+      .map((c) => ({ ...c, phone: normalizePhone(c.telefono) }))
+      .filter((c) => c.phone) as Array<{ id: string; nombre: string; phone: string }>;
+
+    const timestamp = new Date().toLocaleString("es-CL", { timeZone: "America/Santiago" });
+    const mapsLink = data.gps
+      ? `\nUbicación: https://maps.google.com/?q=${data.gps.lat},${data.gps.lng}`
+      : "";
+
+    const body =
+      `${user.nombre} informa que se encuentra bien ✅\n` +
+      `No se requiere acción.\n\n` +
+      `Hora: ${timestamp}${mapsLink}`;
+
+    const results: Array<{
+      to: string;
+      channel: "whatsapp" | "sms";
+      status: "sent" | "failed";
+      error?: string | null;
+    }> = [];
+
+    // Mensaje informativo único: 1 WhatsApp + 1 SMS por guardián. SIN llamadas. SIN reintentos.
+    for (const r of recipients) {
+      const wa = await twilioMessage(r.phone, body, "whatsapp");
+      results.push({ to: r.phone, channel: "whatsapp", status: wa.ok ? "sent" : "failed", error: wa.error });
+      const sms = await twilioMessage(r.phone, body, "sms");
+      results.push({ to: r.phone, channel: "sms", status: sms.ok ? "sent" : "failed", error: sms.error });
+    }
+
+    // Registrar como evento informativo (NO emergencia) para auditoría.
+    try {
+      await supabaseAdmin.from("alert_logs").insert({
+        trial_signup_id: user.id,
+        event_type: "wellness_ok",
+        status: results.some((r) => r.status === "sent") ? "delivered" : "no_recipients",
+        gps_lat: data.gps?.lat ?? null,
+        gps_lng: data.gps?.lng ?? null,
+        gps_accuracy: data.gps?.accuracy ?? null,
+        recipients: recipients.map((r) => ({ id: r.id, nombre: r.nombre, telefono: r.phone })),
+        metadata: { kind: "wellness_ok", timestamp, results } as never,
+      } as never);
+    } catch {
+      /* best-effort */
+    }
+
+    return { ok: true, recipients: recipients.length, results };
+  });

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getAppConfiguration, listFamily } from "@/lib/family.functions";
 import { sendEmergencyAlert } from "@/lib/emergency-alert.functions";
+import { sendWellnessNotice } from "@/lib/wellness.functions";
 import { upsertHeartbeat } from "@/lib/heartbeat.functions";
 import { checkLastAlertAck } from "@/lib/family-portal.functions";
 import { Link } from "@tanstack/react-router";
@@ -34,8 +35,10 @@ function NativeApp() {
   const loadConfig = useServerFn(getAppConfiguration);
   const list = useServerFn(listFamily);
   const sendAlert = useServerFn(sendEmergencyAlert);
+  const sendWellness = useServerFn(sendWellnessNotice);
   const heartbeat = useServerFn(upsertHeartbeat);
   const checkAck = useServerFn(checkLastAlertAck);
+  const [wellnessBusy, setWellnessBusy] = useState(false);
   const [ackInfo, setAckInfo] = useState<{ at: string; name: string | null } | null>(null);
 
   const [bootLoading, setBootLoading] = useState(true);
@@ -346,14 +349,43 @@ function NativeApp() {
           </p>
         </div>
 
-        {/* BOTÓN ESTOY BIEN */}
+        {/* BOTÓN ESTOY BIEN — flujo independiente (NO emergencia, NO llamadas, NO escalamiento) */}
         <button
           type="button"
-          onClick={() => toast.success("Marcado como: Estoy bien 💚")}
-          className="mt-4 w-full h-16 rounded-2xl text-white text-lg font-bold flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition"
+          disabled={!userId || wellnessBusy}
+          onClick={async () => {
+            if (!userId) return;
+            setWellnessBusy(true);
+            // GPS opcional, sin bloquear si falla o no se otorga.
+            const getGps = () =>
+              new Promise<{ lat: number; lng: number; accuracy?: number } | null>((resolve) => {
+                if (!("geolocation" in navigator)) return resolve(null);
+                navigator.geolocation.getCurrentPosition(
+                  (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy }),
+                  () => resolve(null),
+                  { timeout: 4000, maximumAge: 60_000 },
+                );
+              });
+            try {
+              const gps = await getGps();
+              const res = await sendWellness({ data: { signupId: userId, gps } });
+              if (res.recipients === 0) {
+                toast.success("Marcado como: Estoy bien 💚", { description: "No hay guardianes configurados." });
+              } else {
+                toast.success("Estoy bien 💚 — aviso enviado", {
+                  description: `Tus ${res.recipients} guardián${res.recipients === 1 ? "" : "es"} recibirá${res.recipients === 1 ? "" : "n"} un mensaje informativo.`,
+                });
+              }
+            } catch (e: any) {
+              toast.error("No se pudo enviar el aviso", { description: e?.message ?? "Reintenta." });
+            } finally {
+              setWellnessBusy(false);
+            }
+          }}
+          className="mt-4 w-full h-16 rounded-2xl text-white text-lg font-bold flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition disabled:opacity-60"
           style={{ background: GREEN }}
         >
-          <Heart className="w-6 h-6" /> Estoy bien
+          {wellnessBusy ? <Loader2 className="w-6 h-6 animate-spin" /> : <><Heart className="w-6 h-6" /> Estoy bien</>}
         </button>
 
         {/* Banner ack: tu familia ya fue notificada (no bloqueante) */}
