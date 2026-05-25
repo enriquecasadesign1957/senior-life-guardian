@@ -129,6 +129,47 @@ export const addGuardian = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (error) throw error;
+
+    // Pre-registrar como family_member para que pueda hacer OTP login en el Portal Familia.
+    try {
+      const { data: existing } = await supabaseAdmin
+        .from("family_members")
+        .select("id")
+        .eq("trial_signup_id", data.signupId)
+        .eq("telefono", tel)
+        .maybeSingle();
+      if (!existing) {
+        await supabaseAdmin.from("family_members").insert({
+          trial_signup_id: data.signupId,
+          nombre: data.guardian.nombre,
+          telefono: tel,
+          parentesco: data.guardian.parentesco,
+        });
+      }
+    } catch {
+      /* no bloquear si falla */
+    }
+
+    // Enviar invitación con link al Portal Familia (no bloqueante para la respuesta UI).
+    try {
+      const { data: senior } = await supabaseAdmin
+        .from("trial_signups")
+        .select("nombre")
+        .eq("id", data.signupId)
+        .maybeSingle();
+      await sendGuardianInvite({
+        guardianTel: tel,
+        guardianWa: wa,
+        guardianName: data.guardian.nombre,
+        seniorName: senior?.nombre ?? "Tu familiar",
+        parentesco: data.guardian.parentesco,
+        signupId: data.signupId,
+        guardianId: row.id,
+      });
+    } catch {
+      /* la invitación es best-effort */
+    }
+
     return { id: row.id };
   });
 
