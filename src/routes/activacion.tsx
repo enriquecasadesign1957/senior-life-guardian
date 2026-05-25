@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useServerFn } from "@tanstack/react-start";
-import { setUserPin, addFamily } from "@/lib/family.functions";
+import { setUserPin, addFamily, resendFamilyInvite } from "@/lib/family.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/activacion")({
