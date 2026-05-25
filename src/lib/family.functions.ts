@@ -182,6 +182,43 @@ export const deleteFamily = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/**
+ * Reenvía la invitación al Portal Familia para un guardián existente.
+ * Reutiliza sendGuardianInvite (mismo canal WhatsApp + SMS). No duplica contactos.
+ */
+export const resendFamilyInvite = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z.object({ signupId: idSchema, contactId: idSchema }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { data: contact, error } = await supabaseAdmin
+      .from("emergency_contacts")
+      .select("id, nombre, telefono, whatsapp, parentesco")
+      .eq("id", data.contactId)
+      .eq("trial_signup_id", data.signupId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!contact) throw new Error("Guardián no encontrado.");
+
+    const { data: senior } = await supabaseAdmin
+      .from("trial_signups")
+      .select("nombre")
+      .eq("id", data.signupId)
+      .maybeSingle();
+
+    await sendGuardianInvite({
+      guardianTel: contact.telefono,
+      guardianWa: (contact as any).whatsapp ?? null,
+      guardianName: contact.nombre,
+      seniorName: (senior as any)?.nombre ?? "Tu familiar",
+      parentesco: contact.parentesco,
+      signupId: data.signupId,
+      guardianId: contact.id,
+    });
+
+    return { ok: true };
+  });
+
 /** Crea/actualiza el PIN del usuario (hash ya calculado en cliente). */
 export const setUserPin = createServerFn({ method: "POST" })
   .inputValidator((input) =>
