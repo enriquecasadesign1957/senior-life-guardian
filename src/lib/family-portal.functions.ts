@@ -21,7 +21,12 @@ function randomCode6(): string {
   return String(a[0] % 1_000_000).padStart(6, "0");
 }
 
-async function logAccess(family_member_id: string | null, trial_signup_id: string | null, action: string, metadata?: unknown) {
+async function logAccess(
+  family_member_id: string | null,
+  trial_signup_id: string | null,
+  action: string,
+  metadata?: unknown,
+) {
   try {
     await supabaseAdmin.from("family_access_log").insert({
       family_member_id,
@@ -72,6 +77,8 @@ export const requestFamilyCode = createServerFn({ method: "POST" })
       .select("id, trial_signup_id, nombre")
       .eq("telefono", tel)
       .eq("activo", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (!member) {
@@ -145,7 +152,9 @@ async function sendCode(memberId: string, tel: string) {
 // ============================================================
 export const verifyFamilyCode = createServerFn({ method: "POST" })
   .inputValidator((input) =>
-    z.object({ telefono: z.string().min(4).max(40), code: z.string().regex(/^\d{6}$/) }).parse(input),
+    z
+      .object({ telefono: z.string().min(4).max(40), code: z.string().regex(/^\d{6}$/) })
+      .parse(input),
   )
   .handler(async ({ data }) => {
     const tel = normalizePhoneE164(data.telefono);
@@ -183,6 +192,8 @@ export const verifyFamilyCode = createServerFn({ method: "POST" })
       .select("id, trial_signup_id, nombre")
       .eq("telefono", tel)
       .eq("activo", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (!member) throw new Error("Familiar no encontrado.");
@@ -240,7 +251,9 @@ export const getFamilyDashboard = createServerFn({ method: "POST" })
         .maybeSingle(),
       supabaseAdmin
         .from("device_status")
-        .select("last_seen_at, battery_level, gps_enabled, internet_connected, app_version, last_lat, last_lng")
+        .select(
+          "last_seen_at, battery_level, gps_enabled, internet_connected, app_version, last_lat, last_lng",
+        )
         .eq("trial_signup_id", data.trial_signup_id)
         .maybeSingle(),
       supabaseAdmin
@@ -255,12 +268,15 @@ export const getFamilyDashboard = createServerFn({ method: "POST" })
 
     // Estado visual
     const lastAlert = alerts?.[0];
-    const isActiveAlert = lastAlert
-      && ["pending", "partial", "delivered", "failed"].includes(lastAlert.status)
-      && !lastAlert.acknowledged_at
-      && Date.now() - new Date(lastAlert.created_at).getTime() < 30 * 60 * 1000;
+    const isActiveAlert =
+      lastAlert &&
+      ["pending", "partial", "delivered", "failed"].includes(lastAlert.status) &&
+      !lastAlert.acknowledged_at &&
+      Date.now() - new Date(lastAlert.created_at).getTime() < 30 * 60 * 1000;
 
-    const lastSeenMs = device?.last_seen_at ? Date.now() - new Date(device.last_seen_at).getTime() : Infinity;
+    const lastSeenMs = device?.last_seen_at
+      ? Date.now() - new Date(device.last_seen_at).getTime()
+      : Infinity;
     const isDisconnected = lastSeenMs > 10 * 60 * 1000;
 
     let visualStatus: "alert" | "disconnected" | "no_gps" | "ok";
@@ -279,7 +295,9 @@ export const getFamilyDashboard = createServerFn({ method: "POST" })
 // ============================================================
 export const ackAlertByToken = createServerFn({ method: "POST" })
   .inputValidator((input) =>
-    z.object({ token: z.string().min(16).max(128), nombre: z.string().max(120).optional() }).parse(input),
+    z
+      .object({ token: z.string().min(16).max(128), nombre: z.string().max(120).optional() })
+      .parse(input),
   )
   .handler(async ({ data }) => {
     const { data: alert } = await supabaseAdmin
@@ -292,7 +310,10 @@ export const ackAlertByToken = createServerFn({ method: "POST" })
     if (alert.acknowledged_at) {
       return { ok: true, already: true, trial_signup_id: alert.trial_signup_id };
     }
-    if (alert.acknowledgement_expires_at && new Date(alert.acknowledgement_expires_at).getTime() < Date.now()) {
+    if (
+      alert.acknowledgement_expires_at &&
+      new Date(alert.acknowledgement_expires_at).getTime() < Date.now()
+    ) {
       throw new Error("Este link de confirmación expiró.");
     }
 
