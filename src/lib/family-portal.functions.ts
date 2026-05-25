@@ -72,6 +72,8 @@ export const requestFamilyCode = createServerFn({ method: "POST" })
       .select("id, trial_signup_id, nombre")
       .eq("telefono", tel)
       .eq("activo", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (!member) {
@@ -183,6 +185,8 @@ export const verifyFamilyCode = createServerFn({ method: "POST" })
       .select("id, trial_signup_id, nombre")
       .eq("telefono", tel)
       .eq("activo", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (!member) throw new Error("Familiar no encontrado.");
