@@ -144,9 +144,9 @@ function ActivarWhatsAppPage() {
                 ¿No se abre? Hazlo manualmente:
               </div>
               <div>
-                <div className="text-sm text-muted-foreground mb-1">Envía la palabra:</div>
+                <div className="text-sm text-muted-foreground mb-1">Envía este mensaje:</div>
                 <div className="flex items-center justify-between gap-3 bg-background rounded-xl border-2 border-border px-4 py-3">
-                  <span className="text-2xl font-extrabold tracking-wider">{KEYWORD}</span>
+                  <span className="text-2xl font-extrabold tracking-wider">ACTIVAR</span>
                   <Button variant="outline" size="sm" onClick={copyKeyword} className="h-10">
                     <Copy className="w-4 h-4 mr-1" /> Copiar
                   </Button>
