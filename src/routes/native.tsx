@@ -85,22 +85,40 @@ function NativeApp() {
   }, [loadConfig]);
 
   // 2) Pedir GPS apenas haya sesión + refrescar coordenadas periódicamente
+  const requestGps = (interactive = false) => {
+    if (!("geolocation" in navigator)) {
+      if (interactive) toast.error("Este teléfono no soporta GPS.");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGpsOk(true);
+        setLastCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        if (interactive) toast.success("Ubicación activada.");
+      },
+      (err) => {
+        setGpsOk(false);
+        if (interactive) {
+          if (err.code === err.PERMISSION_DENIED) {
+            toast.error("Permiso de ubicación bloqueado. Ábrelo en ajustes del navegador → Permisos del sitio → Ubicación → Permitir.");
+          } else if (err.code === err.POSITION_UNAVAILABLE) {
+            toast.error("GPS no disponible. Activa la ubicación del teléfono y reintenta.");
+          } else {
+            toast.error("No pudimos obtener tu ubicación. Reintenta cerca de una ventana.");
+          }
+        }
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 },
+    );
+  };
+
   useEffect(() => {
-    if (!userId || !("geolocation" in navigator)) return;
-    const capture = () => {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setGpsOk(true);
-          setLastCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        },
-        () => setGpsOk(false),
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 },
-      );
-    };
-    capture();
-    const id = setInterval(capture, 120_000); // refrescar cada 2 min
+    if (!userId) return;
+    requestGps(false);
+    const id = setInterval(() => requestGps(false), 120_000);
     return () => clearInterval(id);
   }, [userId]);
+
 
   // 2b) Heartbeat cada 60s — solo si pestaña visible + online + sesión
   useEffect(() => {
