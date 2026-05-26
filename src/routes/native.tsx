@@ -84,14 +84,22 @@ function NativeApp() {
     return () => { alive = false; };
   }, [loadConfig]);
 
-  // 2) Pedir GPS apenas haya sesión
+  // 2) Pedir GPS apenas haya sesión + refrescar coordenadas periódicamente
   useEffect(() => {
     if (!userId || !("geolocation" in navigator)) return;
-    navigator.geolocation.getCurrentPosition(
-      () => setGpsOk(true),
-      () => setGpsOk(false),
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 },
-    );
+    const capture = () => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setGpsOk(true);
+          setLastCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        },
+        () => setGpsOk(false),
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 },
+      );
+    };
+    capture();
+    const id = setInterval(capture, 120_000); // refrescar cada 2 min
+    return () => clearInterval(id);
   }, [userId]);
 
   // 2b) Heartbeat cada 60s — solo si pestaña visible + online + sesión
@@ -111,6 +119,8 @@ function NativeApp() {
             gps_enabled: gpsOk,
             internet_connected: typeof navigator !== "undefined" ? navigator.onLine : null,
             app_version: "native-1.0",
+            last_lat: lastCoords?.lat ?? null,
+            last_lng: lastCoords?.lng ?? null,
           },
         });
       } catch { /* silencioso */ }
@@ -118,7 +128,7 @@ function NativeApp() {
     ping();
     const id = setInterval(ping, 60_000);
     return () => { alive = false; clearInterval(id); };
-  }, [userId, gpsOk, heartbeat]);
+  }, [userId, gpsOk, lastCoords, heartbeat]);
 
   // 2c) Tras enviar alerta, verificar ack durante 60s (sin polling permanente)
   useEffect(() => {
