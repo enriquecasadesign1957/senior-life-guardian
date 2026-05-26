@@ -20,7 +20,7 @@ import {
   clearFamilyPortalSession,
   readFamilyPortalSession,
   type FamilyPortalSession,
-} from "@/lib/family-session.client";
+} from "@/lib/family-session";
 import type { LucideIcon } from "lucide-react";
 
 export const Route = createFileRoute("/familia/dashboard")({
