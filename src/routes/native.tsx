@@ -236,7 +236,7 @@ function NativeApp() {
       }
     })();
     return () => { cancelled = true; };
-  }, [stage, userId, sendAlert]);
+  }, [stage, userId, sendAlert, lastCoords]);
 
   const handleLogin = async () => {
     const email = loginEmail.trim().toLowerCase();
