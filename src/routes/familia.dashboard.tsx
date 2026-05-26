@@ -85,7 +85,7 @@ function FamilyDashboard() {
 
   const handleLogout = () => {
     clearFamilyPortalSession();
-    navigate({ to: "/familia", replace: true });
+    navigate({ to: "/familia", search: {}, replace: true });
   };
 
   if (loading || !data) {
@@ -136,7 +136,7 @@ function FamilyDashboard() {
             <p className="text-xs text-muted-foreground">Portal Familia</p>
           </div>
           <div className="flex gap-2">
-            <Link to="/familia/guardianes">
+            <Link to="/familia/guardianes" search={{}}>
               <Button variant="outline" size="sm">
                 <Users className="w-4 h-4 mr-1" /> Guardianes
               </Button>
