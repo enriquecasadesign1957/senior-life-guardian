@@ -121,7 +121,14 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
   const handleBigInstall = async () => {
     setInstalling(true);
     try {
-      // 1) PWA instalable (Chrome/Edge en Android o desktop) → prompt nativo.
+      // 1) Android → SIEMPRE priorizar descarga de APK real (no PWA).
+      //    Evita que el usuario crea que "ya instaló" cuando solo abrió la web.
+      if (isAndroid) {
+        window.open(APK_DOWNLOAD_URL, "_blank", "noopener");
+        setShowGuide(true);
+        return;
+      }
+      // 2) Desktop/Chrome con PWA instalable → prompt nativo (útil para QA interno).
       if (deferred) {
         try {
           await deferred.prompt();
@@ -132,25 +139,21 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
             setInstalled(true);
             return;
           }
-          // Usuario canceló → mostrar guía manual
           setShowGuide(true);
           return;
-        } catch {
-          // Si el prompt falla, seguir con fallback
-        }
+        } catch {}
       }
-      // 2) Android sin prompt → descargar APK en pestaña nueva (no congela el modal).
-      if (isAndroid) {
-        window.open(APK_DOWNLOAD_URL, "_blank", "noopener");
-        setShowGuide(true);
-        return;
-      }
-      // 3) iOS / desktop sin prompt → mostrar guía visual paso a paso.
+      // 3) iOS / otros → guía visual paso a paso.
       setShowGuide(true);
     } finally {
       setInstalling(false);
     }
   };
+
+  // Solo mostramos el acceso a la versión web cuando la PWA ya está realmente
+  // instalada (standalone) o como fallback explícito de debug. Nunca como flujo
+  // principal del onboarding — el usuario debe instalar la APK.
+  const showOpenWebFallback = installed;
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -159,9 +162,9 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-2" style={{ background: PETROL }}>
             <Download className="w-7 h-7" />
           </div>
-          <DialogTitle className="text-2xl">Instalar Senior Safe en tu teléfono</DialogTitle>
+          <DialogTitle className="text-2xl">✅ Cuenta creada correctamente</DialogTitle>
           <DialogDescription className="text-base">
-            Toca el botón verde. Instalará Senior Life Guardian, no un acceso directo de esta pantalla.
+            Ahora <b>descarga e instala Senior Safe</b> en este teléfono. Es la aplicación real — no una página web temporal.
           </DialogDescription>
         </DialogHeader>
 
@@ -176,23 +179,28 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
         )}
 
         <div className="space-y-3">
-          {/* BOTÓN PRINCIPAL — siempre visible */}
+          {/* BOTÓN PRINCIPAL — descargar APK */}
           {!installed && (
-            <Button
-              onClick={handleBigInstall}
-              disabled={installing}
-              className="w-full h-16 text-xl font-bold rounded-2xl shadow-lg"
-              style={{ background: GREEN, color: "white" }}
-            >
-              <Download className="w-6 h-6 mr-2" />
-              {installing ? "Preparando instalación…" : "📲 Instalar Senior Safe"}
-            </Button>
+            <>
+              <Button
+                onClick={handleBigInstall}
+                disabled={installing}
+                className="w-full h-16 text-xl font-bold rounded-2xl shadow-lg"
+                style={{ background: GREEN, color: "white" }}
+              >
+                <Download className="w-6 h-6 mr-2" />
+                {installing ? "Preparando descarga…" : "📥 Descargar App"}
+              </Button>
+              <p className="text-xs text-muted-foreground text-center px-2">
+                Importante: no cierres esta ventana hasta terminar la instalación. La versión web no reemplaza la app instalada.
+              </p>
+            </>
           )}
 
-          {installed && (
+          {showOpenWebFallback && (
             <>
               <div className="rounded-2xl p-4 text-sm font-semibold text-center flex items-center justify-center gap-2" style={{ background: "color-mix(in oklab, #16a34a 14%, white)", color: GREEN }}>
-                <CheckCircle2 className="w-5 h-5" /> App instalada — abriendo Senior Safe…
+                <CheckCircle2 className="w-5 h-5" /> App instalada
               </div>
               <Button
                 onClick={openInstalledApp}
@@ -235,9 +243,9 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
           {/* Pasos resumen */}
           <div className="grid gap-2 text-sm">
             {[
-              "Toca el botón verde de arriba.",
-              isAndroid ? "Confirma 'Instalar' si aparece." : (isIOS ? "Sigue los pasos para añadir a inicio." : "Confirma la instalación."),
-              "La app abrirá con tu cuenta lista.",
+              isAndroid ? "Toca 'Descargar App' arriba." : "Toca el botón verde de arriba.",
+              isAndroid ? "Abre el archivo APK descargado y confirma 'Instalar'." : (isIOS ? "Sigue los pasos para añadir a inicio." : "Confirma la instalación."),
+              "Abre Senior Safe desde el ícono en tu teléfono.",
             ].map((step, i) => (
               <div key={step} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
                 <span className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold shrink-0" style={{ background: i === 2 ? GREEN : DEEP }}>{i + 1}</span>
@@ -245,6 +253,23 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
               </div>
             ))}
           </div>
+
+          {/* Fallback web — solo como último recurso, no destacado */}
+          {!installed && (
+            <details className="text-xs text-muted-foreground pt-1">
+              <summary className="cursor-pointer hover:text-foreground select-none">¿No puedes instalar ahora? Ver opción temporal</summary>
+              <div className="mt-2 rounded-2xl border border-dashed border-border p-3 space-y-2">
+                <p>La versión web es temporal y se pierde al cerrar el navegador. Úsala solo si no puedes instalar la APK.</p>
+                <button
+                  type="button"
+                  onClick={openInstalledApp}
+                  className="underline text-foreground font-semibold"
+                >
+                  Abrir versión web temporal
+                </button>
+              </div>
+            </details>
+          )}
 
           {/* Stores próximamente */}
           <div className="grid sm:grid-cols-2 gap-3 pt-1">
