@@ -406,6 +406,7 @@ function NativeApp() {
         {/* Acceso a Mis Guardianes (discreto, no compite con SOS) */}
         <Link
           to="/familia/guardianes"
+          search={{ redirect: undefined }}
           className="mt-3 w-full h-12 rounded-2xl border text-foreground text-sm font-semibold flex items-center justify-center gap-2 bg-white/70"
         >
           <Users className="w-4 h-4" /> Mis Guardianes

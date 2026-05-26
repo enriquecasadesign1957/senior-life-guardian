@@ -239,6 +239,7 @@ function TutorialPage() {
             {last ? (
               <Link
                 to="/checkout"
+                search={{ mode: "trial", plan: "premium", periodo: "mensual" }}
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-7 py-4 rounded-full text-white font-bold text-base shadow-xl hover:scale-[1.02] transition"
                 style={{ background: GREEN }}
               >

@@ -61,7 +61,7 @@ function AckPage() {
               <Input id="n" value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Para que sepa quién confirmó" />
               <Button onClick={handleAddName} className="w-full" disabled={!nombre.trim()}>Guardar mi nombre</Button>
             </div>
-            <Link to="/familia" className="block mt-4 text-sm text-primary underline">Ir al portal familia</Link>
+            <Link to="/familia" search={{ redirect: undefined }} className="block mt-4 text-sm text-primary underline">Ir al portal familia</Link>
           </>
         )}
         {state === "err" && (
@@ -69,7 +69,7 @@ function AckPage() {
             <XCircle className="w-20 h-20 mx-auto text-red-600 mb-3" />
             <h1 className="text-2xl font-bold mb-2">No se pudo confirmar</h1>
             <p className="text-muted-foreground">{msg}</p>
-            <Link to="/familia" className="block mt-4 text-sm text-primary underline">Ir al portal familia</Link>
+            <Link to="/familia" search={{ redirect: undefined }} className="block mt-4 text-sm text-primary underline">Ir al portal familia</Link>
           </>
         )}
       </div>

@@ -168,7 +168,7 @@ function GuardiansPage() {
     <div className="min-h-dvh bg-slate-50">
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link to="/familia/dashboard" className="inline-flex items-center gap-1 text-sm">
+          <Link to="/familia/dashboard" search={{ redirect: undefined }} className="inline-flex items-center gap-1 text-sm">
             <ArrowLeft className="w-4 h-4" /> Volver
           </Link>
           <h1 className="font-bold">Mis Guardianes</h1>
