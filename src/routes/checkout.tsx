@@ -9,7 +9,7 @@ import {
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { activateTrialSignup } from "@/lib/trial-signup.functions";
 import { createPurchaseSignup } from "@/lib/purchase-signup.functions";
-import { initWebpayTransaction } from "@/lib/webpay.functions";
+import { initWebpayTransaction, mockApproveWebpay } from "@/lib/webpay.functions";
 import { WhatsAppFloat } from "@/components/whatsapp-float";
 import { toast } from "sonner";
 
@@ -79,6 +79,7 @@ function CheckoutPage() {
   const activateTrial = useServerFn(activateTrialSignup);
   const createPurchase = useServerFn(createPurchaseSignup);
   const initWebpay = useServerFn(initWebpayTransaction);
+  const mockApprove = useServerFn(mockApproveWebpay);
 
   const [mode, setMode] = useState<"trial" | "contratar">(search.mode);
   const [planKey, setPlanKey] = useState<"basico" | "premium">(search.plan);
@@ -87,11 +88,58 @@ function CheckoutPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [mockLoading, setMockLoading] = useState(false);
 
   const plan = PLANS[planKey];
   const price = yearly ? plan.yearly : plan.monthly;
   const savings = useMemo(() => plan.monthly * 12 - plan.yearly, [plan]);
   const isContratar = mode === "contratar";
+
+  const handleMockApprove = async () => {
+    setSubmitError(null);
+    const r = schema.safeParse(form);
+    if (!r.success) {
+      const errs: Record<string, string> = {};
+      r.error.issues.forEach((i) => { errs[i.path[0] as string] = i.message; });
+      setErrors(errs);
+      toast.error("Completa tus datos para simular el pago");
+      return;
+    }
+    setErrors({});
+    setMockLoading(true);
+    const periodo = yearly ? "anual" : "mensual";
+    try {
+      const { signup } = await createPurchase({ data: {
+        nombre: r.data.name,
+        email: r.data.email.toLowerCase(),
+        telefono: r.data.phone,
+        direccion: r.data.address || null,
+        plan: planKey,
+        periodo,
+      } });
+
+      const mock = await mockApprove({ data: { signupId: signup.id } });
+
+      try {
+        const userPayload = {
+          id: signup.id, nombre: signup.nombre, email: signup.email, telefono: signup.telefono,
+          plan: signup.plan, periodo: signup.periodo,
+          trial_active: false, trial_end: null,
+          purchase_mode: "contratar",
+          subscription_status: "active",
+        };
+        sessionStorage.setItem("seniorsafe_user", JSON.stringify(userPayload));
+        localStorage.setItem("seniorsafe_user_backup", JSON.stringify(userPayload));
+      } catch { /* ignore */ }
+
+      toast.success(`Pago mock aprobado (${mock.authorizationCode})`);
+      navigate({ to: "/bienvenida-premium" });
+    } catch (err) {
+      console.error("Mock approve error:", err);
+      setSubmitError((err as Error)?.message || "No se pudo simular el pago (mock).");
+      setMockLoading(false);
+    }
+  };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -322,6 +370,32 @@ function CheckoutPage() {
                 <p className="text-center text-xs text-muted-foreground -mt-2">
                   Al continuar aceptas los <Link to="/terminos" className="underline">Términos</Link> y la <Link to="/privacidad" className="underline">Política de privacidad</Link>.
                 </p>
+
+                {/* QA / Modo desarrollo (sandbox) — bloqueado en producción por el server */}
+                <div className="mt-4 pt-5 border-t border-dashed border-border">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[11px] uppercase tracking-wide font-bold text-muted-foreground">
+                      QA · Modo desarrollo (sandbox)
+                    </p>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "color-mix(in oklab, #f59e0b 16%, white)", color: "#92400e" }}>
+                      NO PRODUCCIÓN
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Simula una aprobación de pago sin pasar por Webpay. Crea la suscripción,
+                    activa el onboarding y habilita el Portal Familia. No realiza ningún cobro real.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleMockApprove}
+                    disabled={mockLoading || loading}
+                    className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full border-2 font-semibold text-sm disabled:opacity-60"
+                    style={{ borderColor: GREEN, color: GREEN, background: "color-mix(in oklab, #16a34a 6%, white)" }}
+                  >
+                    {mockLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                    {mockLoading ? "Aprobando…" : "Aprobar manualmente (mock)"}
+                  </button>
+                </div>
               </form>
 
               {/* SUMMARY */}
