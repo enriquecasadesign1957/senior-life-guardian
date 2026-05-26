@@ -212,3 +212,41 @@ jobs:
             echo "❌ Falló la subida al bucket apk"
             exit 1
           fi
+
+      # Verifica que el objeto público sea una APK válida:
+      #   1. Tamaño remoto == tamaño local (no truncado / no prependido)
+      #   2. Primeros 4 bytes == 50 4B 03 04  (magic ZIP/APK "PK\x03\x04")
+      # Detecta el bug histórico donde un objeto del bucket tenía cabeceras
+      # HTTP escritas como parte del body → Android: "Se produjo un error
+      # durante el análisis del paquete".
+      - name: Verificar integridad del APK publicado
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        run: |
+          set -euo pipefail
+          PUBLIC_URL="${SUPABASE_URL%/}/storage/v1/object/public/apk/SeniorSafe.apk"
+          LOCAL_SIZE=$(stat -c%s artifacts/SeniorSafe.apk)
+          echo "Local size:  $LOCAL_SIZE"
+
+          REMOTE_SIZE=""
+          for i in 1 2 3 4 5; do
+            REMOTE_SIZE=$(curl -sI "$PUBLIC_URL?ts=$(date +%s%N)" | awk 'BEGIN{IGNORECASE=1}/^content-length:/ {gsub("\r","",$2); print $2}')
+            echo "Remote size (try $i): ${REMOTE_SIZE:-?}"
+            [ "${REMOTE_SIZE:-0}" = "$LOCAL_SIZE" ] && break
+            sleep 3
+          done
+
+          if [ "${REMOTE_SIZE:-0}" != "$LOCAL_SIZE" ]; then
+            echo "❌ Tamaño remoto ($REMOTE_SIZE) ≠ local ($LOCAL_SIZE). Objeto corrupto."
+            exit 1
+          fi
+
+          MAGIC=$(curl -s -H "Range: bytes=0-3" "$PUBLIC_URL?ts=$(date +%s%N)" | od -An -tx1 -N4 | tr -d ' \n')
+          echo "Magic bytes: $MAGIC (esperado: 504b0304)"
+          if [ "$MAGIC" != "504b0304" ]; then
+            echo "❌ APK publicada NO empieza con 'PK\\x03\\x04'. Android la rechazará."
+            echo "   Probablemente hay bytes basura prependidos en el objeto del bucket."
+            exit 1
+          fi
+          echo "✅ APK publicada íntegra ($LOCAL_SIZE bytes, magic OK)."
