@@ -95,6 +95,52 @@ function CheckoutPage() {
   const savings = useMemo(() => plan.monthly * 12 - plan.yearly, [plan]);
   const isContratar = mode === "contratar";
 
+  const handleMockApprove = async () => {
+    setSubmitError(null);
+    const r = schema.safeParse(form);
+    if (!r.success) {
+      const errs: Record<string, string> = {};
+      r.error.issues.forEach((i) => { errs[i.path[0] as string] = i.message; });
+      setErrors(errs);
+      toast.error("Completa tus datos para simular el pago");
+      return;
+    }
+    setErrors({});
+    setMockLoading(true);
+    const periodo = yearly ? "anual" : "mensual";
+    try {
+      const { signup } = await createPurchase({ data: {
+        nombre: r.data.name,
+        email: r.data.email.toLowerCase(),
+        telefono: r.data.phone,
+        direccion: r.data.address || null,
+        plan: planKey,
+        periodo,
+      } });
+
+      const mock = await mockApprove({ data: { signupId: signup.id } });
+
+      try {
+        const userPayload = {
+          id: signup.id, nombre: signup.nombre, email: signup.email, telefono: signup.telefono,
+          plan: signup.plan, periodo: signup.periodo,
+          trial_active: false, trial_end: null,
+          purchase_mode: "contratar",
+          subscription_status: "active",
+        };
+        sessionStorage.setItem("seniorsafe_user", JSON.stringify(userPayload));
+        localStorage.setItem("seniorsafe_user_backup", JSON.stringify(userPayload));
+      } catch { /* ignore */ }
+
+      toast.success(`Pago mock aprobado (${mock.authorizationCode})`);
+      navigate({ to: "/bienvenida-premium" });
+    } catch (err) {
+      console.error("Mock approve error:", err);
+      setSubmitError((err as Error)?.message || "No se pudo simular el pago (mock).");
+      setMockLoading(false);
+    }
+  };
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError(null);
