@@ -243,9 +243,9 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
           {/* Pasos resumen */}
           <div className="grid gap-2 text-sm">
             {[
-              "Toca el botón verde de arriba.",
-              isAndroid ? "Confirma 'Instalar' si aparece." : (isIOS ? "Sigue los pasos para añadir a inicio." : "Confirma la instalación."),
-              "La app abrirá con tu cuenta lista.",
+              isAndroid ? "Toca 'Descargar App' arriba." : "Toca el botón verde de arriba.",
+              isAndroid ? "Abre el archivo APK descargado y confirma 'Instalar'." : (isIOS ? "Sigue los pasos para añadir a inicio." : "Confirma la instalación."),
+              "Abre Senior Safe desde el ícono en tu teléfono.",
             ].map((step, i) => (
               <div key={step} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
                 <span className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold shrink-0" style={{ background: i === 2 ? GREEN : DEEP }}>{i + 1}</span>
@@ -253,6 +253,23 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
               </div>
             ))}
           </div>
+
+          {/* Fallback web — solo como último recurso, no destacado */}
+          {!installed && (
+            <details className="text-xs text-muted-foreground pt-1">
+              <summary className="cursor-pointer hover:text-foreground select-none">¿No puedes instalar ahora? Ver opción temporal</summary>
+              <div className="mt-2 rounded-2xl border border-dashed border-border p-3 space-y-2">
+                <p>La versión web es temporal y se pierde al cerrar el navegador. Úsala solo si no puedes instalar la APK.</p>
+                <button
+                  type="button"
+                  onClick={openInstalledApp}
+                  className="underline text-foreground font-semibold"
+                >
+                  Abrir versión web temporal
+                </button>
+              </div>
+            </details>
+          )}
 
           {/* Stores próximamente */}
           <div className="grid sm:grid-cols-2 gap-3 pt-1">
