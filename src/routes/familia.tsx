@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { Shield, Loader2, ArrowLeft } from "lucide-react";
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/familia")({
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
-  component: FamiliaLogin,
+  component: FamiliaShell,
 });
 
 type Step = "phone" | "code";
@@ -41,6 +41,14 @@ function safeFamilyRedirect(redirect?: string) {
 
 function errorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
+}
+
+function FamiliaShell() {
+  const location = useLocation();
+  const isLoginRoute = location.pathname === "/familia" || location.pathname === "/familia/";
+
+  if (!isLoginRoute) return <Outlet />;
+  return <FamiliaLogin />;
 }
 
 function FamiliaLogin() {
