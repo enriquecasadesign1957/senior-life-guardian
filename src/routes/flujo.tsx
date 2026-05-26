@@ -171,7 +171,7 @@ function FlujoPage() {
               <h2 className="text-2xl md:text-4xl font-bold tracking-tight">Tu familia ya está protegida</h2>
               <p className="mt-2 text-white/85">Senior Safe activo · 24/7 · Sin permanencia.</p>
               <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-                <Link to="/checkout" search={{}} className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full bg-white font-bold shadow-lg hover:scale-[1.02] transition" style={{ color: DEEP }}>
+                <Link to="/checkout" search={{ mode: "trial", plan: "premium", periodo: "mensual" }} className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full bg-white font-bold shadow-lg hover:scale-[1.02] transition" style={{ color: DEEP }}>
                   Comenzar prueba gratuita
                   <ArrowRight className="w-4 h-4" />
                 </Link>
