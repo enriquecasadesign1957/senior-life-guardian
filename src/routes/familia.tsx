@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { requestFamilyCode, verifyFamilyCode } from "@/lib/family-portal.functions";
-import { readFamilyPortalSession, writeFamilyPortalSession } from "@/lib/family-session.client";
+import { readFamilyPortalSession, writeFamilyPortalSession } from "@/lib/family-session";
 
 export const Route = createFileRoute("/familia")({
   validateSearch: (search: Record<string, unknown>) => ({
