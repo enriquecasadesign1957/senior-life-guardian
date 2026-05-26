@@ -341,13 +341,19 @@ function NativeApp() {
             </div>
           </div>
           <div className="mt-4 flex items-center gap-4 text-sm">
-            <span className="inline-flex items-center gap-1.5">
-              <MapPin className="w-4 h-4" /> GPS {gpsOk ? "activo" : "buscando…"}
-            </span>
+            <button
+              type="button"
+              onClick={() => requestGps(true)}
+              className="inline-flex items-center gap-1.5 underline-offset-2 hover:underline"
+              aria-label={gpsOk ? "GPS activo" : "Activar GPS"}
+            >
+              <MapPin className="w-4 h-4" /> GPS {gpsOk ? "activo" : "tocar para activar"}
+            </button>
             <span className="inline-flex items-center gap-1.5">
               <Users className="w-4 h-4" /> {familyCount}
             </span>
           </div>
+
         </section>
 
         {/* BOTÓN EMERGENCIA */}
