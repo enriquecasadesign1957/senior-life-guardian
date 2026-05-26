@@ -79,6 +79,7 @@ function CheckoutPage() {
   const activateTrial = useServerFn(activateTrialSignup);
   const createPurchase = useServerFn(createPurchaseSignup);
   const initWebpay = useServerFn(initWebpayTransaction);
+  const mockApprove = useServerFn(mockApproveWebpay);
 
   const [mode, setMode] = useState<"trial" | "contratar">(search.mode);
   const [planKey, setPlanKey] = useState<"basico" | "premium">(search.plan);
@@ -87,6 +88,7 @@ function CheckoutPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [mockLoading, setMockLoading] = useState(false);
 
   const plan = PLANS[planKey];
   const price = yearly ? plan.yearly : plan.monthly;
