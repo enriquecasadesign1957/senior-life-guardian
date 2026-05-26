@@ -204,13 +204,19 @@ function NativeApp() {
     setSummary(null);
     if ("vibrate" in navigator) navigator.vibrate?.([100, 60, 100]);
     (async () => {
+      const fallback = lastCoords ? { lat: lastCoords.lat, lng: lastCoords.lng } : null;
       const gps = await new Promise<{ lat: number; lng: number; accuracy?: number } | null>((resolve) => {
-        if (!("geolocation" in navigator)) return resolve(null);
-        const to = setTimeout(() => resolve(null), 6000);
+        if (!("geolocation" in navigator)) return resolve(fallback);
+        const to = setTimeout(() => resolve(fallback), 6000);
         navigator.geolocation.getCurrentPosition(
-          (pos) => { clearTimeout(to); resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }); },
-          () => { clearTimeout(to); resolve(null); },
-          { enableHighAccuracy: true, timeout: 5000, maximumAge: 30000 },
+          (pos) => {
+            clearTimeout(to);
+            const c = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy };
+            setLastCoords({ lat: c.lat, lng: c.lng });
+            resolve(c);
+          },
+          () => { clearTimeout(to); resolve(fallback); },
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: 60000 },
         );
       });
       try {
