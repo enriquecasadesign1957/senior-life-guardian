@@ -38,13 +38,10 @@ const PETROL = "var(--brand-petrol)";
 const GREEN = "#16a34a";
 
 /**
- * URL ÚNICA Y OFICIAL de la APK Senior Safe.
- * Sirve un 302 hacia el objeto público en Lovable Cloud Storage
- * (bucket `apk`, archivo SeniorSafe.apk). Definida en
- * src/routes/downloads.SeniorSafe[.]apk.ts — la URL nunca cambia
- * aunque cambie el backend de almacenamiento.
+ * URL HTTPS directa y oficial de la APK Senior Safe.
+ * Mantiene una dirección simple para Android/PC y evita abrir ventanas nuevas.
  */
-const APK_DOWNLOAD_URL = "https://alarmaseniorsafe.cl/downloads/SeniorSafe.apk";
+const APK_DOWNLOAD_URL = "https://alarmaseniorsafe.cl/app.apk";
 
 /** Pantalla nativa publicada. Se usa solo como fallback web (no-Android). */
 const APP_BASE_URL = "https://alarmaseniorsafe.cl/native";
@@ -124,7 +121,7 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
       // 1) Android → SIEMPRE priorizar descarga de APK real (no PWA).
       //    Evita que el usuario crea que "ya instaló" cuando solo abrió la web.
       if (isAndroid) {
-        window.open(APK_DOWNLOAD_URL, "_blank", "noopener");
+        window.location.assign(APK_DOWNLOAD_URL);
         setShowGuide(true);
         return;
       }
