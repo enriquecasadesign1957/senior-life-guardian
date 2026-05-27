@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Bell, Shield, MapPin, Users, CheckCircle2, Loader2, X, Heart } from "lucide-react";
 import { toast } from "sonner";
