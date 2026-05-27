@@ -258,9 +258,15 @@ jobs:
           echo "PUT exit=$CURL_EXIT http=$HTTP_CODE"
           UPLOAD_BODY=$(cat /tmp/upload.out 2>/dev/null || true)
           if [ "$HTTP_CODE" = "409" ] || echo "$UPLOAD_BODY" | grep -q '"statusCode":"409"\|"error":"Duplicate"\|resource already exists'; then
-            echo "↻ Duplicate detectado (http=$HTTP_CODE): borrando objeto existente y reintentando con POST..."
-            curl -sS -X DELETE "$URL" \
-              -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" || true
+            echo "↻ Duplicate detectado (http=$HTTP_CODE): borrando objeto existente vía /storage/v1/object/remove y reintentando con POST..."
+            DEL_CODE=$(curl -sS -o /tmp/delete.out -w "%{http_code}" \
+              -X POST "${SUPABASE_URL%/}/storage/v1/object/remove" \
+              -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+              -H "Content-Type: application/json" \
+              -d '{"bucketId":"apk","prefixes":["SeniorSafe.apk"]}' || true)
+            echo "DELETE (remove) http=$DEL_CODE"
+            cat /tmp/delete.out || true
+            echo ""
             sleep 2
             set +e
             HTTP_CODE=$(curl -sS -o /tmp/upload.out -w "%{http_code}" \
