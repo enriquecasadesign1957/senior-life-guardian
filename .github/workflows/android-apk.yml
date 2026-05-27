@@ -176,16 +176,44 @@ jobs:
             exit 1
           fi
           URL="${SUPABASE_URL%/}/storage/v1/object/apk/SeniorSafe.apk"
-          echo "⬆️ Subiendo APK a $URL"
+          LOCAL_SIZE=$(stat -c%s artifacts/SeniorSafe.apk)
+          echo "📦 Tamaño local del APK: $LOCAL_SIZE bytes"
+
+          # 1) Borrar objeto previo para evitar residuos corruptos en el bucket.
+          echo "🗑️  Borrando objeto previo (si existe)..."
+          curl -sS -o /tmp/delete.out -w "HTTP %{http_code}\n" \
+            -X DELETE "$URL" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" || true
+          cat /tmp/delete.out || true
+          echo ""
+
+          # 2) Subir el APK usando -T (upload-file) en vez de --data-binary.
+          #    -T envía el archivo TAL CUAL, sin parsear ni inyectar nada en
+          #    el cuerpo. --data-binary @file puede agregar bytes/headers en
+          #    ciertos casos y corromper el binario.
+          echo "⬆️  Subiendo APK a $URL"
           HTTP_CODE=$(curl -sS -o /tmp/upload.out -w "%{http_code}" \
             -X PUT "$URL" \
             -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
             -H "Content-Type: application/vnd.android.package-archive" \
             -H "Cache-Control: no-cache, max-age=0" \
-            --data-binary @artifacts/SeniorSafe.apk)
+            -H "x-upsert: true" \
+            -T artifacts/SeniorSafe.apk)
           echo "HTTP $HTTP_CODE"
           cat /tmp/upload.out || true
+          echo ""
           if [ "$HTTP_CODE" -ge 300 ]; then
             echo "❌ Falló la subida al bucket apk"
             exit 1
           fi
+
+          # 3) Verificar que el tamaño remoto coincida con el local.
+          echo "🔎 Verificando tamaño remoto..."
+          REMOTE_SIZE=$(curl -sSI "${SUPABASE_URL%/}/storage/v1/object/public/apk/SeniorSafe.apk" \
+            | awk -v IGNORECASE=1 '/^content-length:/ {gsub(/\r/,""); print $2}' | tail -1)
+          echo "📦 Tamaño remoto: ${REMOTE_SIZE:-desconocido} bytes (local: $LOCAL_SIZE)"
+          if [ -n "$REMOTE_SIZE" ] && [ "$REMOTE_SIZE" != "$LOCAL_SIZE" ]; then
+            echo "❌ El tamaño remoto no coincide con el local. APK corrupto en storage."
+            exit 1
+          fi
+          echo "✅ APK subido correctamente y verificado."
