@@ -46,7 +46,9 @@ function NativeApp() {
   const [userName, setUserName] = useState("");
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [gpsOk, setGpsOk] = useState(false);
-  const [lastCoords, setLastCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [lastCoords, setLastCoords] = useState<{ lat: number; lng: number; accuracy?: number } | null>(null);
+  const [locating, setLocating] = useState(false);
+  const pendingGpsRef = useRef<Promise<{ lat: number; lng: number; accuracy?: number } | null> | null>(null);
 
   // login state
   const [loginEmail, setLoginEmail] = useState("");
