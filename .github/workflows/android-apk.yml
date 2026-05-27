@@ -189,7 +189,11 @@ jobs:
               "$DIR/ic_launcher_foreground.png"
           done
 
-          # colors.xml con ic_launcher_background
+          # Eliminar definiciones duplicadas de ic_launcher_background
+          # (Capacitor genera values/ic_launcher_background.xml que choca con colors.xml)
+          find "$RES" -type f -name 'ic_launcher_background.xml' -print -delete || true
+
+          # colors.xml con ic_launcher_background (única fuente de verdad)
           mkdir -p "$RES/values"
           COLORS="$RES/values/colors.xml"
           if [ ! -f "$COLORS" ]; then
@@ -204,6 +208,7 @@ jobs:
           t = t.replace('</resources>', '    <color name="ic_launcher_background">#dc2626</color>\n</resources>')
           p.write_text(t)
           PY
+
 
           # Adaptive icon XML (Android 8+)
           ADAPT="$RES/mipmap-anydpi-v26"
