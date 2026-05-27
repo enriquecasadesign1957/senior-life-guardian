@@ -146,10 +146,23 @@ jobs:
           if [ ! -d "android" ]; then
             bunx cap add android
           fi
-          # cap sync requiere dist/index.html + node_modules con plugins.
-          # Lo corremos después de instalar capacitor.* y de garantizar dist/.
+
+      # Genera ícono launcher + adaptive icon + splash en todas las
+      # resoluciones (mdpi/hdpi/xhdpi/xxhdpi/xxxhdpi) desde resources/.
+      # Debe correr ANTES de `cap sync` para que los recursos queden
+      # incluidos en el APK final.
+      - name: Generar íconos y splash Android desde resources/
+        run: |
+          bun add -d @capacitor/assets
+          bunx capacitor-assets generate --android \
+            --iconBackgroundColor '#dc2626' \
+            --iconBackgroundColorDark '#dc2626' \
+            --splashBackgroundColor '#dc2626' \
+            --splashBackgroundColorDark '#dc2626'
+
+      - name: Cap sync Android
+        run: |
           bunx cap sync android
-          # Verifica que el archivo problemático exista tras el sync.
           test -f android/app/src/main/assets/capacitor.plugins.json && echo "✅ capacitor.plugins.json OK" || (echo "❌ capacitor.plugins.json no se generó" && exit 1)
 
       - name: Build APK (debug)
