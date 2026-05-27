@@ -95,7 +95,7 @@ function NativeApp() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setGpsOk(true);
-        setLastCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLastCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy });
         if (interactive) toast.success("Ubicación activada.");
       },
       (err) => {
@@ -112,6 +112,25 @@ function NativeApp() {
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 },
     );
+  };
+
+  // Fetch GPS rápido (low-accuracy) para uso inmediato en SOS
+  const fetchGpsFast = (): Promise<{ lat: number; lng: number; accuracy?: number } | null> => {
+    if (!("geolocation" in navigator)) return Promise.resolve(null);
+    return new Promise((resolve) => {
+      const to = setTimeout(() => resolve(null), 8000);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          clearTimeout(to);
+          const c = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy };
+          setGpsOk(true);
+          setLastCoords(c);
+          resolve(c);
+        },
+        () => { clearTimeout(to); resolve(null); },
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 30000 },
+      );
+    });
   };
 
   useEffect(() => {
