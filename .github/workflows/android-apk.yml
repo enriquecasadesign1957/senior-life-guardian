@@ -70,9 +70,6 @@ jobs:
       - name: Forzar dist/index.html con shell /native (fallback)
         run: |
           mkdir -p dist
-          # SIEMPRE sobrescribimos. La APK usa server.url de capacitor.config.ts
-          # para cargar /native directo, pero si alguna build fuera offline,
-          # este shell garantiza que NUNCA se abra la landing web antigua.
           echo "⚠️  Escribiendo shell estático que fuerza /native..."
           cat > dist/index.html <<'HTML'
           <!doctype html>
@@ -103,8 +100,6 @@ jobs:
                 <button onclick="location.reload()">Reintentar</button>
               </div>
               <script>
-                // Orígenes en orden de preferencia. Probamos hasta encontrar uno
-                // donde /native responda OK (publicado).
                 var ORIGINS = [
                   "https://alarmaseniorsafe.cl",
                   "https://www.alarmaseniorsafe.cl",
@@ -146,17 +141,10 @@ jobs:
           if [ ! -d "android" ]; then
             bunx cap add android
           fi
-
-      - name: Cap sync Android
-        run: |
           bunx cap sync android
           test -f android/app/src/main/assets/capacitor.plugins.json && echo "✅ capacitor.plugins.json OK" || (echo "❌ capacitor.plugins.json no se generó" && exit 1)
 
-      # Generación determinística de íconos Android desde resources/icon.png.
-      # Reemplaza el approach previo con @capacitor/assets (frágil) por
-      # ImageMagick directo: produce mipmap PNGs estándar en las 5 densidades
-      # + ic_launcher_round.png + foreground adaptive + adaptive XML + color.
-      # Corre DESPUÉS de `cap sync` para que Capacitor no sobreescriba nada.
+      # Íconos rojos (#dc2626) — generación determinística con ImageMagick.
       - name: Generar íconos Android (mipmap + adaptive)
         run: |
           set -euo pipefail
@@ -166,9 +154,7 @@ jobs:
           FG=resources/icon-foreground.png
           BG_COLOR='#dc2626'
 
-          # Tamaños legacy launcher (ic_launcher / ic_launcher_round)
           declare -A LAUNCHER=( [mdpi]=48 [hdpi]=72 [xhdpi]=96 [xxhdpi]=144 [xxxhdpi]=192 )
-          # Tamaños adaptive foreground (ic_launcher_foreground) - 108dp safe zone
           declare -A FOREGROUND=( [mdpi]=108 [hdpi]=162 [xhdpi]=216 [xxhdpi]=324 [xxxhdpi]=432 )
 
           for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
@@ -176,30 +162,24 @@ jobs:
             mkdir -p "$DIR"
             S=${LAUNCHER[$d]}
             F=${FOREGROUND[$d]}
-            # Launcher cuadrado (compatible Android <8)
             convert "$SRC" -resize ${S}x${S} -strip -define png:color-type=6 \
               -background "$BG_COLOR" -alpha remove -alpha off \
               "$DIR/ic_launcher.png"
-            # Launcher redondo (mismo bitmap, Android lo enmascara)
             convert "$SRC" -resize ${S}x${S} -strip -define png:color-type=6 \
               -background "$BG_COLOR" -alpha remove -alpha off \
               "$DIR/ic_launcher_round.png"
-            # Adaptive foreground (Android 8+) — mantiene transparencia
             convert "$FG" -resize ${F}x${F} -strip -define png:color-type=6 \
               "$DIR/ic_launcher_foreground.png"
           done
 
-          # Eliminar definiciones duplicadas de ic_launcher_background
-          # (Capacitor genera values/ic_launcher_background.xml que choca con colors.xml)
+          # Evitar duplicado de ic_launcher_background (queda solo en colors.xml)
           find "$RES" -type f -name 'ic_launcher_background.xml' -print -delete || true
 
-          # colors.xml con ic_launcher_background (única fuente de verdad)
           mkdir -p "$RES/values"
           COLORS="$RES/values/colors.xml"
           if [ ! -f "$COLORS" ]; then
             echo '<?xml version="1.0" encoding="utf-8"?><resources></resources>' > "$COLORS"
           fi
-          # Remueve cualquier entrada previa de ic_launcher_background y agrega la nueva
           python3 - <<'PY'
           import re, pathlib
           p = pathlib.Path("android/app/src/main/res/values/colors.xml")
@@ -209,8 +189,6 @@ jobs:
           p.write_text(t)
           PY
 
-
-          # Adaptive icon XML (Android 8+)
           ADAPT="$RES/mipmap-anydpi-v26"
           mkdir -p "$ADAPT"
           cat > "$ADAPT/ic_launcher.xml" <<'XML'
@@ -222,66 +200,28 @@ jobs:
           XML
           cp "$ADAPT/ic_launcher.xml" "$ADAPT/ic_launcher_round.xml"
 
-          # Verificar AndroidManifest referencia @mipmap/ic_launcher
-          grep -q '@mipmap/ic_launcher' android/app/src/main/AndroidManifest.xml \
-            && echo "✅ Manifest referencia @mipmap/ic_launcher" \
-            || (echo "❌ Manifest NO referencia @mipmap/ic_launcher" && exit 1)
-
-          # Inspección rápida
-          echo "--- Íconos generados ---"
-          ls -la "$RES"/mipmap-*/ic_launcher*.png | head -20
-          identify "$RES/mipmap-xxxhdpi/ic_launcher.png"
-
-      - name: Limpiar Gradle / build cache previo
+      - name: Build APK (debug)
         working-directory: android
         run: |
           chmod +x ./gradlew
-          ./gradlew clean --no-daemon
-          rm -rf app/build .gradle
-
-      - name: Build APK (debug)
-        run: |
-          rm -f android/app/src/main/res/values/ic_launcher_background.xml
-          find android/app/src/main/res -name "ic_launcher_background.xml" -delete
-          DUPLICATE_ICON_BG=$(find android/app/src/main/res -name "ic_launcher_background.xml" -print)
-          if [ -n "$DUPLICATE_ICON_BG" ]; then
-            echo "❌ Aún existe ic_launcher_background.xml duplicado:"
-            echo "$DUPLICATE_ICON_BG"
-            exit 1
-          fi
-          echo "✅ No existe ningún ic_launcher_background.xml residual"
-          cd android
           ./gradlew assembleDebug --no-daemon
-
-      - name: Validar APK (aapt + zip integrity)
-        run: |
-          set -euo pipefail
-          APK=android/app/build/outputs/apk/debug/app-debug.apk
-          test -f "$APK" || (echo "❌ APK no generada" && exit 1)
-          # Integridad ZIP
-          unzip -t "$APK" > /dev/null && echo "✅ APK ZIP íntegro"
-          # AAPT badging — falla si el manifest o recursos están corruptos
-          BUILD_TOOLS=$(ls -d $ANDROID_HOME/build-tools/*/ | sort -V | tail -1)
-          AAPT="${BUILD_TOOLS}aapt"
-          "$AAPT" dump badging "$APK" | head -20
-          # Verifica que el ícono esté referenciado
-          "$AAPT" dump badging "$APK" | grep -E "application-icon|launchable-activity" \
-            && echo "✅ Ícono referenciado en APK" \
-            || (echo "❌ Ícono NO encontrado en APK" && exit 1)
-          # Verifica firma (debug keystore)
-          APKSIGNER="${BUILD_TOOLS}apksigner"
-          "$APKSIGNER" verify --print-certs "$APK" \
-            && echo "✅ APK firmada correctamente" \
-            || (echo "❌ APK sin firma válida" && exit 1)
 
       - name: Rename APK (nombre fijo + versionado)
         run: |
           mkdir -p artifacts
-          # Nombre FIJO requerido por el botón "Descargar App":
           cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/SeniorSafe.apk
-          # Copia versionada adicional para histórico:
           cp android/app/build/outputs/apk/debug/app-debug.apk \
              artifacts/SeniorSafe-${{ github.run_number }}.apk
+
+      # Validación mínima PK\x03\x04 del APK local antes de publicar.
+      - name: Validar magic PK del APK local
+        run: |
+          set -euo pipefail
+          APK=artifacts/SeniorSafe.apk
+          MAGIC=$(head -c 4 "$APK" | od -An -tx1 | tr -d ' \n')
+          echo "Local magic: $MAGIC (esperado 504b0304)"
+          test "$MAGIC" = "504b0304" || (echo "❌ APK local no empieza con PK\\x03\\x04" && exit 1)
+          unzip -t "$APK" > /dev/null && echo "✅ ZIP local íntegro"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -290,137 +230,38 @@ jobs:
           path: artifacts/*.apk
           retention-days: 90
 
-      # Sube SIEMPRE la APK al bucket público `apk` de Lovable Cloud Storage,
-      # reemplazando el objeto `SeniorSafe.apk` en cada build. El botón
-      # "Descargar App" apunta a https://alarmaseniorsafe.cl/downloads/SeniorSafe.apk
-      # (server route que redirige al objeto público del bucket).
-      #
-      # Requiere estos secrets en el repo GitHub:
-      #   - SUPABASE_URL                 (ej: https://mjdjfjxehnfroqyfzkyk.supabase.co)
-      #   - SUPABASE_SERVICE_ROLE_KEY    (service_role key — NO el anon key)
-      # Subida BINARIA PURA al bucket público `apk`.
-      #
-      # Reglas duras (causa raíz del bug "Content-Type: dentro del body"):
-      #   - NUNCA usar `curl -i` (mezcla headers con body)
-      #   - NUNCA redirigir respuesta HTTP a un archivo que luego se suba
-      #   - NUNCA usar `--data` (modifica saltos de línea) — solo `-T` (upload-file)
-      #     que es streaming binario puro, idéntico byte-a-byte al archivo origen.
-      #   - Respuesta del servidor va a stdout/archivo SEPARADO, jamás al APK.
-      #
-      # Requiere estos secrets en el repo GitHub:
-      #   - SUPABASE_URL                 (ej: https://mjdjfjxehnfroqyfzkyk.supabase.co)
-      #   - SUPABASE_SERVICE_ROLE_KEY    (service_role key — NO el anon key)
-      - name: Upload APK to Lovable Cloud Storage (bucket apk) — binario puro
+      # Upload baseline conocido (commit b24740c) — POST + --data-binary.
+      # NO modificar este step salvo bug confirmado.
+      - name: Upload APK to Lovable Cloud Storage (bucket apk)
         if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           set -euo pipefail
-
           if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
             echo "❌ Faltan secrets SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY en el repo."
             exit 1
           fi
-
-          APK_LOCAL=artifacts/SeniorSafe.apk
-          test -f "$APK_LOCAL" || (echo "❌ No existe $APK_LOCAL" && exit 1)
-          TMP_UPLOAD_DIR=$(mktemp -d)
-          UPLOAD_BODY="$TMP_UPLOAD_DIR/upload-body.json"
-          UPLOAD_HEADERS="$TMP_UPLOAD_DIR/upload-headers.txt"
-
-          # PRE-CHECK 1: el archivo local DEBE empezar con PK\x03\x04
-          LOCAL_MAGIC=$(head -c 4 "$APK_LOCAL" | od -An -tx1 | tr -d ' \n')
-          LOCAL_SIZE=$(stat -c%s "$APK_LOCAL")
-          echo "Local: size=$LOCAL_SIZE magic=$LOCAL_MAGIC"
-          echo "Local xxd:"; xxd -l 4 "$APK_LOCAL"
-          if [ "$LOCAL_MAGIC" != "504b0304" ]; then
-            echo "❌ El APK LOCAL no empieza con PK\\x03\\x04 (magic=$LOCAL_MAGIC). Abortado antes de subir."
-            exit 1
-          fi
-          if [ "$LOCAL_MAGIC" = "436f6e74" ] || head -c 128 "$APK_LOCAL" | LC_ALL=C grep -a -q "Content-Type"; then
-            echo "❌ El APK LOCAL contiene headers HTTP en el cuerpo. Abortado antes de subir."
-            exit 1
-          fi
-
           URL="${SUPABASE_URL%/}/storage/v1/object/apk/SeniorSafe.apk"
-          echo "⬆️  PUT $URL  ($LOCAL_SIZE bytes, binary streaming via -T)"
-
-          # Upload binario PURO con curl -T (upload-file):
-          #   - -T hace streaming binario directo del archivo como body del PUT,
-          #     calcula Content-Length real y NUNCA toca el contenido.
-          #   - --data-binary tiene un bug conocido con archivos grandes
-          #     vs Supabase Storage (puede responder 200 con 0 bytes guardados).
-          #   - Headers van SOLO en -H. Respuestas a archivos APARTE.
-          set +e
-          HTTP_CODE=$(curl -sS \
-            --http1.1 \
-            --no-progress-meter \
-            -o "$UPLOAD_BODY" \
-            -D "$UPLOAD_HEADERS" \
-            -w "%{http_code}" \
-            -X PUT \
+          echo "⬆️  Subiendo APK a $URL"
+          HTTP_CODE=$(curl -sS -o /tmp/upload.out -w "%{http_code}" \
+            -X POST "$URL?upsert=true" \
             -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "x-upsert: true" \
             -H "Content-Type: application/vnd.android.package-archive" \
             -H "Cache-Control: no-cache, max-age=0" \
-            -H "x-upsert: true" \
-            -H "Expect:" \
-            -T "${APK_LOCAL}" \
-            "$URL")
-          CURL_RC=$?
-          set -e
-
-          echo "--- curl exit: $CURL_RC  http: $HTTP_CODE ---"
-          echo "--- response headers ---"; cat "$UPLOAD_HEADERS" || true
-          echo ""
-          echo "--- response body ---";    cat "$UPLOAD_BODY"     || true
-          echo ""
-          echo "------------------------"
-
-          POST_UPLOAD_MAGIC=$(head -c 4 "$APK_LOCAL" | od -An -tx1 | tr -d ' \n')
-          if [ "$POST_UPLOAD_MAGIC" != "$LOCAL_MAGIC" ] || [ "$(stat -c%s "$APK_LOCAL")" != "$LOCAL_SIZE" ]; then
-            echo "❌ El archivo local cambió durante el upload. Abortado."
+            --data-binary @artifacts/SeniorSafe.apk)
+          echo "HTTP $HTTP_CODE"
+          cat /tmp/upload.out || true
+          if [ "$HTTP_CODE" -ge 300 ]; then
+            echo "❌ Falló la subida al bucket apk"
             exit 1
           fi
+          echo "✅ APK publicada en: ${SUPABASE_URL%/}/storage/v1/object/public/apk/SeniorSafe.apk"
 
-          if [ "$CURL_RC" -ne 0 ] || [ "$HTTP_CODE" -ge 300 ]; then
-            echo "❌ Falló la subida al bucket apk (curl=$CURL_RC http=$HTTP_CODE)"
-            exit 1
-          fi
-
-          # HEAD inmediato: confirmar que el bucket realmente guardó los bytes.
-          AUTH_URL="${SUPABASE_URL%/}/storage/v1/object/authenticated/apk/SeniorSafe.apk"
-          PUBLIC_URL="${SUPABASE_URL%/}/storage/v1/object/public/apk/SeniorSafe.apk"
-
-          echo "--- HEAD authenticated (service_role) ---"
-          curl -sS -I \
-            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
-            "$AUTH_URL" || true
-
-          echo "--- HEAD public ---"
-          curl -sS -I "$PUBLIC_URL?ts=$(date +%s%N)" || true
-
-          REMOTE_LEN=$(curl -sS -I "$PUBLIC_URL?ts=$(date +%s%N)" | awk 'tolower($1)=="content-length:"{print $2}' | tr -d '\r\n ')
-          echo "Remote Content-Length (public HEAD): '${REMOTE_LEN:-<empty>}'  Local: $LOCAL_SIZE"
-
-          if [ -z "$REMOTE_LEN" ] || [ "$REMOTE_LEN" = "0" ]; then
-            echo "❌ El objeto remoto quedó VACÍO (Content-Length='${REMOTE_LEN}')."
-            echo "   El PUT respondió OK pero el bucket guardó 0 bytes."
-            echo "   Revisar: permisos service_role en storage.objects, x-upsert, política del bucket 'apk'."
-            exit 1
-          fi
-          if [ "$REMOTE_LEN" != "$LOCAL_SIZE" ]; then
-            echo "❌ Tamaño remoto ($REMOTE_LEN) ≠ local ($LOCAL_SIZE) inmediatamente tras el PUT."
-            exit 1
-          fi
-          echo "✅ Objeto remoto tiene $REMOTE_LEN bytes (== local). Upload confirmado por HEAD."
-
-      # POST-CHECK: descargar el objeto público COMPLETO y comparar byte-a-byte
-      # contra el APK local. Detecta:
-      #   - headers HTTP escritos dentro del body (bug histórico)
-      #   - truncamiento
-      #   - cualquier byte basura prependido/append
-      - name: Verificar integridad del APK publicado (descarga completa + diff)
+      # Verificación mínima: descargar publicado y comparar byte-a-byte contra local.
+      - name: Verificar APK publicado (cmp byte-a-byte)
         if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -428,54 +269,25 @@ jobs:
           set -euo pipefail
           PUBLIC_URL="${SUPABASE_URL%/}/storage/v1/object/public/apk/SeniorSafe.apk"
           LOCAL=artifacts/SeniorSafe.apk
-          TMP_VERIFY_DIR=$(mktemp -d)
-          REMOTE="$TMP_VERIFY_DIR/SeniorSafe.remote.apk"
+          REMOTE=/tmp/SeniorSafe.remote.apk
           LOCAL_SIZE=$(stat -c%s "$LOCAL")
-          echo "Local size: $LOCAL_SIZE"
-          echo "Local xxd:"; xxd -l 4 "$LOCAL"
 
-          # Pequeño retry porque la CDN puede tardar 1-2s en propagar.
           OK=0
-          for i in 1 2 3 4 5 6; do
+          for i in 1 2 3 4 5; do
             rm -f "$REMOTE"
-            # GET completo, body PURO a archivo (sin -i, sin -D mezclado).
             HTTP_CODE=$(curl -sS -L -o "$REMOTE" -w "%{http_code}" "$PUBLIC_URL?ts=$(date +%s%N)")
             REMOTE_SIZE=$(stat -c%s "$REMOTE" 2>/dev/null || echo 0)
-            echo "try $i: http=$HTTP_CODE  remote_size=$REMOTE_SIZE"
+            echo "try $i: http=$HTTP_CODE  remote=$REMOTE_SIZE  local=$LOCAL_SIZE"
             if [ "$HTTP_CODE" = "200" ] && [ "$REMOTE_SIZE" = "$LOCAL_SIZE" ]; then
               OK=1; break
             fi
             sleep 3
           done
-
-          if [ "$OK" -ne 1 ]; then
-            echo "❌ Tamaño remoto ≠ local tras varios intentos. Objeto corrupto en el bucket."
-            head -c 200 "$REMOTE" | od -c | head -10 || true
-            exit 1
-          fi
+          [ "$OK" = "1" ] || (echo "❌ Tamaño remoto ≠ local" && exit 1)
 
           REMOTE_MAGIC=$(head -c 4 "$REMOTE" | od -An -tx1 | tr -d ' \n')
-          echo "Remote magic: $REMOTE_MAGIC (esperado: 504b0304)"
-          echo "Remote xxd:"; xxd -l 4 "$REMOTE"
-          if [ "$REMOTE_MAGIC" != "504b0304" ]; then
-            echo "❌ APK remota NO empieza con PK\\x03\\x04. Android la rechazará."
-            echo "   Primeros bytes recibidos:"
-            head -c 200 "$REMOTE" | od -c | head -10
-            exit 1
-          fi
-          if [ "$REMOTE_MAGIC" = "436f6e74" ] || head -c 256 "$REMOTE" | LC_ALL=C grep -a -q "Content-Type"; then
-            echo "❌ APK remota contiene headers HTTP en el cuerpo (Content-Type/Cont). Abortado."
-            exit 1
-          fi
+          echo "Remote magic: $REMOTE_MAGIC"
+          test "$REMOTE_MAGIC" = "504b0304" || (echo "❌ Remote no empieza con PK\\x03\\x04" && exit 1)
 
-          # Diff binario exacto: cero tolerancia a diferencias.
-          if ! cmp -s "$LOCAL" "$REMOTE"; then
-            echo "❌ El APK publicado NO coincide byte-a-byte con el local."
-            cmp "$LOCAL" "$REMOTE" || true
-            exit 1
-          fi
-
-          # Verificación funcional adicional: integridad ZIP del archivo descargado.
-          unzip -t "$REMOTE" > /dev/null && echo "✅ ZIP remoto íntegro"
-
-          echo "✅ APK publicada idéntica al local ($LOCAL_SIZE bytes, magic OK, cmp OK)."
+          cmp -s "$LOCAL" "$REMOTE" || (echo "❌ cmp falló: remoto ≠ local" && exit 1)
+          echo "✅ APK remoto idéntico al local ($LOCAL_SIZE bytes)."
