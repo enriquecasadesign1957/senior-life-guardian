@@ -147,29 +147,118 @@ jobs:
             bunx cap add android
           fi
 
-      # Genera ícono launcher + adaptive icon + splash en todas las
-      # resoluciones (mdpi/hdpi/xhdpi/xxhdpi/xxxhdpi) desde resources/.
-      # Debe correr ANTES de `cap sync` para que los recursos queden
-      # incluidos en el APK final.
-      - name: Generar íconos y splash Android desde resources/
-        run: |
-          bun add -d @capacitor/assets
-          bunx capacitor-assets generate --android \
-            --iconBackgroundColor '#dc2626' \
-            --iconBackgroundColorDark '#dc2626' \
-            --splashBackgroundColor '#dc2626' \
-            --splashBackgroundColorDark '#dc2626'
-
       - name: Cap sync Android
         run: |
           bunx cap sync android
           test -f android/app/src/main/assets/capacitor.plugins.json && echo "✅ capacitor.plugins.json OK" || (echo "❌ capacitor.plugins.json no se generó" && exit 1)
 
-      - name: Build APK (debug)
+      # Generación determinística de íconos Android desde resources/icon.png.
+      # Reemplaza el approach previo con @capacitor/assets (frágil) por
+      # ImageMagick directo: produce mipmap PNGs estándar en las 5 densidades
+      # + ic_launcher_round.png + foreground adaptive + adaptive XML + color.
+      # Corre DESPUÉS de `cap sync` para que Capacitor no sobreescriba nada.
+      - name: Generar íconos Android (mipmap + adaptive)
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick
+          RES=android/app/src/main/res
+          SRC=resources/icon.png
+          FG=resources/icon-foreground.png
+          BG_COLOR='#dc2626'
+
+          # Tamaños legacy launcher (ic_launcher / ic_launcher_round)
+          declare -A LAUNCHER=( [mdpi]=48 [hdpi]=72 [xhdpi]=96 [xxhdpi]=144 [xxxhdpi]=192 )
+          # Tamaños adaptive foreground (ic_launcher_foreground) - 108dp safe zone
+          declare -A FOREGROUND=( [mdpi]=108 [hdpi]=162 [xhdpi]=216 [xxhdpi]=324 [xxxhdpi]=432 )
+
+          for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            DIR="$RES/mipmap-$d"
+            mkdir -p "$DIR"
+            S=${LAUNCHER[$d]}
+            F=${FOREGROUND[$d]}
+            # Launcher cuadrado (compatible Android <8)
+            convert "$SRC" -resize ${S}x${S} -strip -define png:color-type=6 \
+              -background "$BG_COLOR" -alpha remove -alpha off \
+              "$DIR/ic_launcher.png"
+            # Launcher redondo (mismo bitmap, Android lo enmascara)
+            convert "$SRC" -resize ${S}x${S} -strip -define png:color-type=6 \
+              -background "$BG_COLOR" -alpha remove -alpha off \
+              "$DIR/ic_launcher_round.png"
+            # Adaptive foreground (Android 8+) — mantiene transparencia
+            convert "$FG" -resize ${F}x${F} -strip -define png:color-type=6 \
+              "$DIR/ic_launcher_foreground.png"
+          done
+
+          # colors.xml con ic_launcher_background
+          mkdir -p "$RES/values"
+          COLORS="$RES/values/colors.xml"
+          if [ ! -f "$COLORS" ]; then
+            echo '<?xml version="1.0" encoding="utf-8"?><resources></resources>' > "$COLORS"
+          fi
+          # Remueve cualquier entrada previa de ic_launcher_background y agrega la nueva
+          python3 - <<'PY'
+          import re, pathlib
+          p = pathlib.Path("android/app/src/main/res/values/colors.xml")
+          t = p.read_text()
+          t = re.sub(r'\s*<color name="ic_launcher_background">[^<]*</color>', '', t)
+          t = t.replace('</resources>', '    <color name="ic_launcher_background">#dc2626</color>\n</resources>')
+          p.write_text(t)
+          PY
+
+          # Adaptive icon XML (Android 8+)
+          ADAPT="$RES/mipmap-anydpi-v26"
+          mkdir -p "$ADAPT"
+          cat > "$ADAPT/ic_launcher.xml" <<'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+              <background android:drawable="@color/ic_launcher_background"/>
+              <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+          </adaptive-icon>
+          XML
+          cp "$ADAPT/ic_launcher.xml" "$ADAPT/ic_launcher_round.xml"
+
+          # Verificar AndroidManifest referencia @mipmap/ic_launcher
+          grep -q '@mipmap/ic_launcher' android/app/src/main/AndroidManifest.xml \
+            && echo "✅ Manifest referencia @mipmap/ic_launcher" \
+            || (echo "❌ Manifest NO referencia @mipmap/ic_launcher" && exit 1)
+
+          # Inspección rápida
+          echo "--- Íconos generados ---"
+          ls -la "$RES"/mipmap-*/ic_launcher*.png | head -20
+          identify "$RES/mipmap-xxxhdpi/ic_launcher.png"
+
+      - name: Limpiar Gradle / build cache previo
         working-directory: android
         run: |
           chmod +x ./gradlew
+          ./gradlew clean --no-daemon
+          rm -rf app/build .gradle
+
+      - name: Build APK (debug)
+        working-directory: android
+        run: |
           ./gradlew assembleDebug --no-daemon
+
+      - name: Validar APK (aapt + zip integrity)
+        run: |
+          set -euo pipefail
+          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          test -f "$APK" || (echo "❌ APK no generada" && exit 1)
+          # Integridad ZIP
+          unzip -t "$APK" > /dev/null && echo "✅ APK ZIP íntegro"
+          # AAPT badging — falla si el manifest o recursos están corruptos
+          BUILD_TOOLS=$(ls -d $ANDROID_HOME/build-tools/*/ | sort -V | tail -1)
+          AAPT="${BUILD_TOOLS}aapt"
+          "$AAPT" dump badging "$APK" | head -20
+          # Verifica que el ícono esté referenciado
+          "$AAPT" dump badging "$APK" | grep -E "application-icon|launchable-activity" \
+            && echo "✅ Ícono referenciado en APK" \
+            || (echo "❌ Ícono NO encontrado en APK" && exit 1)
+          # Verifica firma (debug keystore)
+          APKSIGNER="${BUILD_TOOLS}apksigner"
+          "$APKSIGNER" verify --print-certs "$APK" \
+            && echo "✅ APK firmada correctamente" \
+            || (echo "❌ APK sin firma válida" && exit 1)
 
       - name: Rename APK (nombre fijo + versionado)
         run: |
