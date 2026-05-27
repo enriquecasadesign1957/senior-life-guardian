@@ -292,9 +292,11 @@ jobs:
         if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           set -euo pipefail
-          PUBLIC_URL="${SUPABASE_URL%/}/storage/v1/object/public/apk/SeniorSafe.apk"
+          # Usar endpoint autenticado para bypassear CDN cache del endpoint público.
+          AUTH_URL="${SUPABASE_URL%/}/storage/v1/object/authenticated/apk/SeniorSafe.apk"
           LOCAL=artifacts/SeniorSafe.apk
           REMOTE=/tmp/SeniorSafe.remote.apk
           LOCAL_SIZE=$(stat -c%s "$LOCAL")
@@ -302,7 +304,11 @@ jobs:
           OK=0
           for i in 1 2 3 4 5; do
             rm -f "$REMOTE"
-            HTTP_CODE=$(curl -sS -L -o "$REMOTE" -w "%{http_code}" "$PUBLIC_URL?ts=$(date +%s%N)")
+            HTTP_CODE=$(curl -sS -L -o "$REMOTE" -w "%{http_code}" \
+              -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+              -H "Cache-Control: no-cache" \
+              -H "Pragma: no-cache" \
+              "$AUTH_URL?ts=$(date +%s%N)")
             REMOTE_SIZE=$(stat -c%s "$REMOTE" 2>/dev/null || echo 0)
             echo "try $i: http=$HTTP_CODE  remote=$REMOTE_SIZE  local=$LOCAL_SIZE"
             if [ "$HTTP_CODE" = "200" ] && [ "$REMOTE_SIZE" = "$LOCAL_SIZE" ]; then
@@ -310,7 +316,7 @@ jobs:
             fi
             sleep 3
           done
-          [ "$OK" = "1" ] || (echo "❌ Tamaño remoto ≠ local" && exit 1)
+          [ "$OK" = "1" ] || (echo "❌ Tamaño remoto ≠ local (posible cache CDN)" && exit 1)
 
           REMOTE_MAGIC=$(head -c 4 "$REMOTE" | od -An -tx1 | tr -d ' \n')
           echo "Remote magic: $REMOTE_MAGIC"
@@ -318,3 +324,4 @@ jobs:
 
           cmp -s "$LOCAL" "$REMOTE" || (echo "❌ cmp falló: remoto ≠ local" && exit 1)
           echo "✅ APK remoto idéntico al local ($LOCAL_SIZE bytes)."
+
