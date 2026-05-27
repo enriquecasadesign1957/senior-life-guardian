@@ -3,7 +3,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Smartphone, Apple, Download, Share, Plus, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { Smartphone, Apple, Download, Share, Plus, ShieldCheck, CheckCircle2, AlertTriangle, Settings as SettingsIcon } from "lucide-react";
 
 type BIPEvent = Event & {
   prompt: () => Promise<void>;
