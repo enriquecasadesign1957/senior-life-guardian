@@ -507,7 +507,16 @@ function NativeApp() {
               <Bell className="w-10 h-10" />
             </div>
             <h2 className="text-2xl font-bold mb-2">Enviando alerta en {countdown}s</h2>
-            <p className="text-muted-foreground mb-5">Cancela si fue un error.</p>
+            <p className="text-muted-foreground mb-3">Cancela si fue un error.</p>
+            <div className="mb-4 text-sm flex items-center justify-center gap-2 text-muted-foreground">
+              {locating ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Obteniendo ubicación…</>
+              ) : lastCoords ? (
+                <><MapPin className="w-4 h-4 text-green-600" /> Ubicación lista</>
+              ) : (
+                <><MapPin className="w-4 h-4 text-amber-600" /> Sin ubicación aún</>
+              )}
+            </div>
             <div className="flex gap-3">
               <Button variant="outline" className="flex-1 h-14 text-base" onClick={() => setStage("idle")}>
                 <X className="w-5 h-5 mr-1" /> Cancelar
