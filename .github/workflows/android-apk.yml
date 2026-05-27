@@ -311,13 +311,21 @@ jobs:
 
           APK_LOCAL=artifacts/SeniorSafe.apk
           test -f "$APK_LOCAL" || (echo "❌ No existe $APK_LOCAL" && exit 1)
+          TMP_UPLOAD_DIR=$(mktemp -d)
+          UPLOAD_BODY="$TMP_UPLOAD_DIR/upload-body.json"
+          UPLOAD_HEADERS="$TMP_UPLOAD_DIR/upload-headers.txt"
 
           # PRE-CHECK 1: el archivo local DEBE empezar con PK\x03\x04
           LOCAL_MAGIC=$(head -c 4 "$APK_LOCAL" | od -An -tx1 | tr -d ' \n')
           LOCAL_SIZE=$(stat -c%s "$APK_LOCAL")
           echo "Local: size=$LOCAL_SIZE magic=$LOCAL_MAGIC"
+          echo "Local xxd:"; xxd -l 4 "$APK_LOCAL"
           if [ "$LOCAL_MAGIC" != "504b0304" ]; then
             echo "❌ El APK LOCAL no empieza con PK\\x03\\x04 (magic=$LOCAL_MAGIC). Abortado antes de subir."
+            exit 1
+          fi
+          if [ "$LOCAL_MAGIC" = "436f6e74" ] || head -c 128 "$APK_LOCAL" | LC_ALL=C grep -a -q "Content-Type"; then
+            echo "❌ El APK LOCAL contiene headers HTTP en el cuerpo. Abortado antes de subir."
             exit 1
           fi
 
@@ -325,27 +333,36 @@ jobs:
           echo "⬆️  PUT $URL  ($LOCAL_SIZE bytes, binary streaming)"
 
           # `-T file` => upload-file: streaming binario puro, sin transformaciones.
-          # `-o /tmp/upload.out`: respuesta del servidor a archivo APARTE (nunca toca el APK).
-          # `-D /tmp/upload.headers`: headers de respuesta SEPARADOS (jamás se mezclan con body).
+          # `-o $UPLOAD_BODY`: respuesta del servidor a archivo APARTE (nunca toca el APK).
+          # `-D $UPLOAD_HEADERS`: headers de respuesta SEPARADOS (jamás se mezclan con body).
           # `-X PUT` + `x-upsert: true`: sobreescribe el objeto existente.
           set +e
           HTTP_CODE=$(curl -sS \
-            -o /tmp/upload.out \
-            -D /tmp/upload.headers \
+            --fail-with-body \
+            --no-progress-meter \
+            -o "$UPLOAD_BODY" \
+            -D "$UPLOAD_HEADERS" \
             -w "%{http_code}" \
             -X PUT "$URL" \
             -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
             -H "Content-Type: application/vnd.android.package-archive" \
             -H "Cache-Control: no-cache, max-age=0" \
+            -H "Content-Length: ${LOCAL_SIZE}" \
             -H "x-upsert: true" \
             -T "$APK_LOCAL")
           CURL_RC=$?
           set -e
 
           echo "--- curl exit: $CURL_RC  http: $HTTP_CODE ---"
-          echo "--- response headers ---"; cat /tmp/upload.headers || true
-          echo "--- response body ---";    cat /tmp/upload.out     || true
+          echo "--- response headers ---"; cat "$UPLOAD_HEADERS" || true
+          echo "--- response body ---";    cat "$UPLOAD_BODY"     || true
           echo "------------------------"
+
+          POST_UPLOAD_MAGIC=$(head -c 4 "$APK_LOCAL" | od -An -tx1 | tr -d ' \n')
+          if [ "$POST_UPLOAD_MAGIC" != "$LOCAL_MAGIC" ] || [ "$(stat -c%s "$APK_LOCAL")" != "$LOCAL_SIZE" ]; then
+            echo "❌ El archivo local cambió durante el upload. Abortado."
+            exit 1
+          fi
 
           if [ "$CURL_RC" -ne 0 ] || [ "$HTTP_CODE" -ge 300 ]; then
             echo "❌ Falló la subida al bucket apk (curl=$CURL_RC http=$HTTP_CODE)"
@@ -365,9 +382,11 @@ jobs:
           set -euo pipefail
           PUBLIC_URL="${SUPABASE_URL%/}/storage/v1/object/public/apk/SeniorSafe.apk"
           LOCAL=artifacts/SeniorSafe.apk
-          REMOTE=/tmp/SeniorSafe.remote.apk
+          TMP_VERIFY_DIR=$(mktemp -d)
+          REMOTE="$TMP_VERIFY_DIR/SeniorSafe.remote.apk"
           LOCAL_SIZE=$(stat -c%s "$LOCAL")
           echo "Local size: $LOCAL_SIZE"
+          echo "Local xxd:"; xxd -l 4 "$LOCAL"
 
           # Pequeño retry porque la CDN puede tardar 1-2s en propagar.
           OK=0
@@ -391,10 +410,15 @@ jobs:
 
           REMOTE_MAGIC=$(head -c 4 "$REMOTE" | od -An -tx1 | tr -d ' \n')
           echo "Remote magic: $REMOTE_MAGIC (esperado: 504b0304)"
+          echo "Remote xxd:"; xxd -l 4 "$REMOTE"
           if [ "$REMOTE_MAGIC" != "504b0304" ]; then
             echo "❌ APK remota NO empieza con PK\\x03\\x04. Android la rechazará."
             echo "   Primeros bytes recibidos:"
             head -c 200 "$REMOTE" | od -c | head -10
+            exit 1
+          fi
+          if [ "$REMOTE_MAGIC" = "436f6e74" ] || head -c 256 "$REMOTE" | LC_ALL=C grep -a -q "Content-Type"; then
+            echo "❌ APK remota contiene headers HTTP en el cuerpo (Content-Type/Cont). Abortado."
             exit 1
           fi
 
