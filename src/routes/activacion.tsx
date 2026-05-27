@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import confetti from "canvas-confetti";
+
 import {
   CheckCircle2, Download, Smartphone, Apple, KeyRound, Users,
   MapPin, Bell, ArrowRight, Shield, Plus, Trash2, X, Loader2,
@@ -65,7 +65,9 @@ async function hashPin(pin: string, salt: string) {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-function fireConfetti() {
+async function fireConfetti() {
+  if (typeof window === "undefined") return;
+  const { default: confetti } = await import("canvas-confetti");
   const end = Date.now() + 1200;
   const colors = ["#0d4f5c", "#16a34a", "#f59e0b", "#dc2626"];
   (function frame() {
