@@ -144,62 +144,6 @@ jobs:
           bunx cap sync android
           test -f android/app/src/main/assets/capacitor.plugins.json && echo "✅ capacitor.plugins.json OK" || (echo "❌ capacitor.plugins.json no se generó" && exit 1)
 
-      # Íconos rojos (#dc2626) — generación determinística con ImageMagick.
-      - name: Generar íconos Android (mipmap + adaptive)
-        run: |
-          set -euo pipefail
-          sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick
-          RES=android/app/src/main/res
-          SRC=resources/icon.png
-          FG=resources/icon-foreground.png
-          BG_COLOR='#dc2626'
-
-          declare -A LAUNCHER=( [mdpi]=48 [hdpi]=72 [xhdpi]=96 [xxhdpi]=144 [xxxhdpi]=192 )
-          declare -A FOREGROUND=( [mdpi]=108 [hdpi]=162 [xhdpi]=216 [xxhdpi]=324 [xxxhdpi]=432 )
-
-          for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
-            DIR="$RES/mipmap-$d"
-            mkdir -p "$DIR"
-            S=${LAUNCHER[$d]}
-            F=${FOREGROUND[$d]}
-            convert "$SRC" -resize ${S}x${S} -strip -define png:color-type=6 \
-              -background "$BG_COLOR" -alpha remove -alpha off \
-              "$DIR/ic_launcher.png"
-            convert "$SRC" -resize ${S}x${S} -strip -define png:color-type=6 \
-              -background "$BG_COLOR" -alpha remove -alpha off \
-              "$DIR/ic_launcher_round.png"
-            convert "$FG" -resize ${F}x${F} -strip -define png:color-type=6 \
-              "$DIR/ic_launcher_foreground.png"
-          done
-
-          # Evitar duplicado de ic_launcher_background (queda solo en colors.xml)
-          find "$RES" -type f -name 'ic_launcher_background.xml' -print -delete || true
-
-          mkdir -p "$RES/values"
-          COLORS="$RES/values/colors.xml"
-          if [ ! -f "$COLORS" ]; then
-            echo '<?xml version="1.0" encoding="utf-8"?><resources></resources>' > "$COLORS"
-          fi
-          python3 - <<'PY'
-          import re, pathlib
-          p = pathlib.Path("android/app/src/main/res/values/colors.xml")
-          t = p.read_text()
-          t = re.sub(r'\s*<color name="ic_launcher_background">[^<]*</color>', '', t)
-          t = t.replace('</resources>', '    <color name="ic_launcher_background">#dc2626</color>\n</resources>')
-          p.write_text(t)
-          PY
-
-          ADAPT="$RES/mipmap-anydpi-v26"
-          mkdir -p "$ADAPT"
-          cat > "$ADAPT/ic_launcher.xml" <<'XML'
-          <?xml version="1.0" encoding="utf-8"?>
-          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-              <background android:drawable="@color/ic_launcher_background"/>
-              <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
-          </adaptive-icon>
-          XML
-          cp "$ADAPT/ic_launcher.xml" "$ADAPT/ic_launcher_round.xml"
-
       - name: Build APK (debug)
         working-directory: android
         run: |
@@ -213,16 +157,6 @@ jobs:
           cp android/app/build/outputs/apk/debug/app-debug.apk \
              artifacts/SeniorSafe-${{ github.run_number }}.apk
 
-      # Validación mínima PK\x03\x04 del APK local antes de publicar.
-      - name: Validar magic PK del APK local
-        run: |
-          set -euo pipefail
-          APK=artifacts/SeniorSafe.apk
-          MAGIC=$(head -c 4 "$APK" | od -An -tx1 | tr -d ' \n')
-          echo "Local magic: $MAGIC (esperado 504b0304)"
-          test "$MAGIC" = "504b0304" || (echo "❌ APK local no empieza con PK\\x03\\x04" && exit 1)
-          unzip -t "$APK" > /dev/null && echo "✅ ZIP local íntegro"
-
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
@@ -230,8 +164,6 @@ jobs:
           path: artifacts/*.apk
           retention-days: 90
 
-      # Upload baseline conocido (commit b24740c) — POST + --data-binary.
-      # NO modificar este step salvo bug confirmado.
       - name: Upload APK to Lovable Cloud Storage (bucket apk)
         if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
         env:
@@ -244,108 +176,16 @@ jobs:
             exit 1
           fi
           URL="${SUPABASE_URL%/}/storage/v1/object/apk/SeniorSafe.apk"
-          echo "⬆️  Subiendo APK a $URL (PUT + upsert)"
-          set +e
+          echo "⬆️ Subiendo APK a $URL"
           HTTP_CODE=$(curl -sS -o /tmp/upload.out -w "%{http_code}" \
-            -X PUT "$URL?upsert=true" \
+            -X PUT "$URL" \
             -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
-            -H "x-upsert: true" \
             -H "Content-Type: application/vnd.android.package-archive" \
             -H "Cache-Control: no-cache, max-age=0" \
             --data-binary @artifacts/SeniorSafe.apk)
-          CURL_EXIT=$?
-          set -e
-          echo "PUT exit=$CURL_EXIT http=$HTTP_CODE"
-          UPLOAD_BODY=$(cat /tmp/upload.out 2>/dev/null || true)
-          if [ "$HTTP_CODE" = "409" ] || echo "$UPLOAD_BODY" | grep -q '"statusCode":"409"\|"error":"Duplicate"\|resource already exists'; then
-            echo "↻ Duplicate detectado (http=$HTTP_CODE): borrando objeto existente vía /storage/v1/object/remove y reintentando con POST..."
-            DEL_CODE=$(curl -sS -o /tmp/delete.out -w "%{http_code}" \
-              -X POST "${SUPABASE_URL%/}/storage/v1/object/remove" \
-              -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
-              -H "Content-Type: application/json" \
-              -d '{"bucketId":"apk","prefixes":["SeniorSafe.apk"]}' || true)
-            echo "DELETE (remove) http=$DEL_CODE"
-            cat /tmp/delete.out || true
-            echo ""
-            sleep 2
-            set +e
-            HTTP_CODE=$(curl -sS -o /tmp/upload.out -w "%{http_code}" \
-              -X POST "$URL" \
-              -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
-              -H "Content-Type: application/vnd.android.package-archive" \
-              -H "Cache-Control: no-cache, max-age=0" \
-              --data-binary @artifacts/SeniorSafe.apk)
-            CURL_EXIT=$?
-            set -e
-            echo "POST fallback exit=$CURL_EXIT http=$HTTP_CODE"
-          fi
           echo "HTTP $HTTP_CODE"
           cat /tmp/upload.out || true
           if [ "$HTTP_CODE" -ge 300 ]; then
             echo "❌ Falló la subida al bucket apk"
             exit 1
           fi
-          echo "✅ APK publicada en: ${SUPABASE_URL%/}/storage/v1/object/public/apk/SeniorSafe.apk"
-
-      # Verificación mínima: descargar publicado y comparar byte-a-byte contra local.
-      - name: Verificar APK publicado (cmp byte-a-byte)
-        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: |
-          set -euo pipefail
-          # Usar signed URL recién generada para bypassear caché del endpoint público/autenticado.
-          SIGN_URL="${SUPABASE_URL%/}/storage/v1/object/sign/apk/SeniorSafe.apk"
-          LOCAL=artifacts/SeniorSafe.apk
-          REMOTE=/tmp/SeniorSafe.remote.apk
-          LOCAL_SIZE=$(stat -c%s "$LOCAL")
-
-          OK=0
-          for i in 1 2 3 4 5; do
-            rm -f "$REMOTE"
-            SIGN_HTTP=$(curl -sS -o /tmp/sign.out -w "%{http_code}" \
-              -X POST "$SIGN_URL" \
-              -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
-              -H "Content-Type: application/json" \
-              -d '{"expiresIn":60}')
-            if [ "$SIGN_HTTP" != "200" ]; then
-              echo "try $i: sign http=$SIGN_HTTP"
-              cat /tmp/sign.out || true
-              sleep 3
-              continue
-            fi
-            SIGNED_PATH=$(python3 -c "import json,sys; print(json.load(open('/tmp/sign.out')).get('signedURL',''))")
-            if [ -z "$SIGNED_PATH" ]; then
-              echo "try $i: signedURL vacío"
-              cat /tmp/sign.out || true
-              sleep 3
-              continue
-            fi
-            case "$SIGNED_PATH" in
-              http*) DOWNLOAD_URL="$SIGNED_PATH" ;;
-              /*) DOWNLOAD_URL="${SUPABASE_URL%/}/storage/v1${SIGNED_PATH}" ;;
-              *) DOWNLOAD_URL="${SUPABASE_URL%/}/storage/v1/$SIGNED_PATH" ;;
-            esac
-            SEP="?"
-            case "$DOWNLOAD_URL" in *\?*) SEP="&" ;; esac
-            HTTP_CODE=$(curl -sS -L -o "$REMOTE" -w "%{http_code}" \
-              -H "Cache-Control: no-cache" \
-              -H "Pragma: no-cache" \
-              "${DOWNLOAD_URL}${SEP}ts=$(date +%s%N)")
-            REMOTE_SIZE=$(stat -c%s "$REMOTE" 2>/dev/null || echo 0)
-            echo "try $i: http=$HTTP_CODE  remote=$REMOTE_SIZE  local=$LOCAL_SIZE"
-            if [ "$HTTP_CODE" = "200" ] && [ "$REMOTE_SIZE" = "$LOCAL_SIZE" ]; then
-              OK=1; break
-            fi
-            sleep 3
-          done
-          [ "$OK" = "1" ] || (echo "❌ Tamaño remoto ≠ local (posible cache CDN)" && exit 1)
-
-          REMOTE_MAGIC=$(head -c 4 "$REMOTE" | od -An -tx1 | tr -d ' \n')
-          echo "Remote magic: $REMOTE_MAGIC"
-          test "$REMOTE_MAGIC" = "504b0304" || (echo "❌ Remote no empieza con PK\\x03\\x04" && exit 1)
-
-          cmp -s "$LOCAL" "$REMOTE" || (echo "❌ cmp falló: remoto ≠ local" && exit 1)
-          echo "✅ APK remoto idéntico al local ($LOCAL_SIZE bytes)."
-
