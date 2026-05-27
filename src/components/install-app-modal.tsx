@@ -225,17 +225,31 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
                   <p className="text-foreground">3. Toca <b>Añadir</b> arriba a la derecha.</p>
                 </>
               ) : (
-                <>
+                <div className="space-y-4">
                   <div className="font-bold text-foreground flex items-center gap-2 text-base">
-                    <Smartphone className="w-5 h-5" /> En Android (Chrome)
+                    <Smartphone className="w-5 h-5" /> Cómo instalar en Android
                   </div>
-                  <p className="text-foreground">1. Si aparece una ventana, toca <b>Instalar</b>.</p>
-                  <p className="text-foreground">2. Si no aparece, abre el menú <b>⋮</b> arriba a la derecha.</p>
-                  <p className="text-foreground">3. Toca solo <b>Instalar app</b>.</p>
-                  <p className="text-foreground">4. Confirma <b>Instalar</b>.</p>
-                  <p className="text-foreground">Si dice <b>Crear acceso directo</b>, no lo uses.</p>
-                  <p className="text-muted-foreground text-xs pt-1">Tu cuenta ya está lista — la app abrirá con todo configurado.</p>
-                </>
+
+                  {/* AVISO CLAVE — fuentes desconocidas */}
+                  <div className="rounded-xl p-3 flex items-start gap-3" style={{ background: "color-mix(in oklab, #f59e0b 14%, white)", border: "2px solid #f59e0b" }}>
+                    <AlertTriangle className="w-6 h-6 shrink-0 mt-0.5" style={{ color: "#b45309" }} />
+                    <div className="text-sm text-foreground">
+                      <div className="font-bold mb-1">Tu teléfono mostrará un aviso de seguridad</div>
+                      <p className="leading-relaxed">Como Senior Safe aún no está en Google Play, Android dirá: <i>"Por tu seguridad, no se permite instalar apps desconocidas de esta fuente"</i>. Es <b>normal y seguro</b>. Solo hay que autorizarlo una vez.</p>
+                    </div>
+                  </div>
+
+                  <ol className="space-y-2 text-foreground">
+                    <li className="flex gap-3"><span className="w-7 h-7 rounded-full bg-[var(--brand-petrol-deep)] text-white font-bold flex items-center justify-center shrink-0 text-sm">1</span><span>Cuando aparezca el aviso, toca <b>"Configuración"</b> (o <SettingsIcon className="inline w-4 h-4 align-text-bottom" /> Ajustes).</span></li>
+                    <li className="flex gap-3"><span className="w-7 h-7 rounded-full bg-[var(--brand-petrol-deep)] text-white font-bold flex items-center justify-center shrink-0 text-sm">2</span><span>Activa <b>"Permitir desde esta fuente"</b> para tu navegador (Chrome, Samsung Internet, etc.).</span></li>
+                    <li className="flex gap-3"><span className="w-7 h-7 rounded-full bg-[var(--brand-petrol-deep)] text-white font-bold flex items-center justify-center shrink-0 text-sm">3</span><span>Vuelve atrás y toca <b>"Instalar"</b>.</span></li>
+                    <li className="flex gap-3"><span className="w-7 h-7 rounded-full bg-[var(--brand-petrol-deep)] text-white font-bold flex items-center justify-center shrink-0 text-sm">4</span><span>Si Play Protect avisa, toca <b>"Instalar de todas formas"</b>.</span></li>
+                  </ol>
+
+                  <p className="text-xs text-muted-foreground pt-1">
+                    ¿No ves el aviso? Ve a <b>Ajustes → Apps → Acceso especial → Instalar apps desconocidas</b> y autoriza tu navegador.
+                  </p>
+                </div>
               )}
             </div>
           )}
