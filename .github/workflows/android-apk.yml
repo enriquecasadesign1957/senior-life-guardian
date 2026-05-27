@@ -344,40 +344,37 @@ jobs:
           fi
 
           URL="${SUPABASE_URL%/}/storage/v1/object/apk/SeniorSafe.apk"
-          echo "⬆️  PUT $URL  ($LOCAL_SIZE bytes, binary streaming)"
+          echo "⬆️  PUT $URL  ($LOCAL_SIZE bytes, binary streaming via -T)"
 
-          # Upload binario PURO con --data-binary @file:
-          #   - HTTP headers van SOLO en -H (jamás concatenados al body).
-          #   - --data-binary @file envía el contenido del archivo tal cual,
-          #     byte-a-byte, sin transformaciones de saltos de línea.
-          #   - NO se pasa Content-Length manual (curl lo calcula); pasar uno
-          #     incorrecto puede hacer que el servidor interprete bytes extras
-          #     como parte del siguiente request.
-          #   - --http1.1 evita cualquier multiplexing/framing HTTP/2 raro.
-          #   - Respuesta del servidor a archivos APARTE (-o body, -D headers),
-          #     jamás al APK.
+          # Upload binario PURO con curl -T (upload-file):
+          #   - -T hace streaming binario directo del archivo como body del PUT,
+          #     calcula Content-Length real y NUNCA toca el contenido.
+          #   - --data-binary tiene un bug conocido con archivos grandes
+          #     vs Supabase Storage (puede responder 200 con 0 bytes guardados).
+          #   - Headers van SOLO en -H. Respuestas a archivos APARTE.
           set +e
           HTTP_CODE=$(curl -sS \
             --http1.1 \
-            --fail-with-body \
             --no-progress-meter \
             -o "$UPLOAD_BODY" \
             -D "$UPLOAD_HEADERS" \
             -w "%{http_code}" \
-            -X PUT "$URL" \
+            -X PUT \
             -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
             -H "Content-Type: application/vnd.android.package-archive" \
             -H "Cache-Control: no-cache, max-age=0" \
             -H "x-upsert: true" \
             -H "Expect:" \
-            --data-binary "@${APK_LOCAL}")
+            -T "${APK_LOCAL}" \
+            "$URL")
           CURL_RC=$?
           set -e
 
-
           echo "--- curl exit: $CURL_RC  http: $HTTP_CODE ---"
           echo "--- response headers ---"; cat "$UPLOAD_HEADERS" || true
+          echo ""
           echo "--- response body ---";    cat "$UPLOAD_BODY"     || true
+          echo ""
           echo "------------------------"
 
           POST_UPLOAD_MAGIC=$(head -c 4 "$APK_LOCAL" | od -An -tx1 | tr -d ' \n')
@@ -390,6 +387,33 @@ jobs:
             echo "❌ Falló la subida al bucket apk (curl=$CURL_RC http=$HTTP_CODE)"
             exit 1
           fi
+
+          # HEAD inmediato: confirmar que el bucket realmente guardó los bytes.
+          AUTH_URL="${SUPABASE_URL%/}/storage/v1/object/authenticated/apk/SeniorSafe.apk"
+          PUBLIC_URL="${SUPABASE_URL%/}/storage/v1/object/public/apk/SeniorSafe.apk"
+
+          echo "--- HEAD authenticated (service_role) ---"
+          curl -sS -I \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            "$AUTH_URL" || true
+
+          echo "--- HEAD public ---"
+          curl -sS -I "$PUBLIC_URL?ts=$(date +%s%N)" || true
+
+          REMOTE_LEN=$(curl -sS -I "$PUBLIC_URL?ts=$(date +%s%N)" | awk 'tolower($1)=="content-length:"{print $2}' | tr -d '\r\n ')
+          echo "Remote Content-Length (public HEAD): '${REMOTE_LEN:-<empty>}'  Local: $LOCAL_SIZE"
+
+          if [ -z "$REMOTE_LEN" ] || [ "$REMOTE_LEN" = "0" ]; then
+            echo "❌ El objeto remoto quedó VACÍO (Content-Length='${REMOTE_LEN}')."
+            echo "   El PUT respondió OK pero el bucket guardó 0 bytes."
+            echo "   Revisar: permisos service_role en storage.objects, x-upsert, política del bucket 'apk'."
+            exit 1
+          fi
+          if [ "$REMOTE_LEN" != "$LOCAL_SIZE" ]; then
+            echo "❌ Tamaño remoto ($REMOTE_LEN) ≠ local ($LOCAL_SIZE) inmediatamente tras el PUT."
+            exit 1
+          fi
+          echo "✅ Objeto remoto tiene $REMOTE_LEN bytes (== local). Upload confirmado por HEAD."
 
       # POST-CHECK: descargar el objeto público COMPLETO y comparar byte-a-byte
       # contra el APK local. Detecta:
