@@ -245,6 +245,7 @@ jobs:
           fi
           URL="${SUPABASE_URL%/}/storage/v1/object/apk/SeniorSafe.apk"
           echo "⬆️  Subiendo APK a $URL (PUT + upsert)"
+          set +e
           HTTP_CODE=$(curl -sS -o /tmp/upload.out -w "%{http_code}" \
             -X PUT "$URL?upsert=true" \
             -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
@@ -252,16 +253,24 @@ jobs:
             -H "Content-Type: application/vnd.android.package-archive" \
             -H "Cache-Control: no-cache, max-age=0" \
             --data-binary @artifacts/SeniorSafe.apk)
-          if [ "$HTTP_CODE" = "409" ]; then
-            echo "↻ 409 Duplicate: borrando objeto existente y reintentando con POST..."
+          CURL_EXIT=$?
+          set -e
+          echo "PUT exit=$CURL_EXIT http=$HTTP_CODE"
+          if [ "$HTTP_CODE" = "409" ] || [ "$HTTP_CODE" = "400" ]; then
+            echo "↻ $HTTP_CODE Duplicate: borrando objeto existente y reintentando con POST..."
             curl -sS -X DELETE "$URL" \
               -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" || true
+            sleep 2
+            set +e
             HTTP_CODE=$(curl -sS -o /tmp/upload.out -w "%{http_code}" \
               -X POST "$URL" \
               -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
               -H "Content-Type: application/vnd.android.package-archive" \
               -H "Cache-Control: no-cache, max-age=0" \
               --data-binary @artifacts/SeniorSafe.apk)
+            CURL_EXIT=$?
+            set -e
+            echo "POST fallback exit=$CURL_EXIT http=$HTTP_CODE"
           fi
           echo "HTTP $HTTP_CODE"
           cat /tmp/upload.out || true
