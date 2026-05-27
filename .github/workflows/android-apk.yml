@@ -240,8 +240,17 @@ jobs:
           rm -rf app/build .gradle
 
       - name: Build APK (debug)
-        working-directory: android
         run: |
+          rm -f android/app/src/main/res/values/ic_launcher_background.xml
+          find android/app/src/main/res -name "ic_launcher_background.xml" -delete
+          DUPLICATE_ICON_BG=$(find android/app/src/main/res -name "ic_launcher_background.xml" -print)
+          if [ -n "$DUPLICATE_ICON_BG" ]; then
+            echo "❌ Aún existe ic_launcher_background.xml duplicado:"
+            echo "$DUPLICATE_ICON_BG"
+            exit 1
+          fi
+          echo "✅ No existe ningún ic_launcher_background.xml residual"
+          cd android
           ./gradlew assembleDebug --no-daemon
 
       - name: Validar APK (aapt + zip integrity)
