@@ -87,7 +87,7 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
     const timestamp = ts.toLocaleString("es-CL", { timeZone: "America/Santiago" });
     const mapsLink = data.gps
       ? `https://maps.google.com/?q=${data.gps.lat},${data.gps.lng}`
-      : "Ubicación no disponible";
+      : "Ubicación temporalmente no disponible";
 
     // Acknowledgement token (link de un solo uso, expira en 24h)
     const ackToken = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`)
