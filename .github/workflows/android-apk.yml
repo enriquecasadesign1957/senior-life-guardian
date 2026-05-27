@@ -346,12 +346,19 @@ jobs:
           URL="${SUPABASE_URL%/}/storage/v1/object/apk/SeniorSafe.apk"
           echo "⬆️  PUT $URL  ($LOCAL_SIZE bytes, binary streaming)"
 
-          # `-T file` => upload-file: streaming binario puro, sin transformaciones.
-          # `-o $UPLOAD_BODY`: respuesta del servidor a archivo APARTE (nunca toca el APK).
-          # `-D $UPLOAD_HEADERS`: headers de respuesta SEPARADOS (jamás se mezclan con body).
-          # `-X PUT` + `x-upsert: true`: sobreescribe el objeto existente.
+          # Upload binario PURO con --data-binary @file:
+          #   - HTTP headers van SOLO en -H (jamás concatenados al body).
+          #   - --data-binary @file envía el contenido del archivo tal cual,
+          #     byte-a-byte, sin transformaciones de saltos de línea.
+          #   - NO se pasa Content-Length manual (curl lo calcula); pasar uno
+          #     incorrecto puede hacer que el servidor interprete bytes extras
+          #     como parte del siguiente request.
+          #   - --http1.1 evita cualquier multiplexing/framing HTTP/2 raro.
+          #   - Respuesta del servidor a archivos APARTE (-o body, -D headers),
+          #     jamás al APK.
           set +e
           HTTP_CODE=$(curl -sS \
+            --http1.1 \
             --fail-with-body \
             --no-progress-meter \
             -o "$UPLOAD_BODY" \
@@ -361,11 +368,12 @@ jobs:
             -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
             -H "Content-Type: application/vnd.android.package-archive" \
             -H "Cache-Control: no-cache, max-age=0" \
-            -H "Content-Length: ${LOCAL_SIZE}" \
             -H "x-upsert: true" \
-            -T "$APK_LOCAL")
+            -H "Expect:" \
+            --data-binary "@${APK_LOCAL}")
           CURL_RC=$?
           set -e
+
 
           echo "--- curl exit: $CURL_RC  http: $HTTP_CODE ---"
           echo "--- response headers ---"; cat "$UPLOAD_HEADERS" || true
