@@ -20,6 +20,7 @@ import { Route as FamiliaRouteImport } from './routes/familia'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as BienvenidaPremiumRouteImport } from './routes/bienvenida-premium'
+import { Route as AppDotapkRouteImport } from './routes/app[.]apk'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as ActivarWhatsappRouteImport } from './routes/activar-whatsapp'
 import { Route as ActivacionRouteImport } from './routes/activacion'
@@ -95,6 +96,11 @@ const CheckoutRoute = CheckoutRouteImport.update({
 const BienvenidaPremiumRoute = BienvenidaPremiumRouteImport.update({
   id: '/bienvenida-premium',
   path: '/bienvenida-premium',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppDotapkRoute = AppDotapkRouteImport.update({
+  id: '/app.apk',
+  path: '/app.apk',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRoute = AppRouteImport.update({
@@ -218,6 +224,7 @@ export interface FileRoutesByFullPath {
   '/activacion': typeof ActivacionRoute
   '/activar-whatsapp': typeof ActivarWhatsappRoute
   '/app': typeof AppRoute
+  '/app.apk': typeof AppDotapkRoute
   '/bienvenida-premium': typeof BienvenidaPremiumRoute
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
@@ -252,6 +259,7 @@ export interface FileRoutesByTo {
   '/activacion': typeof ActivacionRoute
   '/activar-whatsapp': typeof ActivarWhatsappRoute
   '/app': typeof AppRoute
+  '/app.apk': typeof AppDotapkRoute
   '/bienvenida-premium': typeof BienvenidaPremiumRoute
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
@@ -287,6 +295,7 @@ export interface FileRoutesById {
   '/activacion': typeof ActivacionRoute
   '/activar-whatsapp': typeof ActivarWhatsappRoute
   '/app': typeof AppRoute
+  '/app.apk': typeof AppDotapkRoute
   '/bienvenida-premium': typeof BienvenidaPremiumRoute
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
@@ -323,6 +332,7 @@ export interface FileRouteTypes {
     | '/activacion'
     | '/activar-whatsapp'
     | '/app'
+    | '/app.apk'
     | '/bienvenida-premium'
     | '/checkout'
     | '/dashboard'
@@ -357,6 +367,7 @@ export interface FileRouteTypes {
     | '/activacion'
     | '/activar-whatsapp'
     | '/app'
+    | '/app.apk'
     | '/bienvenida-premium'
     | '/checkout'
     | '/dashboard'
@@ -391,6 +402,7 @@ export interface FileRouteTypes {
     | '/activacion'
     | '/activar-whatsapp'
     | '/app'
+    | '/app.apk'
     | '/bienvenida-premium'
     | '/checkout'
     | '/dashboard'
@@ -426,6 +438,7 @@ export interface RootRouteChildren {
   ActivacionRoute: typeof ActivacionRoute
   ActivarWhatsappRoute: typeof ActivarWhatsappRoute
   AppRoute: typeof AppRoute
+  AppDotapkRoute: typeof AppDotapkRoute
   BienvenidaPremiumRoute: typeof BienvenidaPremiumRoute
   CheckoutRoute: typeof CheckoutRoute
   DashboardRoute: typeof DashboardRoute
@@ -530,6 +543,13 @@ declare module '@tanstack/react-router' {
       path: '/bienvenida-premium'
       fullPath: '/bienvenida-premium'
       preLoaderRoute: typeof BienvenidaPremiumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app.apk': {
+      id: '/app.apk'
+      path: '/app.apk'
+      fullPath: '/app.apk'
+      preLoaderRoute: typeof AppDotapkRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app': {
@@ -702,6 +722,7 @@ const rootRouteChildren: RootRouteChildren = {
   ActivacionRoute: ActivacionRoute,
   ActivarWhatsappRoute: ActivarWhatsappRoute,
   AppRoute: AppRoute,
+  AppDotapkRoute: AppDotapkRoute,
   BienvenidaPremiumRoute: BienvenidaPremiumRoute,
   CheckoutRoute: CheckoutRoute,
   DashboardRoute: DashboardRoute,
