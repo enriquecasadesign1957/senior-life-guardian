@@ -256,8 +256,9 @@ jobs:
           CURL_EXIT=$?
           set -e
           echo "PUT exit=$CURL_EXIT http=$HTTP_CODE"
-          if [ "$HTTP_CODE" = "409" ] || [ "$HTTP_CODE" = "400" ]; then
-            echo "↻ $HTTP_CODE Duplicate: borrando objeto existente y reintentando con POST..."
+          UPLOAD_BODY=$(cat /tmp/upload.out 2>/dev/null || true)
+          if [ "$HTTP_CODE" = "409" ] || echo "$UPLOAD_BODY" | grep -q '"statusCode":"409"\|"error":"Duplicate"\|resource already exists'; then
+            echo "↻ Duplicate detectado (http=$HTTP_CODE): borrando objeto existente y reintentando con POST..."
             curl -sS -X DELETE "$URL" \
               -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" || true
             sleep 2
