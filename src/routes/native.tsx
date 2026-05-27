@@ -533,7 +533,7 @@ function NativeApp() {
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-6">
           <div className="bg-card rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
             <Loader2 className="w-12 h-12 mx-auto mb-3 animate-spin" style={{ color: RED }} />
-            <h2 className="text-xl font-bold">Enviando WhatsApp, SMS y llamada…</h2>
+            <h2 className="text-xl font-bold">{locating ? "Obteniendo ubicación…" : "Enviando WhatsApp, SMS y llamada…"}</h2>
             <p className="text-muted-foreground mt-1 text-sm">No cierres la app.</p>
           </div>
         </div>
