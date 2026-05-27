@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Bell, Shield, MapPin, Users, CheckCircle2, Loader2, X, Heart } from "lucide-react";
 import { toast } from "sonner";
@@ -46,7 +46,9 @@ function NativeApp() {
   const [userName, setUserName] = useState("");
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [gpsOk, setGpsOk] = useState(false);
-  const [lastCoords, setLastCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [lastCoords, setLastCoords] = useState<{ lat: number; lng: number; accuracy?: number } | null>(null);
+  const [locating, setLocating] = useState(false);
+  const pendingGpsRef = useRef<Promise<{ lat: number; lng: number; accuracy?: number } | null> | null>(null);
 
   // login state
   const [loginEmail, setLoginEmail] = useState("");
@@ -93,7 +95,7 @@ function NativeApp() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setGpsOk(true);
-        setLastCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLastCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy });
         if (interactive) toast.success("Ubicación activada.");
       },
       (err) => {
@@ -110,6 +112,25 @@ function NativeApp() {
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 },
     );
+  };
+
+  // Fetch GPS rápido (low-accuracy) para uso inmediato en SOS
+  const fetchGpsFast = (): Promise<{ lat: number; lng: number; accuracy?: number } | null> => {
+    if (!("geolocation" in navigator)) return Promise.resolve(null);
+    return new Promise((resolve) => {
+      const to = setTimeout(() => resolve(null), 8000);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          clearTimeout(to);
+          const c = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy };
+          setGpsOk(true);
+          setLastCoords(c);
+          resolve(c);
+        },
+        () => { clearTimeout(to); resolve(null); },
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 30000 },
+      );
+    });
   };
 
   useEffect(() => {
@@ -182,10 +203,13 @@ function NativeApp() {
     return () => { alive = false; };
   }, [userId, list]);
 
-  // 4) Countdown emergencia
+  // 4) Countdown emergencia + inicio inmediato de GPS rápido en paralelo
   useEffect(() => {
     if (stage !== "confirm") return;
     setCountdown(5);
+    setLocating(true);
+    // Lanzar fetch GPS YA, en paralelo al countdown
+    pendingGpsRef.current = fetchGpsFast().finally(() => setLocating(false));
     if ("vibrate" in navigator) navigator.vibrate?.(80);
     const id = setInterval(() => {
       setCountdown((c) => {
@@ -197,28 +221,23 @@ function NativeApp() {
     return () => clearInterval(id);
   }, [stage]);
 
-  // 5) Envío real
+  // 5) Envío real — espera GPS (race con timeout 8s) antes de enviar
   useEffect(() => {
     if (stage !== "sending" || !userId) return;
     let cancelled = false;
     setSummary(null);
     if ("vibrate" in navigator) navigator.vibrate?.([100, 60, 100]);
     (async () => {
-      const fallback = lastCoords ? { lat: lastCoords.lat, lng: lastCoords.lng } : null;
-      const gps = await new Promise<{ lat: number; lng: number; accuracy?: number } | null>((resolve) => {
-        if (!("geolocation" in navigator)) return resolve(fallback);
-        const to = setTimeout(() => resolve(fallback), 6000);
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            clearTimeout(to);
-            const c = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy };
-            setLastCoords({ lat: c.lat, lng: c.lng });
-            resolve(c);
-          },
-          () => { clearTimeout(to); resolve(fallback); },
-          { enableHighAccuracy: true, timeout: 5000, maximumAge: 60000 },
-        );
-      });
+      const fallback = lastCoords
+        ? { lat: lastCoords.lat, lng: lastCoords.lng, accuracy: lastCoords.accuracy }
+        : null;
+
+      // Race: GPS pendiente (iniciado al presionar SOS) vs timeout 8s
+      const pending = pendingGpsRef.current ?? fetchGpsFast();
+      const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000));
+      let gps = await Promise.race([pending, timeout]);
+      if (!gps) gps = fallback; // fallback a última ubicación conocida
+
       try {
         const res: any = await sendAlert({ data: { signupId: userId, gps } });
         if (cancelled) return;
@@ -228,15 +247,40 @@ function NativeApp() {
         else if (res?.status === "partial") toast.warning("Alerta enviada parcialmente.");
         else if (res?.status === "no_recipients") toast.error("No hay familiares configurados en tu cuenta.");
         else toast.error("No pudimos enviar la alerta. Llama directamente.");
+
+        // Refresco de precisión en background → actualiza Portal Familia vía heartbeat
+        if ("geolocation" in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              const better = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy };
+              setLastCoords(better);
+              setGpsOk(true);
+              heartbeat({
+                data: {
+                  signupId: userId,
+                  gps_enabled: true,
+                  internet_connected: typeof navigator !== "undefined" ? navigator.onLine : null,
+                  app_version: "native-1.0",
+                  last_lat: better.lat,
+                  last_lng: better.lng,
+                  battery_level: null,
+                },
+              }).catch(() => {});
+            },
+            () => {},
+            { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 },
+          );
+        }
       } catch (e) {
         console.error(e);
         if (!cancelled) toast.error("Error enviando la alerta.");
       } finally {
         if (!cancelled) setStage("sent");
+        pendingGpsRef.current = null;
       }
     })();
     return () => { cancelled = true; };
-  }, [stage, userId, sendAlert, lastCoords]);
+  }, [stage, userId, sendAlert, lastCoords, heartbeat]);
 
   const handleLogin = async () => {
     const email = loginEmail.trim().toLowerCase();
@@ -463,7 +507,16 @@ function NativeApp() {
               <Bell className="w-10 h-10" />
             </div>
             <h2 className="text-2xl font-bold mb-2">Enviando alerta en {countdown}s</h2>
-            <p className="text-muted-foreground mb-5">Cancela si fue un error.</p>
+            <p className="text-muted-foreground mb-3">Cancela si fue un error.</p>
+            <div className="mb-4 text-sm flex items-center justify-center gap-2 text-muted-foreground">
+              {locating ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Obteniendo ubicación…</>
+              ) : lastCoords ? (
+                <><MapPin className="w-4 h-4 text-green-600" /> Ubicación lista</>
+              ) : (
+                <><MapPin className="w-4 h-4 text-amber-600" /> Sin ubicación aún</>
+              )}
+            </div>
             <div className="flex gap-3">
               <Button variant="outline" className="flex-1 h-14 text-base" onClick={() => setStage("idle")}>
                 <X className="w-5 h-5 mr-1" /> Cancelar
@@ -480,7 +533,7 @@ function NativeApp() {
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-6">
           <div className="bg-card rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
             <Loader2 className="w-12 h-12 mx-auto mb-3 animate-spin" style={{ color: RED }} />
-            <h2 className="text-xl font-bold">Enviando WhatsApp, SMS y llamada…</h2>
+            <h2 className="text-xl font-bold">{locating ? "Obteniendo ubicación…" : "Enviando WhatsApp, SMS y llamada…"}</h2>
             <p className="text-muted-foreground mt-1 text-sm">No cierres la app.</p>
           </div>
         </div>
