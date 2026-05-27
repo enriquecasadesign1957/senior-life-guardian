@@ -284,7 +284,19 @@ jobs:
       # Requiere estos secrets en el repo GitHub:
       #   - SUPABASE_URL                 (ej: https://mjdjfjxehnfroqyfzkyk.supabase.co)
       #   - SUPABASE_SERVICE_ROLE_KEY    (service_role key — NO el anon key)
-      - name: Upload APK to Lovable Cloud Storage (bucket apk)
+      # Subida BINARIA PURA al bucket público `apk`.
+      #
+      # Reglas duras (causa raíz del bug "Content-Type: dentro del body"):
+      #   - NUNCA usar `curl -i` (mezcla headers con body)
+      #   - NUNCA redirigir respuesta HTTP a un archivo que luego se suba
+      #   - NUNCA usar `--data` (modifica saltos de línea) — solo `-T` (upload-file)
+      #     que es streaming binario puro, idéntico byte-a-byte al archivo origen.
+      #   - Respuesta del servidor va a stdout/archivo SEPARADO, jamás al APK.
+      #
+      # Requiere estos secrets en el repo GitHub:
+      #   - SUPABASE_URL                 (ej: https://mjdjfjxehnfroqyfzkyk.supabase.co)
+      #   - SUPABASE_SERVICE_ROLE_KEY    (service_role key — NO el anon key)
+      - name: Upload APK to Lovable Cloud Storage (bucket apk) — binario puro
         if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -297,58 +309,103 @@ jobs:
             exit 1
           fi
 
-          URL="${SUPABASE_URL%/}/storage/v1/object/apk/SeniorSafe.apk"
-          echo "⬆️ Subiendo APK a $URL"
+          APK_LOCAL=artifacts/SeniorSafe.apk
+          test -f "$APK_LOCAL" || (echo "❌ No existe $APK_LOCAL" && exit 1)
 
-          HTTP_CODE=$(curl -sS -o /tmp/upload.out -w "%{http_code}" \
+          # PRE-CHECK 1: el archivo local DEBE empezar con PK\x03\x04
+          LOCAL_MAGIC=$(head -c 4 "$APK_LOCAL" | od -An -tx1 | tr -d ' \n')
+          LOCAL_SIZE=$(stat -c%s "$APK_LOCAL")
+          echo "Local: size=$LOCAL_SIZE magic=$LOCAL_MAGIC"
+          if [ "$LOCAL_MAGIC" != "504b0304" ]; then
+            echo "❌ El APK LOCAL no empieza con PK\\x03\\x04 (magic=$LOCAL_MAGIC). Abortado antes de subir."
+            exit 1
+          fi
+
+          URL="${SUPABASE_URL%/}/storage/v1/object/apk/SeniorSafe.apk"
+          echo "⬆️  PUT $URL  ($LOCAL_SIZE bytes, binary streaming)"
+
+          # `-T file` => upload-file: streaming binario puro, sin transformaciones.
+          # `-o /tmp/upload.out`: respuesta del servidor a archivo APARTE (nunca toca el APK).
+          # `-D /tmp/upload.headers`: headers de respuesta SEPARADOS (jamás se mezclan con body).
+          # `-X PUT` + `x-upsert: true`: sobreescribe el objeto existente.
+          set +e
+          HTTP_CODE=$(curl -sS \
+            -o /tmp/upload.out \
+            -D /tmp/upload.headers \
+            -w "%{http_code}" \
             -X PUT "$URL" \
             -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
             -H "Content-Type: application/vnd.android.package-archive" \
             -H "Cache-Control: no-cache, max-age=0" \
-            --data-binary @artifacts/SeniorSafe.apk)
+            -H "x-upsert: true" \
+            -T "$APK_LOCAL")
+          CURL_RC=$?
+          set -e
 
-          echo "HTTP $HTTP_CODE"
-          cat /tmp/upload.out || true
+          echo "--- curl exit: $CURL_RC  http: $HTTP_CODE ---"
+          echo "--- response headers ---"; cat /tmp/upload.headers || true
+          echo "--- response body ---";    cat /tmp/upload.out     || true
+          echo "------------------------"
 
-          if [ "$HTTP_CODE" -ge 300 ]; then
-            echo "❌ Falló la subida al bucket apk"
+          if [ "$CURL_RC" -ne 0 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "❌ Falló la subida al bucket apk (curl=$CURL_RC http=$HTTP_CODE)"
             exit 1
           fi
 
-      # Verifica que el objeto público sea una APK válida:
-      #   1. Tamaño remoto == tamaño local (no truncado / no prependido)
-      #   2. Primeros 4 bytes == 50 4B 03 04  (magic ZIP/APK "PK\x03\x04")
-      # Detecta el bug histórico donde un objeto del bucket tenía cabeceras
-      # HTTP escritas como parte del body → Android: "Se produjo un error
-      # durante el análisis del paquete".
-      - name: Verificar integridad del APK publicado
+      # POST-CHECK: descargar el objeto público COMPLETO y comparar byte-a-byte
+      # contra el APK local. Detecta:
+      #   - headers HTTP escritos dentro del body (bug histórico)
+      #   - truncamiento
+      #   - cualquier byte basura prependido/append
+      - name: Verificar integridad del APK publicado (descarga completa + diff)
         if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
         run: |
           set -euo pipefail
           PUBLIC_URL="${SUPABASE_URL%/}/storage/v1/object/public/apk/SeniorSafe.apk"
-          LOCAL_SIZE=$(stat -c%s artifacts/SeniorSafe.apk)
-          echo "Local size:  $LOCAL_SIZE"
+          LOCAL=artifacts/SeniorSafe.apk
+          REMOTE=/tmp/SeniorSafe.remote.apk
+          LOCAL_SIZE=$(stat -c%s "$LOCAL")
+          echo "Local size: $LOCAL_SIZE"
 
-          REMOTE_SIZE=""
-          for i in 1 2 3 4 5; do
-            REMOTE_SIZE=$(curl -sI "$PUBLIC_URL?ts=$(date +%s%N)" | awk 'BEGIN{IGNORECASE=1}/^content-length:/ {gsub("\r","",$2); print $2}')
-            echo "Remote size (try $i): ${REMOTE_SIZE:-?}"
-            [ "${REMOTE_SIZE:-0}" = "$LOCAL_SIZE" ] && break
+          # Pequeño retry porque la CDN puede tardar 1-2s en propagar.
+          OK=0
+          for i in 1 2 3 4 5 6; do
+            rm -f "$REMOTE"
+            # GET completo, body PURO a archivo (sin -i, sin -D mezclado).
+            HTTP_CODE=$(curl -sS -L -o "$REMOTE" -w "%{http_code}" "$PUBLIC_URL?ts=$(date +%s%N)")
+            REMOTE_SIZE=$(stat -c%s "$REMOTE" 2>/dev/null || echo 0)
+            echo "try $i: http=$HTTP_CODE  remote_size=$REMOTE_SIZE"
+            if [ "$HTTP_CODE" = "200" ] && [ "$REMOTE_SIZE" = "$LOCAL_SIZE" ]; then
+              OK=1; break
+            fi
             sleep 3
           done
 
-          if [ "${REMOTE_SIZE:-0}" != "$LOCAL_SIZE" ]; then
-            echo "❌ Tamaño remoto ($REMOTE_SIZE) ≠ local ($LOCAL_SIZE). Objeto corrupto."
+          if [ "$OK" -ne 1 ]; then
+            echo "❌ Tamaño remoto ≠ local tras varios intentos. Objeto corrupto en el bucket."
+            head -c 200 "$REMOTE" | od -c | head -10 || true
             exit 1
           fi
 
-          MAGIC=$(curl -s -H "Range: bytes=0-3" "$PUBLIC_URL?ts=$(date +%s%N)" | od -An -tx1 -N4 | tr -d ' \n')
-          echo "Magic bytes: $MAGIC (esperado: 504b0304)"
-          if [ "$MAGIC" != "504b0304" ]; then
-            echo "❌ APK publicada NO empieza con 'PK\\x03\\x04'. Android la rechazará."
-            echo "   Probablemente hay bytes basura prependidos en el objeto del bucket."
+          REMOTE_MAGIC=$(head -c 4 "$REMOTE" | od -An -tx1 | tr -d ' \n')
+          echo "Remote magic: $REMOTE_MAGIC (esperado: 504b0304)"
+          if [ "$REMOTE_MAGIC" != "504b0304" ]; then
+            echo "❌ APK remota NO empieza con PK\\x03\\x04. Android la rechazará."
+            echo "   Primeros bytes recibidos:"
+            head -c 200 "$REMOTE" | od -c | head -10
             exit 1
           fi
-          echo "✅ APK publicada íntegra ($LOCAL_SIZE bytes, magic OK)."
+
+          # Diff binario exacto: cero tolerancia a diferencias.
+          if ! cmp -s "$LOCAL" "$REMOTE"; then
+            echo "❌ El APK publicado NO coincide byte-a-byte con el local."
+            cmp "$LOCAL" "$REMOTE" || true
+            exit 1
+          fi
+
+          # Verificación funcional adicional: integridad ZIP del archivo descargado.
+          unzip -t "$REMOTE" > /dev/null && echo "✅ ZIP remoto íntegro"
+
+          echo "✅ APK publicada idéntica al local ($LOCAL_SIZE bytes, magic OK, cmp OK)."
