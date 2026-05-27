@@ -295,8 +295,8 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           set -euo pipefail
-          # Usar endpoint autenticado para bypassear CDN cache del endpoint público.
-          AUTH_URL="${SUPABASE_URL%/}/storage/v1/object/authenticated/apk/SeniorSafe.apk"
+          # Usar signed URL recién generada para bypassear caché del endpoint público/autenticado.
+          SIGN_URL="${SUPABASE_URL%/}/storage/v1/object/sign/apk/SeniorSafe.apk"
           LOCAL=artifacts/SeniorSafe.apk
           REMOTE=/tmp/SeniorSafe.remote.apk
           LOCAL_SIZE=$(stat -c%s "$LOCAL")
@@ -304,11 +304,40 @@ jobs:
           OK=0
           for i in 1 2 3 4 5; do
             rm -f "$REMOTE"
-            HTTP_CODE=$(curl -sS -L -o "$REMOTE" -w "%{http_code}" \
+            SIGN_HTTP=$(curl -sS -o /tmp/sign.out -w "%{http_code}" \
+              -X POST "$SIGN_URL" \
               -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+              -H "Content-Type: application/json" \
+              -d '{"expiresIn":60}')
+            if [ "$SIGN_HTTP" != "200" ]; then
+              echo "try $i: sign http=$SIGN_HTTP"
+              cat /tmp/sign.out || true
+              sleep 3
+              continue
+            fi
+            SIGNED_PATH=$(python3 - <<'PY'
+          import json
+          with open('/tmp/sign.out', 'r', encoding='utf-8') as f:
+              print(json.load(f).get('signedURL', ''))
+          PY
+            )
+            if [ -z "$SIGNED_PATH" ]; then
+              echo "try $i: signedURL vacío"
+              cat /tmp/sign.out || true
+              sleep 3
+              continue
+            fi
+            case "$SIGNED_PATH" in
+              http*) DOWNLOAD_URL="$SIGNED_PATH" ;;
+              /*) DOWNLOAD_URL="${SUPABASE_URL%/}/storage/v1${SIGNED_PATH}" ;;
+              *) DOWNLOAD_URL="${SUPABASE_URL%/}/storage/v1/$SIGNED_PATH" ;;
+            esac
+            SEP="?"
+            case "$DOWNLOAD_URL" in *\?*) SEP="&" ;; esac
+            HTTP_CODE=$(curl -sS -L -o "$REMOTE" -w "%{http_code}" \
               -H "Cache-Control: no-cache" \
               -H "Pragma: no-cache" \
-              "$AUTH_URL?ts=$(date +%s%N)")
+              "${DOWNLOAD_URL}${SEP}ts=$(date +%s%N)")
             REMOTE_SIZE=$(stat -c%s "$REMOTE" 2>/dev/null || echo 0)
             echo "try $i: http=$HTTP_CODE  remote=$REMOTE_SIZE  local=$LOCAL_SIZE"
             if [ "$HTTP_CODE" = "200" ] && [ "$REMOTE_SIZE" = "$LOCAL_SIZE" ]; then
