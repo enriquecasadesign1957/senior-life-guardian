@@ -1,6 +1,39 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { getRequest, getRequestHeader, getRequestIP } from "@tanstack/react-start/server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
+type GpsInfo = { lat: number; lng: number; accuracy?: number; source: "device" | "ip" | "none"; city?: string; region?: string; country?: string };
+
+async function resolveIpGeo(): Promise<GpsInfo | null> {
+  try {
+    const req = getRequest();
+    // Cloudflare injects geo headers
+    const cfLat = getRequestHeader("cf-iplatitude") || getRequestHeader("x-vercel-ip-latitude");
+    const cfLng = getRequestHeader("cf-iplongitude") || getRequestHeader("x-vercel-ip-longitude");
+    const city = getRequestHeader("cf-ipcity") || getRequestHeader("x-vercel-ip-city") || undefined;
+    const region = getRequestHeader("cf-region") || getRequestHeader("x-vercel-ip-country-region") || undefined;
+    const country = getRequestHeader("cf-ipcountry") || getRequestHeader("x-vercel-ip-country") || undefined;
+    if (cfLat && cfLng) {
+      const lat = parseFloat(cfLat);
+      const lng = parseFloat(cfLng);
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        return { lat, lng, source: "ip", city, region, country };
+      }
+    }
+    // Fallback: ip-api.com (no key, free for low volume)
+    let ip = getRequestIP({ xForwardedFor: true }) || "";
+    ip = ip.replace(/^::ffff:/, "");
+    const url = ip ? `http://ip-api.com/json/${ip}?fields=status,lat,lon,city,regionName,country` : `http://ip-api.com/json/?fields=status,lat,lon,city,regionName,country`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(4000) });
+    const j: any = await r.json().catch(() => ({}));
+    if (j?.status === "success" && Number.isFinite(j.lat) && Number.isFinite(j.lon)) {
+      return { lat: j.lat, lng: j.lon, source: "ip", city: j.city, region: j.regionName, country: j.country };
+    }
+  } catch {}
+  return null;
+}
+
 
 const TWILIO_GATEWAY = "https://connector-gateway.lovable.dev/twilio";
 
@@ -85,9 +118,21 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
 
     const ts = new Date();
     const timestamp = ts.toLocaleString("es-CL", { timeZone: "America/Santiago" });
-    const mapsLink = data.gps
-      ? `https://maps.google.com/?q=${data.gps.lat},${data.gps.lng}`
-      : "Ubicación temporalmente no disponible";
+
+    // Resolver ubicación: GPS del dispositivo o, si falta, IP (Cloudflare / ip-api).
+    let resolvedGps: GpsInfo;
+    if (data.gps && Number.isFinite(data.gps.lat) && Number.isFinite(data.gps.lng)) {
+      resolvedGps = { lat: data.gps.lat, lng: data.gps.lng, accuracy: data.gps.accuracy, source: "device" };
+    } else {
+      const ipGeo = await resolveIpGeo();
+      resolvedGps = ipGeo ?? { lat: -33.4489, lng: -70.6693, source: "none", city: "Santiago", country: "CL" };
+    }
+    const placeLabel = [resolvedGps.city, resolvedGps.region, resolvedGps.country].filter(Boolean).join(", ");
+    const sourceNote =
+      resolvedGps.source === "device" ? "(GPS preciso)" :
+      resolvedGps.source === "ip" ? `(ubicación aproximada por IP${placeLabel ? ` — ${placeLabel}` : ""})` :
+      "(ubicación referencial)";
+    const mapsLink = `https://maps.google.com/?q=${resolvedGps.lat},${resolvedGps.lng}`;
 
     // Acknowledgement token (link de un solo uso, expira en 24h)
     const ackToken = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`)
@@ -98,7 +143,7 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
     const textMessage =
       `🚨 URGENTE ALERTA SENIOR\n\n` +
       `${user.nombre} necesita ayuda.\n\n` +
-      `📍 Ubicación:\n${mapsLink}\n\n` +
+      `📍 Ubicación ${sourceNote}:\n${mapsLink}\n\n` +
       `⏰ Hora:\n${timestamp}\n\n` +
       `Por favor contacta inmediatamente al usuario.\n\n` +
       `Confirma que recibiste esta alerta:\n${ackUrl}`;
@@ -121,11 +166,11 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
         trial_signup_id: user.id,
         event_type: "emergency_pressed",
         status: "pending",
-        gps_lat: data.gps?.lat ?? null,
-        gps_lng: data.gps?.lng ?? null,
-        gps_accuracy: data.gps?.accuracy ?? null,
+        gps_lat: resolvedGps.lat,
+        gps_lng: resolvedGps.lng,
+        gps_accuracy: resolvedGps.accuracy ?? null,
         recipients: recipients.map((r) => ({ id: r.id, nombre: r.nombre, telefono: r.phone, parentesco: r.parentesco })),
-        metadata: { maps_link: mapsLink, timestamp, ack_url: ackUrl },
+        metadata: { maps_link: mapsLink, timestamp, ack_url: ackUrl, gps_source: resolvedGps.source, place: placeLabel || null },
         acknowledgement_token: ackToken,
         acknowledgement_expires_at: ackExpiresAt,
       } as never)
