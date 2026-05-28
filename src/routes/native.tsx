@@ -12,6 +12,7 @@ import { sendWellnessNotice } from "@/lib/wellness.functions";
 import { upsertHeartbeat } from "@/lib/heartbeat.functions";
 import { checkLastAlertAck } from "@/lib/family-portal.functions";
 import { Link } from "@tanstack/react-router";
+import { getCurrentCoordsWithError, getCurrentCoords, ensureGeoPermission } from "@/lib/geo";
 
 export const Route = createFileRoute("/native")({
   head: () => ({
@@ -87,50 +88,41 @@ function NativeApp() {
   }, [loadConfig]);
 
   // 2) Pedir GPS apenas haya sesión + refrescar coordenadas periódicamente
-  const requestGps = (interactive = false) => {
-    if (!("geolocation" in navigator)) {
-      if (interactive) toast.error("Este teléfono no soporta GPS.");
+  const requestGps = async (interactive = false) => {
+    // En APK pide permiso nativo primero (no depende del bridge web).
+    await ensureGeoPermission();
+    const { coords, error } = await getCurrentCoordsWithError({
+      highAccuracy: true,
+      timeoutMs: 15000,
+      maximumAgeMs: 30000,
+    });
+    if (coords) {
+      setGpsOk(true);
+      setLastCoords(coords);
+      if (interactive) toast.success("Ubicación activada.");
       return;
     }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setGpsOk(true);
-        setLastCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy });
-        if (interactive) toast.success("Ubicación activada.");
-      },
-      (err) => {
-        setGpsOk(false);
-        if (interactive) {
-          if (err.code === err.PERMISSION_DENIED) {
-            toast.error("Permiso de ubicación bloqueado. Ábrelo en ajustes del navegador → Permisos del sitio → Ubicación → Permitir.");
-          } else if (err.code === err.POSITION_UNAVAILABLE) {
-            toast.error("GPS no disponible. Activa la ubicación del teléfono y reintenta.");
-          } else {
-            toast.error("No pudimos obtener tu ubicación. Reintenta cerca de una ventana.");
-          }
-        }
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 },
-    );
+    setGpsOk(false);
+    if (!interactive) return;
+    if (error === "denied") {
+      toast.error("Permiso de ubicación bloqueado. Activa la ubicación en Ajustes del teléfono y reintenta.");
+    } else if (error === "unavailable") {
+      toast.error("GPS no disponible. Activa la ubicación del teléfono y reintenta.");
+    } else if (error === "unsupported") {
+      toast.error("Este teléfono no soporta GPS.");
+    } else {
+      toast.error("No pudimos obtener tu ubicación. Reintenta cerca de una ventana.");
+    }
   };
 
   // Fetch GPS rápido (low-accuracy) para uso inmediato en SOS
-  const fetchGpsFast = (): Promise<{ lat: number; lng: number; accuracy?: number } | null> => {
-    if (!("geolocation" in navigator)) return Promise.resolve(null);
-    return new Promise((resolve) => {
-      const to = setTimeout(() => resolve(null), 8000);
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          clearTimeout(to);
-          const c = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy };
-          setGpsOk(true);
-          setLastCoords(c);
-          resolve(c);
-        },
-        () => { clearTimeout(to); resolve(null); },
-        { enableHighAccuracy: false, timeout: 8000, maximumAge: 30000 },
-      );
-    });
+  const fetchGpsFast = async (): Promise<{ lat: number; lng: number; accuracy?: number } | null> => {
+    const c = await getCurrentCoords({ highAccuracy: false, timeoutMs: 8000, maximumAgeMs: 30000 });
+    if (c) {
+      setGpsOk(true);
+      setLastCoords(c);
+    }
+    return c;
   };
 
   useEffect(() => {
@@ -249,28 +241,22 @@ function NativeApp() {
         else toast.error("No pudimos enviar la alerta. Llama directamente.");
 
         // Refresco de precisión en background → actualiza Portal Familia vía heartbeat
-        if ("geolocation" in navigator) {
-          navigator.geolocation.getCurrentPosition(
-            (pos) => {
-              const better = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy };
-              setLastCoords(better);
-              setGpsOk(true);
-              heartbeat({
-                data: {
-                  signupId: userId,
-                  gps_enabled: true,
-                  internet_connected: typeof navigator !== "undefined" ? navigator.onLine : null,
-                  app_version: "native-1.0",
-                  last_lat: better.lat,
-                  last_lng: better.lng,
-                  battery_level: null,
-                },
-              }).catch(() => {});
+        getCurrentCoords({ highAccuracy: true, timeoutMs: 20000, maximumAgeMs: 0 }).then((better) => {
+          if (!better) return;
+          setLastCoords(better);
+          setGpsOk(true);
+          heartbeat({
+            data: {
+              signupId: userId,
+              gps_enabled: true,
+              internet_connected: typeof navigator !== "undefined" ? navigator.onLine : null,
+              app_version: "native-1.0",
+              last_lat: better.lat,
+              last_lng: better.lng,
+              battery_level: null,
             },
-            () => {},
-            { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 },
-          );
-        }
+          }).catch(() => {});
+        });
       } catch (e) {
         console.error(e);
         if (!cancelled) toast.error("Error enviando la alerta.");
@@ -442,17 +428,8 @@ function NativeApp() {
             if (!userId) return;
             setWellnessBusy(true);
             // GPS opcional, sin bloquear si falla o no se otorga.
-            const getGps = () =>
-              new Promise<{ lat: number; lng: number; accuracy?: number } | null>((resolve) => {
-                if (!("geolocation" in navigator)) return resolve(null);
-                navigator.geolocation.getCurrentPosition(
-                  (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy }),
-                  () => resolve(null),
-                  { timeout: 4000, maximumAge: 60_000 },
-                );
-              });
             try {
-              const gps = await getGps();
+              const gps = await getCurrentCoords({ highAccuracy: false, timeoutMs: 4000, maximumAgeMs: 60_000 });
               const res = await sendWellness({ data: { signupId: userId, gps } });
               if (res.recipients === 0) {
                 toast.success("Marcado como: Estoy bien 💚", { description: "No hay guardianes configurados." });
