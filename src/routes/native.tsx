@@ -178,30 +178,10 @@ function NativeApp() {
       } catch { /* silencioso */ }
       setTimeout(poll, 10_000);
     };
-    poll();
-    return () => { alive = false; };
-  }, [stage, userId, checkAck]);
-
-  // 3) Refrescar familiares en background
-  useEffect(() => {
-    if (!userId) return;
-    let alive = true;
-    (async () => {
-      try {
-        const res = await list({ data: { signupId: userId } });
-        if (alive) setContacts(res.contacts as Contact[]);
-      } catch (e) { console.warn("list family", e); }
-    })();
-    return () => { alive = false; };
-  }, [userId, list]);
-
-  // 4) Countdown emergencia + inicio inmediato de GPS rápido en paralelo
+  // 4) Countdown emergencia
   useEffect(() => {
     if (stage !== "confirm") return;
     setCountdown(5);
-    setLocating(true);
-    // Lanzar fetch GPS YA, en paralelo al countdown
-    pendingGpsRef.current = fetchGpsFast().finally(() => setLocating(false));
     if ("vibrate" in navigator) navigator.vibrate?.(80);
     const id = setInterval(() => {
       setCountdown((c) => {
@@ -213,21 +193,61 @@ function NativeApp() {
     return () => clearInterval(id);
   }, [stage]);
 
-  // 5) Envío real — espera GPS (race con timeout 8s) antes de enviar
+  // 5) Envío real — GPS con timeout estricto de 3s. Si no responde, envía null y NO bloquea.
   useEffect(() => {
     if (stage !== "sending" || !userId) return;
     let cancelled = false;
     setSummary(null);
     if ("vibrate" in navigator) navigator.vibrate?.([100, 60, 100]);
     (async () => {
-      const fallback = lastCoords
-        ? { lat: lastCoords.lat, lng: lastCoords.lng, accuracy: lastCoords.accuracy }
-        : null;
+      // Race estricto: GPS de alta precisión vs 3s. Sin bloqueo.
+      setLocating(true);
+      const gpsPromise = getCurrentCoords({ highAccuracy: true, timeoutMs: 3000, maximumAgeMs: 0 });
+      const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000));
+      const gps = await Promise.race([gpsPromise, timeout]);
+      setLocating(false);
+      if (gps) {
+        setLastCoords(gps);
+        setGpsOk(true);
+      }
 
-      // Race: GPS pendiente (iniciado al presionar SOS) vs timeout 8s
-      const pending = pendingGpsRef.current ?? fetchGpsFast();
-      const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000));
-      let gps = await Promise.race([pending, timeout]);
+      try {
+        const res: any = await sendAlert({ data: { signupId: userId, gps: gps ?? null } });
+        if (cancelled) return;
+        const sent = (res?.results ?? []).filter((r: any) => r.status === "sent").length;
+        setSummary({ delivered: sent, total: res?.results?.length ?? 0, status: res?.status ?? "unknown" });
+        if (res?.status === "delivered") toast.success("Alerta enviada a tu familia.");
+        else if (res?.status === "partial") toast.warning("Alerta enviada parcialmente.");
+        else if (res?.status === "no_recipients") toast.error("No hay familiares configurados en tu cuenta.");
+        else toast.error("No pudimos enviar la alerta. Llama directamente.");
+
+        // Refresco de precisión en background → actualiza Portal Familia vía heartbeat
+        getCurrentCoords({ highAccuracy: true, timeoutMs: 20000, maximumAgeMs: 0 }).then((better) => {
+          if (!better) return;
+          setLastCoords(better);
+          setGpsOk(true);
+          heartbeat({
+            data: {
+              signupId: userId,
+              gps_enabled: true,
+              internet_connected: typeof navigator !== "undefined" ? navigator.onLine : null,
+              app_version: "native-1.0",
+              last_lat: better.lat,
+              last_lng: better.lng,
+              battery_level: null,
+            },
+          }).catch(() => {});
+        });
+      } catch (e) {
+        console.error(e);
+        if (!cancelled) toast.error("Error enviando la alerta.");
+      } finally {
+        if (!cancelled) setStage("sent");
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [stage, userId, sendAlert, heartbeat]);
+
       if (!gps) gps = fallback; // fallback a última ubicación conocida
 
       try {
