@@ -65,26 +65,26 @@ export async function getCurrentCoords(opts?: {
   const timeoutMs = opts?.timeoutMs ?? 15000;
   const maximumAgeMs = opts?.maximumAgeMs ?? 30000;
 
-  // Capacitor nativo
+  // Capacitor nativo / APK: usar SIEMPRE @capacitor/geolocation. Nunca
+  // caer a navigator.geolocation (el shell estático bloquea el bridge web).
   if (isNative()) {
     const Geo = await getCapacitorGeo();
-    if (Geo) {
-      const ok = await ensureGeoPermission();
-      if (!ok) return null;
-      try {
-        const pos = await Geo.getCurrentPosition({
-          enableHighAccuracy: highAccuracy,
-          timeout: timeoutMs,
-          maximumAge: maximumAgeMs,
-        });
-        return {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          accuracy: pos.coords.accuracy,
-        };
-      } catch {
-        return null;
-      }
+    if (!Geo) return null;
+    const ok = await ensureGeoPermission();
+    if (!ok) return null;
+    try {
+      const pos = await Geo.getCurrentPosition({
+        enableHighAccuracy: highAccuracy,
+        timeout: timeoutMs,
+        maximumAge: maximumAgeMs,
+      });
+      return {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        accuracy: pos.coords.accuracy,
+      };
+    } catch {
+      return null;
     }
   }
 
