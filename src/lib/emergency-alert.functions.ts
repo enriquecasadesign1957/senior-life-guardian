@@ -118,9 +118,21 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
 
     const ts = new Date();
     const timestamp = ts.toLocaleString("es-CL", { timeZone: "America/Santiago" });
-    const mapsLink = data.gps
-      ? `https://maps.google.com/?q=${data.gps.lat},${data.gps.lng}`
-      : "Ubicación temporalmente no disponible";
+
+    // Resolver ubicación: GPS del dispositivo o, si falta, IP (Cloudflare / ip-api).
+    let resolvedGps: GpsInfo;
+    if (data.gps && Number.isFinite(data.gps.lat) && Number.isFinite(data.gps.lng)) {
+      resolvedGps = { lat: data.gps.lat, lng: data.gps.lng, accuracy: data.gps.accuracy, source: "device" };
+    } else {
+      const ipGeo = await resolveIpGeo();
+      resolvedGps = ipGeo ?? { lat: -33.4489, lng: -70.6693, source: "none", city: "Santiago", country: "CL" };
+    }
+    const placeLabel = [resolvedGps.city, resolvedGps.region, resolvedGps.country].filter(Boolean).join(", ");
+    const sourceNote =
+      resolvedGps.source === "device" ? "(GPS preciso)" :
+      resolvedGps.source === "ip" ? `(ubicación aproximada por IP${placeLabel ? ` — ${placeLabel}` : ""})` :
+      "(ubicación referencial)";
+    const mapsLink = `https://maps.google.com/?q=${resolvedGps.lat},${resolvedGps.lng} ${sourceNote}`;
 
     // Acknowledgement token (link de un solo uso, expira en 24h)
     const ackToken = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`)
