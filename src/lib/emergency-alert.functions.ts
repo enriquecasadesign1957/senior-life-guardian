@@ -236,7 +236,8 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
         }
       }
 
-      // FASE 2 — SMS
+      // FASE 2 — SMS (espera 15s desde el inicio para dar tiempo al GPS)
+      await sleep(15000);
       for (const c of recipients) {
         const to = c.phone;
         if (!smsFrom) {
@@ -264,8 +265,9 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
         }
       }
 
-      // Espera 10s antes de WhatsApp
+      // Espera adicional de 10s (total 25s desde el inicio) antes de WhatsApp
       if (recipients.length > 0) await sleep(10000);
+
 
       // FASE 3 — WhatsApp
       for (const c of recipients) {
