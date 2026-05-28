@@ -3,23 +3,22 @@ import type { CapacitorConfig } from '@capacitor/cli';
 /**
  * App Android/iOS Senior Safe.
  *
- * Importante: NO usamos `server.url` apuntando a la web pública.
- * La app es un binario independiente que carga su propio bundle (dist/)
- * y abre directamente la pantalla `/native` (UI limpia de emergencia).
- *
- * La web alarmaseniorsafe.cl sigue intacta para registro/onboarding/pagos.
+ * Importante: Se añade allowNavigation para desbloquear el hardware del GPS
+ * nativo en Android cuando la WebView carga el dominio remoto.
  */
 const config: CapacitorConfig = {
   appId: 'cl.alarmaseniorsafe.app',
   appName: 'Senior Safe',
   webDir: 'dist',
-  // La APK debe abrir DIRECTAMENTE la pantalla nativa de emergencia,
-  // NO la landing/onboarding web. Capacitor carga este URL al arrancar
-  // y nunca cae en dist/index.html (que podría contener la web antigua).
   server: {
     url: 'https://alarmaseniorsafe.cl/native?source=apk',
     androidScheme: 'https',
     cleartext: false,
+    // CRUCIAL: Esto le dice a Android que confíe en la web y le libere el chip de GPS
+    allowNavigation: [
+      "alarmaseniorsafe.cl",
+      "*.alarmaseniorsafe.cl"
+    ]
   },
   android: {
     allowMixedContent: false,
