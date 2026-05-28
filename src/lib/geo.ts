@@ -9,9 +9,28 @@
 
 export type Coords = { lat: number; lng: number; accuracy?: number };
 
+function isApkSource(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("source") === "apk") {
+      try { localStorage.setItem("seniorsafe_source", "apk"); } catch {}
+      return true;
+    }
+  } catch {}
+  try {
+    if (localStorage.getItem("seniorsafe_source") === "apk") return true;
+  } catch {}
+  return false;
+}
+
 function isNative(): boolean {
   if (typeof window === "undefined") return false;
-  return Boolean((window as any).Capacitor?.isNativePlatform?.());
+  if (Boolean((window as any).Capacitor?.isNativePlatform?.())) return true;
+  // Cuando la app corre como APK (shell estático cargado en la WebView de
+  // Capacitor con ?source=apk), forzamos el camino nativo aunque el bridge
+  // `window.Capacitor` aún no esté inyectado al evaluar este helper.
+  return isApkSource();
 }
 
 async function getCapacitorGeo() {
