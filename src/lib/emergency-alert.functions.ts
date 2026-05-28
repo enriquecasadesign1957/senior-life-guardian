@@ -1,50 +1,18 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { getRequest, getRequestHeader, getRequestIP } from "@tanstack/react-start/server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-
-type GpsInfo = { lat: number; lng: number; accuracy?: number; source: "device" | "ip" | "none"; city?: string; region?: string; country?: string };
-
-async function resolveIpGeo(): Promise<GpsInfo | null> {
-  try {
-    const req = getRequest();
-    // Cloudflare injects geo headers
-    const cfLat = getRequestHeader("cf-iplatitude") || getRequestHeader("x-vercel-ip-latitude");
-    const cfLng = getRequestHeader("cf-iplongitude") || getRequestHeader("x-vercel-ip-longitude");
-    const city = getRequestHeader("cf-ipcity") || getRequestHeader("x-vercel-ip-city") || undefined;
-    const region = getRequestHeader("cf-region") || getRequestHeader("x-vercel-ip-country-region") || undefined;
-    const country = getRequestHeader("cf-ipcountry") || getRequestHeader("x-vercel-ip-country") || undefined;
-    if (cfLat && cfLng) {
-      const lat = parseFloat(cfLat);
-      const lng = parseFloat(cfLng);
-      if (Number.isFinite(lat) && Number.isFinite(lng)) {
-        return { lat, lng, source: "ip", city, region, country };
-      }
-    }
-    // Fallback: ip-api.com (no key, free for low volume)
-    let ip = getRequestIP({ xForwardedFor: true }) || "";
-    ip = ip.replace(/^::ffff:/, "");
-    const url = ip ? `http://ip-api.com/json/${ip}?fields=status,lat,lon,city,regionName,country` : `http://ip-api.com/json/?fields=status,lat,lon,city,regionName,country`;
-    const r = await fetch(url, { signal: AbortSignal.timeout(4000) });
-    const j: any = await r.json().catch(() => ({}));
-    if (j?.status === "success" && Number.isFinite(j.lat) && Number.isFinite(j.lon)) {
-      return { lat: j.lat, lng: j.lon, source: "ip", city: j.city, region: j.regionName, country: j.country };
-    }
-  } catch {}
-  return null;
-}
-
 
 const TWILIO_GATEWAY = "https://connector-gateway.lovable.dev/twilio";
 
 const Schema = z.object({
   signupId: z.string().uuid(),
   gps: z.object({
-    lat: z.number(),
-    lng: z.number(),
+    lat: z.number().refine((v) => Number.isFinite(v) && v >= -90 && v <= 90, "lat inválida"),
+    lng: z.number().refine((v) => Number.isFinite(v) && v >= -180 && v <= 180, "lng inválida"),
     accuracy: z.number().optional(),
-  }).nullable().optional(),
+  }, { required_error: "gps_required", invalid_type_error: "gps_required" }),
 });
+
 
 function normalizePhone(raw: string): string | null {
   const trimmed = (raw ?? "").replace(/[^\d+]/g, "");
