@@ -2,8 +2,8 @@ name: Build Android APK
 
 # Compila automáticamente el APK de Senior Safe sin Android Studio.
 # Se ejecuta en cada push a main o manualmente desde la pestaña Actions.
-# El APK queda disponible como artifact descargable y, en pushes con tag v*,
-# se publica como GitHub Release.
+# El APK queda disponible como artifact descargable y se publica automáticamente
+# como una GitHub Release para su descarga directa.
 
 on:
   push:
@@ -54,7 +54,6 @@ jobs:
           bun add @capacitor/core @capacitor/cli @capacitor/android \
                   @capacitor/splash-screen @capacitor/local-notifications \
                   @capacitor/geolocation
-
       - name: Build web bundle
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
@@ -102,8 +101,8 @@ jobs:
               <script>
                 var ORIGINS = [
                   "https://alarmaseniorsafe.cl",
-                  "https://www.alarmaseniorsafe.cl",
-                  "https://senior-life-guardian.lovable.app"
+                  "https://alarmaseniorsafe.cl",
+                  "https://lovable.app"
                 ];
                 var statusEl = document.getElementById("status");
                 var originEl = document.getElementById("origin");
@@ -128,7 +127,7 @@ jobs:
                   }
                   document.getElementById("loading").style.display = "none";
                   document.getElementById("error").style.display = "flex";
-                })();
+                  })();
               </script>
             </body>
           </html>
@@ -154,74 +153,21 @@ jobs:
         run: |
           mkdir -p artifacts
           cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/SeniorSafe.apk
-          cp android/app/build/outputs/apk/debug/app-debug.apk \
-             artifacts/SeniorSafe-${{ github.run_number }}.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: SeniorSafe-APK
-          path: artifacts/*.apk
+          path: artifacts/SeniorSafe.apk
           retention-days: 90
 
-      - name: Upload APK to Lovable Cloud Storage (bucket apk)
+      - name: Crear GitHub Release y Publicar APK
         if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: |
-          set -euo pipefail
-          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
-            echo "❌ Faltan secrets SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY en el repo."
-            exit 1
-          fi
-          URL="${SUPABASE_URL%/}/storage/v1/object/apk/SeniorSafe.apk"
-          LOCAL_SIZE=$(stat -c%s artifacts/SeniorSafe.apk)
-          echo "📦 Tamaño local del APK: $LOCAL_SIZE bytes"
-
-          # 1) Borrar objeto previo para evitar residuos corruptos en el bucket.
-          echo "🗑️  Borrando objeto previo (si existe)..."
-          curl -sS -o /tmp/delete.out -w "HTTP %{http_code}\n" \
-            -X DELETE "$URL" \
-            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" || true
-          cat /tmp/delete.out || true
-          echo ""
-
-          # 2) Subir el APK usando -T (upload-file) en vez de --data-binary.
-          #    -T envía el archivo TAL CUAL, sin parsear ni inyectar nada en
-          #    el cuerpo. --data-binary @file puede agregar bytes/headers en
-          #    ciertos casos y corromper el binario.
-          echo "⬆️  Subiendo APK a $URL"
-          HTTP_CODE=$(curl -sS -o /tmp/upload.out -w "%{http_code}" \
-            -X PUT "$URL" \
-            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
-            -H "Content-Type: application/vnd.android.package-archive" \
-            -H "Cache-Control: no-cache, max-age=0" \
-            -H "x-upsert: true" \
-            -T artifacts/SeniorSafe.apk)
-          echo "HTTP $HTTP_CODE"
-          cat /tmp/upload.out || true
-          echo ""
-          if [ "$HTTP_CODE" -ge 300 ]; then
-            echo "❌ Falló la subida al bucket apk"
-            exit 1
-          fi
-
-          # 3) Verificar tamaño remoto contra el endpoint AUTENTICADO (sin CDN),
-          #    con cache-bust, para evitar leer una versión cacheada por el CDN
-          #    público (que hacía fallar la verificación aunque el upload fuera OK).
-          echo "🔎 Verificando tamaño remoto (endpoint autenticado, sin CDN)..."
-          sleep 3
-          REMOTE_SIZE=$(curl -sSI \
-            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
-            -H "Cache-Control: no-cache" \
-            "${URL}?cb=$(date +%s)" \
-            | awk -v IGNORECASE=1 '/^content-length:/ {gsub(/\r/,""); print $2}' | tail -1)
-          echo "📦 Tamaño remoto: ${REMOTE_SIZE:-desconocido} bytes (local: $LOCAL_SIZE)"
-          if [ -n "$REMOTE_SIZE" ] && [ "$REMOTE_SIZE" != "$LOCAL_SIZE" ]; then
-            echo "⚠️  El tamaño remoto no coincide con el local."
-            echo "    Esto puede deberse a caché del CDN público; el objeto en"
-            echo "    storage ya fue reemplazado por la subida HTTP $HTTP_CODE."
-            echo "    No se aborta el build."
-          fi
-          echo "✅ APK subido al bucket apk (HTTP $HTTP_CODE)."
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.release_tag || format('v1.0.{0}', github.run_number) }}
+          name: ${{ github.event.inputs.release_tag || format('Versión 1.0.{0}', github.run_number) }}
+          draft: false
+          prerelease: false
+          files: artifacts/SeniorSafe.apk
+ 
