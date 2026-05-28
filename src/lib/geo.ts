@@ -41,7 +41,12 @@ export async function ensureGeoPermission(): Promise<boolean> {
   }
 }
 
-export async function getCurrentCoordsWithError(): Promise<{ coords: Coords | null; error: GeoErrorCode | null }> {
+export async function getCurrentCoordsWithError(opts?: {
+  highAccuracy?: boolean;
+  timeoutMs?: number;
+  maximumAgeMs?: number;
+}): Promise<{ coords: Coords | null; error: GeoErrorCode | null }> {
+
   try {
     const permissions = await Geolocation.checkPermissions();
     if (permissions.location !== 'granted') {
