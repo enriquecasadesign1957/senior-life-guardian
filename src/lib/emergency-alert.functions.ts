@@ -87,19 +87,14 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
     const ts = new Date();
     const timestamp = ts.toLocaleString("es-CL", { timeZone: "America/Santiago" });
 
-    // Resolver ubicación: GPS del dispositivo o, si falta, IP (Cloudflare / ip-api).
-    let resolvedGps: GpsInfo;
-    if (data.gps && Number.isFinite(data.gps.lat) && Number.isFinite(data.gps.lng)) {
-      resolvedGps = { lat: data.gps.lat, lng: data.gps.lng, accuracy: data.gps.accuracy, source: "device" };
-    } else {
-      const ipGeo = await resolveIpGeo();
-      resolvedGps = ipGeo ?? { lat: -33.4489, lng: -70.6693, source: "none", city: "Santiago", country: "CL" };
-    }
-    const placeLabel = [resolvedGps.city, resolvedGps.region, resolvedGps.country].filter(Boolean).join(", ");
-    const sourceNote =
-      resolvedGps.source === "device" ? "(GPS preciso)" :
-      resolvedGps.source === "ip" ? `(ubicación aproximada por IP${placeLabel ? ` — ${placeLabel}` : ""})` :
-      "(ubicación referencial)";
+    // GPS obligatorio: solo coordenadas reales y precisas del APK/dispositivo.
+    const resolvedGps = {
+      lat: data.gps.lat,
+      lng: data.gps.lng,
+      accuracy: data.gps.accuracy,
+      source: "device" as const,
+    };
+    const sourceNote = "(GPS preciso)";
     const mapsLink = `https://maps.google.com/?q=${resolvedGps.lat},${resolvedGps.lng}`;
 
     // Acknowledgement token (link de un solo uso, expira en 24h)
@@ -112,6 +107,8 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
       `🚨 URGENTE ALERTA SENIOR\n\n` +
       `${user.nombre} necesita ayuda.\n\n` +
       `📍 Ubicación ${sourceNote}:\n${mapsLink}\n\n` +
+      `⏰ Hora:\n${timestamp}\n\n` +
+
       `⏰ Hora:\n${timestamp}\n\n` +
       `Por favor contacta inmediatamente al usuario.\n\n` +
       `Confirma que recibiste esta alerta:\n${ackUrl}`;
