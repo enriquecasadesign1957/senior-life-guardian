@@ -210,14 +210,25 @@ function NativeApp() {
     return () => clearInterval(id);
   }, [stage]);
 
-  // 5) Envío real — GPS con timeout estricto de 3s. Si no responde, envía null y NO bloquea.
+  // 5) Envío 100% NATIVO LOCAL — llamada inmediata + SMS nativo con contactos pre-cargados.
+  //    Backend remoto (sendAlert) desactivado temporalmente mientras preparamos Google Play.
   useEffect(() => {
     if (stage !== "sending" || !userId) return;
     let cancelled = false;
     setSummary(null);
     if ("vibrate" in navigator) navigator.vibrate?.([100, 60, 100]);
+
     (async () => {
-      // Race estricto: GPS de alta precisión vs 3s. Sin bloqueo.
+      const phones = contacts
+        .map((c) => String(c.telefono ?? "").replace(/[^\d+]/g, ""))
+        .filter((p) => p.length >= 6);
+
+      // FASE 1 (Segundo 0): Llamada telefónica inmediata al primer guardián.
+      if (phones.length > 0) {
+        try { window.location.href = `tel:${phones[0]}`; } catch (e) { console.warn("tel:", e); }
+      }
+
+      // FASE 2 (en paralelo): GPS rápido con timeout 3s, sin bloquear.
       setLocating(true);
       const gpsPromise = getCurrentCoords({ highAccuracy: true, timeoutMs: 3000, maximumAgeMs: 0 });
       const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000));
@@ -228,42 +239,34 @@ function NativeApp() {
         setGpsOk(true);
       }
 
-      try {
-        const res: any = await sendAlert({ data: { signupId: userId, gps: gps ?? null } });
-        if (cancelled) return;
-        const sent = (res?.results ?? []).filter((r: any) => r.status === "sent").length;
-        setSummary({ delivered: sent, total: res?.results?.length ?? 0, status: res?.status ?? "unknown" });
-        if (res?.status === "delivered") toast.success("Alerta enviada a tu familia.");
-        else if (res?.status === "partial") toast.warning("Alerta enviada parcialmente.");
-        else if (res?.status === "no_recipients") toast.error("No hay familiares configurados en tu cuenta.");
-        else toast.error("No pudimos enviar la alerta. Llama directamente.");
+      // FASE 3: Abrir app de SMS nativa con cuerpo pre-rellenado y contactos cargados.
+      const coords = gps ?? lastCoords;
+      const mapsLink = coords
+        ? `https://google.com/maps?q=${coords.lat},${coords.lng}`
+        : `https://google.com`;
+      const fullName = userName || "Un usuario de Senior Safe";
+      const body = `🚨 URGENTE ALERTA SENIOR: ${fullName} necesita ayuda urgente. Ver ubicación en el mapa: ${mapsLink}`;
 
-        // Refresco de precisión en background → actualiza Portal Familia vía heartbeat
-        getCurrentCoords({ highAccuracy: true, timeoutMs: 20000, maximumAgeMs: 0 }).then((better) => {
-          if (!better) return;
-          setLastCoords(better);
-          setGpsOk(true);
-          heartbeat({
-            data: {
-              signupId: userId,
-              gps_enabled: true,
-              internet_connected: typeof navigator !== "undefined" ? navigator.onLine : null,
-              app_version: "native-1.0",
-              last_lat: better.lat,
-              last_lng: better.lng,
-              battery_level: null,
-            },
-          }).catch(() => {});
-        });
-      } catch (e) {
-        console.error(e);
-        if (!cancelled) toast.error("Error enviando la alerta.");
-      } finally {
-        if (!cancelled) setStage("sent");
+      if (phones.length > 0) {
+        // Esquema sms: con múltiples destinatarios (Android: separados por coma).
+        const recipients = phones.join(",");
+        const smsUrl = `sms:${recipients}?body=${encodeURIComponent(body)}`;
+        // Delay corto para que la llamada se gatille primero.
+        setTimeout(() => {
+          try { window.location.href = smsUrl; } catch (e) { console.warn("sms:", e); }
+        }, 1200);
+        toast.success(`Llamando y abriendo SMS para ${phones.length} guardián${phones.length === 1 ? "" : "es"}.`);
+        setSummary({ delivered: phones.length, total: phones.length, status: "native" });
+      } else {
+        toast.error("No hay guardianes configurados en tu cuenta.");
+        setSummary({ delivered: 0, total: 0, status: "no_recipients" });
       }
+
+      if (!cancelled) setStage("sent");
     })();
     return () => { cancelled = true; };
-  }, [stage, userId, sendAlert, heartbeat]);
+  }, [stage, userId, contacts, userName, lastCoords]);
+
 
 
 
