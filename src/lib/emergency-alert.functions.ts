@@ -90,16 +90,19 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
 
     const ts = new Date();
     const timestamp = ts.toLocaleString("es-CL", { timeZone: "America/Santiago" });
-
-    // GPS obligatorio: solo coordenadas reales y precisas del APK/dispositivo.
-    const resolvedGps = {
-      lat: data.gps.lat,
-      lng: data.gps.lng,
-      accuracy: data.gps.accuracy,
-      source: "device" as const,
-    };
-    const sourceNote = "(GPS preciso)";
-    const mapsLink = `https://maps.google.com/?q=${resolvedGps.lat},${resolvedGps.lng}`;
+    // GPS opcional: si el APK no logra sincronizar en 3s, enviamos null y avisamos en el mensaje.
+    const hasGps = !!data.gps;
+    const resolvedGps = hasGps
+      ? {
+          lat: data.gps!.lat,
+          lng: data.gps!.lng,
+          accuracy: data.gps!.accuracy,
+          source: "device" as const,
+        }
+      : null;
+    const mapsLink = resolvedGps
+      ? `https://maps.google.com/?q=${resolvedGps.lat},${resolvedGps.lng}`
+      : null;
 
     // Acknowledgement token (link de un solo uso, expira en 24h)
     const ackToken = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`)
@@ -107,14 +110,18 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
     const ackExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     const ackUrl = `https://alarmaseniorsafe.cl/familia/ack/${ackToken}`;
 
+    const locationBlock = mapsLink
+      ? `📍 Ubicación (GPS preciso):\n${mapsLink}`
+      : `📍 Ubicación: el usuario activó la alerta, pero el GPS del celular no se pudo sincronizar a tiempo. Por favor contáctalo de inmediato.`;
+
     const textMessage =
       `🚨 URGENTE ALERTA SENIOR\n\n` +
       `${user.nombre} necesita ayuda.\n\n` +
-      `📍 Ubicación ${sourceNote}:\n${mapsLink}\n\n` +
-      `⏰ Hora:\n${timestamp}\n\n` +
-
+      `${locationBlock}\n\n` +
       `⏰ Hora:\n${timestamp}\n\n` +
       `Por favor contacta inmediatamente al usuario.\n\n` +
+      `Confirma que recibiste esta alerta:\n${ackUrl}`;
+
       `Confirma que recibiste esta alerta:\n${ackUrl}`;
 
     const voiceText =
