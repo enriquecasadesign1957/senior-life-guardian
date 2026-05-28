@@ -178,7 +178,26 @@ function NativeApp() {
       } catch { /* silencioso */ }
       setTimeout(poll, 10_000);
     };
+    poll();
+    return () => { alive = false; };
+  }, [stage, userId, checkAck]);
+
+  // 3) Refrescar familiares en background
+  useEffect(() => {
+    if (!userId) return;
+    let alive = true;
+    (async () => {
+      try {
+        const res = await list({ data: { signupId: userId } });
+        if (alive) setContacts(res.contacts as Contact[]);
+      } catch (e) { console.warn("list family", e); }
+    })();
+    return () => { alive = false; };
+  }, [userId, list]);
+
   // 4) Countdown emergencia
+  useEffect(() => {
+
   useEffect(() => {
     if (stage !== "confirm") return;
     setCountdown(5);
