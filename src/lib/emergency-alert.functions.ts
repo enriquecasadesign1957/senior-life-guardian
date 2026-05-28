@@ -142,11 +142,12 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
         trial_signup_id: user.id,
         event_type: "emergency_pressed",
         status: "pending",
-        gps_lat: resolvedGps.lat,
-        gps_lng: resolvedGps.lng,
-        gps_accuracy: resolvedGps.accuracy ?? null,
+        gps_lat: resolvedGps?.lat ?? null,
+        gps_lng: resolvedGps?.lng ?? null,
+        gps_accuracy: resolvedGps?.accuracy ?? null,
         recipients: recipients.map((r) => ({ id: r.id, nombre: r.nombre, telefono: r.phone, parentesco: r.parentesco })),
-        metadata: { maps_link: mapsLink, timestamp, ack_url: ackUrl, gps_source: resolvedGps.source },
+        metadata: { maps_link: mapsLink, timestamp, ack_url: ackUrl, gps_source: resolvedGps?.source ?? "unavailable" },
+
 
         acknowledgement_token: ackToken,
         acknowledgement_expires_at: ackExpiresAt,
