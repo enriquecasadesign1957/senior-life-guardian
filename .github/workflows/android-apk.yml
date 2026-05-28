@@ -54,86 +54,21 @@ jobs:
           bun add @capacitor/core @capacitor/cli @capacitor/android \
                   @capacitor/splash-screen @capacitor/local-notifications \
                   @capacitor/geolocation
-      - name: Build web bundle
+
+      - name: Build web bundle (Modo Estático Nativo)
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
-        run: bun run build
-
-      # TanStack Start + Cloudflare construye un Worker SSR (no genera un
-      # dist/index.html estático). Capacitor necesita SÍ o SÍ un dist/index.html,
-      # así que generamos un shell estático que carga directamente la pantalla
-      # /native publicada. El backend (Supabase / Twilio / Webpay / server fns)
-      # sigue viviendo en Lovable Cloud, intacto.
-      - name: Forzar dist/index.html con shell /native (fallback)
         run: |
-          mkdir -p dist
-          echo "⚠️  Escribiendo shell estático que fuerza /native..."
-          cat > dist/index.html <<'HTML'
-          <!doctype html>
-          <html lang="es">
-            <head>
-              <meta charset="utf-8" />
-              <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
-              <title>Senior Safe</title>
-              <style>
-                html,body{margin:0;height:100%;background:#0d4f5c;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
-                .wrap{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;}
-                .spinner{width:48px;height:48px;border:4px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:16px;}
-                @keyframes spin{to{transform:rotate(360deg);}}
-                .msg{font-size:15px;opacity:.95;max-width:300px;line-height:1.4;}
-                .err{display:none;}
-                .err button{margin-top:18px;background:#16a34a;color:#fff;border:0;border-radius:14px;padding:14px 22px;font-size:16px;font-weight:700;}
-                .small{font-size:12px;opacity:.65;margin-top:10px;}
-              </style>
-            </head>
-            <body>
-              <div class="wrap" id="loading">
-                <div class="spinner"></div>
-                <div class="msg" id="status">Cargando Senior Safe…</div>
-                <div class="small" id="origin"></div>
-              </div>
-              <div class="wrap err" id="error">
-                <div class="msg">No se pudo conectar a Senior Safe.<br/>Revisa tu conexión a internet e inténtalo de nuevo.</div>
-                <button onclick="location.reload()">Reintentar</button>
-              </div>
-              <script>
-                var ORIGINS = [
-                  "https://alarmaseniorsafe.cl",
-                  "https://alarmaseniorsafe.cl",
-                  "https://lovable.app"
-                ];
-                var statusEl = document.getElementById("status");
-                var originEl = document.getElementById("origin");
-                async function probe(origin){
-                  try{
-                    var ctrl = new AbortController();
-                    var to = setTimeout(function(){ctrl.abort();}, 5000);
-                    var r = await fetch(origin + "/native", {method:"GET", redirect:"follow", signal: ctrl.signal});
-                    clearTimeout(to);
-                    return r.ok;
-                  }catch(e){ return false; }
-                }
-                (async function(){
-                  for (var i = 0; i < ORIGINS.length; i++){
-                    var o = ORIGINS[i];
-                    statusEl.textContent = "Conectando…";
-                    originEl.textContent = o.replace("https://","");
-                    if (await probe(o)){
-                      window.location.replace(o + "/native?source=apk");
-                      return;
-                    }
-                  }
-                  document.getElementById("loading").style.display = "none";
-                  document.getElementById("error").style.display = "flex";
-                  })();
-              </script>
-            </body>
-          </html>
-          HTML
-          ls -la dist/ | head -20
-          test -f dist/index.html || (echo "❌ dist/index.html no existe" && exit 1)
+          bun run build
+          
+          # Si TanStack no generó el index.html en dist por su lógica SSR, 
+          # creamos un cascarón local seguro que no viaja por internet.
+          if [ ! -f "dist/index.html" ]; then
+            mkdir -p dist
+            echo "<!doctype html><html><head><meta charset='utf-8'/><title>Senior Safe</title><script>window.location.href='/native?source=apk';</script></head><body></body></html>" > dist/index.html
+          fi
 
       - name: Add Android platform (si no existe)
         run: |
