@@ -38,10 +38,9 @@ const PETROL = "var(--brand-petrol)";
 const GREEN = "#16a34a";
 
 /**
- * URL HTTPS directa y oficial de la APK Senior Safe.
- * Mantiene una dirección simple para Android/PC y evita abrir ventanas nuevas.
+ * URL directa al APK en GitHub Releases (permanente, sin CDN ni proxy).
  */
-const APK_DOWNLOAD_URL = "https://alarmaseniorsafe.cl/app.apk";
+const APK_DOWNLOAD_URL = "https://github.com/enriquecasadesign1957/senior-life-guardian/releases/latest/download/SeniorSafe.apk";
 
 /** Pantalla nativa publicada. Se usa solo como fallback web (no-Android). */
 const APP_BASE_URL = "https://alarmaseniorsafe.cl/native";
