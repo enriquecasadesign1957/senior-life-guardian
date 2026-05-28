@@ -428,17 +428,8 @@ function NativeApp() {
             if (!userId) return;
             setWellnessBusy(true);
             // GPS opcional, sin bloquear si falla o no se otorga.
-            const getGps = () =>
-              new Promise<{ lat: number; lng: number; accuracy?: number } | null>((resolve) => {
-                if (!("geolocation" in navigator)) return resolve(null);
-                navigator.geolocation.getCurrentPosition(
-                  (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy }),
-                  () => resolve(null),
-                  { timeout: 4000, maximumAge: 60_000 },
-                );
-              });
             try {
-              const gps = await getGps();
+              const gps = await getCurrentCoords({ highAccuracy: false, timeoutMs: 4000, maximumAgeMs: 60_000 });
               const res = await sendWellness({ data: { signupId: userId, gps } });
               if (res.recipients === 0) {
                 toast.success("Marcado como: Estoy bien 💚", { description: "No hay guardianes configurados." });
