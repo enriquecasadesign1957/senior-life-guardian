@@ -248,45 +248,7 @@ function NativeApp() {
     return () => { cancelled = true; };
   }, [stage, userId, sendAlert, heartbeat]);
 
-      if (!gps) gps = fallback; // fallback a última ubicación conocida
 
-      try {
-        const res: any = await sendAlert({ data: { signupId: userId, gps } });
-        if (cancelled) return;
-        const sent = (res?.results ?? []).filter((r: any) => r.status === "sent").length;
-        setSummary({ delivered: sent, total: res?.results?.length ?? 0, status: res?.status ?? "unknown" });
-        if (res?.status === "delivered") toast.success("Alerta enviada a tu familia.");
-        else if (res?.status === "partial") toast.warning("Alerta enviada parcialmente.");
-        else if (res?.status === "no_recipients") toast.error("No hay familiares configurados en tu cuenta.");
-        else toast.error("No pudimos enviar la alerta. Llama directamente.");
-
-        // Refresco de precisión en background → actualiza Portal Familia vía heartbeat
-        getCurrentCoords({ highAccuracy: true, timeoutMs: 20000, maximumAgeMs: 0 }).then((better) => {
-          if (!better) return;
-          setLastCoords(better);
-          setGpsOk(true);
-          heartbeat({
-            data: {
-              signupId: userId,
-              gps_enabled: true,
-              internet_connected: typeof navigator !== "undefined" ? navigator.onLine : null,
-              app_version: "native-1.0",
-              last_lat: better.lat,
-              last_lng: better.lng,
-              battery_level: null,
-            },
-          }).catch(() => {});
-        });
-      } catch (e) {
-        console.error(e);
-        if (!cancelled) toast.error("Error enviando la alerta.");
-      } finally {
-        if (!cancelled) setStage("sent");
-        pendingGpsRef.current = null;
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [stage, userId, sendAlert, lastCoords, heartbeat]);
 
   const handleLogin = async () => {
     const email = loginEmail.trim().toLowerCase();
