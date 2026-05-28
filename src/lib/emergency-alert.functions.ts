@@ -6,12 +6,16 @@ const TWILIO_GATEWAY = "https://connector-gateway.lovable.dev/twilio";
 
 const Schema = z.object({
   signupId: z.string().uuid(),
-  gps: z.object({
-    lat: z.number().refine((v) => Number.isFinite(v) && v >= -90 && v <= 90, "lat inválida"),
-    lng: z.number().refine((v) => Number.isFinite(v) && v >= -180 && v <= 180, "lng inválida"),
-    accuracy: z.number().optional(),
-  }, { required_error: "gps_required", invalid_type_error: "gps_required" }),
+  gps: z
+    .object({
+      lat: z.number().refine((v) => Number.isFinite(v) && v >= -90 && v <= 90, "lat inválida"),
+      lng: z.number().refine((v) => Number.isFinite(v) && v >= -180 && v <= 180, "lng inválida"),
+      accuracy: z.number().optional(),
+    })
+    .nullable()
+    .optional(),
 });
+
 
 
 function normalizePhone(raw: string): string | null {
