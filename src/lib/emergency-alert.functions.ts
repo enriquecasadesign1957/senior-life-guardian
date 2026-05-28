@@ -132,7 +132,7 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
       resolvedGps.source === "device" ? "(GPS preciso)" :
       resolvedGps.source === "ip" ? `(ubicación aproximada por IP${placeLabel ? ` — ${placeLabel}` : ""})` :
       "(ubicación referencial)";
-    const mapsLink = `https://maps.google.com/?q=${resolvedGps.lat},${resolvedGps.lng} ${sourceNote}`;
+    const mapsLink = `https://maps.google.com/?q=${resolvedGps.lat},${resolvedGps.lng}`;
 
     // Acknowledgement token (link de un solo uso, expira en 24h)
     const ackToken = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`)
@@ -143,7 +143,7 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
     const textMessage =
       `🚨 URGENTE ALERTA SENIOR\n\n` +
       `${user.nombre} necesita ayuda.\n\n` +
-      `📍 Ubicación:\n${mapsLink}\n\n` +
+      `📍 Ubicación ${sourceNote}:\n${mapsLink}\n\n` +
       `⏰ Hora:\n${timestamp}\n\n` +
       `Por favor contacta inmediatamente al usuario.\n\n` +
       `Confirma que recibiste esta alerta:\n${ackUrl}`;
