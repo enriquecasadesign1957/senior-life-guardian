@@ -4,17 +4,60 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const TWILIO_GATEWAY = "https://connector-gateway.lovable.dev/twilio";
 
+// Acepta el formato { lat, lng } y también el formato nativo de
+// @capacitor/geolocation: { latitude, longitude, accuracy } o
+// { coords: { latitude, longitude, accuracy } }. Mapeamos todo a {lat,lng}.
+const GpsInput = z
+  .any()
+  .transform((raw) => {
+    if (raw == null) return null;
+    const src: any =
+      raw && typeof raw === "object" && raw.coords && typeof raw.coords === "object"
+        ? raw.coords
+        : raw;
+    const lat =
+      typeof src?.lat === "number"
+        ? src.lat
+        : typeof src?.latitude === "number"
+          ? src.latitude
+          : typeof src?.lat === "string"
+            ? parseFloat(src.lat)
+            : typeof src?.latitude === "string"
+              ? parseFloat(src.latitude)
+              : NaN;
+    const lng =
+      typeof src?.lng === "number"
+        ? src.lng
+        : typeof src?.longitude === "number"
+          ? src.longitude
+          : typeof src?.lon === "number"
+            ? src.lon
+            : typeof src?.lng === "string"
+              ? parseFloat(src.lng)
+              : typeof src?.longitude === "string"
+                ? parseFloat(src.longitude)
+                : typeof src?.lon === "string"
+                  ? parseFloat(src.lon)
+                  : NaN;
+    const accRaw = src?.accuracy;
+    const accuracy =
+      typeof accRaw === "number"
+        ? accRaw
+        : typeof accRaw === "string"
+          ? parseFloat(accRaw)
+          : undefined;
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+    return { lat, lng, accuracy: Number.isFinite(accuracy as number) ? (accuracy as number) : undefined };
+  })
+  .nullable()
+  .optional();
+
 const Schema = z.object({
   signupId: z.string().uuid(),
-  gps: z
-    .object({
-      lat: z.number().refine((v) => Number.isFinite(v) && v >= -90 && v <= 90, "lat inválida"),
-      lng: z.number().refine((v) => Number.isFinite(v) && v >= -180 && v <= 180, "lng inválida"),
-      accuracy: z.number().optional(),
-    })
-    .nullable()
-    .optional(),
+  gps: GpsInput,
 });
+
 
 
 
