@@ -135,7 +135,8 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
         gps_lng: resolvedGps.lng,
         gps_accuracy: resolvedGps.accuracy ?? null,
         recipients: recipients.map((r) => ({ id: r.id, nombre: r.nombre, telefono: r.phone, parentesco: r.parentesco })),
-        metadata: { maps_link: mapsLink, timestamp, ack_url: ackUrl, gps_source: resolvedGps.source, place: placeLabel || null },
+        metadata: { maps_link: mapsLink, timestamp, ack_url: ackUrl, gps_source: resolvedGps.source },
+
         acknowledgement_token: ackToken,
         acknowledgement_expires_at: ackExpiresAt,
       } as never)
