@@ -10,6 +10,13 @@ import {
 import { useEffect } from "react";
 
 import appCss from "../styles.css?url";
+import { installApiBaseFetch } from "@/lib/api-base";
+
+// Parchea fetch lo antes posible para que las server functions y rutas /api/*
+// usen el dominio real cuando la app corre como APK (Capacitor / file://).
+if (typeof window !== "undefined") {
+  installApiBaseFetch();
+}
 
 function NotFoundComponent() {
   return (
