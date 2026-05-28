@@ -2,8 +2,7 @@ name: Build Android APK
 
 # Compila automáticamente el APK de Senior Safe sin Android Studio.
 # Se ejecuta en cada push a main o manualmente desde la pestaña Actions.
-# El APK queda disponible como artifact descargable y se publica automáticamente
-# como una GitHub Release para su descarga directa.
+# El APK queda disponible como artifact descargable y se publica en el bucket de Supabase.
 
 on:
   push:
@@ -101,8 +100,8 @@ jobs:
               <script>
                 var ORIGINS = [
                   "https://alarmaseniorsafe.cl",
-                  "https://www.alarmaseniorsafe.cl",
-                  "https://senior-life-guardian.lovable.app"
+                  "https://alarmaseniorsafe.cl",
+                  "https://lovable.app"
                 ];
                 var statusEl = document.getElementById("status");
                 var originEl = document.getElementById("origin");
@@ -134,7 +133,6 @@ jobs:
           HTML
           ls -la dist/ | head -20
           test -f dist/index.html || (echo "❌ dist/index.html no existe" && exit 1)
-
       - name: Add Android platform (si no existe)
         run: |
           if [ ! -d "android" ]; then
@@ -142,32 +140,48 @@ jobs:
           fi
           bunx cap sync android
           test -f android/app/src/main/assets/capacitor.plugins.json && echo "✅ capacitor.plugins.json OK" || (echo "❌ capacitor.plugins.json no se generó" && exit 1)
-
       - name: Build APK (debug)
         working-directory: android
         run: |
           chmod +x ./gradlew
           ./gradlew assembleDebug --no-daemon
-
       - name: Rename APK (nombre fijo + versionado)
         run: |
           mkdir -p artifacts
           cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/SeniorSafe.apk
-
+          cp android/app/build/outputs/apk/debug/app-debug.apk \
+             artifacts/SeniorSafe-${{ github.run_number }}.apk
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: SeniorSafe-APK
-          path: artifacts/SeniorSafe.apk
+          path: artifacts/*.apk
           retention-days: 90
 
-      - name: Crear GitHub Release y Publicar APK
+      - name: Upload APK to Lovable Cloud Storage (bucket apk)
         if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.event.inputs.release_tag || format('v1.0.{0}', github.run_number) }}
-          name: ${{ github.event.inputs.release_tag || format('Versión 1.0.{0}', github.run_number) }}
-          draft: false
-          prerelease: false
-          files: artifacts/SeniorSafe.apk
- 
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
+            echo "❌ Faltan secrets SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY en el repo."
+            exit 1
+          fi
+          URL="${SUPABASE_URL%/}/storage/v1/object/apk/SeniorSafe.apk"
+          LOCAL_SIZE=$(stat -c%s artifacts/SeniorSafe.apk)
+          echo "📦 Tamaño local del APK: $LOCAL_SIZE bytes"
+          
+          echo "🗑️  Borrando objeto previo (si existe)..."
+          curl -sS -o /tmp/delete.out -w "HTTP %{http_code}\n" \
+            -X DELETE "$URL" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" || true
+          cat /tmp/delete.out || true
+          echo ""
+          
+          echo "⬆️  Subiendo APK a $URL"
+          curl -sS -X POST "$URL" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/vnd.android.package-archive" \
+            --data-binary "@artifacts/SeniorSafe.apk"
