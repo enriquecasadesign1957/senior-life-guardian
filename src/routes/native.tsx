@@ -197,8 +197,6 @@ function NativeApp() {
 
   // 4) Countdown emergencia
   useEffect(() => {
-
-  useEffect(() => {
     if (stage !== "confirm") return;
     setCountdown(5);
     if ("vibrate" in navigator) navigator.vibrate?.(80);
