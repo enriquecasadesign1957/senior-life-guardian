@@ -12,6 +12,7 @@ import { sendWellnessNotice } from "@/lib/wellness.functions";
 import { upsertHeartbeat } from "@/lib/heartbeat.functions";
 import { checkLastAlertAck } from "@/lib/family-portal.functions";
 import { Link } from "@tanstack/react-router";
+import { getCurrentCoordsWithError, getCurrentCoords, ensureGeoPermission } from "@/lib/geo";
 
 export const Route = createFileRoute("/native")({
   head: () => ({
