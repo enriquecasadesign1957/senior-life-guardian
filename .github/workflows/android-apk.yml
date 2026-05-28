@@ -133,6 +133,7 @@ jobs:
           HTML
           ls -la dist/ | head -20
           test -f dist/index.html || (echo "❌ dist/index.html no existe" && exit 1)
+
       - name: Add Android platform (si no existe)
         run: |
           if [ ! -d "android" ]; then
@@ -140,17 +141,30 @@ jobs:
           fi
           bunx cap sync android
           test -f android/app/src/main/assets/capacitor.plugins.json && echo "✅ capacitor.plugins.json OK" || (echo "❌ capacitor.plugins.json no se generó" && exit 1)
+
+      - name: Inyectar Permisos Nativos de GPS en AndroidManifest
+        run: |
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          if [ -f "$MANIFEST" ]; then
+            echo "⚙️ Inyectando permisos de hardware GPS..."
+            sed -i '/<application/i \    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-feature android:name="android.hardware.location.gps" android:required="true" />' $MANIFEST
+          else
+            echo "⚠️ No se encontró AndroidManifest.xml para parchear."
+          fi
+
       - name: Build APK (debug)
         working-directory: android
         run: |
           chmod +x ./gradlew
           ./gradlew assembleDebug --no-daemon
+
       - name: Rename APK (nombre fijo + versionado)
         run: |
           mkdir -p artifacts
           cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/SeniorSafe.apk
           cp android/app/build/outputs/apk/debug/app-debug.apk \
              artifacts/SeniorSafe-${{ github.run_number }}.apk
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
