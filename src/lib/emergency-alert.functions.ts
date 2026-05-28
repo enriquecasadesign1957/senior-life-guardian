@@ -6,12 +6,16 @@ const TWILIO_GATEWAY = "https://connector-gateway.lovable.dev/twilio";
 
 const Schema = z.object({
   signupId: z.string().uuid(),
-  gps: z.object({
-    lat: z.number().refine((v) => Number.isFinite(v) && v >= -90 && v <= 90, "lat inválida"),
-    lng: z.number().refine((v) => Number.isFinite(v) && v >= -180 && v <= 180, "lng inválida"),
-    accuracy: z.number().optional(),
-  }, { required_error: "gps_required", invalid_type_error: "gps_required" }),
+  gps: z
+    .object({
+      lat: z.number().refine((v) => Number.isFinite(v) && v >= -90 && v <= 90, "lat inválida"),
+      lng: z.number().refine((v) => Number.isFinite(v) && v >= -180 && v <= 180, "lng inválida"),
+      accuracy: z.number().optional(),
+    })
+    .nullable()
+    .optional(),
 });
+
 
 
 function normalizePhone(raw: string): string | null {
@@ -86,16 +90,19 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
 
     const ts = new Date();
     const timestamp = ts.toLocaleString("es-CL", { timeZone: "America/Santiago" });
-
-    // GPS obligatorio: solo coordenadas reales y precisas del APK/dispositivo.
-    const resolvedGps = {
-      lat: data.gps.lat,
-      lng: data.gps.lng,
-      accuracy: data.gps.accuracy,
-      source: "device" as const,
-    };
-    const sourceNote = "(GPS preciso)";
-    const mapsLink = `https://maps.google.com/?q=${resolvedGps.lat},${resolvedGps.lng}`;
+    // GPS opcional: si el APK no logra sincronizar en 3s, enviamos null y avisamos en el mensaje.
+    const hasGps = !!data.gps;
+    const resolvedGps = hasGps
+      ? {
+          lat: data.gps!.lat,
+          lng: data.gps!.lng,
+          accuracy: data.gps!.accuracy,
+          source: "device" as const,
+        }
+      : null;
+    const mapsLink = resolvedGps
+      ? `https://maps.google.com/?q=${resolvedGps.lat},${resolvedGps.lng}`
+      : null;
 
     // Acknowledgement token (link de un solo uso, expira en 24h)
     const ackToken = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`)
@@ -103,14 +110,18 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
     const ackExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     const ackUrl = `https://alarmaseniorsafe.cl/familia/ack/${ackToken}`;
 
+    const locationBlock = mapsLink
+      ? `📍 Ubicación (GPS preciso):\n${mapsLink}`
+      : `📍 Ubicación: el usuario activó la alerta, pero el GPS del celular no se pudo sincronizar a tiempo. Por favor contáctalo de inmediato.`;
+
     const textMessage =
       `🚨 URGENTE ALERTA SENIOR\n\n` +
       `${user.nombre} necesita ayuda.\n\n` +
-      `📍 Ubicación ${sourceNote}:\n${mapsLink}\n\n` +
-      `⏰ Hora:\n${timestamp}\n\n` +
-
+      `${locationBlock}\n\n` +
       `⏰ Hora:\n${timestamp}\n\n` +
       `Por favor contacta inmediatamente al usuario.\n\n` +
+      `Confirma que recibiste esta alerta:\n${ackUrl}`;
+
       `Confirma que recibiste esta alerta:\n${ackUrl}`;
 
     const voiceText =
@@ -131,11 +142,12 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
         trial_signup_id: user.id,
         event_type: "emergency_pressed",
         status: "pending",
-        gps_lat: resolvedGps.lat,
-        gps_lng: resolvedGps.lng,
-        gps_accuracy: resolvedGps.accuracy ?? null,
+        gps_lat: resolvedGps?.lat ?? null,
+        gps_lng: resolvedGps?.lng ?? null,
+        gps_accuracy: resolvedGps?.accuracy ?? null,
         recipients: recipients.map((r) => ({ id: r.id, nombre: r.nombre, telefono: r.phone, parentesco: r.parentesco })),
-        metadata: { maps_link: mapsLink, timestamp, ack_url: ackUrl, gps_source: resolvedGps.source },
+        metadata: { maps_link: mapsLink, timestamp, ack_url: ackUrl, gps_source: resolvedGps?.source ?? "unavailable" },
+
 
         acknowledgement_token: ackToken,
         acknowledgement_expires_at: ackExpiresAt,
@@ -153,7 +165,35 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
     } else {
       const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
-      // FASE 1 — SMS inmediato a todos los guardianes
+      // FASE 1 — Llamada automática INMEDIATA (no requiere GPS)
+      for (const c of recipients) {
+        const to = c.phone;
+        if (!voiceFrom) {
+          results.push({ channel: "call", to, status: "skipped", error: "missing TWILIO_VOICE_FROM", event: "call_skipped", at: new Date().toISOString() });
+          continue;
+        }
+        try {
+          const r = await twilioPost(
+            "/Calls.json",
+            { To: to, From: voiceFrom, Twiml: twiml },
+            lovableKey,
+            twilioKey,
+          );
+          results.push({
+            channel: "call",
+            to,
+            status: r.ok ? "sent" : "failed",
+            sid: r.data?.sid ?? null,
+            error: r.ok ? null : `Twilio ${r.status}: ${JSON.stringify(r.data)}`,
+            event: r.ok ? "call_started" : "call_failed",
+            at: new Date().toISOString(),
+          });
+        } catch (e: any) {
+          results.push({ channel: "call", to, status: "failed", error: String(e?.message ?? e), event: "call_failed", at: new Date().toISOString() });
+        }
+      }
+
+      // FASE 2 — SMS
       for (const c of recipients) {
         const to = c.phone;
         if (!smsFrom) {
@@ -181,10 +221,10 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
         }
       }
 
-      // Espera 15s antes de WhatsApp
-      if (recipients.length > 0) await sleep(15000);
+      // Espera 10s antes de WhatsApp
+      if (recipients.length > 0) await sleep(10000);
 
-      // FASE 2 — WhatsApp
+      // FASE 3 — WhatsApp
       for (const c of recipients) {
         const to = c.phone;
         try {
@@ -207,38 +247,8 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
           results.push({ channel: "whatsapp", to, status: "failed", error: String(e?.message ?? e), event: "whatsapp_failed", at: new Date().toISOString() });
         }
       }
-
-      // Espera 20s antes de la llamada
-      if (recipients.length > 0) await sleep(20000);
-
-      // FASE 3 — Llamada automática
-      for (const c of recipients) {
-        const to = c.phone;
-        if (!voiceFrom) {
-          results.push({ channel: "call", to, status: "skipped", error: "missing TWILIO_VOICE_FROM", event: "call_skipped", at: new Date().toISOString() });
-          continue;
-        }
-        try {
-          const r = await twilioPost(
-            "/Calls.json",
-            { To: to, From: voiceFrom, Twiml: twiml },
-            lovableKey,
-            twilioKey,
-          );
-          results.push({
-            channel: "call",
-            to,
-            status: r.ok ? "sent" : "failed",
-            sid: r.data?.sid ?? null,
-            error: r.ok ? null : `Twilio ${r.status}: ${JSON.stringify(r.data)}`,
-            event: r.ok ? "call_started" : "call_failed",
-            at: new Date().toISOString(),
-          });
-        } catch (e: any) {
-          results.push({ channel: "call", to, status: "failed", error: String(e?.message ?? e), event: "call_failed", at: new Date().toISOString() });
-        }
-      }
     }
+
 
 
     const anySent = results.some((r) => r.status === "sent");

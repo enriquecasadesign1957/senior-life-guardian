@@ -195,13 +195,10 @@ function NativeApp() {
     return () => { alive = false; };
   }, [userId, list]);
 
-  // 4) Countdown emergencia + inicio inmediato de GPS rápido en paralelo
+  // 4) Countdown emergencia
   useEffect(() => {
     if (stage !== "confirm") return;
     setCountdown(5);
-    setLocating(true);
-    // Lanzar fetch GPS YA, en paralelo al countdown
-    pendingGpsRef.current = fetchGpsFast().finally(() => setLocating(false));
     if ("vibrate" in navigator) navigator.vibrate?.(80);
     const id = setInterval(() => {
       setCountdown((c) => {
@@ -213,25 +210,26 @@ function NativeApp() {
     return () => clearInterval(id);
   }, [stage]);
 
-  // 5) Envío real — espera GPS (race con timeout 8s) antes de enviar
+  // 5) Envío real — GPS con timeout estricto de 3s. Si no responde, envía null y NO bloquea.
   useEffect(() => {
     if (stage !== "sending" || !userId) return;
     let cancelled = false;
     setSummary(null);
     if ("vibrate" in navigator) navigator.vibrate?.([100, 60, 100]);
     (async () => {
-      const fallback = lastCoords
-        ? { lat: lastCoords.lat, lng: lastCoords.lng, accuracy: lastCoords.accuracy }
-        : null;
-
-      // Race: GPS pendiente (iniciado al presionar SOS) vs timeout 8s
-      const pending = pendingGpsRef.current ?? fetchGpsFast();
-      const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000));
-      let gps = await Promise.race([pending, timeout]);
-      if (!gps) gps = fallback; // fallback a última ubicación conocida
+      // Race estricto: GPS de alta precisión vs 3s. Sin bloqueo.
+      setLocating(true);
+      const gpsPromise = getCurrentCoords({ highAccuracy: true, timeoutMs: 3000, maximumAgeMs: 0 });
+      const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000));
+      const gps = await Promise.race([gpsPromise, timeout]);
+      setLocating(false);
+      if (gps) {
+        setLastCoords(gps);
+        setGpsOk(true);
+      }
 
       try {
-        const res: any = await sendAlert({ data: { signupId: userId, gps } });
+        const res: any = await sendAlert({ data: { signupId: userId, gps: gps ?? null } });
         if (cancelled) return;
         const sent = (res?.results ?? []).filter((r: any) => r.status === "sent").length;
         setSummary({ delivered: sent, total: res?.results?.length ?? 0, status: res?.status ?? "unknown" });
@@ -262,11 +260,12 @@ function NativeApp() {
         if (!cancelled) toast.error("Error enviando la alerta.");
       } finally {
         if (!cancelled) setStage("sent");
-        pendingGpsRef.current = null;
       }
     })();
     return () => { cancelled = true; };
-  }, [stage, userId, sendAlert, lastCoords, heartbeat]);
+  }, [stage, userId, sendAlert, heartbeat]);
+
+
 
   const handleLogin = async () => {
     const email = loginEmail.trim().toLowerCase();
