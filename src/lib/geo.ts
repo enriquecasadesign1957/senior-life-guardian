@@ -54,9 +54,11 @@ export async function getCurrentCoordsWithError(opts?: {
       if (req.location !== 'granted') return { coords: null, error: 'denied' };
     }
     const position = await Geolocation.getCurrentPosition({
-      enableHighAccuracy: true,
-      timeout: 10000,
+      enableHighAccuracy: opts?.highAccuracy ?? true,
+      timeout: opts?.timeoutMs ?? 10000,
+      maximumAge: opts?.maximumAgeMs ?? 0,
     });
+
     return {
       coords: {
         lat: position.coords.latitude,
