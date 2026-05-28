@@ -241,28 +241,22 @@ function NativeApp() {
         else toast.error("No pudimos enviar la alerta. Llama directamente.");
 
         // Refresco de precisión en background → actualiza Portal Familia vía heartbeat
-        if ("geolocation" in navigator) {
-          navigator.geolocation.getCurrentPosition(
-            (pos) => {
-              const better = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy };
-              setLastCoords(better);
-              setGpsOk(true);
-              heartbeat({
-                data: {
-                  signupId: userId,
-                  gps_enabled: true,
-                  internet_connected: typeof navigator !== "undefined" ? navigator.onLine : null,
-                  app_version: "native-1.0",
-                  last_lat: better.lat,
-                  last_lng: better.lng,
-                  battery_level: null,
-                },
-              }).catch(() => {});
+        getCurrentCoords({ highAccuracy: true, timeoutMs: 20000, maximumAgeMs: 0 }).then((better) => {
+          if (!better) return;
+          setLastCoords(better);
+          setGpsOk(true);
+          heartbeat({
+            data: {
+              signupId: userId,
+              gps_enabled: true,
+              internet_connected: typeof navigator !== "undefined" ? navigator.onLine : null,
+              app_version: "native-1.0",
+              last_lat: better.lat,
+              last_lng: better.lng,
+              battery_level: null,
             },
-            () => {},
-            { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 },
-          );
-        }
+          }).catch(() => {});
+        });
       } catch (e) {
         console.error(e);
         if (!cancelled) toast.error("Error enviando la alerta.");
