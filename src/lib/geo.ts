@@ -3,15 +3,20 @@ import { Geolocation } from '@capacitor/geolocation';
 export type Coords = { lat: number; lng: number; accuracy?: number };
 export type GeoErrorCode = "denied" | "unavailable" | "timeout" | "unsupported" | "unknown";
 
-export async function getCurrentCoords(): Promise<Coords | null> {
+export async function getCurrentCoords(opts?: {
+  highAccuracy?: boolean;
+  timeoutMs?: number;
+  maximumAgeMs?: number;
+}): Promise<Coords | null> {
   try {
     const permissions = await Geolocation.checkPermissions();
     if (permissions.location !== 'granted') {
       await Geolocation.requestPermissions();
     }
     const position = await Geolocation.getCurrentPosition({
-      enableHighAccuracy: true,
-      timeout: 10000,
+      enableHighAccuracy: opts?.highAccuracy ?? true,
+      timeout: opts?.timeoutMs ?? 10000,
+      maximumAge: opts?.maximumAgeMs ?? 0,
     });
     return {
       lat: position.coords.latitude,
@@ -22,6 +27,7 @@ export async function getCurrentCoords(): Promise<Coords | null> {
     return null;
   }
 }
+
 
 // Compat: usados por src/routes/native.tsx
 export async function ensureGeoPermission(): Promise<boolean> {
