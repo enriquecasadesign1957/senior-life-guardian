@@ -203,26 +203,30 @@ function NativeApp() {
     const id = setInterval(() => {
       setCountdown((c) => {
         if ("vibrate" in navigator) navigator.vibrate?.(30);
-        if (c <= 1) { clearInterval(id); setStage("sending"); return 0; }
+        if (c <= 1) { clearInterval(id); triggerAlert(); return 0; }
         return c - 1;
       });
     }, 1000);
     return () => clearInterval(id);
   }, [stage]);
 
-  // 5) Envío AUTOMÁTICO: llamada inmediata + request HTTPS al backend
-  //    (sendEmergencyAlert dispara SMS + WhatsApp por Twilio en segundo plano).
-  useEffect(() => {
-    if (stage !== "sending" || !userId) return;
-    let cancelled = false;
+  // 5) Envío AUTOMÁTICO: disparado por el handler del botón (NO useEffect).
+  //    Bloquea reentradas con sendingRef y congela la UI con stage="sending".
+  const sendingRef = useRef(false);
+  const triggerAlert = async () => {
+    if (sendingRef.current) return;
+    if (!userId) return;
+    sendingRef.current = true;
+
+    // 1) Estado síncrono: congela la UI antes de cualquier await.
+    setStage("sending");
     setSummary(null);
     if ("vibrate" in navigator) navigator.vibrate?.([100, 60, 100]);
 
-    (async () => {
+    try {
       const phones = contacts
         .map((c) => String(c.telefono ?? "").replace(/[^\d+]/g, ""))
         .filter((p) => p.length >= 6);
-
 
       // FASE 1 (Segundo 0): Llamada telefónica INMEDIATA al primer guardián.
       if (phones.length > 0) {
@@ -233,8 +237,7 @@ function NativeApp() {
         }
       }
 
-      // FASE 2 (paralelo): GPS real con timeout 3s; si falla, mandamos sin GPS
-      // y el backend usará el texto de "ubicación no disponible" o lo que haya.
+      // FASE 2 (paralelo): GPS real con timeout 3s; si falla, mandamos sin GPS.
       setLocating(true);
       const gpsPromise = getCurrentCoords({ highAccuracy: true, timeoutMs: 3000, maximumAgeMs: 0 });
       const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000));
@@ -271,10 +274,12 @@ function NativeApp() {
         setSummary({ delivered: 0, total: phones.length, status: "failed" });
       }
 
-      if (!cancelled) setStage("sent");
-    })();
-    return () => { cancelled = true; };
-  }, [stage, userId, contacts, sendAlert, lastCoords]);
+      setStage("sent");
+    } finally {
+      sendingRef.current = false;
+    }
+  };
+
 
 
 
@@ -510,7 +515,7 @@ function NativeApp() {
               <Button variant="outline" className="flex-1 h-14 text-base" onClick={() => setStage("idle")}>
                 <X className="w-5 h-5 mr-1" /> Cancelar
               </Button>
-              <Button className="flex-1 h-14 text-base text-white" style={{ background: RED }} onClick={() => setStage("sending")}>
+              <Button className="flex-1 h-14 text-base text-white" disabled={sendingRef.current} style={{ background: RED }} onClick={() => triggerAlert()}>
                 Enviar ya
               </Button>
             </div>
