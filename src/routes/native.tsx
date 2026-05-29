@@ -286,8 +286,10 @@ function NativeApp() {
       setStage("sent");
     } finally {
       sendingRef.current = false;
+      setIsSending(false);
     }
   };
+
 
 
 
