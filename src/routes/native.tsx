@@ -223,9 +223,21 @@ function NativeApp() {
         .map((c) => String(c.telefono ?? "").replace(/[^\d+]/g, ""))
         .filter((p) => p.length >= 6);
 
-      // FASE 1 (Segundo 0): Llamada telefónica inmediata al primer guardián.
-      if (phones.length > 0) {
-        try { window.location.href = `tel:${phones[0]}`; } catch (e) { console.warn("tel:", e); }
+      if (phones.length === 0) {
+        toast.error("No hay guardianes configurados en tu cuenta.");
+        setSummary({ delivered: 0, total: 0, status: "no_recipients" });
+        if (!cancelled) setStage("sent");
+        return;
+      }
+
+      // FASE 1 (Segundo 0): Llamada telefónica INMEDIATA al primer guardián.
+      // window.open con "_system" fuerza al WebView de Capacitor a delegar
+      // el esquema tel: al marcador nativo, sin mostrar chooser.
+      try {
+        window.open(`tel:${phones[0]}`, "_system");
+      } catch (e) {
+        console.warn("tel:", e);
+        try { window.location.href = `tel:${phones[0]}`; } catch {}
       }
 
       // FASE 2 (en paralelo): GPS rápido con timeout 3s, sin bloquear.
@@ -239,7 +251,8 @@ function NativeApp() {
         setGpsOk(true);
       }
 
-      // FASE 3: Abrir app de SMS nativa con cuerpo pre-rellenado y contactos cargados.
+      // FASE 3: Abrir app de SMS nativa (NO WhatsApp, sin chooser).
+      // El esquema sms: va siempre al cliente de mensajería predeterminado.
       const coords = gps ?? lastCoords;
       const mapsLink = coords
         ? `https://google.com/maps?q=${coords.lat},${coords.lng}`
@@ -247,20 +260,22 @@ function NativeApp() {
       const fullName = userName || "Un usuario de Senior Safe";
       const body = `🚨 URGENTE ALERTA SENIOR: ${fullName} necesita ayuda urgente. Ver ubicación en el mapa: ${mapsLink}`;
 
-      if (phones.length > 0) {
-        // Esquema sms: con múltiples destinatarios (Android: separados por coma).
-        const recipients = phones.join(",");
-        const smsUrl = `sms:${recipients}?body=${encodeURIComponent(body)}`;
-        // Delay corto para que la llamada se gatille primero.
-        setTimeout(() => {
-          try { window.location.href = smsUrl; } catch (e) { console.warn("sms:", e); }
-        }, 1200);
-        toast.success(`Llamando y abriendo SMS para ${phones.length} guardián${phones.length === 1 ? "" : "es"}.`);
-        setSummary({ delivered: phones.length, total: phones.length, status: "native" });
-      } else {
-        toast.error("No hay guardianes configurados en tu cuenta.");
-        setSummary({ delivered: 0, total: 0, status: "no_recipients" });
-      }
+      // Android admite múltiples destinatarios separados por coma en sms:
+      const recipients = phones.join(",");
+      const smsUrl = `sms:${recipients}?body=${encodeURIComponent(body)}`;
+
+      // Delay corto para no pisar la apertura del marcador.
+      setTimeout(() => {
+        try {
+          window.open(smsUrl, "_system");
+        } catch (e) {
+          console.warn("sms:", e);
+          try { window.location.href = smsUrl; } catch {}
+        }
+      }, 1500);
+
+      toast.success(`Llamando y abriendo SMS para ${phones.length} guardián${phones.length === 1 ? "" : "es"}.`);
+      setSummary({ delivered: phones.length, total: phones.length, status: "native" });
 
       if (!cancelled) setStage("sent");
     })();
