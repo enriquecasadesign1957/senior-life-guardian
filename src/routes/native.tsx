@@ -282,7 +282,7 @@ function NativeApp() {
       if (!cancelled) setStage("sent");
     })();
     return () => { cancelled = true; };
-  }, [stage, userId, contacts, sendAlert, lastCoords]);
+  }, [stage, userId, sendAlert]);
 
 
 
