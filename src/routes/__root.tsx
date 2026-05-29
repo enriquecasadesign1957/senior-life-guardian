@@ -47,7 +47,6 @@ if (typeof window !== "undefined") {
     installApiBaseFetch();
   }
 }
-}
 
 function NotFoundComponent() {
   return (
