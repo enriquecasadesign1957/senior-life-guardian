@@ -13,11 +13,14 @@ export async function getCurrentCoords(opts?: {
     if (permissions.location !== 'granted') {
       await Geolocation.requestPermissions();
     }
+    
+    // CORRECCIÓN NATIVA: Android Capacitor espera segundos o valores limpios, forzamos un intervalo de 6 segundos estables.
     const position = await Geolocation.getCurrentPosition({
-      enableHighAccuracy: opts?.highAccuracy ?? true,
-      timeout: opts?.timeoutMs ?? 10000,
-      maximumAge: opts?.maximumAgeMs ?? 0,
+      enableHighAccuracy: true,
+      timeout: 6000, 
+      maximumAge: 0,
     });
+    
     return {
       lat: position.coords.latitude,
       lng: position.coords.longitude,
@@ -27,7 +30,6 @@ export async function getCurrentCoords(opts?: {
     return null;
   }
 }
-
 
 // Compat: usados por src/routes/native.tsx
 export async function ensureGeoPermission(): Promise<boolean> {
@@ -46,17 +48,18 @@ export async function getCurrentCoordsWithError(opts?: {
   timeoutMs?: number;
   maximumAgeMs?: number;
 }): Promise<{ coords: Coords | null; error: GeoErrorCode | null }> {
-
   try {
     const permissions = await Geolocation.checkPermissions();
     if (permissions.location !== 'granted') {
       const req = await Geolocation.requestPermissions();
       if (req.location !== 'granted') return { coords: null, error: 'denied' };
     }
+    
+    // CORRECCIÓN NATIVA: Forzamos el mismo intervalo nativo limpio para la función extendida.
     const position = await Geolocation.getCurrentPosition({
-      enableHighAccuracy: opts?.highAccuracy ?? true,
-      timeout: opts?.timeoutMs ?? 10000,
-      maximumAge: opts?.maximumAgeMs ?? 0,
+      enableHighAccuracy: true,
+      timeout: 6000,
+      maximumAge: 0,
     });
 
     return {
