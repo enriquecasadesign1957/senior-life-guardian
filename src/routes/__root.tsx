@@ -15,7 +15,8 @@ import { installApiBaseFetch } from "@/lib/api-base";
 // Parchea fetch lo antes posible para que las server functions y rutas /api/*
 // usen el dominio real cuando la app corre como APK (Capacitor / file://).
 // NUNCA activar en preview de Lovable ni localhost para evitar CORS.
-if (typeof window !== "undefined") {
+function setupApiBase() {
+  if (typeof window === "undefined") return;
   const host = window.location.hostname;
   const isDevOrPreview =
     host === "localhost" ||
@@ -23,8 +24,6 @@ if (typeof window !== "undefined") {
     host.includes("lovableproject.com") ||
     host.includes("lovable.app");
 
-  // Si un build anterior dejó window.fetch parcheado en dev/preview,
-  // lo restauramos al nativo antes de seguir (evita CORS hacia alarmaseniorsafe.cl).
   if (isDevOrPreview && (window as any).__API_BASE__) {
     console.log("[api-base] old patch detected — restoring native fetch");
     try {
@@ -47,6 +46,7 @@ if (typeof window !== "undefined") {
     installApiBaseFetch();
   }
 }
+setupApiBase();
 
 function NotFoundComponent() {
   return (
