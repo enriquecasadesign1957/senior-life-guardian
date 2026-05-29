@@ -1,43 +1,57 @@
-import { Geolocation } from '@capacitor/geolocation';
+// Geolocalización 100% web (PWA). Usa navigator.geolocation estándar.
+// Sin dependencias de Capacitor para que funcione en el navegador móvil.
 
 export type Coords = { lat: number; lng: number; accuracy?: number };
 export type GeoErrorCode = "denied" | "unavailable" | "timeout" | "unsupported" | "unknown";
+
+function mapError(err: GeolocationPositionError): GeoErrorCode {
+  switch (err.code) {
+    case 1: return "denied";
+    case 2: return "unavailable";
+    case 3: return "timeout";
+    default: return "unknown";
+  }
+}
 
 export async function getCurrentCoords(opts?: {
   highAccuracy?: boolean;
   timeoutMs?: number;
   maximumAgeMs?: number;
 }): Promise<Coords | null> {
-  try {
-    const permissions = await Geolocation.checkPermissions();
-    if (permissions.location !== 'granted') {
-      await Geolocation.requestPermissions();
-    }
-    
-    // CORRECCIÓN NATIVA: Android Capacitor espera segundos o valores limpios, forzamos un intervalo de 6 segundos estables.
-    const position = await Geolocation.getCurrentPosition({
-      enableHighAccuracy: true,
-      timeout: 6000, 
-      maximumAge: 0,
-    });
-    
-    return {
-      lat: position.coords.latitude,
-      lng: position.coords.longitude,
-    };
-  } catch (error) {
-    console.error('Error en GPS nativo:', error);
-    return null;
-  }
+  if (typeof navigator === "undefined" || !navigator.geolocation) return null;
+  return new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        accuracy: pos.coords.accuracy,
+      }),
+      (err) => {
+        console.warn("GPS web error:", err.message);
+        resolve(null);
+      },
+      {
+        enableHighAccuracy: opts?.highAccuracy ?? true,
+        timeout: opts?.timeoutMs ?? 8000,
+        maximumAge: opts?.maximumAgeMs ?? 0,
+      }
+    );
+  });
 }
 
-// Compat: usados por src/routes/native.tsx
 export async function ensureGeoPermission(): Promise<boolean> {
+  if (typeof navigator === "undefined" || !navigator.geolocation) return false;
   try {
-    const permissions = await Geolocation.checkPermissions();
-    if (permissions.location === 'granted') return true;
-    const req = await Geolocation.requestPermissions();
-    return req.location === 'granted';
+    // @ts-ignore - permissions API puede no existir en algunos navegadores
+    if (navigator.permissions?.query) {
+      // @ts-ignore
+      const status = await navigator.permissions.query({ name: "geolocation" });
+      if (status.state === "granted") return true;
+      if (status.state === "denied") return false;
+    }
+    // prompt: forzamos petición con una llamada corta
+    const c = await getCurrentCoords({ timeoutMs: 8000 });
+    return c !== null;
   } catch {
     return false;
   }
@@ -48,33 +62,25 @@ export async function getCurrentCoordsWithError(opts?: {
   timeoutMs?: number;
   maximumAgeMs?: number;
 }): Promise<{ coords: Coords | null; error: GeoErrorCode | null }> {
-  try {
-    const permissions = await Geolocation.checkPermissions();
-    if (permissions.location !== 'granted') {
-      const req = await Geolocation.requestPermissions();
-      if (req.location !== 'granted') return { coords: null, error: 'denied' };
-    }
-    
-    // CORRECCIÓN NATIVA: Forzamos el mismo intervalo nativo limpio para la función extendida.
-    const position = await Geolocation.getCurrentPosition({
-      enableHighAccuracy: true,
-      timeout: 6000,
-      maximumAge: 0,
-    });
-
-    return {
-      coords: {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude,
-        accuracy: position.coords.accuracy,
-      },
-      error: null,
-    };
-  } catch (error: any) {
-    console.error('Error en GPS nativo:', error);
-    const msg = String(error?.message ?? error ?? '').toLowerCase();
-    if (msg.includes('denied') || msg.includes('permission')) return { coords: null, error: 'denied' };
-    if (msg.includes('timeout')) return { coords: null, error: 'timeout' };
-    return { coords: null, error: 'unavailable' };
+  if (typeof navigator === "undefined" || !navigator.geolocation) {
+    return { coords: null, error: "unsupported" };
   }
+  return new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({
+        coords: {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          accuracy: pos.coords.accuracy,
+        },
+        error: null,
+      }),
+      (err) => resolve({ coords: null, error: mapError(err) }),
+      {
+        enableHighAccuracy: opts?.highAccuracy ?? true,
+        timeout: opts?.timeoutMs ?? 8000,
+        maximumAge: opts?.maximumAgeMs ?? 0,
+      }
+    );
+  });
 }
