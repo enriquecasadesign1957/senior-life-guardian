@@ -5,47 +5,59 @@
  * a "/api/..." o a cualquier endpoint relativo fallan porque el WebView intenta
  * resolverlos contra el propio dispositivo.
  *
- * Esta utilidad parchea `window.fetch` UNA sola vez para reescribir cualquier URL
- * relativa hacia el origen real del backend (https://alarmaseniorsafe.cl) cuando
- * detecta que estamos corriendo dentro de Capacitor / no en el dominio web.
+ * Esta utilidad parchea `window.fetch` para reescribir URLs relativas hacia
+ * el backend real cuando la app corre como APK nativa.
+ * IMPORTANTE: Siempre reinstala el parche para sobrescribir cualquier versión
+ * anterior que pudiera quedar activa tras HMR o recarga parcial.
  */
 
 export const API_BASE_URL = "https://alarmaseniorsafe.cl";
 
-const WEB_HOSTS = new Set([
-  "alarmaseniorsafe.cl",
-  "www.alarmaseniorsafe.cl",
-]);
-
-function isNativeRuntime(): boolean {
-  if (typeof window === "undefined") return false;
-  const cap = (window as any).Capacitor;
-  if (cap?.isNativePlatform?.()) return true;
-  const proto = window.location.protocol;
-  if (proto === "capacitor:" || proto === "file:") return true;
-  // localhost (http) dentro de WebView Android también necesita reescritura
-  const host = window.location.hostname;
-  if (host === "localhost" || host === "127.0.0.1") return true;
-  // Si no estamos en el dominio oficial, asumimos shell estático en APK
-  if (!WEB_HOSTS.has(host)) return true;
-  return false;
-}
-
-let installed = false;
+const ORIGINAL_FETCH_KEY = "__api_base_original_fetch__";
 
 export function installApiBaseFetch() {
-  if (installed) return;
   if (typeof window === "undefined") return;
-  if (!isNativeRuntime()) return;
+
+  const host = window.location.hostname;
+
+  // Detectar si el parche ya está instalado y restaurar el fetch original
+  // para poder reinstalarlo limpio (evita acumulación de parches tras HMR).
+  const savedOriginal = (window as any)[ORIGINAL_FETCH_KEY];
+  if (savedOriginal && typeof savedOriginal === "function") {
+    window.fetch = savedOriginal;
+    console.log("[api-base] restored original fetch");
+  }
+
+  // NUNCA reescribir en desarrollo, preview de Lovable, o localhost
+  if (
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host.includes("lovableproject.com") ||
+    host.includes("lovable.app")
+  ) {
+    console.log("[api-base] skipped — dev/preview host:", host);
+    return;
+  }
+
+  // Solo reescribir si estamos en entorno nativo real
+  const cap = (window as any).Capacitor;
+  const proto = window.location.protocol;
+  const isNative = cap?.isNativePlatform?.() || proto === "capacitor:" || proto === "file:";
+
+  if (!isNative) {
+    console.log("[api-base] skipped — not native:", host, proto);
+    return;
+  }
+
+  console.log("[api-base] installing for native host:", host);
 
   const originalFetch = window.fetch.bind(window);
+  (window as any)[ORIGINAL_FETCH_KEY] = originalFetch;
 
   const rewrite = (url: string): string => {
     if (!url) return url;
-    // ya es absoluta
     if (/^https?:\/\//i.test(url)) return url;
     if (/^(data|blob|capacitor|file):/i.test(url)) return url;
-    // Solo reescribimos rutas que apunten al backend de la app
     if (url.startsWith("/")) {
       return API_BASE_URL + url;
     }
@@ -60,7 +72,6 @@ export function installApiBaseFetch() {
       if (input instanceof URL) {
         return originalFetch(input.toString(), init);
       }
-      // Request object
       const req = input as Request;
       const rewritten = rewrite(req.url);
       if (rewritten === req.url) {
@@ -69,13 +80,11 @@ export function installApiBaseFetch() {
       const newReq = new Request(rewritten, req);
       return originalFetch(newReq, init);
     } catch (e) {
-      console.warn("[api-base] fetch rewrite failed", e);
+      console.warn("[api-base] rewrite failed", e);
       return originalFetch(input as any, init);
     }
   }) as typeof window.fetch;
 
-  installed = true;
-  // Marca útil para debugging
   (window as any).__API_BASE__ = API_BASE_URL;
-  console.info("[api-base] fetch reescrito hacia", API_BASE_URL);
+  console.info("[api-base] rewritten to", API_BASE_URL);
 }
