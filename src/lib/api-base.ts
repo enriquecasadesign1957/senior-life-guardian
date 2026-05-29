@@ -21,21 +21,19 @@ function isNativeRuntime(): boolean {
   if (typeof window === "undefined") return false;
 
   const host = window.location.hostname;
+  const proto = window.location.protocol;
 
-  // NUNCA reescribir en desarrollo local ni en preview de Lovable
+  // Si es Capacitor nativo o protocolo nativo, SIEMPRE reescribir
+  const cap = (window as any).Capacitor;
+  if (cap?.isNativePlatform?.()) return true;
+  if (proto === "capacitor:" || proto === "file:") return true;
+
+  // NUNCA reescribir en desarrollo local ni preview de Lovable
   if (host === "localhost" || host === "127.0.0.1" || host.includes("lovableproject.com")) {
     return false;
   }
 
-  const cap = (window as any).Capacitor;
-  if (cap?.isNativePlatform?.()) return true;
-  const proto = window.location.protocol;
-  if (proto === "capacitor:" || proto === "file:") return true;
-
-  // localhost (http) dentro de WebView Android también necesita reescritura
-  if (host === "localhost" || host === "127.0.0.1") return true;
-
-  // Si no estamos en el dominio oficial, asumimos shell estático en APK
+  // Si no estamos en el dominio oficial de producción, asumimos shell estático en APK
   if (!WEB_HOSTS.has(host)) return true;
 
   return false;
