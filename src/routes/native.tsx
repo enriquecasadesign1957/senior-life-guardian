@@ -59,6 +59,12 @@ function NativeApp() {
   const [stage, setStage] = useState<Stage>("idle");
   const [countdown, setCountdown] = useState(5);
   const [summary, setSummary] = useState<{ delivered: number; total: number; status: string } | null>(null);
+  const sentRef = useRef(false);
+  const contactsRef = useRef<Contact[]>([]);
+  const lastCoordsRef = useRef<{ lat: number; lng: number; accuracy?: number } | null>(null);
+  useEffect(() => { contactsRef.current = contacts; }, [contacts]);
+  useEffect(() => { lastCoordsRef.current = lastCoords; }, [lastCoords]);
+  useEffect(() => { if (stage === "idle") sentRef.current = false; }, [stage]);
 
   // 1) Auto-hidratar desde almacenamiento local
   useEffect(() => {
