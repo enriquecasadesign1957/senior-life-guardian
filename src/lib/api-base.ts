@@ -7,17 +7,26 @@
  *
  * Esta utilidad parchea `window.fetch` para reescribir URLs relativas hacia
  * el backend real cuando la app corre como APK nativa.
+ * IMPORTANTE: Siempre reinstala el parche para sobrescribir cualquier versión
+ * anterior que pudiera quedar activa tras HMR o recarga parcial.
  */
 
 export const API_BASE_URL = "https://alarmaseniorsafe.cl";
 
-const PATCH_KEY = "__api_base_installed_v2__";
+const ORIGINAL_FETCH_KEY = "__api_base_original_fetch__";
 
 export function installApiBaseFetch() {
   if (typeof window === "undefined") return;
 
   const host = window.location.hostname;
-  console.log("[api-base] checking host:", host);
+
+  // Detectar si el parche ya está instalado y restaurar el fetch original
+  // para poder reinstalarlo limpio (evita acumulación de parches tras HMR).
+  const savedOriginal = (window as any)[ORIGINAL_FETCH_KEY];
+  if (savedOriginal && typeof savedOriginal === "function") {
+    window.fetch = savedOriginal;
+    console.log("[api-base] restored original fetch");
+  }
 
   // NUNCA reescribir en desarrollo, preview de Lovable, o localhost
   if (
@@ -40,15 +49,10 @@ export function installApiBaseFetch() {
     return;
   }
 
-  // Evitar instalar múltiples veces
-  if ((window as any)[PATCH_KEY]) {
-    console.log("[api-base] already installed");
-    return;
-  }
-
-  console.log("[api-base] installing rewrite for native host:", host);
+  console.log("[api-base] installing for native host:", host);
 
   const originalFetch = window.fetch.bind(window);
+  (window as any)[ORIGINAL_FETCH_KEY] = originalFetch;
 
   const rewrite = (url: string): string => {
     if (!url) return url;
@@ -81,7 +85,6 @@ export function installApiBaseFetch() {
     }
   }) as typeof window.fetch;
 
-  (window as any)[PATCH_KEY] = true;
   (window as any).__API_BASE__ = API_BASE_URL;
-  console.info("[api-base] fetch rewritten to", API_BASE_URL);
+  console.info("[api-base] rewritten to", API_BASE_URL);
 }
