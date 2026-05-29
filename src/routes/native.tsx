@@ -220,9 +220,17 @@ function NativeApp() {
   //    (sendEmergencyAlert dispara SMS + WhatsApp por Twilio en segundo plano).
   useEffect(() => {
     if (stage !== "sending" || !userId) return;
+  useEffect(() => {
+    if (stage !== "sending" || !userId) return;
+    if (sentRef.current) return;
+    sentRef.current = true;
     let cancelled = false;
     setSummary(null);
     if ("vibrate" in navigator) navigator.vibrate?.([100, 60, 100]);
+
+    (async () => {
+      const currentContacts = contactsRef.current;
+      const phones = currentContacts
 
     (async () => {
       const phones = contacts
