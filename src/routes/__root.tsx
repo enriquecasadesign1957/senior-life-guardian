@@ -20,10 +20,33 @@ if (typeof window !== "undefined") {
   const isDevOrPreview =
     host === "localhost" ||
     host === "127.0.0.1" ||
-    host.includes("lovableproject.com");
+    host.includes("lovableproject.com") ||
+    host.includes("lovable.app");
+
+  // Si un build anterior dejó window.fetch parcheado en dev/preview,
+  // lo restauramos al nativo antes de seguir (evita CORS hacia alarmaseniorsafe.cl).
+  if (isDevOrPreview && (window as any).__API_BASE__) {
+    console.log("[api-base] old patch detected — restoring native fetch");
+    try {
+      const iframe = document.createElement("iframe");
+      iframe.style.display = "none";
+      iframe.src = "about:blank";
+      document.body.appendChild(iframe);
+      const nativeFetch = (iframe.contentWindow as any)?.fetch;
+      if (nativeFetch) {
+        window.fetch = nativeFetch.bind(window);
+        console.log("[api-base] native fetch restored");
+      }
+      document.body.removeChild(iframe);
+    } catch (e) {
+      console.warn("[api-base] could not restore native fetch", e);
+    }
+  }
+
   if (!isDevOrPreview) {
     installApiBaseFetch();
   }
+}
 }
 
 function NotFoundComponent() {
