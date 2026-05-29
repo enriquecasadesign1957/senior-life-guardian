@@ -526,9 +526,10 @@ function NativeApp() {
               <Button variant="outline" className="flex-1 h-14 text-base" onClick={() => setStage("idle")}>
                 <X className="w-5 h-5 mr-1" /> Cancelar
               </Button>
-              <Button className="flex-1 h-14 text-base text-white" disabled={sendingRef.current} style={{ background: RED }} onClick={() => triggerAlert()}>
+              <Button type="button" className="flex-1 h-14 text-base text-white" disabled={isSending} style={{ background: RED }} onClick={(e) => triggerAlert(e)}>
                 Enviar ya
               </Button>
+
             </div>
           </div>
         </div>
