@@ -19,15 +19,25 @@ const WEB_HOSTS = new Set([
 
 function isNativeRuntime(): boolean {
   if (typeof window === "undefined") return false;
+
+  const host = window.location.hostname;
+
+  // NUNCA reescribir en desarrollo local ni en preview de Lovable
+  if (host === "localhost" || host === "127.0.0.1" || host.includes("lovableproject.com")) {
+    return false;
+  }
+
   const cap = (window as any).Capacitor;
   if (cap?.isNativePlatform?.()) return true;
   const proto = window.location.protocol;
   if (proto === "capacitor:" || proto === "file:") return true;
+
   // localhost (http) dentro de WebView Android también necesita reescritura
-  const host = window.location.hostname;
   if (host === "localhost" || host === "127.0.0.1") return true;
+
   // Si no estamos en el dominio oficial, asumimos shell estático en APK
   if (!WEB_HOSTS.has(host)) return true;
+
   return false;
 }
 
