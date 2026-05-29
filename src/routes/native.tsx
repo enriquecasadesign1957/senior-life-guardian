@@ -213,17 +213,12 @@ function NativeApp() {
   // 5) Envío AUTOMÁTICO: disparado por el handler del botón (NO useEffect).
   //    Bloquea reentradas con sendingRef y congela la UI con stage="sending".
   const sendingRef = useRef(false);
-  const [isSending, setIsSending] = useState(false);
-  const triggerAlert = async (e?: { preventDefault?: () => void; stopPropagation?: () => void }) => {
-    // Cortafuegos contra doble disparo del navegador (form submit, bubbling, etc.)
-    try { e?.preventDefault?.(); } catch {}
-    try { e?.stopPropagation?.(); } catch {}
-
-    // Bloqueo fulminante: ref síncrono + estado reactivo para deshabilitar el botón YA.
+  const triggerAlert = async () => {
     if (sendingRef.current) return;
     if (!userId) return;
     sendingRef.current = true;
-    setIsSending(true);
+
+
 
 
 
