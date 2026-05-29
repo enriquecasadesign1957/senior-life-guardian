@@ -12,46 +12,47 @@
 
 export const API_BASE_URL = "https://alarmaseniorsafe.cl";
 
-const WEB_HOSTS = new Set([
-  "alarmaseniorsafe.cl",
-  "www.alarmaseniorsafe.cl",
-]);
-
-function isNativeRuntime(): boolean {
+function shouldRewrite(): boolean {
   if (typeof window === "undefined") return false;
 
   const host = window.location.hostname;
   const proto = window.location.protocol;
 
-  // Si es Capacitor nativo o protocolo nativo, SIEMPRE reescribir
-  const cap = (window as any).Capacitor;
-  if (cap?.isNativePlatform?.()) return true;
-  if (proto === "capacitor:" || proto === "file:") return true;
-
-  // NUNCA reescribir en desarrollo local ni preview de Lovable
-  if (host === "localhost" || host === "127.0.0.1" || host.includes("lovableproject.com")) {
+  // NUNCA reescribir en desarrollo, preview de Lovable, o dominios de desarrollo
+  if (
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host.includes("lovableproject.com") ||
+    host.includes("lovable.app")
+  ) {
+    console.log("[api-base] SKIPPING rewrite — dev/preview host:", host);
     return false;
   }
 
-  // Si no estamos en el dominio oficial de producción, asumimos shell estático en APK
-  if (!WEB_HOSTS.has(host)) return true;
+  // Solo reescribir si estamos en un entorno nativo real
+  const cap = (window as any).Capacitor;
+  if (cap?.isNativePlatform?.()) {
+    console.log("[api-base] REWRITING — Capacitor native detected");
+    return true;
+  }
+  if (proto === "capacitor:" || proto === "file:") {
+    console.log("[api-base] REWRITING — native protocol:", proto);
+    return true;
+  }
 
+  console.log("[api-base] SKIPPING rewrite — host:", host, "proto:", proto);
   return false;
 }
 
-let installed = false;
-
 export function installApiBaseFetch() {
-  if (installed) return;
   if (typeof window === "undefined") return;
 
-  // Segunda línea de defensa: nunca instalar el parche en dev/preview
-  const host = window.location.hostname;
-  if (host === "localhost" || host === "127.0.0.1" || host.includes("lovableproject.com")) {
+  console.log("[api-base] installApiBaseFetch() called on:", window.location.hostname);
+
+  if (!shouldRewrite()) {
+    console.log("[api-base] installApiBaseFetch() aborted — not native");
     return;
   }
-
-  if (!isNativeRuntime()) return;
 
   const originalFetch = window.fetch.bind(window);
 
@@ -60,12 +61,6 @@ export function installApiBaseFetch() {
     // ya es absoluta
     if (/^https?:\/\//i.test(url)) return url;
     if (/^(data|blob|capacitor|file):/i.test(url)) return url;
-
-    // Tercera línea de defensa: nunca reescribir en dev/preview
-    const h = window.location.hostname;
-    if (h === "localhost" || h === "127.0.0.1" || h.includes("lovableproject.com")) {
-      return url;
-    }
 
     // Solo reescribimos rutas que apunten al backend de la app
     if (url.startsWith("/")) {
@@ -96,7 +91,6 @@ export function installApiBaseFetch() {
     }
   }) as typeof window.fetch;
 
-  installed = true;
   // Marca útil para debugging
   (window as any).__API_BASE__ = API_BASE_URL;
   console.info("[api-base] fetch reescrito hacia", API_BASE_URL);
