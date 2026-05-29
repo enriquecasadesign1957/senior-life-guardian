@@ -14,8 +14,16 @@ import { installApiBaseFetch } from "@/lib/api-base";
 
 // Parchea fetch lo antes posible para que las server functions y rutas /api/*
 // usen el dominio real cuando la app corre como APK (Capacitor / file://).
+// NUNCA activar en preview de Lovable ni localhost para evitar CORS.
 if (typeof window !== "undefined") {
-  installApiBaseFetch();
+  const host = window.location.hostname;
+  const isDevOrPreview =
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host.includes("lovableproject.com");
+  if (!isDevOrPreview) {
+    installApiBaseFetch();
+  }
 }
 
 function NotFoundComponent() {
