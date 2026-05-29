@@ -252,7 +252,7 @@ function NativeApp() {
         setLastCoords(gps);
         setGpsOk(true);
       }
-      const coords = gps ?? lastCoords;
+      const coords = gps ?? lastCoordsRef.current;
 
       // FASE 3: Disparar backend Twilio (SMS + WhatsApp automáticos, invisible).
       try {
