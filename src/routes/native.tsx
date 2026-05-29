@@ -213,17 +213,12 @@ function NativeApp() {
   // 5) Envío AUTOMÁTICO: disparado por el handler del botón (NO useEffect).
   //    Bloquea reentradas con sendingRef y congela la UI con stage="sending".
   const sendingRef = useRef(false);
-  const [isSending, setIsSending] = useState(false);
-  const triggerAlert = async (e?: { preventDefault?: () => void; stopPropagation?: () => void }) => {
-    // Cortafuegos contra doble disparo del navegador (form submit, bubbling, etc.)
-    try { e?.preventDefault?.(); } catch {}
-    try { e?.stopPropagation?.(); } catch {}
-
-    // Bloqueo fulminante: ref síncrono + estado reactivo para deshabilitar el botón YA.
+  const triggerAlert = async () => {
     if (sendingRef.current) return;
     if (!userId) return;
     sendingRef.current = true;
-    setIsSending(true);
+
+
 
 
 
@@ -286,8 +281,8 @@ function NativeApp() {
       setStage("sent");
     } finally {
       sendingRef.current = false;
-      setIsSending(false);
     }
+
   };
 
 
@@ -526,7 +521,7 @@ function NativeApp() {
               <Button variant="outline" className="flex-1 h-14 text-base" onClick={() => setStage("idle")}>
                 <X className="w-5 h-5 mr-1" /> Cancelar
               </Button>
-              <Button type="button" className="flex-1 h-14 text-base text-white" disabled={isSending} style={{ background: RED }} onClick={(e) => triggerAlert(e)}>
+              <Button className="flex-1 h-14 text-base text-white" disabled={sendingRef.current} style={{ background: RED }} onClick={() => triggerAlert()}>
                 Enviar ya
               </Button>
 
