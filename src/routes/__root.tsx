@@ -12,9 +12,9 @@ import { useEffect } from "react";
 import appCss from "../styles.css?url";
 import { installApiBaseFetch } from "@/lib/api-base";
 
-// Parchea fetch lo antes posible para que las server functions y rutas /api/*
-// usen el dominio real cuando la app corre como APK (Capacitor / file://).
-// NUNCA activar en preview de Lovable ni localhost para evitar CORS.
+// Parchea fetch para APK (Capacitor / file://). En preview de Lovable y
+// localhost NO se activa para evitar CORS. Se ejecuta dentro de useEffect
+// (ver RootComponent) para no interferir con la evaluación del módulo durante SSR.
 function setupApiBase() {
   if (typeof window === "undefined") return;
   const host = window.location.hostname;
@@ -24,8 +24,7 @@ function setupApiBase() {
     host.includes("lovableproject.com") ||
     host.includes("lovable.app");
 
-  if (isDevOrPreview && (window as any).__API_BASE__) {
-    console.log("[api-base] old patch detected — restoring native fetch");
+  if (isDevOrPreview && (window as any).__API_BASE__ && document.body) {
     try {
       const iframe = document.createElement("iframe");
       iframe.style.display = "none";
@@ -34,11 +33,10 @@ function setupApiBase() {
       const nativeFetch = (iframe.contentWindow as any)?.fetch;
       if (nativeFetch) {
         window.fetch = nativeFetch.bind(window);
-        console.log("[api-base] native fetch restored");
       }
       document.body.removeChild(iframe);
-    } catch (e) {
-      console.warn("[api-base] could not restore native fetch", e);
+    } catch {
+      // silencioso: no romper el render si el iframe no se puede crear
     }
   }
 
@@ -46,7 +44,6 @@ function setupApiBase() {
     installApiBaseFetch();
   }
 }
-setupApiBase();
 
 function NotFoundComponent() {
   return (
@@ -166,6 +163,10 @@ function RootComponent() {
   // En navegador web normal no hace nada (Capacitor no está definido).
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    setupApiBase();
+
+
 
     // Captura global y temprana del prompt nativo de instalación PWA
     // (Chrome/Edge mini-infobar). Llamar preventDefault suprime el banner
