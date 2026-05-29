@@ -44,6 +44,13 @@ let installed = false;
 export function installApiBaseFetch() {
   if (installed) return;
   if (typeof window === "undefined") return;
+
+  // Segunda línea de defensa: nunca instalar el parche en dev/preview
+  const host = window.location.hostname;
+  if (host === "localhost" || host === "127.0.0.1" || host.includes("lovableproject.com")) {
+    return;
+  }
+
   if (!isNativeRuntime()) return;
 
   const originalFetch = window.fetch.bind(window);
@@ -53,6 +60,13 @@ export function installApiBaseFetch() {
     // ya es absoluta
     if (/^https?:\/\//i.test(url)) return url;
     if (/^(data|blob|capacitor|file):/i.test(url)) return url;
+
+    // Tercera línea de defensa: nunca reescribir en dev/preview
+    const h = window.location.hostname;
+    if (h === "localhost" || h === "127.0.0.1" || h.includes("lovableproject.com")) {
+      return url;
+    }
+
     // Solo reescribimos rutas que apunten al backend de la app
     if (url.startsWith("/")) {
       return API_BASE_URL + url;
