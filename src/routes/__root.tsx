@@ -164,6 +164,10 @@ function RootComponent() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    setupApiBase();
+
+
+
     // Captura global y temprana del prompt nativo de instalación PWA
     // (Chrome/Edge mini-infobar). Llamar preventDefault suprime el banner
     // automático en cualquier ruta — el evento queda guardado en window y
