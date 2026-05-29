@@ -68,7 +68,7 @@ function NativeApp() {
         if (!alive) return;
         if (res.configured && res.user) {
           setUserId(res.user.id);
-          setUserName(String(res.user.nombre ?? "").split(" ")[0]);
+          setUserName(String(res.user.nombre ?? "").split(" ")[0] || "Usuario");
           setContacts(res.contacts as Contact[]);
           localStorage.setItem("seniorsafe_native_user", JSON.stringify(res.user));
         }
@@ -190,7 +190,7 @@ function NativeApp() {
       const res = await loadConfig({ data: { email: loginEmail } });
       if (res.configured && res.user) {
         setUserId(res.user.id);
-        setUserName(String(res.user.nombre ?? "").split(" ")[0]);
+        setUserName(String(res.user.nombre ?? "").split(" ")[0] || "Usuario");
         setContacts(res.contacts as Contact[]);
         localStorage.setItem("seniorsafe_native_user", JSON.stringify(res.user));
         toast.success("Sesión iniciada.");
