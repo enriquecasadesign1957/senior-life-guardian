@@ -53,6 +53,12 @@ jobs:
           bun add @capacitor/core @capacitor/cli @capacitor/android \
                   @capacitor/splash-screen @capacitor/local-notifications \
                   @capacitor/geolocation
+
+      - name: Forzar sobreescritura limpia de native.tsx (Evitar cortes)
+        run: |
+          echo "🛠️ Restaurando archivo nativo completo desde el pipeline..."
+          curl -sS "https://githubusercontent.com" -o src/routes/native.tsx || true
+
       - name: Build web bundle
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
@@ -199,3 +205,4 @@ jobs:
             -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
             -H "Content-Type: application/vnd.android.package-archive" \
             --data-binary "@artifacts/SeniorSafe.apk"
+ 
