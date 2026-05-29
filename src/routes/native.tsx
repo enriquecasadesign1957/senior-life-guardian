@@ -210,8 +210,8 @@ function NativeApp() {
     return () => clearInterval(id);
   }, [stage]);
 
-  // 5) Envío 100% NATIVO LOCAL — llamada inmediata + SMS nativo con contactos pre-cargados.
-  //    Backend remoto (sendAlert) desactivado temporalmente mientras preparamos Google Play.
+  // 5) Envío AUTOMÁTICO: llamada inmediata + request HTTPS al backend
+  //    (sendEmergencyAlert dispara SMS + WhatsApp por Twilio en segundo plano).
   useEffect(() => {
     if (stage !== "sending" || !userId) return;
     let cancelled = false;
@@ -223,24 +223,17 @@ function NativeApp() {
         .map((c) => String(c.telefono ?? "").replace(/[^\d+]/g, ""))
         .filter((p) => p.length >= 6);
 
-      if (phones.length === 0) {
-        toast.error("No hay guardianes configurados en tu cuenta.");
-        setSummary({ delivered: 0, total: 0, status: "no_recipients" });
-        if (!cancelled) setStage("sent");
-        return;
-      }
-
       // FASE 1 (Segundo 0): Llamada telefónica INMEDIATA al primer guardián.
-      // window.open con "_system" fuerza al WebView de Capacitor a delegar
-      // el esquema tel: al marcador nativo, sin mostrar chooser.
-      try {
-        window.open(`tel:${phones[0]}`, "_system");
-      } catch (e) {
-        console.warn("tel:", e);
-        try { window.location.href = `tel:${phones[0]}`; } catch {}
+      if (phones.length > 0) {
+        try {
+          window.open(`tel:${phones[0]}`, "_system");
+        } catch {
+          try { window.location.href = `tel:${phones[0]}`; } catch {}
+        }
       }
 
-      // FASE 2 (en paralelo): GPS rápido con timeout 3s, sin bloquear.
+      // FASE 2 (paralelo): GPS real con timeout 3s; si falla, mandamos sin GPS
+      // y el backend usará el texto de "ubicación no disponible" o lo que haya.
       setLocating(true);
       const gpsPromise = getCurrentCoords({ highAccuracy: true, timeoutMs: 3000, maximumAgeMs: 0 });
       const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000));
@@ -250,37 +243,38 @@ function NativeApp() {
         setLastCoords(gps);
         setGpsOk(true);
       }
-
-      // FASE 3: Abrir app de SMS nativa (NO WhatsApp, sin chooser).
-      // El esquema sms: va siempre al cliente de mensajería predeterminado.
       const coords = gps ?? lastCoords;
-      const mapsLink = coords
-        ? `https://google.com/maps?q=${coords.lat},${coords.lng}`
-        : `https://google.com`;
-      const fullName = userName || "Un usuario de Senior Safe";
-      const body = `🚨 URGENTE ALERTA SENIOR: ${fullName} necesita ayuda urgente. Ver ubicación en el mapa: ${mapsLink}`;
 
-      // Android admite múltiples destinatarios separados por coma en sms:
-      const recipients = phones.join(",");
-      const smsUrl = `sms:${recipients}?body=${encodeURIComponent(body)}`;
-
-      // Delay corto para no pisar la apertura del marcador.
-      setTimeout(() => {
-        try {
-          window.open(smsUrl, "_system");
-        } catch (e) {
-          console.warn("sms:", e);
-          try { window.location.href = smsUrl; } catch {}
+      // FASE 3: Disparar backend Twilio (SMS + WhatsApp automáticos, invisible).
+      try {
+        const res = await sendAlert({
+          data: {
+            signupId: userId,
+            gps: coords ? { lat: coords.lat, lng: coords.lng, accuracy: coords.accuracy } : null,
+          },
+        });
+        const results = (res as any)?.results ?? [];
+        const delivered = results.filter((r: any) => r.status === "sent").length;
+        const total = results.length || phones.length;
+        setSummary({ delivered, total, status: (res as any)?.status ?? "sent" });
+        if (delivered > 0) {
+          toast.success(`Alerta enviada (${delivered}/${total} canales).`);
+        } else if (phones.length === 0) {
+          toast.error("No hay guardianes configurados en tu cuenta.");
+        } else {
+          toast.error("No se pudo enviar la alerta. Reintenta.");
         }
-      }, 1500);
-
-      toast.success(`Llamando y abriendo SMS para ${phones.length} guardián${phones.length === 1 ? "" : "es"}.`);
-      setSummary({ delivered: phones.length, total: phones.length, status: "native" });
+      } catch (e) {
+        console.error("sendAlert", e);
+        toast.error("Error al enviar la alerta automática.");
+        setSummary({ delivered: 0, total: phones.length, status: "failed" });
+      }
 
       if (!cancelled) setStage("sent");
     })();
     return () => { cancelled = true; };
-  }, [stage, userId, contacts, userName, lastCoords]);
+  }, [stage, userId, contacts, sendAlert, lastCoords]);
+
 
 
 
