@@ -59,12 +59,6 @@ function NativeApp() {
   const [stage, setStage] = useState<Stage>("idle");
   const [countdown, setCountdown] = useState(5);
   const [summary, setSummary] = useState<{ delivered: number; total: number; status: string } | null>(null);
-  const sentRef = useRef(false);
-  const contactsRef = useRef<Contact[]>([]);
-  const lastCoordsRef = useRef<{ lat: number; lng: number; accuracy?: number } | null>(null);
-  useEffect(() => { contactsRef.current = contacts; }, [contacts]);
-  useEffect(() => { lastCoordsRef.current = lastCoords; }, [lastCoords]);
-  useEffect(() => { if (stage === "idle") sentRef.current = false; }, [stage]);
 
   // 1) Auto-hidratar desde almacenamiento local
   useEffect(() => {
@@ -220,14 +214,12 @@ function NativeApp() {
   //    (sendEmergencyAlert dispara SMS + WhatsApp por Twilio en segundo plano).
   useEffect(() => {
     if (stage !== "sending" || !userId) return;
-    if (sentRef.current) return;
-    sentRef.current = true;
     let cancelled = false;
     setSummary(null);
     if ("vibrate" in navigator) navigator.vibrate?.([100, 60, 100]);
 
     (async () => {
-      const phones = contactsRef.current
+      const phones = contacts
         .map((c) => String(c.telefono ?? "").replace(/[^\d+]/g, ""))
         .filter((p) => p.length >= 6);
 
@@ -252,7 +244,7 @@ function NativeApp() {
         setLastCoords(gps);
         setGpsOk(true);
       }
-      const coords = gps ?? lastCoordsRef.current;
+      const coords = gps ?? lastCoords;
 
       // FASE 3: Disparar backend Twilio (SMS + WhatsApp automáticos, invisible).
       try {
@@ -282,7 +274,7 @@ function NativeApp() {
       if (!cancelled) setStage("sent");
     })();
     return () => { cancelled = true; };
-  }, [stage, userId, sendAlert]);
+  }, [stage, userId, contacts, sendAlert, lastCoords]);
 
 
 
