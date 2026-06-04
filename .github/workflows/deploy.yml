@@ -1,0 +1,57 @@
+name: Deploy Cloudflare Workers
+
+# Despliega Senior Safe (TanStack Start + Nitro) a Cloudflare Workers.
+# Repo anidado: la app está en senior-life-guardian-main/; los scripts cf:* en la raíz delegan ahí.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Build y deploy (cf:build → cf:deploy)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: .
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: senior-life-guardian-main/package-lock.json
+
+      - name: Install dependencies
+        working-directory: senior-life-guardian-main
+        run: npm ci
+
+      - name: cf:build — compilar cliente + Worker (dist/server/index.mjs)
+        env:
+          # Variables embebidas en el bundle del cliente (Vite)
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
+          # Alineado con wrangler.jsonc / producción
+          PUBLIC_APP_URL: https://alarmaseniorsafe.cl
+          TRANSBANK_ENVIRONMENT: production
+        run: npm run cf:build
+
+      - name: cf:deploy — publicar en Cloudflare Workers
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npm run cf:deploy
