@@ -1,46 +1,45 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "senior-life-guardian",
-  "main": "src/server.ts",
+  /**
+   * Entrada del Worker TRAS `npm run build` (Nitro preset cloudflare-module).
+   * NO usar src/server.ts en deploy — eso provoca el Worker por defecto ("Hello World").
+   * Despliegue recomendado: npm run deploy
+   * (equivale a wrangler deploy --config dist/server/wrangler.json)
+   */
+  "main": "dist/server/index.mjs",
+  "no_bundle": true,
+  "rules": [
+    {
+      "type": "ESModule",
+      "globs": ["**/*.mjs", "**/*.js"]
+    }
+  ],
   "compatibility_date": "2025-09-24",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
   "observability": { "enabled": true },
 
-  // Sitio estático (PWA + assets Vite) — el Worker SSR atiende /api/*
   "assets": {
     "directory": "./dist/client",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "html_handling": "auto-trailing-slash",
+    "html_handling": "auto-trailing-slash"
   },
 
-  // Dominio producción (requiere zona alarmaseniorsafe.cl en tu cuenta Cloudflare).
-  // Tras verificar el dominio, pon workers_dev: false y despliega.
   "routes": [
     { "pattern": "alarmaseniorsafe.cl/*", "zone_name": "alarmaseniorsafe.cl" },
-    { "pattern": "www.alarmaseniorsafe.cl/*", "zone_name": "alarmaseniorsafe.cl" },
+    { "pattern": "www.alarmaseniorsafe.cl/*", "zone_name": "alarmaseniorsafe.cl" }
   ],
 
-  // Variables no secretas (secretos → wrangler secret put, ver DEPLOY.md)
   "vars": {
     "PUBLIC_APP_URL": "https://alarmaseniorsafe.cl",
-    "TRANSBANK_ENVIRONMENT": "production",
+    "TRANSBANK_ENVIRONMENT": "production"
   },
 
   /**
-   * Webhooks públicos HTTPS (Twilio + Zoho) — rutas de la app:
-   *   POST https://alarmaseniorsafe.cl/api/public/twilio-whatsapp-webhook
-   *   POST https://alarmaseniorsafe.cl/api/public/zoho-email-webhook
-   *   GET  (health) en las mismas URLs
-   *
-   * Secretos obligatorios en producción (wrangler secret put <NAME>):
-   *   SUPABASE_SERVICE_ROLE_KEY
-   *   SUPABASE_URL
-   *   TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN
-   *   TRANSBANK_CC, TRANSBANK_API_KEY
-   *   GROQ_API_KEY o OPENAI_API_KEY
-   *   ZOHO_SMTP_USER, ZOHO_SMTP_PASSWORD
-   *   ZOHO_EMAIL_WEBHOOK_SECRET
+   * Secretos (wrangler secret put): SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY,
+   * TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TRANSBANK_CC, TRANSBANK_API_KEY,
+   * GROQ_API_KEY u OPENAI_API_KEY, ZOHO_SMTP_*, ZOHO_EMAIL_WEBHOOK_SECRET
    */
 }

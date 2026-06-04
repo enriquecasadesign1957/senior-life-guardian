@@ -28,10 +28,10 @@ O paso a paso:
 
 ```bash
 npm run build
-npx wrangler deploy --config dist/server/wrangler.json
+npx wrangler deploy --cwd dist/server
 ```
 
-El build genera `dist/server/wrangler.json` desde `wrangler.jsonc` (Nitro + Cloudflare).
+El build genera `dist/server/index.mjs` (entrada Nitro) y `dist/server/wrangler.json` desde `wrangler.jsonc`. **No** despliegues con `main: src/server.ts` — eso muestra "Hello World".
 
 Scripts npm:
 
@@ -46,7 +46,7 @@ npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
 npx wrangler secret put SUPABASE_URL
 npx wrangler secret put TWILIO_ACCOUNT_SID
 npx wrangler secret put TWILIO_AUTH_TOKEN
-npx wrangler secret put TRANSBANK_COMMERCE_CODE
+npx wrangler secret put TRANSBANK_CC
 npx wrangler secret put TRANSBANK_API_KEY
 npx wrangler secret put GROQ_API_KEY
 npx wrangler secret put ZOHO_SMTP_USER
@@ -61,7 +61,7 @@ Opcional: `OPENAI_API_KEY`, `ZOHO_SMTP_BCC` (por defecto `enriquecasadesign@gmai
 Edita `vars` en `wrangler.jsonc`:
 
 - `PUBLIC_APP_URL`: `https://alarmaseniorsafe.cl` (retorno Webpay)
-- `WEBPAY_ENVIRONMENT`: `production` cuando uses comercio real
+- `TRANSBANK_ENVIRONMENT`: `production` cuando uses comercio real
 
 ## Dominio personalizado
 

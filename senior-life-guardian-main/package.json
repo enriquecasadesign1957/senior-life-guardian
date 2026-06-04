@@ -8,8 +8,8 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
-    "deploy": "npm run build && wrangler deploy --config dist/server/wrangler.json",
-    "deploy:preview": "npm run build && wrangler deploy --config dist/server/wrangler.json --env preview",
+    "deploy": "npm run build && wrangler deploy --cwd dist/server",
+    "deploy:preview": "npm run build && wrangler deploy --cwd dist/server --env preview",
     "cf:secrets": "wrangler secret list",
     "lint": "eslint .",
     "format": "prettier --write ."
