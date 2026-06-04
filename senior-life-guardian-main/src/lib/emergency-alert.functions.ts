@@ -1,0 +1,351 @@
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
+import {
+  isTwilioConfigured,
+  twilioPost,
+  TWILIO_WHATSAPP_SANDBOX_FROM,
+  twilioSmsFrom,
+  twilioVoiceFrom,
+} from "@/lib/twilio";
+
+// Acepta el formato { lat, lng } y también el formato nativo de
+// @capacitor/geolocation: { latitude, longitude, accuracy } o
+// { coords: { latitude, longitude, accuracy } }. Mapeamos todo a {lat,lng}.
+const GpsInput = z
+  .any()
+  .transform((raw) => {
+    if (raw == null) return null;
+    const src: any =
+      raw && typeof raw === "object" && raw.coords && typeof raw.coords === "object"
+        ? raw.coords
+        : raw;
+    const lat =
+      typeof src?.lat === "number"
+        ? src.lat
+        : typeof src?.latitude === "number"
+          ? src.latitude
+          : typeof src?.lat === "string"
+            ? parseFloat(src.lat)
+            : typeof src?.latitude === "string"
+              ? parseFloat(src.latitude)
+              : NaN;
+    const lng =
+      typeof src?.lng === "number"
+        ? src.lng
+        : typeof src?.longitude === "number"
+          ? src.longitude
+          : typeof src?.lon === "number"
+            ? src.lon
+            : typeof src?.lng === "string"
+              ? parseFloat(src.lng)
+              : typeof src?.longitude === "string"
+                ? parseFloat(src.longitude)
+                : typeof src?.lon === "string"
+                  ? parseFloat(src.lon)
+                  : NaN;
+    const accRaw = src?.accuracy;
+    const accuracy =
+      typeof accRaw === "number"
+        ? accRaw
+        : typeof accRaw === "string"
+          ? parseFloat(accRaw)
+          : undefined;
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+    return { lat, lng, accuracy: Number.isFinite(accuracy as number) ? (accuracy as number) : undefined };
+  })
+  .nullable()
+  .optional();
+
+const Schema = z.object({
+  signupId: z.string().uuid(),
+  gps: GpsInput,
+  /** Modo entrenamiento: no llama a Twilio (sin costo). */
+  trainingMode: z.boolean().optional().default(false),
+});
+
+
+
+
+function normalizePhone(raw: string): string | null {
+  const trimmed = (raw ?? "").replace(/[^\d+]/g, "");
+  if (!trimmed) return null;
+  if (trimmed.startsWith("+")) return trimmed;
+  if (/^\d{8,9}$/.test(trimmed)) return `+56${trimmed}`;
+  return `+${trimmed}`;
+}
+
+type ChannelResult = {
+  channel: "whatsapp" | "sms" | "call";
+  to: string;
+  status: "sent" | "failed" | "skipped";
+  sid?: string | null;
+  error?: string | null;
+  event: string;
+  at: string;
+};
+
+/**
+ * Envía alerta de emergencia REAL multicanal:
+ *  - WhatsApp (Twilio)
+ *  - SMS (Twilio)
+ *  - Llamada automática con voz (Twilio TwiML inline)
+ * Ejecuta TODOS los canales aunque alguno falle. Registra todo en alert_logs.
+ */
+export const sendEmergencyAlert = createServerFn({ method: "POST" })
+  .inputValidator((input) => Schema.parse(input))
+  .handler(async ({ data }) => {
+    // WhatsApp SIEMPRE desde el sandbox oficial Twilio. Nunca usar número chileno.
+    const waFrom = TWILIO_WHATSAPP_SANDBOX_FROM;
+    const smsFrom = twilioSmsFrom();
+    const voiceFrom = twilioVoiceFrom();
+
+
+    // Resolver usuario + familiares
+    const { data: user, error: userErr } = await supabaseAdmin
+      .from(CONTRACT_SIGNUPS_TABLE)
+      .select("id, nombre, telefono")
+      .eq("id", data.signupId)
+      .maybeSingle();
+
+    if (userErr || !user) {
+      return { ok: false, error: "user_not_found", results: [] as ChannelResult[] };
+    }
+
+    const { data: contacts } = await supabaseAdmin
+      .from("emergency_contacts")
+      .select("id, nombre, telefono, parentesco")
+      .eq("contract_signup_id", user.id);
+
+    const recipients = (contacts ?? [])
+      .map((c) => ({ ...c, phone: normalizePhone(c.telefono) }))
+      .filter((c) => c.phone) as Array<{ id: string; nombre: string; telefono: string; parentesco: string; phone: string }>;
+
+    const ts = new Date();
+    const timestamp = ts.toLocaleString("es-CL", { timeZone: "America/Santiago" });
+    // GPS opcional: si el APK no logra sincronizar en 3s, enviamos null y avisamos en el mensaje.
+    const hasGps = !!data.gps;
+    const resolvedGps = hasGps
+      ? {
+          lat: data.gps!.lat,
+          lng: data.gps!.lng,
+          accuracy: data.gps!.accuracy,
+          source: "device" as const,
+        }
+      : null;
+    const mapsLink = resolvedGps
+      ? `https://maps.google.com/?q=${resolvedGps.lat},${resolvedGps.lng}`
+      : null;
+
+    // Acknowledgement token (link de un solo uso, expira en 24h)
+    const ackToken = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`)
+      .replace(/-/g, "") + Math.random().toString(36).slice(2, 10);
+    const ackExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const ackUrl = `https://alarmaseniorsafe.cl/familia/ack/${ackToken}`;
+
+    const locationBlock = mapsLink
+      ? `📍 Ubicación (GPS preciso):\n${mapsLink}`
+      : `📍 Ubicación: el usuario activó la alerta, pero el GPS del celular no se pudo sincronizar a tiempo. Por favor contáctalo de inmediato.`;
+
+    const textMessage =
+      `🚨 URGENTE ALERTA SENIOR\n\n` +
+      `${user.nombre} necesita ayuda.\n\n` +
+      `${locationBlock}\n\n` +
+      `⏰ Hora:\n${timestamp}\n\n` +
+      `Por favor contacta inmediatamente al usuario.\n\n` +
+      `Confirma que recibiste esta alerta:\n${ackUrl}`;
+
+      `Confirma que recibiste esta alerta:\n${ackUrl}`;
+
+    const voiceText =
+      `Urgente. Alerta Senior. ${user.nombre} necesita ayuda inmediata. Repito: Urgente. Alerta Senior. ${user.nombre} necesita ayuda inmediata.`;
+    const twiml =
+      `<?xml version="1.0" encoding="UTF-8"?>` +
+      `<Response><Pause length="1"/>` +
+      `<Say language="es-MX" voice="Polly.Mia">${voiceText}</Say>` +
+      `<Pause length="1"/>` +
+      `<Say language="es-MX" voice="Polly.Mia">${voiceText}</Say>` +
+      `</Response>`;
+
+
+    // Crear log inicial (pending)
+    const { data: logRow } = await supabaseAdmin
+      .from("alert_logs")
+      .insert({
+        contract_signup_id: user.id,
+        event_type: "emergency_pressed",
+        status: "pending",
+        gps_lat: resolvedGps?.lat ?? null,
+        gps_lng: resolvedGps?.lng ?? null,
+        gps_accuracy: resolvedGps?.accuracy ?? null,
+        recipients: recipients.map((r) => ({ id: r.id, nombre: r.nombre, telefono: r.phone, parentesco: r.parentesco })),
+        metadata: { maps_link: mapsLink, timestamp, ack_url: ackUrl, gps_source: resolvedGps?.source ?? "unavailable" },
+
+
+        acknowledgement_token: ackToken,
+        acknowledgement_expires_at: ackExpiresAt,
+      } as never)
+      .select("id")
+      .single();
+
+    const results: ChannelResult[] = [];
+
+    if (data.trainingMode) {
+      const simulatedAt = new Date().toISOString();
+      for (const c of recipients) {
+        const to = c.phone;
+        results.push(
+          { channel: "call", to, status: "sent", sid: "TRAINING_SIM", error: null, event: "call_simulated", at: simulatedAt },
+          { channel: "sms", to, status: "sent", sid: "TRAINING_SIM", error: null, event: "sms_simulated", at: simulatedAt },
+          { channel: "whatsapp", to, status: "sent", sid: "TRAINING_SIM", error: null, event: "whatsapp_simulated", at: simulatedAt },
+        );
+      }
+      if (recipients.length === 0) {
+        results.push(
+          { channel: "whatsapp", to: "-", status: "skipped", error: "no_recipients", event: "training_no_recipients", at: simulatedAt },
+        );
+      }
+
+      const finalStatus =
+        recipients.length === 0 ? "no_recipients" : "simulated";
+
+      if (logRow?.id) {
+        await supabaseAdmin
+          .from("alert_logs")
+          .update({
+            event_type: "training_simulation",
+            status: finalStatus,
+            metadata: {
+              maps_link: mapsLink,
+              timestamp,
+              training: true,
+              results,
+              message: "Entrenamiento: sin envíos reales a Twilio",
+            },
+            error_message: null,
+          })
+          .eq("id", logRow.id);
+      }
+
+      return {
+        ok: true,
+        status: finalStatus,
+        training: true,
+        recipients: recipients.length,
+        results,
+      };
+    }
+
+    if (!isTwilioConfigured()) {
+      const err = "twilio_not_configured";
+      results.push({ channel: "whatsapp", to: "-", status: "failed", error: err, event: "whatsapp_failed", at: new Date().toISOString() });
+      results.push({ channel: "sms", to: "-", status: "failed", error: err, event: "sms_failed", at: new Date().toISOString() });
+      results.push({ channel: "call", to: "-", status: "failed", error: err, event: "call_failed", at: new Date().toISOString() });
+    } else {
+      const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
+
+      // FASE 1 — Llamada automática INMEDIATA (no requiere GPS)
+      for (const c of recipients) {
+        const to = c.phone;
+        if (!voiceFrom) {
+          results.push({ channel: "call", to, status: "skipped", error: "missing TWILIO_VOICE_FROM", event: "call_skipped", at: new Date().toISOString() });
+          continue;
+        }
+        try {
+          const r = await twilioPost("/Calls.json", { To: to, From: voiceFrom, Twiml: twiml });
+          results.push({
+            channel: "call",
+            to,
+            status: r.ok ? "sent" : "failed",
+            sid: r.data?.sid ?? null,
+            error: r.ok ? null : `Twilio ${r.status}: ${JSON.stringify(r.data)}`,
+            event: r.ok ? "call_started" : "call_failed",
+            at: new Date().toISOString(),
+          });
+        } catch (e: any) {
+          results.push({ channel: "call", to, status: "failed", error: String(e?.message ?? e), event: "call_failed", at: new Date().toISOString() });
+        }
+      }
+
+      // FASE 2 — SMS (espera 15s desde el inicio para dar tiempo al GPS)
+      await sleep(15000);
+      for (const c of recipients) {
+        const to = c.phone;
+        if (!smsFrom) {
+          results.push({ channel: "sms", to, status: "skipped", error: "missing TWILIO_SMS_FROM", event: "sms_skipped", at: new Date().toISOString() });
+          continue;
+        }
+        try {
+          const r = await twilioPost("/Messages.json", { To: to, From: smsFrom, Body: textMessage });
+          results.push({
+            channel: "sms",
+            to,
+            status: r.ok ? "sent" : "failed",
+            sid: r.data?.sid ?? null,
+            error: r.ok ? null : `Twilio ${r.status}: ${JSON.stringify(r.data)}`,
+            event: r.ok ? "sms_sent" : "sms_failed",
+            at: new Date().toISOString(),
+          });
+        } catch (e: any) {
+          results.push({ channel: "sms", to, status: "failed", error: String(e?.message ?? e), event: "sms_failed", at: new Date().toISOString() });
+        }
+      }
+
+      // Espera adicional de 10s (total 25s desde el inicio) antes de WhatsApp
+      if (recipients.length > 0) await sleep(10000);
+
+
+      // FASE 3 — WhatsApp
+      for (const c of recipients) {
+        const to = c.phone;
+        try {
+          const r = await twilioPost("/Messages.json", {
+            To: `whatsapp:${to}`,
+            From: waFrom,
+            Body: textMessage,
+          });
+          results.push({
+            channel: "whatsapp",
+            to,
+            status: r.ok ? "sent" : "failed",
+            sid: r.data?.sid ?? null,
+            error: r.ok ? null : `Twilio ${r.status}: ${JSON.stringify(r.data)}`,
+            event: r.ok ? "whatsapp_sent" : "whatsapp_failed",
+            at: new Date().toISOString(),
+          });
+        } catch (e: any) {
+          results.push({ channel: "whatsapp", to, status: "failed", error: String(e?.message ?? e), event: "whatsapp_failed", at: new Date().toISOString() });
+        }
+      }
+    }
+
+
+
+    const anySent = results.some((r) => r.status === "sent");
+    const finalStatus = recipients.length === 0
+      ? "no_recipients"
+      : anySent
+        ? (results.some((r) => r.status === "failed") ? "partial" : "delivered")
+        : "failed";
+
+    // Actualizar log con resultados finales
+    if (logRow?.id) {
+      await supabaseAdmin
+        .from("alert_logs")
+        .update({
+          status: finalStatus,
+          metadata: { maps_link: mapsLink, timestamp, results, from: { waFrom, smsFrom, voiceFrom } },
+          error_message: anySent ? null : results.map((r) => r.error).filter(Boolean).join(" | ").slice(0, 500) || null,
+        })
+        .eq("id", logRow.id);
+    }
+
+    return {
+      ok: anySent || recipients.length === 0,
+      status: finalStatus,
+      recipients: recipients.length,
+      results,
+    };
+  });

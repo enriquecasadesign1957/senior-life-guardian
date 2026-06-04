@@ -1,0 +1,65 @@
+{
+  "name": "Senior Life Guardian",
+  "short_name": "Senior Life",
+  "description": "Tu red de cuidado familiar siempre activa. Alertas inmediatas por WhatsApp, SMS y llamada.",
+  "start_url": "/native?source=pwa",
+  "id": "senior-life-guardian",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#0d4f5c",
+  "theme_color": "#0d4f5c",
+  "lang": "es-CL",
+  "dir": "ltr",
+  "categories": ["health", "lifestyle", "medical"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/senior-life-guardian-192.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "any"
+    },
+    {
+      "src": "/senior-life-guardian-512.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any"
+    },
+    {
+      "src": "/senior-life-guardian-512.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Botón de emergencia",
+      "short_name": "Emergencia",
+      "description": "Enviar alerta inmediata a familiares",
+      "url": "/native?sos=1",
+      "icons": [
+        {
+          "src": "/senior-life-guardian-192.webp",
+          "sizes": "192x192",
+          "type": "image/webp"
+        }
+      ]
+    },
+    {
+      "name": "Mi configuración",
+      "short_name": "Configurar",
+      "description": "Abrir Senior Safe",
+      "url": "/native",
+      "icons": [
+        {
+          "src": "/senior-life-guardian-192.webp",
+          "sizes": "192x192",
+          "type": "image/webp"
+        }
+      ]
+    }
+  ]
+}
