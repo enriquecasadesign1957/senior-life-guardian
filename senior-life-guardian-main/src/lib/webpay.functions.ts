@@ -11,6 +11,12 @@ import {
   getTransbankConfig,
 } from "@/lib/transbank-webpay";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import type { Json } from "@/integrations/supabase/types";
+
+/** Serializa la respuesta cruda de Transbank al tipo Json de Supabase. */
+function toSupabaseJson(value: Record<string, unknown>): Json {
+  return JSON.parse(JSON.stringify(value)) as Json;
+}
 
 /**
  * 1) INICIAR TRANSACCIÓN WEBPAY PLUS
@@ -84,7 +90,7 @@ export const initWebpayTransaction = createServerFn({ method: "POST" })
 
     const { error: txTokenErr } = await supabaseAdmin
       .from("webpay_transactions")
-      .update({ token: tb.token, status: "TOKEN_ISSUED", raw_response: tb.raw })
+      .update({ token: tb.token, status: "TOKEN_ISSUED", raw_response: toSupabaseJson(tb.raw) })
       .eq("buy_order", buyOrder);
 
     if (txTokenErr) {
@@ -136,7 +142,7 @@ export const confirmWebpayTransaction = createServerFn({ method: "POST" })
           typeof result.raw.payment_type_code === "string"
             ? result.raw.payment_type_code
             : null,
-        raw_response: result.raw,
+        raw_response: toSupabaseJson(result.raw),
       })
       .eq("token", data.token);
 

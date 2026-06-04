@@ -20,7 +20,7 @@ import {
   triggerPwaInstallPrompt,
 } from "@/lib/pwa-install";
 import {
-  APP_ENTRENAMIENTO_URL,
+  APP_ENTRENAMIENTO_SEARCH,
   buildMobileInstallPageUrl,
   clearRequiresPwaInstall,
   markRequiresPwaInstall,
@@ -119,7 +119,7 @@ export function PostPaymentInstallScreen({
 
   const continueToApp = useCallback(() => {
     clearRequiresPwaInstall();
-    navigate({ to: APP_ENTRENAMIENTO_URL });
+    navigate({ to: "/app", search: APP_ENTRENAMIENTO_SEARCH });
   }, [navigate]);
 
   const handleInstallClick = async () => {

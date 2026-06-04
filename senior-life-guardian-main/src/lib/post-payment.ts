@@ -1,5 +1,5 @@
 /** Tras pago Webpay (o mock), el usuario entra directo a la app en modo entrenamiento. */
-export const APP_ENTRENAMIENTO_URL = "/app?entrenamiento=1";
+export const APP_ENTRENAMIENTO_SEARCH = { entrenamiento: "1" } as const;
 
 /** Ruta obligatoria post-pago: instalar PWA/WAM antes del panel web. */
 export const POST_PAYMENT_INSTALL_PATH = "/instalar-app";

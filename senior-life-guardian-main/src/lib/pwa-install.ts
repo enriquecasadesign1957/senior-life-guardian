@@ -6,25 +6,35 @@ export type BeforeInstallPromptEvent = Event & {
 const PROMPT_KEY = "__seniorSafeInstallPrompt";
 const PROMPT_BOUND_KEY = "__seniorSafeInstallPromptBound";
 
+type InstallPromptWindow = Window & {
+  [PROMPT_KEY]?: BeforeInstallPromptEvent | null;
+  [PROMPT_BOUND_KEY]?: boolean;
+};
+
+function installPromptWindow(): InstallPromptWindow {
+  return window as unknown as InstallPromptWindow;
+}
+
 export function getCapturedInstallPrompt(): BeforeInstallPromptEvent | null {
   if (typeof window === "undefined") return null;
-  return ((window as Window & Record<string, unknown>)[PROMPT_KEY] as BeforeInstallPromptEvent) ?? null;
+  return installPromptWindow()[PROMPT_KEY] ?? null;
 }
 
 export function clearCapturedInstallPrompt() {
   if (typeof window !== "undefined") {
-    (window as Window & Record<string, unknown>)[PROMPT_KEY] = null;
+    installPromptWindow()[PROMPT_KEY] = null;
   }
 }
 
 export function ensureInstallPromptCapture() {
-  if (typeof window === "undefined" || (window as Window & Record<string, unknown>)[PROMPT_BOUND_KEY]) {
+  const w = typeof window !== "undefined" ? installPromptWindow() : null;
+  if (!w || w[PROMPT_BOUND_KEY]) {
     return;
   }
-  (window as Window & Record<string, unknown>)[PROMPT_BOUND_KEY] = true;
+  w[PROMPT_BOUND_KEY] = true;
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault();
-    (window as Window & Record<string, unknown>)[PROMPT_KEY] = event;
+    installPromptWindow()[PROMPT_KEY] = event as BeforeInstallPromptEvent;
   });
 }
 

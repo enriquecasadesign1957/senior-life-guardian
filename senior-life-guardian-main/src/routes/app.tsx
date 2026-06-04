@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { z } from "zod";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Shield, MapPin, Users, Battery, Wifi, Bell, CheckCircle2,
@@ -23,7 +24,12 @@ import { WhatsAppActivationButton } from "@/components/whatsapp-activation-butto
 import { InstallAppModal } from "@/components/install-app-modal";
 import { Download } from "lucide-react";
 
+const appSearchSchema = z.object({
+  entrenamiento: z.enum(["1"]).optional(),
+});
+
 export const Route = createFileRoute("/app")({
+  validateSearch: (s) => appSearchSchema.parse(s),
   head: () => ({
     meta: [
       { title: "Senior Safe — Mi protección" },

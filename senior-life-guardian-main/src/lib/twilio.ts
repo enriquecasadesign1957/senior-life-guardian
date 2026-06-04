@@ -6,6 +6,12 @@ export type TwilioPostResult = {
   data: Record<string, unknown>;
 };
 
+/** SID de recurso Twilio (Messages/Calls) con tipado seguro. */
+export function twilioResourceSid(data: Record<string, unknown>): string | null {
+  const sid = data.sid;
+  return typeof sid === "string" ? sid : null;
+}
+
 /** Sandbox WhatsApp oficial de Twilio (no usar número chileno para WA). */
 export const TWILIO_WHATSAPP_SANDBOX_FROM = "whatsapp:+14155238886";
 

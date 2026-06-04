@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { z } from "zod";
 import { PostPaymentInstallScreen } from "@/components/post-payment-install-screen";
 import { isPwaStandalone } from "@/lib/device";
-import { APP_ENTRENAMIENTO_URL, clearRequiresPwaInstall } from "@/lib/post-payment";
+import { APP_ENTRENAMIENTO_SEARCH, clearRequiresPwaInstall } from "@/lib/post-payment";
 
 const searchSchema = z.object({
   entrenamiento: z.string().optional(),
@@ -31,7 +31,7 @@ function InstalarAppPage() {
     if (typeof window === "undefined") return;
     if (isPwaStandalone()) {
       clearRequiresPwaInstall();
-      navigate({ to: APP_ENTRENAMIENTO_URL });
+      navigate({ to: "/app", search: APP_ENTRENAMIENTO_SEARCH });
     }
   }, [navigate]);
 

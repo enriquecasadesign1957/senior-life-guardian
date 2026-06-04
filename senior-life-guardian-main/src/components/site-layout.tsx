@@ -2,6 +2,13 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Menu, X, Phone, Mail, Globe, Shield } from "lucide-react";
 import logo from "@/assets/logo-senior-safe.png";
+import { PLAN_KEY } from "@/lib/plans";
+
+const defaultCheckoutSearch = {
+  mode: "contratar" as const,
+  plan: PLAN_KEY,
+  periodo: "mensual" as const,
+};
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
@@ -23,7 +30,7 @@ export function SiteHeader() {
             <a key={l.href} href={l.href} className="hover:text-foreground transition-colors">{l.label}</a>
           ))}
         </div>
-        <Link to="/checkout" className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--brand-petrol-deep)] text-white text-sm font-semibold hover:opacity-90 transition">
+        <Link to="/checkout" search={defaultCheckoutSearch} className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--brand-petrol-deep)] text-white text-sm font-semibold hover:opacity-90 transition">
           Contratar
         </Link>
         <button className="md:hidden text-foreground" onClick={() => setOpen(!open)} aria-label="Menu">
@@ -35,7 +42,7 @@ export function SiteHeader() {
           {links.map((l) => (
             <a key={l.href} href={l.href} onClick={() => setOpen(false)} className="text-foreground py-1">{l.label}</a>
           ))}
-          <Link to="/checkout" onClick={() => setOpen(false)} className="px-5 py-4 rounded-full bg-[var(--brand-petrol-deep)] text-white font-semibold text-center">Contratar</Link>
+          <Link to="/checkout" search={defaultCheckoutSearch} onClick={() => setOpen(false)} className="px-5 py-4 rounded-full bg-[var(--brand-petrol-deep)] text-white font-semibold text-center">Contratar</Link>
         </div>
       )}
     </header>
@@ -65,7 +72,7 @@ export function SiteFooter() {
             <li><a href="/#funciones" className="text-white/85 hover:text-white">Funciones técnicas</a></li>
             <li><a href="/#como" className="text-white/85 hover:text-white">Cómo funciona</a></li>
             <li><a href="/#planes" className="text-white/85 hover:text-white">Planes</a></li>
-            <li><Link to="/checkout" className="text-white/85 hover:text-white">Contratar</Link></li>
+            <li><Link to="/checkout" search={defaultCheckoutSearch} className="text-white/85 hover:text-white">Contratar</Link></li>
           </ul>
         </div>
         <div>
