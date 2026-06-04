@@ -1,0 +1,30 @@
+{
+  "$schema": "./senior-life-guardian-main/node_modules/wrangler/config-schema.json",
+  "name": "senior-life-guardian",
+  "main": "senior-life-guardian-main/dist/server/index.mjs",
+  "no_bundle": true,
+  "rules": [
+    {
+      "type": "ESModule",
+      "globs": ["senior-life-guardian-main/dist/server/**/*.mjs", "senior-life-guardian-main/dist/server/**/*.js"]
+    }
+  ],
+  "compatibility_date": "2025-09-24",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "observability": { "enabled": true },
+  "assets": {
+    "directory": "./senior-life-guardian-main/dist/client",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "html_handling": "auto-trailing-slash"
+  },
+  "routes": [
+    { "pattern": "alarmaseniorsafe.cl/*", "zone_name": "alarmaseniorsafe.cl" },
+    { "pattern": "www.alarmaseniorsafe.cl/*", "zone_name": "alarmaseniorsafe.cl" }
+  ],
+  "vars": {
+    "PUBLIC_APP_URL": "https://alarmaseniorsafe.cl",
+    "TRANSBANK_ENVIRONMENT": "production"
+  }
+}

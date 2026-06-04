@@ -1,45 +1,16 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "senior-life-guardian",
-  /**
-   * Entrada del Worker TRAS `npm run build` (Nitro preset cloudflare-module).
-   * NO usar src/server.ts en deploy — eso provoca el Worker por defecto ("Hello World").
-   * Despliegue recomendado: npm run deploy
-   * (equivale a wrangler deploy --config dist/server/wrangler.json)
-   */
-  "main": "dist/server/index.mjs",
-  "no_bundle": true,
-  "rules": [
-    {
-      "type": "ESModule",
-      "globs": ["**/*.mjs", "**/*.js"]
-    }
-  ],
   "compatibility_date": "2025-09-24",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
   "observability": { "enabled": true },
-
-  "assets": {
-    "directory": "./dist/client",
-    "binding": "ASSETS",
-    "not_found_handling": "single-page-application",
-    "html_handling": "auto-trailing-slash"
-  },
-
   "routes": [
     { "pattern": "alarmaseniorsafe.cl/*", "zone_name": "alarmaseniorsafe.cl" },
     { "pattern": "www.alarmaseniorsafe.cl/*", "zone_name": "alarmaseniorsafe.cl" }
   ],
-
   "vars": {
     "PUBLIC_APP_URL": "https://alarmaseniorsafe.cl",
     "TRANSBANK_ENVIRONMENT": "production"
-  },
-
-  /**
-   * Secretos (wrangler secret put): SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY,
-   * TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TRANSBANK_CC, TRANSBANK_API_KEY,
-   * GROQ_API_KEY u OPENAI_API_KEY, ZOHO_SMTP_*, ZOHO_EMAIL_WEBHOOK_SECRET
-   */
+  }
 }

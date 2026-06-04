@@ -1,0 +1,12 @@
+{
+  "name": "senior-life-guardian-repo",
+  "private": true,
+  "description": "Raíz del repo Git; la app vive en senior-life-guardian-main/ (Cloudflare Workers).",
+  "scripts": {
+    "build": "npm run cf:build",
+    "deploy": "npm run cf:deploy",
+    "cf:build": "npm --prefix senior-life-guardian-main run cf:build",
+    "cf:deploy": "npm --prefix senior-life-guardian-main run cf:deploy",
+    "cf:secrets": "npm --prefix senior-life-guardian-main run cf:secrets"
+  }
+}

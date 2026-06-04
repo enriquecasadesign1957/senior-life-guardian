@@ -19,19 +19,27 @@ Health check: `GET` en las mismas rutas.
 
 ## Build y deploy
 
+El repo Git tiene la app en la subcarpeta `senior-life-guardian-main/`. Hay dos formas válidas:
+
+### A) Raíz del repositorio (recomendado para Cloudflare Workers CI)
+
+```bash
+npm run build    # o npm run cf:build
+npm run deploy   # o npm run cf:deploy
+```
+
+Usa `wrangler.jsonc` en la raíz del repo (`main`: `senior-life-guardian-main/dist/server/index.mjs`).
+
+### B) Dentro de la carpeta de la app
+
 ```bash
 cd senior-life-guardian-main
 npm run deploy
 ```
 
-O paso a paso:
+Genera `dist/server/index.mjs` y despliega con `wrangler deploy --cwd dist/server` (usa `dist/server/wrangler.json` generado por Nitro).
 
-```bash
-npm run build
-npx wrangler deploy --cwd dist/server
-```
-
-El build genera `dist/server/index.mjs` (entrada Nitro) y `dist/server/wrangler.json` desde `wrangler.jsonc`. **No** despliegues con `main: src/server.ts` — eso muestra "Hello World".
+**Cloudflare:** comando de build `npm run build` y deploy `npm run deploy` desde la **raíz del repo**, o bien Root directory = `senior-life-guardian-main` con los mismos scripts locales.
 
 Scripts npm:
 
