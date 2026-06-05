@@ -76,6 +76,7 @@ export function resolvePublicAppUrl(): string {
   return fromEnv ?? OFFICIAL_APP_URL;
 }
 
+/** URL de retorno que Transbank invoca tras el pago (return_url). */
 export function buildWebpayReturnUrl(): string {
   return `${resolvePublicAppUrl()}/webpay/retorno`;
 }

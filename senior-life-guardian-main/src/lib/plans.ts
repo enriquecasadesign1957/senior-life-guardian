@@ -17,7 +17,7 @@ export const PLAN = {
   name: "Senior Safe",
   displayName: "Plan Único",
   tagline: "Protección completa para toda la familia.",
-  monthly: 50,
+  monthly: 6900,
   yearly: 69000,
   /** Texto oficial del beneficio anual */
   yearlySavingsLabel: "Ahorras 2 meses",
