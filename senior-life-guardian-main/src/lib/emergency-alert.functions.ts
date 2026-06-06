@@ -63,9 +63,57 @@ const GpsInput = z
 const Schema = z.object({
   signupId: z.string().uuid(),
   gps: GpsInput,
+  /** Coordenadas GPS planas (alternativa a `gps`). */
+  gpsLat: z.number().finite().optional(),
+  gpsLng: z.number().finite().optional(),
   /** Modo entrenamiento: no llama a Twilio (sin costo). */
   trainingMode: z.boolean().optional().default(false),
 });
+
+const MAX_INITIAL_CONTACTS = 3;
+const VOICE_ESCALATION_DELAY_MS = 20_000;
+
+type ResolvedGps = {
+  lat: number;
+  lng: number;
+  accuracy?: number;
+  source: "device" | "params";
+};
+
+function resolveGpsFromInput(data: z.infer<typeof Schema>): ResolvedGps | null {
+  if (data.gps) {
+    return {
+      lat: data.gps.lat,
+      lng: data.gps.lng,
+      accuracy: data.gps.accuracy,
+      source: "device",
+    };
+  }
+  if (
+    data.gpsLat != null &&
+    data.gpsLng != null &&
+    data.gpsLat >= -90 &&
+    data.gpsLat <= 90 &&
+    data.gpsLng >= -180 &&
+    data.gpsLng <= 180
+  ) {
+    return { lat: data.gpsLat, lng: data.gpsLng, source: "params" };
+  }
+  return null;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function isAlertAcknowledged(logId: string): Promise<boolean> {
+  const { data: row } = await supabaseAdmin
+    .from("alert_logs")
+    .select("acknowledged_at")
+    .eq("id", logId)
+    .maybeSingle();
+  return !!row?.acknowledged_at;
+}
 
 
 
@@ -88,12 +136,60 @@ type ChannelResult = {
   at: string;
 };
 
+type EmergencyContactRow = {
+  id: string;
+  nombre: string;
+  telefono: string;
+  whatsapp: string | null;
+  parentesco: string;
+  recibe_sms: boolean;
+  recibe_whatsapp: boolean;
+  recibe_llamada: boolean;
+};
+
+/** Destinatario activo de emergencia (fuente: emergency_contacts). */
+type EmergencyRecipient = {
+  id: string;
+  nombre: string;
+  telefono: string;
+  whatsapp: string;
+  recibe_sms: boolean;
+  recibe_whatsapp: boolean;
+  recibe_llamada: boolean;
+  parentesco: string;
+  /** E.164 normalizado para SMS y llamadas (compat. envío actual). */
+  phone: string;
+  /** E.164 normalizado para WhatsApp (fallback a telefono). */
+  whatsappPhone: string;
+};
+
+function toEmergencyRecipient(row: EmergencyContactRow): EmergencyRecipient | null {
+  const phone = normalizePhone(row.telefono);
+  if (!phone) return null;
+
+  const whatsapp = row.whatsapp ?? row.telefono;
+  const whatsappPhone = normalizePhone(whatsapp);
+  if (!whatsappPhone) return null;
+
+  return {
+    id: row.id,
+    nombre: row.nombre,
+    telefono: row.telefono,
+    whatsapp,
+    recibe_sms: row.recibe_sms,
+    recibe_whatsapp: row.recibe_whatsapp,
+    recibe_llamada: row.recibe_llamada,
+    parentesco: row.parentesco,
+    phone,
+    whatsappPhone,
+  };
+}
+
 /**
- * Envía alerta de emergencia REAL multicanal:
- *  - WhatsApp (Twilio)
- *  - SMS (Twilio)
- *  - Llamada automática con voz (Twilio TwiML inline)
- * Ejecuta TODOS los canales aunque alguno falle. Registra todo en alert_logs.
+ * Algoritmo de emergencia — Ecosistema Inteligente:
+ *  Fase 1: SMS + WhatsApp en paralelo (máx. 3 contactos activos por prioridad).
+ *  Fase 2: Tras 20s, escalamiento telefónico secuencial si no hay confirmación.
+ * Registra cada canal en alert_logs.
  */
 export const sendEmergencyAlert = createServerFn({ method: "POST" })
   .inputValidator((input) => Schema.parse(input))
@@ -115,27 +211,29 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
       return { ok: false, error: "user_not_found", results: [] as ChannelResult[] };
     }
 
-    const { data: contacts } = await supabaseAdmin
+    const { data: contactRows, error: contactsErr } = await supabaseAdmin
       .from("emergency_contacts")
-      .select("id, nombre, telefono, parentesco")
-      .eq("contract_signup_id", user.id);
+      .select(
+        "id, nombre, telefono, whatsapp, parentesco, recibe_sms, recibe_whatsapp, recibe_llamada",
+      )
+      .eq("contract_signup_id", data.signupId)
+      .eq("activo", true)
+      .order("prioridad", { ascending: true })
+      .order("created_at", { ascending: true });
 
-    const recipients = (contacts ?? [])
-      .map((c) => ({ ...c, phone: normalizePhone(c.telefono) }))
-      .filter((c) => c.phone) as Array<{ id: string; nombre: string; telefono: string; parentesco: string; phone: string }>;
+    if (contactsErr) {
+      console.error("[sendEmergencyAlert] emergency_contacts:", contactsErr.message);
+    }
+
+    const recipients: EmergencyRecipient[] = (contactRows ?? [])
+      .map((row) => toEmergencyRecipient(row as EmergencyContactRow))
+      .filter((r): r is EmergencyRecipient => r !== null);
 
     const ts = new Date();
     const timestamp = ts.toLocaleString("es-CL", { timeZone: "America/Santiago" });
-    // GPS opcional: si el APK no logra sincronizar en 3s, enviamos null y avisamos en el mensaje.
-    const hasGps = !!data.gps;
-    const resolvedGps = hasGps
-      ? {
-          lat: data.gps!.lat,
-          lng: data.gps!.lng,
-          accuracy: data.gps!.accuracy,
-          source: "device" as const,
-        }
-      : null;
+    const resolvedGps = resolveGpsFromInput(data);
+    const topContacts = recipients.slice(0, MAX_INITIAL_CONTACTS);
+    const callEscalationContacts = recipients.filter((r) => r.recibe_llamada);
     const mapsLink = resolvedGps
       ? `https://maps.google.com/?q=${resolvedGps.lat},${resolvedGps.lng}`
       : null;
@@ -156,8 +254,6 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
       `${locationBlock}\n\n` +
       `⏰ Hora:\n${timestamp}\n\n` +
       `Por favor contacta inmediatamente al usuario.\n\n` +
-      `Confirma que recibiste esta alerta:\n${ackUrl}`;
-
       `Confirma que recibiste esta alerta:\n${ackUrl}`;
 
     const voiceText =
@@ -182,7 +278,14 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
         gps_lng: resolvedGps?.lng ?? null,
         gps_accuracy: resolvedGps?.accuracy ?? null,
         recipients: recipients.map((r) => ({ id: r.id, nombre: r.nombre, telefono: r.phone, parentesco: r.parentesco })),
-        metadata: { maps_link: mapsLink, timestamp, ack_url: ackUrl, gps_source: resolvedGps?.source ?? "unavailable" },
+        metadata: {
+          maps_link: mapsLink,
+          timestamp,
+          ack_url: ackUrl,
+          gps_source: resolvedGps?.source ?? "unavailable",
+          algorithm: "ecosystem_v2",
+          max_initial_contacts: MAX_INITIAL_CONTACTS,
+        },
 
 
         acknowledgement_token: ackToken,
@@ -195,13 +298,18 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
 
     if (data.trainingMode) {
       const simulatedAt = new Date().toISOString();
-      for (const c of recipients) {
-        const to = c.phone;
-        results.push(
-          { channel: "call", to, status: "sent", sid: "TRAINING_SIM", error: null, event: "call_simulated", at: simulatedAt },
-          { channel: "sms", to, status: "sent", sid: "TRAINING_SIM", error: null, event: "sms_simulated", at: simulatedAt },
-          { channel: "whatsapp", to, status: "sent", sid: "TRAINING_SIM", error: null, event: "whatsapp_simulated", at: simulatedAt },
-        );
+      for (const c of topContacts) {
+        if (c.recibe_sms) {
+          results.push({ channel: "sms", to: c.phone, status: "sent", sid: "TRAINING_SIM", error: null, event: "sms_simulated", at: simulatedAt });
+        }
+        if (c.recibe_whatsapp) {
+          results.push({ channel: "whatsapp", to: c.whatsappPhone, status: "sent", sid: "TRAINING_SIM", error: null, event: "whatsapp_simulated", at: simulatedAt });
+        }
+      }
+      for (const c of callEscalationContacts) {
+        if (c.recibe_llamada) {
+          results.push({ channel: "call", to: c.phone, status: "sent", sid: "TRAINING_SIM", error: null, event: "call_simulated", at: simulatedAt });
+        }
       }
       if (recipients.length === 0) {
         results.push(
@@ -241,83 +349,155 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
 
     if (!isTwilioConfigured()) {
       const err = "twilio_not_configured";
-      results.push({ channel: "whatsapp", to: "-", status: "failed", error: err, event: "whatsapp_failed", at: new Date().toISOString() });
-      results.push({ channel: "sms", to: "-", status: "failed", error: err, event: "sms_failed", at: new Date().toISOString() });
-      results.push({ channel: "call", to: "-", status: "failed", error: err, event: "call_failed", at: new Date().toISOString() });
+      const at = new Date().toISOString();
+      results.push({ channel: "whatsapp", to: "-", status: "failed", error: err, event: "whatsapp_failed", at });
+      results.push({ channel: "sms", to: "-", status: "failed", error: err, event: "sms_failed", at });
+      results.push({ channel: "call", to: "-", status: "failed", error: err, event: "call_failed", at });
     } else {
-      const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
+      const nowIso = () => new Date().toISOString();
 
-      // FASE 1 — Llamada automática INMEDIATA (no requiere GPS)
-      for (const c of recipients) {
-        const to = c.phone;
-        if (!voiceFrom) {
-          results.push({ channel: "call", to, status: "skipped", error: "missing TWILIO_VOICE_FROM", event: "call_skipped", at: new Date().toISOString() });
-          continue;
+      const pushSkipped = (
+        channel: ChannelResult["channel"],
+        to: string,
+        error: string,
+        event: string,
+      ) => {
+        results.push({ channel, to, status: "skipped", error, event, at: nowIso() });
+      };
+
+      // ── FASE 1: SMS + WhatsApp en paralelo (máx. 3 contactos) ──
+      const phase1Tasks: Promise<ChannelResult>[] = [];
+
+      for (const c of topContacts) {
+        if (c.recibe_sms) {
+          if (!smsFrom) {
+            pushSkipped("sms", c.phone, "missing TWILIO_SMS_FROM", "sms_skipped");
+          } else {
+            phase1Tasks.push(
+              twilioPost("/Messages.json", { To: c.phone, From: smsFrom, Body: textMessage })
+                .then((r) => ({
+                  channel: "sms" as const,
+                  to: c.phone,
+                  status: r.ok ? ("sent" as const) : ("failed" as const),
+                  sid: twilioResourceSid(r.data),
+                  error: r.ok ? null : `Twilio ${r.status}: ${JSON.stringify(r.data)}`,
+                  event: r.ok ? "sms_sent" : "sms_failed",
+                  at: nowIso(),
+                }))
+                .catch((e: unknown) => ({
+                  channel: "sms" as const,
+                  to: c.phone,
+                  status: "failed" as const,
+                  error: String((e as Error)?.message ?? e),
+                  event: "sms_failed",
+                  at: nowIso(),
+                })),
+            );
+          }
+        } else {
+          pushSkipped("sms", c.phone, "recibe_sms_disabled", "sms_skipped");
         }
-        try {
-          const r = await twilioPost("/Calls.json", { To: to, From: voiceFrom, Twiml: twiml });
-          results.push({
-            channel: "call",
-            to,
-            status: r.ok ? "sent" : "failed",
-            sid: twilioResourceSid(r.data),
-            error: r.ok ? null : `Twilio ${r.status}: ${JSON.stringify(r.data)}`,
-            event: r.ok ? "call_started" : "call_failed",
-            at: new Date().toISOString(),
-          });
-        } catch (e: any) {
-          results.push({ channel: "call", to, status: "failed", error: String(e?.message ?? e), event: "call_failed", at: new Date().toISOString() });
+
+        if (c.recibe_whatsapp) {
+          phase1Tasks.push(
+            twilioPost("/Messages.json", {
+              To: `whatsapp:${c.whatsappPhone}`,
+              From: waFrom,
+              Body: textMessage,
+            })
+              .then((r) => ({
+                channel: "whatsapp" as const,
+                to: c.whatsappPhone,
+                status: r.ok ? ("sent" as const) : ("failed" as const),
+                sid: twilioResourceSid(r.data),
+                error: r.ok ? null : `Twilio ${r.status}: ${JSON.stringify(r.data)}`,
+                event: r.ok ? "whatsapp_sent" : "whatsapp_failed",
+                at: nowIso(),
+              }))
+              .catch((e: unknown) => ({
+                channel: "whatsapp" as const,
+                to: c.whatsappPhone,
+                status: "failed" as const,
+                error: String((e as Error)?.message ?? e),
+                event: "whatsapp_failed",
+                at: nowIso(),
+              })),
+          );
+        } else {
+          pushSkipped("whatsapp", c.whatsappPhone, "recibe_whatsapp_disabled", "whatsapp_skipped");
         }
       }
 
-      // FASE 2 — SMS (espera 15s desde el inicio para dar tiempo al GPS)
-      await sleep(15000);
-      for (const c of recipients) {
-        const to = c.phone;
-        if (!smsFrom) {
-          results.push({ channel: "sms", to, status: "skipped", error: "missing TWILIO_SMS_FROM", event: "sms_skipped", at: new Date().toISOString() });
-          continue;
-        }
-        try {
-          const r = await twilioPost("/Messages.json", { To: to, From: smsFrom, Body: textMessage });
-          results.push({
-            channel: "sms",
-            to,
-            status: r.ok ? "sent" : "failed",
-            sid: twilioResourceSid(r.data),
-            error: r.ok ? null : `Twilio ${r.status}: ${JSON.stringify(r.data)}`,
-            event: r.ok ? "sms_sent" : "sms_failed",
-            at: new Date().toISOString(),
-          });
-        } catch (e: any) {
-          results.push({ channel: "sms", to, status: "failed", error: String(e?.message ?? e), event: "sms_failed", at: new Date().toISOString() });
-        }
+      const phase1Settled = await Promise.allSettled(phase1Tasks);
+      for (const outcome of phase1Settled) {
+        if (outcome.status === "fulfilled") results.push(outcome.value);
       }
 
-      // Espera adicional de 10s (total 25s desde el inicio) antes de WhatsApp
-      if (recipients.length > 0) await sleep(10000);
+      if (logRow?.id) {
+        const phase1Sent = results.filter((r) => r.status === "sent");
+        await supabaseAdmin
+          .from("alert_logs")
+          .update({
+            status: phase1Sent.length > 0 ? "partial" : "pending",
+            metadata: {
+              maps_link: mapsLink,
+              timestamp,
+              ack_url: ackUrl,
+              gps_source: resolvedGps?.source ?? "unavailable",
+              algorithm: "ecosystem_v2",
+              phase: "phase1_complete",
+              phase1_contacts: topContacts.map((contact) => contact.id),
+              results: [...results],
+            },
+          } as never)
+          .eq("id", logRow.id);
+      }
 
+      // ── FASE 2: escalamiento telefónico secuencial tras 20s ──
+      await sleep(VOICE_ESCALATION_DELAY_MS);
 
-      // FASE 3 — WhatsApp
-      for (const c of recipients) {
-        const to = c.phone;
-        try {
-          const r = await twilioPost("/Messages.json", {
-            To: `whatsapp:${to}`,
-            From: waFrom,
-            Body: textMessage,
-          });
-          results.push({
-            channel: "whatsapp",
-            to,
-            status: r.ok ? "sent" : "failed",
-            sid: twilioResourceSid(r.data),
-            error: r.ok ? null : `Twilio ${r.status}: ${JSON.stringify(r.data)}`,
-            event: r.ok ? "whatsapp_sent" : "whatsapp_failed",
-            at: new Date().toISOString(),
-          });
-        } catch (e: any) {
-          results.push({ channel: "whatsapp", to, status: "failed", error: String(e?.message ?? e), event: "whatsapp_failed", at: new Date().toISOString() });
+      const acknowledgedBeforeCalls = logRow?.id ? await isAlertAcknowledged(logRow.id) : false;
+
+      if (acknowledgedBeforeCalls) {
+        pushSkipped("call", "-", "acknowledged_before_escalation", "call_escalation_skipped");
+      } else if (!voiceFrom) {
+        for (const c of callEscalationContacts) {
+          pushSkipped("call", c.phone, "missing TWILIO_VOICE_FROM", "call_skipped");
+        }
+      } else if (callEscalationContacts.length === 0) {
+        pushSkipped("call", "-", "no_call_recipients", "call_escalation_skipped");
+      } else {
+        for (const c of callEscalationContacts) {
+          if (logRow?.id && (await isAlertAcknowledged(logRow.id))) {
+            pushSkipped("call", c.phone, "acknowledged_during_escalation", "call_escalation_stopped");
+            break;
+          }
+
+          try {
+            const r = await twilioPost("/Calls.json", { To: c.phone, From: voiceFrom, Twiml: twiml });
+            results.push({
+              channel: "call",
+              to: c.phone,
+              status: r.ok ? "sent" : "failed",
+              sid: twilioResourceSid(r.data),
+              error: r.ok ? null : `Twilio ${r.status}: ${JSON.stringify(r.data)}`,
+              event: r.ok ? "call_started" : "call_failed",
+              at: nowIso(),
+            });
+          } catch (e: unknown) {
+            results.push({
+              channel: "call",
+              to: c.phone,
+              status: "failed",
+              error: String((e as Error)?.message ?? e),
+              event: "call_failed",
+              at: nowIso(),
+            });
+          }
+
+          if (logRow?.id && (await isAlertAcknowledged(logRow.id))) {
+            break;
+          }
         }
       }
     }
@@ -337,7 +517,18 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
         .from("alert_logs")
         .update({
           status: finalStatus,
-          metadata: { maps_link: mapsLink, timestamp, results, from: { waFrom, smsFrom, voiceFrom } },
+          metadata: {
+            maps_link: mapsLink,
+            timestamp,
+            ack_url: ackUrl,
+            gps_source: resolvedGps?.source ?? "unavailable",
+            algorithm: "ecosystem_v2",
+            phase: "complete",
+            phase1_contacts: topContacts.map((c) => c.id),
+            call_escalation_contacts: callEscalationContacts.map((c) => c.id),
+            results,
+            from: { waFrom, smsFrom, voiceFrom },
+          },
           error_message: anySent ? null : results.map((r) => r.error).filter(Boolean).join(" | ").slice(0, 500) || null,
         })
         .eq("id", logRow.id);
