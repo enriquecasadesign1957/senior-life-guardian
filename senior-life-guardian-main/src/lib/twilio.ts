@@ -98,8 +98,12 @@ export function twilioWhatsappFrom(): string {
   return process.env.TWILIO_WHATSAPP_FROM?.trim() || TWILIO_WHATSAPP_SANDBOX_FROM;
 }
 
-/** E.164 sin prefijo + para enlaces wa.me del número oficial Chile. */
-export const SENIOR_SAFE_WHATSAPP_COMMERCIAL_E164 = "56229147733";
+/**
+ * E.164 sin prefijo + para enlaces wa.me comerciales (solo UI).
+ * Temporal: celular personal — Meta no abre wa.me con red fija Twilio +56229147733.
+ * Backend/alertas siguen en TWILIO_WHATSAPP_FROM (whatsapp:+56229147733).
+ */
+export const SENIOR_SAFE_WHATSAPP_COMMERCIAL_E164 = "56971404580";
 
 export function seniorSafeWhatsAppMeUrl(text?: string): string {
   const base = `https://wa.me/${SENIOR_SAFE_WHATSAPP_COMMERCIAL_E164}`;
