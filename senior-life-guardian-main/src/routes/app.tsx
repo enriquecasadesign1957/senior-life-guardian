@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -15,21 +15,45 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
-  getAppConfiguration, listFamily, addFamily, updateFamily, deleteFamily, verifyPin,
+  getAppConfiguration, listFamily, addFamily, updateFamily, deleteFamily, verifyPin, setUserPin,
 } from "@/lib/family.functions";
 import { sendEmergencyAlert } from "@/lib/emergency-alert.functions";
-import { isTrainingDone, markTrainingDone, requiresPwaInstall } from "@/lib/post-payment";
+import {
+  isTrainingDone,
+  markTrainingDone,
+  persistSignupHandoff,
+  readStoredSignupId,
+  requiresPwaInstall,
+} from "@/lib/post-payment";
 import { PostPaymentInstallScreen } from "@/components/post-payment-install-screen";
 import { WhatsAppActivationButton } from "@/components/whatsapp-activation-button";
 import { InstallAppModal } from "@/components/install-app-modal";
 import { Download } from "lucide-react";
+import { loginAccountByEmail, loginErrorMessage } from "@/lib/account-login";
+import {
+  addFamilyWithFallback,
+  deleteFamilyWithFallback,
+  familyErrorMessage,
+  listFamilyWithFallback,
+  updateFamilyWithFallback,
+} from "@/lib/family-actions";
+import { savePinErrorMessage, saveUserPinWithFallback, verifyPinWithFallback } from "@/lib/pin-actions";
+import { FallDetectionOverlay, useFallDetection } from "@/hooks/useFallDetection";
 
 const appSearchSchema = z.object({
   entrenamiento: z.enum(["1"]).optional(),
+  ss: z.string().uuid().optional(),
 });
 
 export const Route = createFileRoute("/app")({
-  validateSearch: (s) => appSearchSchema.parse(s),
+  validateSearch: (raw) => {
+    const parsed = appSearchSchema.safeParse(raw);
+    if (parsed.success) return parsed.data;
+    return {
+      entrenamiento: raw.entrenamiento === "1" ? ("1" as const) : undefined,
+      ss: undefined,
+    };
+  },
   head: () => ({
     meta: [
       { title: "Senior Safe — Mi protección" },
@@ -71,6 +95,7 @@ async function hashPin(pin: string, salt: string) {
 }
 
 function AppHome() {
+  const routeSearch = Route.useSearch();
   const [stage, setStage] = useState<Stage>("idle");
   const [countdown, setCountdown] = useState(5);
   const [deliveredTo, setDeliveredTo] = useState<number>(0);
@@ -86,6 +111,7 @@ function AppHome() {
   const [batteryChecked, setBatteryChecked] = useState(false);
 
   const [manageOpen, setManageOpen] = useState(false);
+  const [pinConfigured, setPinConfigured] = useState(false);
   const [pinGateOpen, setPinGateOpen] = useState(false);
   const [pinUnlocked, setPinUnlocked] = useState(false);
   const [installOpen, setInstallOpen] = useState(false);
@@ -95,14 +121,16 @@ function AppHome() {
   const isTrainingRunRef = useRef(false);
   const [trainingRunActive, setTrainingRunActive] = useState(false);
   const [clientReady, setClientReady] = useState(false);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginBusy, setLoginBusy] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const p = new URLSearchParams(window.location.search);
-    setTrainingPending(p.get("entrenamiento") === "1");
+    setTrainingPending(routeSearch.entrenamiento === "1");
     setTrainingDone(isTrainingDone());
     setClientReady(true);
-  }, []);
+  }, [routeSearch.entrenamiento]);
 
   const mustInstallBeforeWebPanel =
     clientReady && !isInstalled && (trainingPending || requiresPwaInstall());
@@ -123,20 +151,24 @@ function AppHome() {
   const list = useServerFn(listFamily);
   const loadConfig = useServerFn(getAppConfiguration);
 
-  // Load account from onboarding handoff or saved session, then hydrate app config.
+  // Hidrata cuenta desde ?ss=, sessionStorage o email guardado (handoff post-pago / QR).
   useEffect(() => {
     let alive = true;
     (async () => {
       setLoadingContacts(true);
       try {
-        const params = new URLSearchParams(window.location.search);
-        const signupId = params.get("ss") || undefined;
+        const signupIdFromUrl = routeSearch.ss;
         let stored: Partial<TrialUser> | null = null;
         const raw = sessionStorage.getItem("seniorsafe_user") || localStorage.getItem("seniorsafe_user_backup");
         if (raw) stored = JSON.parse(raw);
 
+        if (signupIdFromUrl) {
+          persistSignupHandoff(signupIdFromUrl);
+          setUserId(signupIdFromUrl);
+        }
+
         const lookup = {
-          signupId: signupId || stored?.id || undefined,
+          signupId: signupIdFromUrl || stored?.id || undefined,
           email: stored?.email || undefined,
           telefono: stored?.telefono || undefined,
         };
@@ -150,6 +182,7 @@ function AppHome() {
           setUserId(user.id);
           setUserName(String(user.nombre ?? "").split(" ")[0]);
           setContacts(res.contacts as Contact[]);
+          setPinConfigured(Boolean(res.pinConfigured));
           setAccountConfigured(true);
           try { sessionStorage.setItem("seniorsafe_user", JSON.stringify(user)); } catch {}
           try { localStorage.setItem("seniorsafe_user_backup", JSON.stringify(user)); } catch {}
@@ -158,6 +191,9 @@ function AppHome() {
             const hasContacts = Array.isArray(res.contacts) && res.contacts.length > 0;
             localStorage.setItem("seniorsafe_progress", JSON.stringify({ pin: res.pinConfigured, contactos: hasContacts, gps: false, emergencia: false, app: true }));
           } catch {}
+        } else if (lookup.signupId) {
+          setUserId(lookup.signupId);
+          if (stored?.nombre) setUserName(String(stored.nombre).split(" ")[0]);
         } else if (stored?.id) {
           setUserId(stored.id);
           if (stored.nombre) setUserName(String(stored.nombre).split(" ")[0]);
@@ -170,7 +206,7 @@ function AppHome() {
       }
     })();
     return () => { alive = false; };
-  }, [loadConfig]);
+  }, [loadConfig, routeSearch.ss]);
 
   // Load contacts when userId is ready
   useEffect(() => {
@@ -179,7 +215,7 @@ function AppHome() {
     (async () => {
       setLoadingContacts(true);
       try {
-        const res = await list({ data: { signupId: userId } });
+        const res = await listFamilyWithFallback(list, userId);
         if (alive) setContacts(res.contacts as Contact[]);
       } catch (e) {
         console.error(e);
@@ -209,6 +245,60 @@ function AppHome() {
   }, [stage]);
 
   const sendAlert = useServerFn(sendEmergencyAlert);
+
+  const fetchFallGps = useCallback(async () => {
+    if (!("geolocation" in navigator)) return null;
+    return new Promise<{ lat: number; lng: number; accuracy?: number } | null>((resolve) => {
+      const to = setTimeout(() => resolve(null), 6000);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          clearTimeout(to);
+          resolve({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            accuracy: pos.coords.accuracy,
+          });
+        },
+        () => {
+          clearTimeout(to);
+          resolve(null);
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 30000 },
+      );
+    });
+  }, []);
+
+  const dispatchFallEmergency = useCallback(
+    async (gps: { lat: number; lng: number; accuracy?: number } | null) => {
+      if (!userId) return;
+      const res: any = await sendAlert({ data: { signupId: userId, gps } });
+      const sent = (res?.results ?? []).filter((r: any) => r.status === "sent").length;
+      if (sent > 0) toast.success("Alerta por caída enviada a tu familia.");
+      else if (res?.status === "no_recipients") toast.error("No hay familiares configurados.");
+      else toast.error("No pudimos enviar la alerta automática por caída.");
+    },
+    [sendAlert, userId],
+  );
+
+  const {
+    countdownSeconds: fallCountdown,
+    isCountdownActive: fallCountdownActive,
+    status: fallStatus,
+    cancelarAlerta,
+    requestPermission: requestFallPermission,
+  } = useFallDetection({
+    signupId: userId,
+    enabled: !!userId && stage === "idle",
+    getGps: fetchFallGps,
+    dispatchEmergency: dispatchFallEmergency,
+  });
+
+  useEffect(() => {
+    if (fallStatus === "permission_required" && userId) {
+      void requestFallPermission();
+    }
+  }, [fallStatus, userId, requestFallPermission]);
+
   const [alertSummary, setAlertSummary] = useState<{
     delivered: number;
     total: number;
@@ -304,8 +394,44 @@ function AppHome() {
   }, [stage, familyCount, userId, sendAlert]);
 
   const requestManage = () => {
+    if (!userId && !readStoredSignupId()) {
+      toast.error("Inicia sesión con tu correo o abre el enlace que recibiste tras el pago.");
+      return;
+    }
     if (pinUnlocked) setManageOpen(true);
     else setPinGateOpen(true);
+  };
+
+  const handleEmailLogin = async () => {
+    const email = loginEmail.trim().toLowerCase();
+    if (!email) {
+      setLoginError("Ingresa tu correo registrado.");
+      return;
+    }
+    setLoginBusy(true);
+    setLoginError(null);
+    try {
+      const res = await loginAccountByEmail(loadConfig, email);
+      if (!res.configured || !res.user) {
+        setLoginError(loginErrorMessage(res.error));
+        return;
+      }
+      const user = res.user as TrialUser;
+      setUserId(user.id);
+      setUserName(String(user.nombre ?? "").split(" ")[0]);
+      setContacts(res.contacts as Contact[]);
+      setPinConfigured(Boolean(res.pinConfigured));
+      setAccountConfigured(true);
+      persistSignupHandoff(user.id);
+      try { sessionStorage.setItem("seniorsafe_user", JSON.stringify(user)); } catch {}
+      try { localStorage.setItem("seniorsafe_user_backup", JSON.stringify(user)); } catch {}
+      toast.success(`Hola ${String(user.nombre ?? "").split(" ")[0]}`);
+    } catch (e) {
+      console.error(e);
+      setLoginError("No pudimos cargar tu cuenta. Revisa tu conexión e inténtalo de nuevo.");
+    } finally {
+      setLoginBusy(false);
+    }
   };
 
   const requestGps = () => {
@@ -336,6 +462,51 @@ function AppHome() {
         signupId={userId}
         showPaymentSuccess={false}
       />
+    );
+  }
+
+  if (configReady && !userId && !loadingContacts) {
+    return (
+      <div
+        className="min-h-dvh flex flex-col items-center justify-center p-6 text-white"
+        style={{ background: `linear-gradient(135deg, ${DEEP}, #0a3540)` }}
+      >
+        <div className="w-20 h-20 rounded-3xl bg-white/15 flex items-center justify-center mb-6 backdrop-blur-sm">
+          <Shield className="w-10 h-10" />
+        </div>
+        <h1 className="text-3xl font-extrabold mb-2">Senior Safe</h1>
+        <p className="text-white/80 text-center mb-8 max-w-xs">
+          Ingresa el correo con el que te registraste en alarmaseniorsafe.cl
+        </p>
+        <div className="w-full max-w-sm space-y-3">
+          <Label htmlFor="app-email" className="text-white/90">Correo registrado</Label>
+          <Input
+            id="app-email"
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            value={loginEmail}
+            onChange={(e) => { setLoginEmail(e.target.value); setLoginError(null); }}
+            onKeyDown={(e) => { if (e.key === "Enter") handleEmailLogin(); }}
+            placeholder="tu@correo.cl"
+            className="h-14 text-base bg-white text-foreground"
+          />
+          {loginError && (
+            <p className="text-sm font-medium text-red-200 bg-red-950/40 rounded-xl px-3 py-2" role="alert">
+              {loginError}
+            </p>
+          )}
+          <Button
+            type="button"
+            onClick={handleEmailLogin}
+            disabled={loginBusy}
+            className="w-full h-14 text-lg font-bold"
+            style={{ background: GREEN }}
+          >
+            {loginBusy ? <Loader2 className="w-5 h-5 animate-spin" /> : "Entrar"}
+          </Button>
+        </div>
+      </div>
     );
   }
 
@@ -557,7 +728,7 @@ function AppHome() {
             </div>
           ) : familyCount === 0 ? (
             <div className="text-sm text-muted-foreground py-2">
-              Aún no has agregado familiares. Usa “Administrar familiares” para añadirlos.
+              Aún no has agregado familiares. {pinConfigured ? "Usa “Administrar familiares” para añadirlos." : "Primero crea tu PIN de seguridad (botón de abajo)."}
             </div>
           ) : (
             <ul className="space-y-2">
@@ -580,16 +751,29 @@ function AppHome() {
             </ul>
           )}
 
+          {!pinConfigured && userId && (
+            <button
+              type="button"
+              onClick={() => setPinGateOpen(true)}
+              className="mt-3 w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-2xl text-white font-bold text-sm shadow-md"
+              style={{ background: DEEP }}
+            >
+              <KeyRound className="w-4 h-4" /> Crear PIN de seguridad (4 dígitos)
+            </button>
+          )}
+
           <button
             type="button"
             onClick={requestManage}
             disabled={!userId}
-            className="mt-3 w-full inline-flex items-center justify-center gap-2 py-3 rounded-2xl border border-border text-foreground font-bold text-sm hover:bg-muted transition disabled:opacity-50"
+            className={`w-full inline-flex items-center justify-center gap-2 py-3 rounded-2xl border border-border text-foreground font-bold text-sm hover:bg-muted transition disabled:opacity-50 ${pinConfigured ? "mt-3" : "mt-2"}`}
           >
             <KeyRound className="w-4 h-4" /> Administrar familiares
           </button>
           <p className="mt-2 text-[11px] text-muted-foreground text-center">
-            Para editar tu red pediremos tu PIN. La emergencia nunca pide PIN.
+            {pinConfigured
+              ? "Para editar tu red pediremos tu PIN. La emergencia nunca pide PIN."
+              : "Crea tu PIN una vez; luego podrás agregar y editar familiares."}
           </p>
         </section>
 
@@ -612,7 +796,16 @@ function AppHome() {
       <PinGateDialog
         open={pinGateOpen}
         signupId={userId}
+        pinConfigured={pinConfigured}
         onClose={() => setPinGateOpen(false)}
+        onPinConfigured={() => {
+          setPinConfigured(true);
+          try {
+            const raw = localStorage.getItem("seniorsafe_progress");
+            const prog = raw ? JSON.parse(raw) : {};
+            localStorage.setItem("seniorsafe_progress", JSON.stringify({ ...prog, pin: true }));
+          } catch { /* ignore */ }
+        }}
         onSuccess={() => { setPinUnlocked(true); setPinGateOpen(false); setManageOpen(true); }}
       />
 
@@ -787,6 +980,13 @@ function AppHome() {
         </div>
       )}
 
+      <FallDetectionOverlay
+        isActive={fallCountdownActive}
+        countdownSeconds={fallCountdown}
+        isDispatching={fallStatus === "dispatching"}
+        onCancel={cancelarAlerta}
+      />
+
       <InstallAppModal open={installOpen} onClose={() => setInstallOpen(false)} signupId={userId} />
     </div>
   );
@@ -826,65 +1026,182 @@ function PermissionButton({ icon: Icon, label, done, onClick }: { icon: any; lab
   );
 }
 
-/* ---------- PIN Gate ---------- */
+/* ---------- PIN Gate (crear o verificar) ---------- */
 function PinGateDialog({
-  open, onClose, signupId, onSuccess,
-}: { open: boolean; onClose: () => void; signupId: string | null; onSuccess: () => void }) {
+  open, onClose, signupId, pinConfigured, onPinConfigured, onSuccess,
+}: {
+  open: boolean;
+  onClose: () => void;
+  signupId: string | null;
+  pinConfigured: boolean;
+  onPinConfigured: () => void;
+  onSuccess: () => void;
+}) {
   const [pin, setPin] = useState("");
+  const [confirmPin, setConfirmPin] = useState("");
+  const [phase, setPhase] = useState<"verify" | "create" | "confirm">("verify");
   const [busy, setBusy] = useState(false);
+  const [inlineError, setInlineError] = useState<string | null>(null);
+  const confirmStartedRef = useRef(false);
   const verify = useServerFn(verifyPin);
+  const savePin = useServerFn(setUserPin);
 
-  useEffect(() => { if (open) setPin(""); }, [open]);
+  const activeSignupId = signupId || readStoredSignupId();
 
-  const submit = async () => {
-    if (!signupId) { toast.error("Sesión no encontrada."); return; }
-    if (pin.length !== 4) { toast.error("Ingresa los 4 dígitos."); return; }
+  useEffect(() => {
+    if (!open) return;
+    setPin("");
+    setConfirmPin("");
+    setInlineError(null);
+    confirmStartedRef.current = false;
+    setPhase(pinConfigured ? "verify" : "create");
+  }, [open, pinConfigured]);
+
+  useEffect(() => {
+    if (!open || phase !== "create" || pin.length !== 4) return;
+    const t = setTimeout(() => setPhase("confirm"), 250);
+    return () => clearTimeout(t);
+  }, [open, phase, pin]);
+
+  const submitVerify = async () => {
+    if (!activeSignupId) {
+      setInlineError("No encontramos tu cuenta. Inicia sesión con tu correo.");
+      toast.error("Sesión no encontrada.");
+      return;
+    }
+    if (pin.length !== 4) { setInlineError("Ingresa los 4 dígitos."); return; }
+    setInlineError(null);
     setBusy(true);
     try {
-      const pinHash = await hashPin(pin, signupId);
-      const res = await verify({ data: { signupId, pinHash } });
+      const pinHash = await hashPin(pin, activeSignupId);
+      const res = await verifyPinWithFallback(verify, activeSignupId, pinHash);
       if (!res.configured) {
-        toast.info("Aún no has creado tu PIN. Configúralo en la activación.");
-        onClose();
+        setPhase("create");
+        setPin("");
         return;
       }
-      if (!res.ok) { toast.error("PIN incorrecto."); setPin(""); return; }
+      if (!res.ok) {
+        setInlineError("PIN incorrecto.");
+        setPin("");
+        return;
+      }
       toast.success("PIN correcto.");
       onSuccess();
     } catch (e) {
       console.error(e);
+      setInlineError("No pudimos verificar el PIN. Revisa tu conexión.");
       toast.error("No pudimos verificar el PIN.");
     } finally { setBusy(false); }
   };
 
+  const submitCreate = () => {
+    if (!activeSignupId) {
+      setInlineError("No encontramos tu cuenta. Inicia sesión con tu correo.");
+      return;
+    }
+    if (pin.length !== 4) { setInlineError("Elige 4 dígitos."); return; }
+    setInlineError(null);
+    setPhase("confirm");
+    setConfirmPin("");
+  };
+
+  const submitConfirm = async () => {
+    if (!activeSignupId) {
+      setInlineError("No encontramos tu cuenta. Inicia sesión con tu correo.");
+      toast.error("Sesión no encontrada.");
+      return;
+    }
+    if (confirmPin !== pin) {
+      setInlineError("Los PIN no coinciden. Intenta de nuevo.");
+      setConfirmPin("");
+      setPin("");
+      setPhase("create");
+      confirmStartedRef.current = false;
+      return;
+    }
+    setInlineError(null);
+    setBusy(true);
+    try {
+      const pinHash = await hashPin(pin, activeSignupId);
+      const saved = await saveUserPinWithFallback(savePin, activeSignupId, pinHash);
+      if (!saved.ok) {
+        setInlineError(savePinErrorMessage(saved.error));
+        toast.error(savePinErrorMessage(saved.error));
+        confirmStartedRef.current = false;
+        return;
+      }
+      onPinConfigured();
+      toast.success("PIN creado. Ya puedes administrar familiares.");
+      onSuccess();
+    } catch (e) {
+      console.error(e);
+      setInlineError(savePinErrorMessage());
+      toast.error("No pudimos guardar tu PIN.");
+      confirmStartedRef.current = false;
+    } finally { setBusy(false); }
+  };
+
+  useEffect(() => {
+    if (!open || phase !== "confirm" || confirmPin.length !== 4 || busy || confirmStartedRef.current) return;
+    confirmStartedRef.current = true;
+    void submitConfirm();
+  }, [open, phase, confirmPin, busy]);
+
+  const title =
+    phase === "verify" ? "Ingresa tu PIN" : phase === "create" ? "Crea tu PIN" : "Confirma tu PIN";
+  const description =
+    phase === "verify"
+      ? "El PIN protege la edición de tu red familiar. La emergencia nunca pide PIN."
+      : phase === "create"
+        ? "Elige 4 dígitos fáciles de recordar. Los usarás para agregar familiares."
+        : "Vuelve a ingresar el mismo PIN para confirmar.";
+
+  const value = phase === "confirm" ? confirmPin : pin;
+  const setValue = (v: string) => (phase === "confirm" ? setConfirmPin(v) : setPin(v));
+
+  const onSubmit = () => {
+    if (phase === "verify") return submitVerify();
+    if (phase === "create") return submitCreate();
+    return submitConfirm();
+  };
+
+  const primaryLabel =
+    phase === "verify" ? "Desbloquear" : phase === "create" ? "Continuar" : "Guardar PIN";
+
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="sm:max-w-sm z-[100]">
         <DialogHeader>
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-2" style={{ background: DEEP }}>
             <KeyRound className="w-7 h-7" />
           </div>
-          <DialogTitle className="text-2xl">Ingresa tu PIN</DialogTitle>
-          <DialogDescription className="text-base">
-            El PIN protege la edición de tu red familiar y los ajustes. La emergencia nunca pide PIN.
-          </DialogDescription>
+          <DialogTitle className="text-2xl">{title}</DialogTitle>
+          <DialogDescription className="text-base">{description}</DialogDescription>
         </DialogHeader>
         <div className="py-2">
           <Input
             inputMode="numeric"
             autoFocus
             maxLength={4}
-            value={pin}
-            onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+            value={value}
+            onChange={(e) => {
+              setInlineError(null);
+              setValue(e.target.value.replace(/\D/g, "").slice(0, 4));
+            }}
             placeholder="••••"
             className="text-center text-3xl tracking-[0.6em] h-16"
-            onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
+            onKeyDown={(e) => { if (e.key === "Enter") onSubmit(); }}
           />
+          {inlineError && (
+            <p className="mt-2 text-sm font-medium text-destructive text-center" role="alert">
+              {inlineError}
+            </p>
+          )}
         </div>
         <DialogFooter className="gap-2 sm:gap-2">
-          <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button onClick={submit} disabled={busy || pin.length !== 4} style={{ background: DEEP }}>
-            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : "Desbloquear"}
+          <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button type="button" onClick={onSubmit} disabled={busy || value.length !== 4} style={{ background: DEEP }}>
+            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : primaryLabel}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -917,19 +1234,27 @@ function ManageFamilyDialog({
     setBusy(true);
     try {
       if (editingId) {
-        const res = await upd({ data: { signupId, id: editingId, contact: form } });
+        const res = await updateFamilyWithFallback(upd, signupId, editingId, form);
+        if (!res.contact) {
+          toast.error(familyErrorMessage(res.error));
+          return;
+        }
         setContacts(contacts.map(c => c.id === editingId ? (res.contact as Contact) : c));
         toast.success("Familiar actualizado");
       } else {
         if (contacts.length >= 5) { toast.error("Máximo 5 familiares."); return; }
-        const res = await add({ data: { signupId, contact: form } });
+        const res = await addFamilyWithFallback(add, signupId, form);
+        if (!res.contact) {
+          toast.error(familyErrorMessage(res.error));
+          return;
+        }
         setContacts([...contacts, res.contact as Contact]);
         toast.success("Familiar agregado");
       }
       resetForm();
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error(e);
-      toast.error(e?.message ?? "No pudimos guardar el familiar.");
+      toast.error(familyErrorMessage(e instanceof Error ? e.message : undefined));
     } finally { setBusy(false); }
   };
 
@@ -943,7 +1268,11 @@ function ManageFamilyDialog({
     if (!confirm(`¿Eliminar a ${c.nombre}?`)) return;
     setBusy(true);
     try {
-      await del({ data: { signupId, id: c.id } });
+      const res = await deleteFamilyWithFallback(del, signupId, c.id);
+      if (!res.ok) {
+        toast.error(familyErrorMessage(res.error));
+        return;
+      }
       setContacts(contacts.filter(x => x.id !== c.id));
       if (editingId === c.id) resetForm();
       toast.success("Familiar eliminado");

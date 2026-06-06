@@ -1,18 +1,21 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Bell, Shield, MapPin, Users, CheckCircle2, Loader2, X, Heart } from "lucide-react";
+import { Bell, Shield, MapPin, Users, CheckCircle2, Loader2, X, Heart, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getAppConfiguration, listFamily } from "@/lib/family.functions";
+import { persistSignupHandoff } from "@/lib/post-payment";
+import { loginAccountByEmail, loginErrorMessage } from "@/lib/account-login";
+import { listFamilyWithFallback } from "@/lib/family-actions";
 import { sendEmergencyAlert } from "@/lib/emergency-alert.functions";
 import { sendWellnessNotice } from "@/lib/wellness.functions";
 import { upsertHeartbeat } from "@/lib/heartbeat.functions";
 import { checkLastAlertAck } from "@/lib/family-portal.functions";
-import { Link } from "@tanstack/react-router";
 import { getCurrentCoordsWithError, getCurrentCoords, ensureGeoPermission } from "@/lib/geo";
+import { FallDetectionOverlay, useFallDetection } from "@/hooks/useFallDetection";
 
 export const Route = createFileRoute("/native")({
   head: () => ({
@@ -54,6 +57,7 @@ function NativeApp() {
   // login state
   const [loginEmail, setLoginEmail] = useState("");
   const [loginBusy, setLoginBusy] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   // emergency state
   const [stage, setStage] = useState<Stage>("idle");
@@ -76,6 +80,7 @@ function NativeApp() {
           setUserId(res.user.id);
           setUserName(String(res.user.nombre ?? "").split(" ")[0]);
           setContacts(res.contacts as Contact[]);
+          persistSignupHandoff(res.user.id);
           localStorage.setItem("seniorsafe_native_user", JSON.stringify(res.user));
         }
       } catch (e) {
@@ -188,7 +193,7 @@ function NativeApp() {
     let alive = true;
     (async () => {
       try {
-        const res = await list({ data: { signupId: userId } });
+        const res = await listFamilyWithFallback(list, userId);
         if (alive) setContacts(res.contacts as Contact[]);
       } catch (e) { console.warn("list family", e); }
     })();
@@ -213,6 +218,55 @@ function NativeApp() {
   // 5) Envío AUTOMÁTICO: disparado por el handler del botón (NO useEffect).
   //    Bloquea reentradas con sendingRef y congela la UI con stage="sending".
   const sendingRef = useRef(false);
+
+  const fetchFallGps = useCallback(async () => {
+    const gps = await getCurrentCoords({ highAccuracy: true, timeoutMs: 5000, maximumAgeMs: 30000 });
+    if (gps) {
+      setLastCoords(gps);
+      setGpsOk(true);
+    }
+    return gps ?? lastCoords;
+  }, [lastCoords]);
+
+  const dispatchFallEmergency = useCallback(
+    async (gps: { lat: number; lng: number; accuracy?: number } | null) => {
+      if (!userId) return;
+      const res = await sendAlert({
+        data: {
+          signupId: userId,
+          gps: gps ? { lat: gps.lat, lng: gps.lng, accuracy: gps.accuracy } : null,
+        },
+      });
+      const results = (res as { results?: Array<{ status: string }> })?.results ?? [];
+      const delivered = results.filter((r) => r.status === "sent").length;
+      if (delivered > 0) {
+        toast.success(`Alerta por caída enviada (${delivered}/${results.length} canales).`);
+      } else {
+        toast.error("No se pudo enviar la alerta automática por caída.");
+      }
+    },
+    [sendAlert, userId],
+  );
+
+  const {
+    countdownSeconds: fallCountdown,
+    isCountdownActive: fallCountdownActive,
+    status: fallStatus,
+    cancelarAlerta,
+    requestPermission: requestFallPermission,
+  } = useFallDetection({
+    signupId: userId,
+    enabled: !!userId && stage === "idle",
+    getGps: fetchFallGps,
+    dispatchEmergency: dispatchFallEmergency,
+  });
+
+  useEffect(() => {
+    if (fallStatus === "permission_required" && userId) {
+      void requestFallPermission();
+    }
+  }, [fallStatus, userId, requestFallPermission]);
+
   const triggerAlert = async () => {
     if (sendingRef.current) return;
     if (!userId) return;
@@ -293,22 +347,29 @@ function NativeApp() {
 
   const handleLogin = async () => {
     const email = loginEmail.trim().toLowerCase();
-    if (!email) { toast.error("Ingresa tu correo."); return; }
+    if (!email) {
+      setLoginError("Ingresa tu correo registrado.");
+      return;
+    }
     setLoginBusy(true);
+    setLoginError(null);
     try {
-      const res = await loadConfig({ data: { email } });
+      const res = await loginAccountByEmail(loadConfig, email);
       if (!res.configured || !res.user) {
-        toast.error("No encontramos tu cuenta. Regístrate en alarmaseniorsafe.cl");
+        setLoginError(loginErrorMessage(res.error));
         return;
       }
       setUserId(res.user.id);
       setUserName(String(res.user.nombre ?? "").split(" ")[0]);
       setContacts(res.contacts as Contact[]);
+      persistSignupHandoff(res.user.id);
       localStorage.setItem("seniorsafe_native_user", JSON.stringify(res.user));
+      try { sessionStorage.setItem("seniorsafe_user", JSON.stringify(res.user)); } catch {}
+      try { localStorage.setItem("seniorsafe_user_backup", JSON.stringify(res.user)); } catch {}
       toast.success(`Hola ${String(res.user.nombre ?? "").split(" ")[0]}`);
     } catch (e) {
       console.error(e);
-      toast.error("No pudimos cargar tu cuenta.");
+      setLoginError("No pudimos cargar tu cuenta. Revisa tu conexión e inténtalo de nuevo.");
     } finally {
       setLoginBusy(false);
     }
@@ -343,11 +404,18 @@ function NativeApp() {
             inputMode="email"
             autoComplete="email"
             value={loginEmail}
-            onChange={(e) => setLoginEmail(e.target.value)}
+            onChange={(e) => { setLoginEmail(e.target.value); setLoginError(null); }}
+            onKeyDown={(e) => { if (e.key === "Enter") handleLogin(); }}
             placeholder="tu@correo.cl"
             className="h-14 text-base bg-white text-foreground"
           />
+          {loginError && (
+            <p className="text-sm font-medium text-red-200 bg-red-950/40 rounded-xl px-3 py-2" role="alert">
+              {loginError}
+            </p>
+          )}
           <Button
+            type="button"
             onClick={handleLogin}
             disabled={loginBusy}
             className="w-full h-14 text-lg font-bold"
@@ -488,11 +556,20 @@ function NativeApp() {
           </div>
         )}
 
+        <Link
+          to="/app"
+          search={{ entrenamiento: "1", ss: userId ?? undefined }}
+          className="mt-3 w-full h-12 rounded-2xl text-white text-sm font-semibold flex items-center justify-center gap-2 shadow-md"
+          style={{ background: DEEP }}
+        >
+          <KeyRound className="w-4 h-4" /> Crear PIN y agregar familiares
+        </Link>
+
         {/* Acceso a Mis Guardianes (discreto, no compite con SOS) */}
         <Link
           to="/familia/guardianes"
           search={{ redirect: undefined }}
-          className="mt-3 w-full h-12 rounded-2xl border text-foreground text-sm font-semibold flex items-center justify-center gap-2 bg-white/70"
+          className="mt-2 w-full h-12 rounded-2xl border text-foreground text-sm font-semibold flex items-center justify-center gap-2 bg-white/70"
         >
           <Users className="w-4 h-4" /> Mis Guardianes
         </Link>
@@ -556,6 +633,13 @@ function NativeApp() {
           </div>
         </div>
       )}
+
+      <FallDetectionOverlay
+        isActive={fallCountdownActive}
+        countdownSeconds={fallCountdown}
+        isDispatching={fallStatus === "dispatching"}
+        onCancel={cancelarAlerta}
+      />
     </div>
   );
 }
