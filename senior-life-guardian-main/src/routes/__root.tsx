@@ -11,6 +11,8 @@ import { useEffect } from "react";
 
 import appCss from "../styles.css?url";
 import { installApiBaseFetch } from "@/lib/api-base";
+import { productionHomeUrl } from "@/lib/app-url";
+import { Toaster } from "@/components/ui/sonner";
 
 // Parchea fetch para APK (Capacitor / file://). En preview de Lovable y
 // localhost NO se activa para evitar CORS. Se ejecuta dentro de useEffect
@@ -55,12 +57,12 @@ function NotFoundComponent() {
           The page you're looking for doesn't exist or has been moved.
         </p>
         <div className="mt-6">
-          <Link
-            to="/"
+          <a
+            href={productionHomeUrl()}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Go home
-          </Link>
+          </a>
         </div>
       </div>
     </div>
@@ -91,7 +93,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             Try again
           </button>
           <a
-            href="/"
+            href={productionHomeUrl()}
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
             Go home
@@ -131,8 +133,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/manifest.json?v=2026-05-29" },
       
-      { rel: "apple-touch-icon", href: "https://storage.googleapis.com/gpt-engineer-file-uploads/WEgAKtYLuSfQACezmGynaHiHwV53/social-images/social-1778871881128-Logo_alarma.webp" },
-      { rel: "icon", type: "image/webp", href: "https://storage.googleapis.com/gpt-engineer-file-uploads/WEgAKtYLuSfQACezmGynaHiHwV53/social-images/social-1778871881128-Logo_alarma.webp" },
+      { rel: "apple-touch-icon", href: "/senior-life-guardian-512.webp" },
+      { rel: "icon", type: "image/webp", href: "/senior-life-guardian-512.webp" },
     ],
   }),
   shellComponent: RootShell,
@@ -196,6 +198,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
+      <Toaster position="top-center" richColors closeButton />
     </QueryClientProvider>
   );
 }

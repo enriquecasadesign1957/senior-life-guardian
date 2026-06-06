@@ -7,10 +7,10 @@ import {
   Monitor,
   Plus,
   QrCode,
-  Share,
   Smartphone,
   Apple,
   Shield,
+  ArrowUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { detectPlatform, isMobileDevice, isPwaStandalone } from "@/lib/device";
@@ -19,11 +19,14 @@ import {
   getCapturedInstallPrompt,
   triggerPwaInstallPrompt,
 } from "@/lib/pwa-install";
+import { PRODUCTION_SITE_URL } from "@/lib/app-url";
+import { toast } from "sonner";
 import {
-  APP_ENTRENAMIENTO_SEARCH,
+  buildAppHandoffSearch,
   buildMobileInstallPageUrl,
   clearRequiresPwaInstall,
   markRequiresPwaInstall,
+  persistSignupHandoff,
 } from "@/lib/post-payment";
 
 const DEEP = "var(--brand-petrol-deep)";
@@ -44,6 +47,13 @@ type Props = {
   showPaymentSuccess?: boolean;
 };
 
+/** Modo prueba: fuerza flujo iOS en cualquier navegador (?simular_ios=true). */
+function readSimulateIosFromUrl(): boolean {
+  if (typeof window === "undefined") return false;
+  const v = new URLSearchParams(window.location.search).get("simular_ios");
+  return v === "true" || v === "1";
+}
+
 function resolveSignupId(explicit?: string | null): string | null {
   if (explicit) return explicit;
   if (typeof window === "undefined") return null;
@@ -61,13 +71,45 @@ function resolveSignupId(explicit?: string | null): string | null {
   }
 }
 
+/** URL codificada en el QR — en producción siempre alarmaseniorsafe.cl/instalar-app */
+function buildQrTargetUrl(signupId: string | null, paymentSuccess: boolean): string {
+  if (import.meta.env.PROD) {
+    const u = new URL("/instalar-app", PRODUCTION_SITE_URL);
+    u.searchParams.set("entrenamiento", "1");
+    if (paymentSuccess) u.searchParams.set("pago", "ok");
+    if (signupId) u.searchParams.set("ss", signupId);
+    return u.toString();
+  }
+  return buildMobileInstallPageUrl(signupId, { paymentSuccess });
+}
+
 function qrImageUrl(target: string): string {
   return `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=14&data=${encodeURIComponent(target)}`;
 }
 
+/** Icono estilo Safari/iOS: cuadrado con flecha hacia arriba (Compartir). */
+function IosShareIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+      <polyline points="16 6 12 2 8 6" />
+      <line x1="12" y1="2" x2="12" y2="15" />
+    </svg>
+  );
+}
+
 /**
  * Pantalla post-pago: obliga a instalar la PWA/WAM antes del panel web.
- * — Móvil: botón central que dispara el prompt nativo (o guía iOS).
+ * — Móvil / iPhone: guía Safari automática o prompt nativo Android.
  * — Escritorio: QR + pasos; sin acceso al panel web tradicional.
  */
 export function PostPaymentInstallScreen({
@@ -82,17 +124,27 @@ export function PostPaymentInstallScreen({
   const [showIosGuide, setShowIosGuide] = useState(false);
   const [showAndroidGuide, setShowAndroidGuide] = useState(false);
   const [hasDeferredPrompt, setHasDeferredPrompt] = useState(false);
+  const [simulateIos, setSimulateIos] = useState(false);
+
+  const platform = useMemo(() => detectPlatform(), []);
   const mobile = useMemo(() => isMobileDevice(), []);
-  const { isIOS, isAndroid } = detectPlatform();
+  const effectiveIsIOS = platform.isIOS || simulateIos;
+  const showMobilePanel = mobile || effectiveIsIOS;
 
   const installPageUrl = useMemo(
-    () => buildMobileInstallPageUrl(signupId),
-    [signupId],
+    () => buildQrTargetUrl(signupId, showPaymentSuccess),
+    [signupId, showPaymentSuccess],
   );
 
   useEffect(() => {
+    setSimulateIos(readSimulateIosFromUrl());
+  }, []);
+
+  useEffect(() => {
     markRequiresPwaInstall();
-    setSignupId(resolveSignupId(signupIdProp));
+    const id = resolveSignupId(signupIdProp);
+    setSignupId(id);
+    if (id) persistSignupHandoff(id);
   }, [signupIdProp]);
 
   useEffect(() => {
@@ -117,17 +169,29 @@ export function PostPaymentInstallScreen({
     };
   }, []);
 
+  // Guía Safari automática en iPhone (o simulación) si aún no está instalada.
+  useEffect(() => {
+    if (effectiveIsIOS && !isPwaStandalone() && !installed) {
+      setShowIosGuide(true);
+    }
+  }, [effectiveIsIOS, installed]);
+
   const continueToApp = useCallback(() => {
+    const id = resolveSignupId(signupId);
+    if (!id) {
+      toast.error("No encontramos tu cuenta. Escanea el código QR o vuelve a abrir el enlace de instalación.");
+      return;
+    }
+    persistSignupHandoff(id, showPaymentSuccess ? { subscription_status: "active" } : undefined);
     clearRequiresPwaInstall();
-    navigate({ to: "/app", search: APP_ENTRENAMIENTO_SEARCH });
-  }, [navigate]);
+    navigate({ to: "/app", search: buildAppHandoffSearch(id) });
+  }, [navigate, signupId, showPaymentSuccess]);
 
   const handleInstallClick = async () => {
     setInstalling(true);
-    setShowIosGuide(false);
     setShowAndroidGuide(false);
     try {
-      if (isIOS) {
+      if (effectiveIsIOS) {
         setShowIosGuide(true);
         return;
       }
@@ -137,8 +201,7 @@ export function PostPaymentInstallScreen({
         return;
       }
       if (outcome === "dismissed" || outcome === "unavailable") {
-        if (isAndroid) setShowAndroidGuide(true);
-        else setShowAndroidGuide(true);
+        setShowAndroidGuide(true);
       }
     } finally {
       setInstalling(false);
@@ -150,6 +213,16 @@ export function PostPaymentInstallScreen({
       className="min-h-[100dvh] flex flex-col"
       style={{ background: "var(--gradient-soft)" }}
     >
+      {simulateIos && (
+        <div
+          className="mx-auto mt-3 max-w-lg w-full px-4 py-2 rounded-xl text-center text-xs font-bold border-2 border-dashed"
+          style={{ borderColor: PETROL, color: DEEP, background: "color-mix(in oklab, var(--brand-petrol) 8%, white)" }}
+          role="status"
+        >
+          Modo prueba iOS activo (?simular_ios=true) — la guía Safari se muestra automáticamente.
+        </div>
+      )}
+
       <header className="px-6 pt-10 pb-4 text-center max-w-lg mx-auto w-full">
         {showPaymentSuccess && (
           <>
@@ -160,25 +233,44 @@ export function PostPaymentInstallScreen({
               <CheckCircle2 className="w-9 h-9" style={{ color: GREEN }} />
             </div>
             <h1 className="mt-5 text-2xl md:text-3xl font-bold text-foreground tracking-tight">
-              ¡Pago aprobado!
+              ¡Pago confirmado!
             </h1>
-            <p className="mt-2 text-muted-foreground text-base">
-              Un último paso: instala Senior Safe en tu teléfono para usar la protección real.
+            <p className="mt-2 text-muted-foreground text-base leading-relaxed">
+              Tu suscripción Senior Safe está activa. Instala la app en tu teléfono y crea tu PIN de 4 dígitos para agregar familiares.
             </p>
-            {paymentSummary && (paymentSummary.amount != null || paymentSummary.buyOrder) && (
-              <div className="mt-5 text-left bg-card border border-border rounded-2xl p-4 text-sm space-y-1.5 shadow-sm">
+            {paymentSummary &&
+              (paymentSummary.amount != null ||
+                paymentSummary.buyOrder ||
+                paymentSummary.authorizationCode ||
+                paymentSummary.cardLast4) && (
+              <div className="mt-5 text-left bg-card border border-border rounded-2xl p-4 text-sm space-y-2 shadow-sm">
+                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                  Comprobante Webpay Plus
+                </p>
                 {paymentSummary.amount != null && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Monto</span>
+                  <div className="flex justify-between gap-4">
+                    <span className="text-muted-foreground">Monto pagado</span>
                     <span className="font-semibold">
-                      ${paymentSummary.amount.toLocaleString("es-CL")}
+                      ${paymentSummary.amount.toLocaleString("es-CL")} CLP
                     </span>
                   </div>
                 )}
+                {paymentSummary.authorizationCode && (
+                  <div className="flex justify-between gap-4">
+                    <span className="text-muted-foreground">Código de autorización</span>
+                    <span className="font-mono text-xs">{paymentSummary.authorizationCode}</span>
+                  </div>
+                )}
+                {paymentSummary.cardLast4 && (
+                  <div className="flex justify-between gap-4">
+                    <span className="text-muted-foreground">Tarjeta</span>
+                    <span className="font-mono text-xs">**** {paymentSummary.cardLast4}</span>
+                  </div>
+                )}
                 {paymentSummary.buyOrder && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Orden</span>
-                    <span className="font-mono text-xs">{paymentSummary.buyOrder}</span>
+                  <div className="flex justify-between gap-4">
+                    <span className="text-muted-foreground">Orden de compra</span>
+                    <span className="font-mono text-xs break-all text-right">{paymentSummary.buyOrder}</span>
                   </div>
                 )}
               </div>
@@ -195,21 +287,23 @@ export function PostPaymentInstallScreen({
               <Shield className="w-7 h-7" />
             </div>
             <h1 className="mt-4 text-2xl font-bold text-foreground">Instala Senior Safe</h1>
-            <p className="mt-2 text-muted-foreground">
-              Escaneaste el código desde tu computador. Continúa en este teléfono.
+            <p className="mt-2 text-muted-foreground text-base leading-relaxed">
+              {effectiveIsIOS
+                ? "Sigue los 3 pasos de abajo para guardar la app en tu iPhone."
+                : "Escaneaste el código desde tu computador. Continúa en este teléfono."}
             </p>
           </>
         )}
       </header>
 
       <main className="flex-1 px-6 pb-10 max-w-lg mx-auto w-full">
-        {mobile ? (
+        {showMobilePanel ? (
           <MobileInstallPanel
             installed={installed}
             installing={installing}
             hasDeferredPrompt={hasDeferredPrompt}
-            isIOS={isIOS}
-            isAndroid={isAndroid}
+            isIOS={effectiveIsIOS}
+            isAndroid={platform.isAndroid && !simulateIos}
             showIosGuide={showIosGuide}
             showAndroidGuide={showAndroidGuide}
             onInstall={handleInstallClick}
@@ -219,12 +313,112 @@ export function PostPaymentInstallScreen({
           <DesktopInstallPanel installPageUrl={installPageUrl} qrSrc={qrImageUrl(installPageUrl)} />
         )}
 
-        <p className="mt-8 text-center text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
-          {mobile
-            ? "El panel web en el navegador es solo temporal. La app instalada es la forma segura de usar el botón de emergencia."
+        <p className="mt-8 text-center text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
+          {showMobilePanel
+            ? effectiveIsIOS
+              ? "La app instalada en tu pantalla de inicio es la forma segura de usar el botón de emergencia 24/7."
+              : "El panel web en el navegador es solo temporal. La app instalada es la forma segura de usar el botón de emergencia."
             : "Por seguridad, el panel web no está disponible en computador. Usa tu celular para instalar la aplicación."}
         </p>
       </main>
+    </div>
+  );
+}
+
+function IosSafariInstallGuide() {
+  const steps = [
+    {
+      n: 1,
+      title: "Toca Compartir",
+      body: (
+        <>
+          En la barra inferior de Safari, toca el botón{" "}
+          <span className="inline-flex items-center gap-1 font-bold text-foreground">
+            <span
+              className="inline-flex items-center justify-center w-8 h-8 rounded-lg border-2 bg-white shadow-sm"
+              style={{ borderColor: PETROL, color: DEEP }}
+            >
+              <IosShareIcon className="w-5 h-5" />
+            </span>
+            Compartir
+          </span>{" "}
+          (cuadrado con flecha hacia arriba).
+        </>
+      ),
+    },
+    {
+      n: 2,
+      title: "Añadir a pantalla de inicio",
+      body: (
+        <>
+          Desliza hacia abajo el menú y elige{" "}
+          <span className="inline-flex items-center gap-1 font-bold text-foreground">
+            <Plus className="w-4 h-4" style={{ color: DEEP }} />
+            Añadir a pantalla de inicio
+          </span>
+          . En inglés aparece como <b>Add to Home Screen</b>.
+        </>
+      ),
+    },
+    {
+      n: 3,
+      title: 'Pulsa "Añadir"',
+      body: (
+        <>
+          En la esquina superior derecha, toca el botón azul{" "}
+          <b>Añadir</b>. Luego abre Senior Safe desde el ícono nuevo en tu pantalla de inicio.
+        </>
+      ),
+    },
+  ];
+
+  return (
+    <div
+      className="rounded-3xl border-4 p-5 md:p-6 space-y-4 shadow-lg"
+      style={{
+        borderColor: PETROL,
+        background: "linear-gradient(180deg, #ffffff 0%, color-mix(in oklab, var(--brand-petrol) 6%, white) 100%)",
+      }}
+      role="region"
+      aria-label="Guía de instalación en iPhone Safari"
+    >
+      <div className="flex items-center gap-3">
+        <div
+          className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shrink-0"
+          style={{ background: DEEP }}
+        >
+          <Apple className="w-6 h-6" />
+        </div>
+        <div>
+          <h2 className="text-xl font-extrabold text-foreground leading-tight">Instalar en iPhone</h2>
+          <p className="text-sm text-muted-foreground font-medium">Safari · 3 pasos sencillos</p>
+        </div>
+      </div>
+
+      <ol className="space-y-4">
+        {steps.map((step) => (
+          <li
+            key={step.n}
+            className="flex gap-4 rounded-2xl bg-white/90 border border-border p-4 shadow-sm"
+          >
+            <span
+              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-extrabold text-lg shrink-0"
+              style={{ background: step.n === 3 ? GREEN : DEEP }}
+            >
+              {step.n}
+            </span>
+            <div className="min-w-0">
+              <p className="text-base font-bold text-foreground mb-1">{step.title}</p>
+              <p className="text-base text-foreground/90 leading-relaxed">{step.body}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+
+      <p className="text-sm text-center font-semibold rounded-xl py-3 px-4" style={{ background: "color-mix(in oklab, #16a34a 10%, white)", color: "#166534" }}>
+        <ArrowUp className="inline w-4 h-4 mr-1 align-text-bottom" />
+        El botón Compartir está abajo en el centro de Safari
+      </p>
     </div>
   );
 }
@@ -260,8 +454,8 @@ function MobileInstallPanel({
           <CheckCircle2 className="w-10 h-10" />
         </div>
         <h2 className="text-xl font-bold text-foreground">App instalada</h2>
-        <p className="text-muted-foreground text-sm">
-          Abre Senior Safe desde el ícono en tu pantalla de inicio y completa el entrenamiento del botón de pánico.
+        <p className="text-muted-foreground text-base leading-relaxed">
+          Abre Senior Safe desde el ícono en tu pantalla de inicio y completa la configuración inicial.
         </p>
         <Button
           onClick={onContinue}
@@ -276,65 +470,64 @@ function MobileInstallPanel({
 
   return (
     <div className="bg-card border-2 border-border rounded-3xl p-6 md:p-8 shadow-xl space-y-5">
-      <div className="flex items-center gap-3 justify-center text-sm font-semibold text-muted-foreground">
-        <Smartphone className="w-5 h-5" style={{ color: DEEP }} />
-        Instalación en este teléfono
-      </div>
-
-      <Button
-        onClick={onInstall}
-        disabled={installing}
-        className="w-full h-[4.5rem] text-xl font-bold rounded-2xl shadow-xl"
-        style={{ background: GREEN, color: "white" }}
-      >
-        {installing ? (
-          <>
-            <Loader2 className="w-6 h-6 mr-2 animate-spin" />
-            Preparando instalación…
-          </>
-        ) : (
-          <>
-            <Download className="w-6 h-6 mr-2" />
-            Instalar aplicación
-          </>
-        )}
-      </Button>
-
-      <p className="text-center text-sm text-muted-foreground">
-        {isIOS
-          ? "En iPhone verás los pasos para añadir Senior Safe a tu pantalla de inicio."
-          : hasDeferredPrompt
-            ? "Toca el botón y confirma «Instalar» en el mensaje del navegador."
-            : "Si no aparece el mensaje automático, sigue la guía paso a paso debajo."}
-      </p>
-
-      {showIosGuide && (
-        <div className="rounded-2xl border-2 p-4 text-sm space-y-2" style={{ borderColor: PETROL }}>
-          <div className="font-bold flex items-center gap-2">
-            <Apple className="w-5 h-5" /> iPhone (Safari)
+      {isIOS && showIosGuide ? (
+        <IosSafariInstallGuide />
+      ) : (
+        <>
+          <div className="flex items-center gap-3 justify-center text-sm font-semibold text-muted-foreground">
+            <Smartphone className="w-5 h-5" style={{ color: DEEP }} />
+            Instalación en este teléfono
           </div>
-          <p>
-            1. Toca <Share className="inline w-4 h-4 align-text-bottom" /> <b>Compartir</b> abajo.
+
+          <Button
+            onClick={onInstall}
+            disabled={installing}
+            className="w-full h-[4.5rem] text-xl font-bold rounded-2xl shadow-xl"
+            style={{ background: GREEN, color: "white" }}
+          >
+            {installing ? (
+              <>
+                <Loader2 className="w-6 h-6 mr-2 animate-spin" />
+                Preparando instalación…
+              </>
+            ) : (
+              <>
+                <Download className="w-6 h-6 mr-2" />
+                Instalar aplicación
+              </>
+            )}
+          </Button>
+
+          <p className="text-center text-base text-muted-foreground leading-relaxed">
+            {hasDeferredPrompt
+              ? "Toca el botón y confirma «Instalar» en el mensaje del navegador."
+              : "Si no aparece el mensaje automático, sigue la guía paso a paso debajo."}
           </p>
-          <p>
-            2. Elige <Plus className="inline w-4 h-4 align-text-bottom" /> <b>Añadir a pantalla de inicio</b>.
-          </p>
-          <p>3. Toca <b>Añadir</b> y abre Senior Safe desde el ícono nuevo.</p>
-        </div>
+        </>
+      )}
+
+      {isIOS && !showIosGuide && (
+        <Button
+          variant="outline"
+          onClick={onInstall}
+          className="w-full h-14 text-base font-bold rounded-2xl"
+        >
+          Ver guía de instalación en iPhone
+        </Button>
       )}
 
       {showAndroidGuide && !isIOS && (
-        <div className="rounded-2xl border-2 p-4 text-sm space-y-2" style={{ borderColor: PETROL }}>
+        <div className="rounded-2xl border-2 p-4 text-base space-y-2" style={{ borderColor: PETROL }}>
           <div className="font-bold flex items-center gap-2">
             <Smartphone className="w-5 h-5" /> Android (Chrome)
           </div>
-          <ol className="space-y-2 list-decimal list-inside text-foreground">
+          <ol className="space-y-2 list-decimal list-inside text-foreground leading-relaxed">
             <li>Toca el menú <b>⋮</b> del navegador.</li>
             <li>Elige <b>Instalar aplicación</b> o <b>Añadir a pantalla de inicio</b>.</li>
             <li>Confirma <b>Instalar</b> y abre la app desde el ícono.</li>
           </ol>
           {isAndroid && (
-            <p className="text-xs text-muted-foreground pt-1">
+            <p className="text-sm text-muted-foreground pt-1">
               Si pagaste desde el computador, este enlace ya trae tu cuenta lista.
             </p>
           )}
@@ -352,10 +545,10 @@ function DesktopInstallPanel({
   qrSrc: string;
 }) {
   const steps = [
-    "Abre la cámara o app de escaneo QR en tu celular.",
-    "Apunta al código de abajo hasta que aparezca el enlace.",
-    "Toca el enlace y pulsa «Instalar aplicación» en tu teléfono.",
-    "Abre Senior Safe desde el ícono en la pantalla de inicio.",
+    "Abre la cámara de tu celular y escanea el código QR.",
+    "Se abrirá alarmaseniorsafe.cl con tu cuenta ya activa.",
+    "Pulsa «Instalar aplicación» y confirma en tu teléfono.",
+    "Abre Senior Safe desde el ícono y completa la configuración inicial.",
   ];
 
   return (
@@ -402,8 +595,8 @@ function DesktopInstallPanel({
         {installPageUrl}
       </div>
 
-      <p className="mt-5 text-sm text-center text-amber-800 font-medium rounded-xl p-3" style={{ background: "color-mix(in oklab, #f59e0b 12%, white)" }}>
-        El acceso al panel web desde este computador no está disponible. Debes completar la instalación en tu teléfono.
+      <p className="mt-5 text-sm text-center text-foreground font-medium rounded-xl p-3 bg-muted/50">
+        Senior Safe funciona como aplicación instalada en tu celular. El panel web en computador no está disponible por seguridad.
       </p>
     </div>
   );
