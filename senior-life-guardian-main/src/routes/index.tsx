@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import {
-  Shield, Phone, MessageCircle, MapPin, Bell, CheckCircle2,
+  Shield, MessageCircle, MapPin, CheckCircle2,
   Mail, ArrowRight, Heart, AlertCircle, Users, Zap, Smartphone,
-  Clock, Activity, Star, Accessibility, Home, Loader2,
-  CircleDot, PhoneCall, Radio, Satellite, Navigation, Send,
+  Clock, Activity, Star, Accessibility, Home,
+  PhoneCall, Radio, Navigation, Send,
+  Brain, Sparkles, Layers,
 } from "lucide-react";
 import emergencyButton from "@/assets/emergency-button.jpg";
 import seniorCouple from "@/assets/senior-couple.jpg";
@@ -13,7 +14,6 @@ import logo from "@/assets/logo-senior-safe.png";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import {
   PLAN,
-  PLAN_KEY,
   checkoutUrl,
   formatPlanPrice,
   yearlyEquivalentMonthly,
@@ -23,10 +23,10 @@ import { WhatsAppFloat } from "@/components/whatsapp-float";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Alarma Senior Safe — Seguridad inteligente para adultos mayores" },
-      { name: "description", content: "Protección inmediata para quienes más quieres. Botón de emergencia, GPS, WhatsApp, SMS y llamada automática conectados con la familia." },
-      { property: "og:title", content: "Alarma Senior Safe — Más que una app, una red de cuidado" },
-      { property: "og:description", content: "Conecta automáticamente a adultos mayores con sus familiares mediante alertas inteligentes." },
+      { title: "Senior Safe — Ecosistema Inteligente de Protección de Toda la Familia" },
+      { name: "description", content: "Infraestructura blindada con IA, telemetría y comunicaciones redundantes: WhatsApp, SMS, GPS en vivo y escalamiento por voz. Plan Único desde $6.900/mes." },
+      { property: "og:title", content: "Senior Safe — Ecosistema Inteligente de Protección Familiar" },
+      { property: "og:description", content: "Protección resiliente para toda la familia con canales redundantes y telemetría avanzada." },
     ],
   }),
   component: Landing,
@@ -55,15 +55,16 @@ function HeroPhoneMockup() {
           <div className="relative rounded-[2.25rem] overflow-hidden bg-black aspect-[9/19.5] ring-1 ring-white/10">
             <img
               src={emergencyButton}
-              alt="Pantalla Senior Safe con botón SOS"
+              alt="Aplicación Senior Safe con red de protección familiar activa"
               className="h-full w-full object-cover object-top"
             />
             <div className="absolute inset-x-0 bottom-0 p-4 pt-16 bg-gradient-to-t from-black/85 via-black/40 to-transparent">
               <div
-                className="mx-auto w-full max-w-[200px] py-4 rounded-2xl text-center font-bold text-white text-lg shadow-[0_0_40px_-8px_rgba(220,38,38,0.9)] border border-red-400/40 animate-pulse"
-                style={{ background: `linear-gradient(180deg, ${RED}, #991b1b)` }}
+                className="mx-auto w-full max-w-[200px] py-3 rounded-2xl text-center font-bold text-white text-sm shadow-lg border border-emerald-400/40"
+                style={{ background: `linear-gradient(180deg, ${GREEN}, #15803d)` }}
               >
-                SOS
+                <Shield className="inline w-4 h-4 mr-1 align-text-bottom" />
+                Red protegida 24/7
               </div>
             </div>
           </div>
@@ -116,31 +117,39 @@ function Hero() {
       <div className="relative max-w-6xl mx-auto px-6 pt-12 pb-16 md:pt-20 md:pb-24 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
         <div className="order-2 lg:order-1">
           <p className="text-sm font-bold uppercase tracking-[0.2em] text-white/70 mb-4 animate-fade-in">
-            Alarma Senior Safe
-          </p>
-          <p className="text-xl md:text-2xl text-white/90 font-light italic mb-5 animate-fade-in" style={{ animationDelay: "80ms" }}>
-            Seguridad inteligente para adultos mayores
+            Plan Único · desde ${formatPlanPrice(PLAN.monthly)}/mes
           </p>
           <h1
-            className="text-[36px] md:text-[52px] lg:text-[58px] font-bold leading-[1.06] tracking-tight animate-fade-in"
-            style={{ animationDelay: "120ms" }}
+            className="text-[30px] md:text-[44px] lg:text-[50px] font-bold leading-[1.08] tracking-tight animate-fade-in"
+            style={{ animationDelay: "80ms" }}
           >
-            Protección inmediata <br />
-            para quienes <span className="text-[#ffd66b] drop-shadow-sm">más quieres</span>.
+            Senior Safe — Ecosistema Inteligente de Protección de{" "}
+            <span className="text-[#ffd66b] drop-shadow-sm">Toda la Familia</span>
           </h1>
-          <p
-            className="mt-6 text-lg md:text-xl text-white/85 leading-relaxed max-w-xl animate-fade-in"
-            style={{ animationDelay: "180ms" }}
+          <h2
+            className="mt-5 text-lg md:text-xl text-white/90 font-medium leading-relaxed max-w-xl animate-fade-in"
+            style={{ animationDelay: "140ms" }}
           >
-            Senior Safe conecta automáticamente a adultos mayores con sus familiares mediante alertas inteligentes, ubicación GPS, llamadas, SMS y WhatsApp.
-          </p>
-          <div className="mt-8 flex flex-col sm:flex-row gap-3 animate-fade-in" style={{ animationDelay: "240ms" }}>
+            Una infraestructura tecnológica blindada que fusiona Inteligencia Artificial, telemetría avanzada y comunicaciones resilientes para cuidar a quienes más quieres.
+          </h2>
+          <div
+            className="mt-6 inline-flex flex-wrap items-center gap-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 px-5 py-3 animate-fade-in"
+            style={{ animationDelay: "200ms" }}
+          >
+            <span className="text-sm font-bold text-white/90">{PLAN.displayName}</span>
+            <span className="text-2xl md:text-3xl font-extrabold text-white">
+              ${formatPlanPrice(PLAN.monthly)}
+              <span className="text-base font-semibold text-white/80">/mes</span>
+            </span>
+            <span className="text-xs text-white/70">Sin permanencia · Webpay Plus</span>
+          </div>
+          <div className="mt-8 flex flex-col sm:flex-row gap-3 animate-fade-in" style={{ animationDelay: "260ms" }}>
             <a
               href={checkoutUrl()}
               className="inline-flex items-center justify-center gap-3 px-7 py-5 rounded-full bg-white text-base font-bold shadow-xl hover:scale-[1.03] hover:shadow-2xl transition-all duration-300"
               style={{ color: DEEP }}
             >
-              Contratar con Webpay
+              Contratar Plan Único — ${formatPlanPrice(PLAN.monthly)}/mes
               <ArrowRight className="w-5 h-5" />
             </a>
             <a
@@ -175,22 +184,22 @@ function Hero() {
 
 function QueEs() {
   const items = [
-    { icon: Bell, color: RED, title: "Botón de emergencia", desc: "Grande, visible y fácil de presionar." },
-    { icon: Zap, color: "#f59e0b", title: "Alertas automáticas", desc: "WhatsApp, SMS y llamada en segundos." },
-    { icon: MapPin, color: PETROL, title: "Ubicación GPS", desc: "Mapa con la ubicación exacta del usuario." },
-    { icon: Users, color: GREEN, title: "Conexión familiar", desc: "Toda la familia recibe la alerta a la vez." },
-    { icon: Smartphone, color: DEEP, title: "Facilidad de uso", desc: "Diseñado para adultos mayores: simple y claro." },
+    { icon: Layers, color: DEEP, title: "Ecosistema unificado", desc: "Una sola plataforma conecta senior, familia y canales de respuesta." },
+    { icon: Zap, color: "#f59e0b", title: "Alertas resilientes", desc: "WhatsApp, SMS, GPS y voz en cascada ante emergencias reales." },
+    { icon: MapPin, color: PETROL, title: "Telemetría en vivo", desc: "Coordenadas exactas y contexto operativo en cada evento." },
+    { icon: Users, color: GREEN, title: "Red familiar priorizada", desc: "Hasta 10 guardianes con orden de escalamiento inteligente." },
+    { icon: Smartphone, color: RED, title: "Diseño senior-first", desc: "Interfaz clara, accesible y pensada para el uso diario en casa." },
   ];
   return (
     <section id="que-es" className="py-20 md:py-24 bg-background">
       <div className="max-w-6xl mx-auto px-6">
-        <div className="text-center max-w-2xl mx-auto mb-12">
+        <div className="text-center max-w-3xl mx-auto mb-12">
           <div className="text-sm font-bold uppercase tracking-[0.18em] mb-3" style={{ color: PETROL }}>¿Qué es?</div>
           <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight">
-            Una red de cuidado familiar, en un solo botón.
+            Más que una app: un ecosistema de protección familiar.
           </h2>
-          <p className="mt-5 text-lg text-muted-foreground">
-            Alarma Senior Safe es una aplicación simple y segura que permite a los adultos mayores pedir ayuda en segundos, conectándose automáticamente con sus familiares.
+          <p className="mt-5 text-lg text-muted-foreground leading-relaxed">
+            Senior Safe integra inteligencia artificial, sensores del teléfono y comunicaciones redundantes para que tu familia reciba ayuda cuando más importa — sin depender de un solo canal.
           </p>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-5">
@@ -206,8 +215,8 @@ function QueEs() {
         </div>
         <div className="mt-12 text-center">
           <div className="inline-flex items-center gap-3 px-6 py-4 rounded-full text-white font-bold text-lg" style={{ background: DEEP }}>
-            <Heart className="w-5 h-5" fill="currentColor" />
-            Todo funciona con un solo botón.
+            <Shield className="w-5 h-5" />
+            Infraestructura blindada para toda la familia.
           </div>
         </div>
       </div>
@@ -245,287 +254,59 @@ function ParaQuien() {
   );
 }
 
-type TechVisual = "button" | "call" | "network" | "map";
-
-const TECH_FEATURES: Array<{
-  icon: typeof CircleDot;
-  color: string;
-  title: string;
-  desc: string;
-  spec: string;
-  visual: TechVisual;
-}> = [
+const BENTO_CHANNELS = [
   {
-    icon: CircleDot,
-    color: RED,
-    title: "Botón Único",
-    desc: "Un solo botón de emergencia, visible y accesible. Sin menús ni pasos extra: diseñado para activarse bajo estrés.",
-    spec: "Activación en 1 toque",
-    visual: "button",
+    id: "A",
+    icon: MessageCircle,
+    color: "#25D366",
+    badge: "Canal A",
+    title: "WhatsApp + IA Groq",
+    desc: "Notificación automatizada e instantánea al núcleo familiar. Procesamiento de respuestas con Inteligencia Artificial para confirmar lectura y contexto.",
+    tag: "Paralelo · Top 3 guardianes",
+    span: "md:col-span-2",
   },
   {
+    id: "B",
+    icon: Mail,
+    color: "#f59e0b",
+    badge: "Canal B",
+    title: "SMS de Respaldo",
+    desc: "Mensajería celular tradicional enviada en simultáneo. Opera sin necesidad de internet móvil en el dispositivo del familiar.",
+    tag: "Resiliente sin datos",
+    span: "md:col-span-1",
+  },
+  {
+    id: "C",
+    icon: MapPin,
+    color: PETROL,
+    badge: "Canal C",
+    title: "Geolocalización en Vivo",
+    desc: "Inyección de coordenadas GPS exactas con enlaces universales de Google Maps para asistencia inmediata en terreno.",
+    tag: "Lat/lng en cada alerta",
+    span: "md:col-span-1",
+  },
+  {
+    id: "D",
     icon: PhoneCall,
     color: DEEP,
-    title: "Llamada Express",
-    desc: "Marcación automática prioritaria a los contactos de confianza. La llamada se dispara en paralelo a los otros canales.",
-    spec: "Voz Twilio · prioridad alta",
-    visual: "call",
-  },
-  {
-    icon: Radio,
-    color: GREEN,
-    title: "WhatsApp / SMS Omnicanal",
-    desc: "Mensajes simultáneos por WhatsApp y SMS de respaldo. Mismo contenido de alerta en todos los canales.",
-    spec: "WhatsApp + SMS en segundos",
-    visual: "network",
-  },
-  {
-    icon: Satellite,
-    color: PETROL,
-    title: "GPS Satelital",
-    desc: "Coordenadas en tiempo real adjuntas a cada alerta, con enlace directo a Google Maps para los guardianes.",
-    spec: "Lat/lng + precisión",
-    visual: "map",
-  },
-];
-
-function TechFeatureVisual({ type, accent }: { type: TechVisual; accent: string }) {
-  const frame =
-    "relative w-full overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-br from-card via-background to-muted/40 shadow-[var(--shadow-card)] ring-1 ring-black/[0.04] aspect-[4/3] min-h-[240px] md:min-h-[280px] group-hover:shadow-xl transition-shadow duration-500";
-
-  if (type === "button") {
-    return (
-      <div className={frame}>
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-800/40 to-slate-700/20" />
-        <div className="absolute inset-0 flex flex-col items-center justify-end p-6 pb-8">
-          <div
-            className="w-[72%] max-w-[220px] aspect-square rounded-full flex items-center justify-center text-white font-black text-3xl md:text-4xl shadow-[0_0_60px_-10px_rgba(220,38,38,0.85)] border-4 border-red-300/50 animate-pulse"
-            style={{ background: `radial-gradient(circle at 30% 25%, #fca5a5, ${RED} 45%, #7f1d1d)` }}
-          >
-            SOS
-          </div>
-          <p className="mt-5 text-xs text-white/70 font-medium tracking-wide">1 toque · sin menús</p>
-        </div>
-        <div className="absolute top-4 right-4 w-10 h-10 rounded-xl bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center">
-          <Smartphone className="w-5 h-5 text-white/90" />
-        </div>
-      </div>
-    );
-  }
-
-  if (type === "call") {
-    return (
-      <div className={frame}>
-        <div
-          className="absolute inset-0 opacity-30"
-          style={{ background: `radial-gradient(circle at 50% 40%, ${accent}40, transparent 65%)` }}
-        />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="relative">
-            {[1, 2, 3].map((ring) => (
-              <span
-                key={ring}
-                className="absolute inset-0 rounded-full border-2 animate-ping"
-                style={{
-                  borderColor: accent,
-                  animationDuration: `${2 + ring * 0.6}s`,
-                  animationDelay: `${ring * 0.35}s`,
-                  margin: `-${ring * 14}px`,
-                }}
-              />
-            ))}
-            <span
-              className="relative z-10 w-24 h-24 md:w-28 md:h-28 rounded-full flex items-center justify-center text-white shadow-2xl"
-              style={{ background: `linear-gradient(145deg, ${accent}, ${DEEP})` }}
-            >
-              <PhoneCall className="w-10 h-10 md:w-12 md:h-12" />
-            </span>
-          </div>
-        </div>
-        <div className="absolute bottom-4 left-4 right-4 flex gap-2">
-          {["G1", "G2", "G3"].map((g) => (
-            <div key={g} className="flex-1 rounded-xl bg-card/90 backdrop-blur border border-border px-2 py-2 text-center text-[10px] font-bold text-foreground shadow-sm">
-              {g} <span className="text-emerald-600">●</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (type === "network") {
-    const nodes = [
-      { label: "Guardián 1", x: "12%", y: "18%", color: GREEN },
-      { label: "Guardián 2", x: "78%", y: "22%", color: PETROL },
-      { label: "Guardián 3", x: "50%", y: "8%", color: "#f59e0b" },
-    ];
-    return (
-      <div className={frame}>
-        <svg className="absolute inset-0 w-full h-full text-border" aria-hidden>
-          <line x1="50%" y1="52%" x2="22%" y2="28%" stroke="currentColor" strokeWidth="2" strokeDasharray="6 4" className="opacity-60" />
-          <line x1="50%" y1="52%" x2="82%" y2="30%" stroke="currentColor" strokeWidth="2" strokeDasharray="6 4" className="opacity-60" />
-          <line x1="50%" y1="52%" x2="50%" y2="18%" stroke="currentColor" strokeWidth="2" strokeDasharray="6 4" className="opacity-60" />
-        </svg>
-        <div className="absolute left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2 z-10">
-          <div
-            className="w-20 h-20 md:w-24 md:h-24 rounded-2xl flex flex-col items-center justify-center text-white shadow-xl border-2 border-white/30"
-            style={{ background: `linear-gradient(135deg, ${DEEP}, ${PETROL})` }}
-          >
-            <Heart className="w-7 h-7 mb-1" fill="currentColor" />
-            <span className="text-[9px] font-bold uppercase tracking-wider">Senior</span>
-          </div>
-        </div>
-        {nodes.map((n) => (
-          <div
-            key={n.label}
-            className="absolute z-10 flex flex-col items-center gap-1"
-            style={{ left: n.x, top: n.y, transform: "translate(-50%, -50%)" }}
-          >
-            <span
-              className="w-11 h-11 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg ring-2 ring-white"
-              style={{ background: n.color }}
-            >
-              <Users className="w-5 h-5" />
-            </span>
-            <span className="text-[9px] font-semibold text-muted-foreground bg-card/90 px-2 py-0.5 rounded-full border border-border shadow-sm">
-              {n.label}
-            </span>
-          </div>
-        ))}
-        <div className="absolute bottom-3 left-3 right-3 flex gap-2 justify-center">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#25D366]/15 text-[10px] font-bold text-emerald-800 border border-emerald-200">
-            <MessageCircle className="w-3.5 h-3.5" /> WA
-          </span>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/15 text-[10px] font-bold text-amber-900 border border-amber-200">
-            <Mail className="w-3.5 h-3.5" /> SMS
-          </span>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className={frame}>
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/80 via-sky-50/50 to-slate-100/90" />
-      <div
-        className="absolute inset-0 opacity-40"
-        style={{
-          backgroundImage: `
-            linear-gradient(oklch(0.85 0.02 240 / 0.5) 1px, transparent 1px),
-            linear-gradient(90deg, oklch(0.85 0.02 240 / 0.5) 1px, transparent 1px)
-          `,
-          backgroundSize: "24px 24px",
-        }}
-      />
-      <div className="absolute inset-0">
-        <div className="absolute top-[28%] left-[22%] w-16 h-10 rounded-lg bg-emerald-200/40 border border-emerald-300/50" />
-        <div className="absolute top-[45%] right-[18%] w-20 h-14 rounded-lg bg-sky-200/40 border border-sky-300/50" />
-        <div className="absolute bottom-[32%] left-[38%] w-24 h-12 rounded-lg bg-amber-100/50 border border-amber-200/60" />
-      </div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full z-10 flex flex-col items-center">
-        <span
-          className="w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg ring-4 ring-white animate-bounce"
-          style={{ background: RED, animationDuration: "2s" }}
-        >
-          <MapPin className="w-6 h-6" />
-        </span>
-        <span className="mt-1 w-3 h-1 rounded-full bg-black/20" />
-      </div>
-      <div className="absolute bottom-4 left-4 right-4 rounded-2xl bg-card/95 backdrop-blur-md border border-border p-3 shadow-lg">
-        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-          <Satellite className="w-3.5 h-3.5" style={{ color: accent }} />
-          GPS en vivo
-        </div>
-        <p className="text-xs font-mono text-foreground">-33.4489, -70.6693</p>
-        <p className="text-[10px] text-muted-foreground mt-0.5">Precisión ± 8 m · enlace Maps</p>
-      </div>
-    </div>
-  );
-}
-
-function TechFeatureRow({
-  feature,
-  reverse,
-  index,
-}: {
-  feature: (typeof TECH_FEATURES)[number];
-  reverse: boolean;
-  index: number;
-}) {
-  return (
-    <article
-      className={`group grid lg:grid-cols-2 gap-8 lg:gap-14 items-center ${index > 0 ? "mt-16 md:mt-24" : ""}`}
-    >
-      <div className={`space-y-5 ${reverse ? "lg:order-2" : "lg:order-1"}`}>
-        <div className="inline-flex items-center gap-3">
-          <span
-            className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform duration-300 group-hover:scale-110"
-            style={{ background: feature.color }}
-          >
-            <feature.icon className="w-6 h-6" strokeWidth={2} />
-          </span>
-          <span
-            className="text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border"
-            style={{
-              color: PETROL,
-              borderColor: "color-mix(in oklab, var(--brand-petrol) 22%, transparent)",
-              background: "color-mix(in oklab, var(--brand-petrol) 8%, white)",
-            }}
-          >
-            {feature.spec}
-          </span>
-        </div>
-        <h3 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">{feature.title}</h3>
-        <p className="text-base text-muted-foreground leading-relaxed max-w-lg">{feature.desc}</p>
-        <div
-          className="h-1 w-16 rounded-full transition-all duration-500 group-hover:w-28"
-          style={{ background: `linear-gradient(90deg, ${feature.color}, transparent)` }}
-        />
-      </div>
-      <div className={`${reverse ? "lg:order-1" : "lg:order-2"} transition-transform duration-500 group-hover:scale-[1.01]`}>
-        <TechFeatureVisual type={feature.visual} accent={feature.color} />
-      </div>
-    </article>
-  );
-}
-
-const FLOW_STEPS = [
-  {
-    n: 1,
-    icon: Bell,
-    color: RED,
-    title: "Pulsación",
-    desc: "El adulto mayor presiona el botón de emergencia en la app. La señal se registra al instante en la nube.",
-    detail: "Menos de 1 segundo",
-  },
-  {
-    n: 2,
-    icon: Navigation,
-    color: "#f59e0b",
-    title: "Procesamiento GPS",
-    desc: "El sistema captura y valida la ubicación satelital del dispositivo mientras prepara el mensaje de alerta.",
-    detail: "Hasta 3 s de sincronización",
-  },
-  {
-    n: 3,
-    icon: Send,
-    color: GREEN,
-    title: "Alerta masiva a los 3 guardianes",
-    desc: "Se notifica en paralelo a los tres guardianes activos: llamada, WhatsApp y SMS con mapa y enlace de confirmación.",
-    detail: "Multicanal automático",
+    badge: "Canal D",
+    title: "Escalamiento por Voz",
+    desc: "Si la familia no confirma lectura en la plataforma, el sistema inicia llamadas telefónicas secuenciales automáticas mediante Twilio.",
+    tag: "Secuencial · prioridad",
+    span: "md:col-span-2",
   },
 ] as const;
 
-function Funciones() {
+function ComunicacionRedundanteBento() {
   return (
-    <section id="funciones" className="relative py-20 md:py-28 overflow-hidden" style={{ background: "var(--gradient-soft)" }}>
+    <section id="comunicacion" className="relative py-20 md:py-28 overflow-hidden" style={{ background: "var(--gradient-soft)" }}>
       <div
-        className="absolute top-0 right-0 w-[420px] h-[420px] rounded-full blur-3xl opacity-40 pointer-events-none"
+        className="absolute top-0 left-0 w-[420px] h-[420px] rounded-full blur-3xl opacity-40 pointer-events-none"
         style={{ background: `radial-gradient(circle, color-mix(in oklab, var(--brand-petrol) 35%, transparent), transparent 70%)` }}
         aria-hidden
       />
       <div className="relative max-w-6xl mx-auto px-6">
-        <div className="text-center max-w-2xl mx-auto mb-14 md:mb-20">
+        <div className="text-center max-w-3xl mx-auto mb-12 md:mb-16">
           <div
             className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.18em] mb-4 px-4 py-1.5 rounded-full border"
             style={{
@@ -534,26 +315,154 @@ function Funciones() {
               background: "color-mix(in oklab, var(--brand-petrol) 6%, white)",
             }}
           >
-            <Zap className="w-4 h-4" />
-            Funciones técnicas
+            <Radio className="w-4 h-4" />
+            Comunicación redundante
           </div>
           <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight">
-            Infraestructura pensada para emergencias reales.
+            Cuatro pilares de resiliencia ante emergencias reales.
           </h2>
-          <p className="mt-4 text-lg text-muted-foreground">
-            Layout espejo: cada capacidad con su visual — mapa, red familiar y canales en vivo.
+          <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
+            El algoritmo <strong className="font-semibold text-foreground">ecosystem_v2</strong> dispara canales en paralelo y escala por voz solo si la familia no confirma — sin depender de una sola tecnología.
           </p>
         </div>
 
-        <div className="max-w-5xl mx-auto">
-          {TECH_FEATURES.map((f, i) => (
-            <TechFeatureRow key={f.title} feature={f} reverse={i % 2 === 1} index={i} />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
+          {BENTO_CHANNELS.map((ch) => (
+            <article
+              key={ch.id}
+              className={`group bg-card border-2 border-border rounded-3xl p-6 md:p-7 shadow-sm hover:shadow-xl transition-all duration-300 ${ch.span}`}
+            >
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <span
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-md"
+                  style={{ background: ch.color }}
+                >
+                  <ch.icon className="w-6 h-6" />
+                </span>
+                <span
+                  className="text-[10px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-full border"
+                  style={{ color: PETROL, borderColor: "color-mix(in oklab, var(--brand-petrol) 25%, transparent)" }}
+                >
+                  {ch.badge}
+                </span>
+              </div>
+              <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2">{ch.title}</h3>
+              <p className="text-base text-muted-foreground leading-relaxed">{ch.desc}</p>
+              <p className="mt-4 text-xs font-bold uppercase tracking-wide" style={{ color: PETROL }}>
+                {ch.tag}
+              </p>
+            </article>
           ))}
         </div>
       </div>
     </section>
   );
 }
+
+function CapacidadesPredictivas() {
+  const cards = [
+    {
+      icon: Activity,
+      color: RED,
+      title: "Detección Autónoma de Caídas",
+      desc: "Monitoreo continuo mediante acelerómetro y giroscopio del teléfono. Detecta impactos bruscos (>3.8G) y valida inmovilidad de 3 segundos antes de activar la cuenta regresiva de alerta.",
+      badge: "Sensor autónomo",
+    },
+    {
+      icon: Brain,
+      color: DEEP,
+      title: "Patrones Preventivos con IA",
+      desc: "Inteligencia Artificial orientada a identificar ausencia de actividad, priorizar niveles de emergencia crítica en el hogar y enriquecer respuestas familiares vía Groq.",
+      badge: "IA predictiva",
+    },
+  ];
+
+  return (
+    <section id="inteligencia" className="py-20 md:py-24 bg-background">
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="text-center max-w-3xl mx-auto mb-12">
+          <div className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.18em] mb-3" style={{ color: PETROL }}>
+            <Sparkles className="w-4 h-4" />
+            Capacidades en evolución
+          </div>
+          <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight">
+            Telemetría inteligente que anticipa el riesgo.
+          </h2>
+          <p className="mt-4 text-lg text-muted-foreground">
+            Sensores del dispositivo e IA trabajan en conjunto para proteger antes de que una emergencia se agrave.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          {cards.map((c) => (
+            <div
+              key={c.title}
+              className="relative overflow-hidden rounded-3xl border-2 border-border p-8 shadow-lg"
+              style={{ background: "linear-gradient(145deg, white 0%, color-mix(in oklab, var(--brand-petrol) 5%, white) 100%)" }}
+            >
+              <span
+                className="inline-block text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full mb-5 text-white"
+                style={{ background: c.color }}
+              >
+                {c.badge}
+              </span>
+              <span
+                className="w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-5 shadow-md"
+                style={{ background: c.color }}
+              >
+                <c.icon className="w-7 h-7" />
+              </span>
+              <h3 className="text-2xl font-bold text-foreground mb-3">{c.title}</h3>
+              <p className="text-base text-muted-foreground leading-relaxed">{c.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-10 grid lg:grid-cols-2 gap-8 items-center rounded-3xl overflow-hidden border border-border shadow-xl">
+          <img
+            src={seniorCouple}
+            alt="Pareja de adultos mayores protegida por Senior Safe"
+            loading="lazy"
+            className="w-full h-full object-cover min-h-[240px]"
+          />
+          <div className="p-8 md:p-10 bg-card">
+            <h3 className="text-xl font-bold text-foreground mb-3">Protección que evoluciona contigo</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              El ecosistema combina detección física en el teléfono, análisis de patrones y comunicación multicanal para que tu familia nunca quede desconectada ante un evento crítico.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const FLOW_STEPS = [
+  {
+    n: 1,
+    icon: AlertCircle,
+    color: RED,
+    title: "Activación del evento",
+    desc: "Una emergencia o detección autónoma dispara el algoritmo ecosystem_v2. La señal se registra al instante en la nube blindada.",
+    detail: "Menos de 1 segundo",
+  },
+  {
+    n: 2,
+    icon: Navigation,
+    color: "#f59e0b",
+    title: "Telemetría y GPS",
+    desc: "El sistema captura coordenadas satelitales, contexto del dispositivo y prepara el paquete de alerta multicanal.",
+    detail: "Hasta 3 s de sincronización",
+  },
+  {
+    n: 3,
+    icon: Send,
+    color: GREEN,
+    title: "Canales redundantes en paralelo",
+    desc: "WhatsApp con IA Groq, SMS de respaldo y enlace Google Maps a los tres guardianes prioritarios. Si no hay confirmación, escalamiento por voz Twilio.",
+    detail: "Multicanal automático",
+  },
+] as const;
 
 function Como() {
   return (
@@ -564,10 +473,10 @@ function Como() {
             Cómo funciona
           </div>
           <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight">
-            Del botón a la familia en tres pasos.
+            Del evento crítico a la familia en tres pasos.
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            El recorrido del usuario, de principio a fin — en línea de tiempo vertical.
+            El recorrido del ecosistema, de principio a fin — en línea de tiempo vertical.
           </p>
         </div>
 
@@ -643,7 +552,7 @@ function Beneficios() {
   const benefits = [
     { icon: Heart, title: "Tranquilidad para la familia", desc: "Saber que mamá o papá está protegido las 24 horas." },
     { icon: Zap, title: "Protección inmediata", desc: "Senior Safe actúa en menos de 3 segundos." },
-    { icon: Smartphone, title: "Fácil de usar", desc: "Botones grandes y texto claro." },
+    { icon: Smartphone, title: "Fácil de usar", desc: "Interfaz senior-first con acciones claras y visibles." },
     { icon: Users, title: "Diseñada para adultos mayores", desc: "Probada con familias reales." },
     { icon: Activity, title: "Funciona incluso en estrés", desc: "La alerta se envía aunque no haya respuesta." },
     { icon: Shield, title: "Conexión directa con familiares", desc: "Sin intermediarios. Sin demoras." },
@@ -773,12 +682,12 @@ function Prueba() {
             </div>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Contrata Senior Safe con Webpay Plus.</h2>
             <p className="text-base text-white/85 leading-relaxed mb-7">
-              Sin período de prueba gratuito. Tras confirmar el pago, entras a la app con un mock de entrenamiento del botón de pánico (sin costos Twilio).
+              Sin período de prueba gratuito. Tras confirmar el pago, accedes al ecosistema completo con modo de entrenamiento seguro (sin costos Twilio ni alertas reales).
             </p>
             <ul className="space-y-3 text-base">
               {[
                 "Pago obligatorio antes de activar",
-                "Mock de entrenamiento sin alertas reales",
+                "Simulación de emergencia sin alertas reales",
                 "Cancelación simple cuando quieras",
               ].map((t) => (
                 <li key={t} className="flex items-center gap-3">
@@ -790,7 +699,7 @@ function Prueba() {
           <div className="bg-card p-10 md:p-12 flex flex-col gap-5 justify-center">
             <h3 className="text-xl font-bold text-foreground">Comenzar protección</h3>
             <p className="text-muted-foreground">
-              El registro gratuito de 7 días fue deshabilitado antes del lanzamiento. Contrata el plan único y practica el botón de emergencia en simulación.
+              El registro gratuito de 7 días fue deshabilitado antes del lanzamiento. Contrata el Plan Único y practica el flujo de protección familiar en simulación.
             </p>
             <a
               href={checkoutUrl()}
@@ -818,9 +727,9 @@ function Prueba() {
 
 function Capturas() {
   const screens = [
-    { title: "Botón de emergencia", color: RED, icon: Bell },
+    { title: "Red de protección", color: RED, icon: Shield },
     { title: "Ubicación GPS", color: PETROL, icon: MapPin },
-    { title: "Alerta familiar", color: "#f59e0b", icon: MessageCircle },
+    { title: "Alerta multicanal", color: "#f59e0b", icon: MessageCircle },
     { title: "Modo familiar", color: GREEN, icon: Users },
   ];
   return (
@@ -856,7 +765,7 @@ function Capturas() {
 function Testimonios() {
   const items = [
     { name: "Carmen R.", role: "Hija", quote: "Ahora puedo estar tranquila sabiendo que mi madre puede avisarnos inmediatamente." },
-    { name: "Jorge M.", role: "Adulto mayor, 74", quote: "Es muy fácil de usar. Un solo botón y mis hijos saben que necesito ayuda." },
+    { name: "Jorge M.", role: "Adulto mayor, 74", quote: "Es muy fácil de usar. Mis hijos reciben la alerta al instante por WhatsApp y SMS." },
     { name: "Familia Pérez", role: "Familia conectada", quote: "Por primera vez sentimos que toda la familia está protegida y unida." },
   ];
   return (
@@ -968,8 +877,9 @@ function Landing() {
       <main>
         <Hero />
         <QueEs />
+        <ComunicacionRedundanteBento />
+        <CapacidadesPredictivas />
         <ParaQuien />
-        <Funciones />
         <Como />
         <Beneficios />
         <Capturas />
