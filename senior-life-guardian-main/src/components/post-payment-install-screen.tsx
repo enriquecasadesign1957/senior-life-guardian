@@ -47,8 +47,9 @@ type Props = {
   showPaymentSuccess?: boolean;
 };
 
-/** Modo prueba: fuerza flujo iOS en cualquier navegador (?simular_ios=true). */
+/** Modo prueba local: fuerza flujo iOS (?simular_ios=true). Deshabilitado en producción. */
 function readSimulateIosFromUrl(): boolean {
+  if (import.meta.env.PROD) return false;
   if (typeof window === "undefined") return false;
   const v = new URLSearchParams(window.location.search).get("simular_ios");
   return v === "true" || v === "1";
@@ -213,7 +214,7 @@ export function PostPaymentInstallScreen({
       className="min-h-[100dvh] flex flex-col"
       style={{ background: "var(--gradient-soft)" }}
     >
-      {simulateIos && (
+      {import.meta.env.DEV && simulateIos && (
         <div
           className="mx-auto mt-3 max-w-lg w-full px-4 py-2 rounded-xl text-center text-xs font-bold border-2 border-dashed"
           style={{ borderColor: PETROL, color: DEEP, background: "color-mix(in oklab, var(--brand-petrol) 8%, white)" }}
