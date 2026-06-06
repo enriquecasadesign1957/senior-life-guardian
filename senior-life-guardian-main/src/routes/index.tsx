@@ -227,7 +227,7 @@ function QueEs() {
 function ParaQuien() {
   const cards = [
     { icon: Home, title: "Adultos mayores", desc: "Que viven solos y necesitan tranquilidad diaria." },
-    { icon: Heart, title: "Familias", desc: "Que buscan saber que mamá o papá están bien." },
+    { icon: Heart, title: "Toda la familia conectada por emergencias", desc: "" },
     { icon: Activity, title: "Asistencia rápida", desc: "Personas con condiciones médicas o riesgo de caídas." },
     { icon: Accessibility, title: "Movilidad reducida", desc: "Quienes necesitan ayuda inmediata en casa." },
   ];
@@ -359,15 +359,93 @@ function ComunicacionRedundanteBento() {
   );
 }
 
+const FALL_DETECTION_STEPS = [
+  {
+    label: "Impacto Crítico",
+    title: "Monitoreo Telemetría G",
+    desc: "Analiza de forma constante los vectores de movimiento mediante el acelerómetro, identificando desaceleraciones severas superiores a 3.8G.",
+    icon: Activity,
+    color: RED,
+  },
+  {
+    label: "Fase de Shock",
+    title: "Validación de Inmovilidad",
+    desc: "El sistema espera y verifica de forma inteligente una ventana de quietud total durante 3 segundos continuos para descartar falsos positivos cotidianos.",
+    icon: Clock,
+    color: "#f59e0b",
+  },
+  {
+    label: "Escudo Resiliente",
+    title: "Alerta Progresiva",
+    desc: "Activa un modal a pantalla completa con 30 segundos de cuenta regresiva. Inicia con vibración silenciosa por privacidad y escala a sirena audible antes de despachar el auxilio simultáneo a la familia.",
+    icon: Shield,
+    color: GREEN,
+  },
+] as const;
+
+function DeteccionCaidasActiva() {
+  return (
+    <section id="deteccion-caidas" className="py-12 md:py-16 bg-background">
+      <div className="max-w-6xl mx-auto px-6">
+        <div
+          className="rounded-2xl border border-border/60 py-12 px-6 md:px-12 shadow-sm"
+          style={{ background: "#f0f7f9" }}
+        >
+          <div className="max-w-4xl mx-auto text-center mb-10 md:mb-12">
+            <span
+              className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full mb-4 border border-white/80 bg-white/90 shadow-sm"
+              style={{ color: PETROL }}
+            >
+              <Activity className="w-4 h-4" />
+              Protección activa
+            </span>
+            <h2 className="text-2xl md:text-4xl font-bold text-foreground tracking-tight">
+              Protección Activa: Detección Inteligente y Autónoma de Caídas
+            </h2>
+            <p className="mt-4 text-base md:text-lg text-muted-foreground leading-relaxed">
+              Transformamos el smartphone en un guardián continuo que actúa por sí solo cuando más se necesita, ideal para la seguridad de adultos mayores dentro y fuera del hogar.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-5 md:gap-6">
+            {FALL_DETECTION_STEPS.map((step, index) => (
+              <article
+                key={step.title}
+                className="bg-white rounded-2xl border border-border/70 p-6 md:p-7 shadow-md hover:shadow-lg transition-shadow duration-300"
+              >
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <span
+                    className="w-11 h-11 rounded-xl flex items-center justify-center text-white shadow-sm"
+                    style={{ background: step.color }}
+                  >
+                    <step.icon className="w-5 h-5" />
+                  </span>
+                  <span
+                    className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full"
+                    style={{
+                      color: PETROL,
+                      background: "color-mix(in oklab, var(--brand-petrol) 8%, white)",
+                    }}
+                  >
+                    Paso {index + 1}
+                  </span>
+                </div>
+                <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: step.color }}>
+                  {step.label}
+                </p>
+                <h3 className="text-lg md:text-xl font-bold text-foreground mb-3">{step.title}</h3>
+                <p className="text-sm md:text-base text-muted-foreground leading-relaxed">{step.desc}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function CapacidadesPredictivas() {
   const cards = [
-    {
-      icon: Activity,
-      color: RED,
-      title: "Detección Autónoma de Caídas",
-      desc: "Monitoreo continuo mediante acelerómetro y giroscopio del teléfono. Detecta impactos bruscos (>3.8G) y valida inmovilidad de 3 segundos antes de activar la cuenta regresiva de alerta.",
-      badge: "Sensor autónomo",
-    },
     {
       icon: Brain,
       color: DEEP,
@@ -393,7 +471,7 @@ function CapacidadesPredictivas() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-1 gap-6 max-w-2xl mx-auto">
           {cards.map((c) => (
             <div
               key={c.title}
@@ -847,6 +925,7 @@ function Landing() {
         <QueEs />
         <ComunicacionRedundanteBento />
         <CapacidadesPredictivas />
+        <DeteccionCaidasActiva />
         <ParaQuien />
         <Como />
         <Beneficios />
