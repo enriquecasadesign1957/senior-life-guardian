@@ -856,10 +856,9 @@ function Contacto() {
           <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight">Hablemos.</h2>
           <p className="mt-4 text-lg text-muted-foreground">Estamos aquí para ayudarte a proteger a tu familia.</p>
         </div>
-        <div className="grid sm:grid-cols-3 gap-5">
-          <ContactCard icon={MessageCircle} title="WhatsApp 24/7" value="Escríbenos ahora" href="https://wa.me/56971404580?text=Hola%20Senior%20Safe%2C%20tengo%20una%20consulta" isExternal highlight />
+        <div className="grid sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
+          <ContactCard icon={MessageCircle} title="WhatsApp" value="Escríbenos ahora" href="https://wa.me/56971404580?text=Hola%20Senior%20Safe%2C%20tengo%20una%20consulta" isExternal highlight />
           <ContactCard icon={Mail} title="Email" value="hola@alarmaseniorsafe.cl" href="mailto:hola@alarmaseniorsafe.cl" />
-          <ContactCard icon={Clock} title="Horario" value="Soporte humano 24/7" />
         </div>
 
         <p className="text-center mt-12 text-xl md:text-2xl italic text-foreground/80 font-light">
