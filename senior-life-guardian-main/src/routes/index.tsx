@@ -674,51 +674,19 @@ function Planes() {
 function Prueba() {
   return (
     <section id="prueba" className="py-20 md:py-24 bg-background">
-      <div className="max-w-5xl mx-auto px-6">
-        <div className="rounded-3xl overflow-hidden grid md:grid-cols-2 shadow-2xl border border-border">
-          <div className="p-10 md:p-12 text-white" style={{ background: `linear-gradient(135deg, ${DEEP}, ${PETROL})` }}>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 text-xs font-bold uppercase tracking-wider mb-5">
-              <Star className="w-3.5 h-3.5" fill="currentColor" /> Pago seguro
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Contrata Senior Safe con Webpay Plus.</h2>
-            <p className="text-base text-white/85 leading-relaxed mb-7">
-              Sin período de prueba gratuito. Tras confirmar el pago, accedes al ecosistema completo con modo de entrenamiento seguro (sin costos Twilio ni alertas reales).
-            </p>
-            <ul className="space-y-3 text-base">
-              {[
-                "Pago obligatorio antes de activar",
-                "Simulación de emergencia sin alertas reales",
-                "Cancelación simple cuando quieras",
-              ].map((t) => (
-                <li key={t} className="flex items-center gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-white" /> {t}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="bg-card p-10 md:p-12 flex flex-col gap-5 justify-center">
-            <h3 className="text-xl font-bold text-foreground">Comenzar protección</h3>
-            <p className="text-muted-foreground">
-              El registro gratuito de 7 días fue deshabilitado antes del lanzamiento. Contrata el Plan Único y practica el flujo de protección familiar en simulación.
-            </p>
-            <a
-              href={checkoutUrl()}
-              className="inline-flex items-center justify-center gap-2 py-4 rounded-full text-white text-base font-bold transition"
-              style={{ background: PETROL }}
-            >
-              Ir a checkout (Webpay)
-              <ArrowRight className="w-4 h-4" />
-            </a>
-            <a
-              href="/instalar-app?entrenamiento=1"
-              className="text-center text-sm font-semibold text-muted-foreground hover:text-foreground transition"
-            >
-              Ya pagué · Entrar a entrenamiento
-            </a>
-            <p className="text-xs text-muted-foreground text-center">
-              Al continuar aceptas nuestros términos y política de privacidad.
-            </p>
-          </div>
+      <div className="max-w-3xl mx-auto px-6 text-center">
+        <div className="rounded-3xl border border-border bg-card p-10 md:p-14 shadow-2xl">
+          <a
+            href={checkoutUrl()}
+            className="inline-flex items-center justify-center gap-3 px-8 py-5 rounded-full text-white text-lg font-bold shadow-xl hover:scale-[1.02] hover:shadow-2xl transition-all duration-300"
+            style={{ background: `linear-gradient(135deg, ${DEEP}, ${PETROL})` }}
+          >
+            👉 Contratar Plan Único — ${formatPlanPrice(PLAN.monthly)}/mes
+            <ArrowRight className="w-5 h-5" />
+          </a>
+          <p className="mt-6 text-xs text-muted-foreground">
+            Al continuar aceptas nuestros términos y política de privacidad.
+          </p>
         </div>
       </div>
     </section>
