@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { MessageCircle, X } from "lucide-react";
 
-const WHATSAPP_NUMBER = "56971404580";
-const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hola Senior Safe, tengo una consulta")}`;
+import { seniorSafeWhatsAppMeUrl } from "@/lib/twilio";
+
+const WHATSAPP_LINK = seniorSafeWhatsAppMeUrl("Hola Senior Safe, tengo una consulta");
 
 export function WhatsAppFloat() {
   // Mount client-only to avoid SSR hydration mismatch

@@ -95,6 +95,7 @@ async function findGuardianByPhone(phone: string) {
 export async function processWhatsAppAlertAck(
   phone: string,
   body: string,
+  options?: { forceAck?: boolean },
 ): Promise<string | null> {
   const token = extractAckToken(body);
   if (token) {
@@ -102,7 +103,7 @@ export async function processWhatsAppAlertAck(
     return ackByToken(token, guardian?.nombre ?? null);
   }
 
-  if (!isEmergencyAlertAckMessage(body)) return null;
+  if (!options?.forceAck && !isEmergencyAlertAckMessage(body)) return null;
 
   const guardian = await findGuardianByPhone(phone);
   if (!guardian) return null;

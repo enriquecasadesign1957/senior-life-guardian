@@ -6,9 +6,9 @@ import {
   isTwilioConfigured,
   twilioPost,
   twilioResourceSid,
-  TWILIO_WHATSAPP_SANDBOX_FROM,
   twilioSmsFrom,
   twilioVoiceFrom,
+  twilioWhatsappFrom,
 } from "@/lib/twilio";
 
 // Acepta el formato { lat, lng } y también el formato nativo de
@@ -194,8 +194,7 @@ function toEmergencyRecipient(row: EmergencyContactRow): EmergencyRecipient | nu
 export const sendEmergencyAlert = createServerFn({ method: "POST" })
   .inputValidator((input) => Schema.parse(input))
   .handler(async ({ data }) => {
-    // WhatsApp SIEMPRE desde el sandbox oficial Twilio. Nunca usar número chileno.
-    const waFrom = TWILIO_WHATSAPP_SANDBOX_FROM;
+    const waFrom = twilioWhatsappFrom();
     const smsFrom = twilioSmsFrom();
     const voiceFrom = twilioVoiceFrom();
 

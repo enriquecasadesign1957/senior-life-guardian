@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { generateSeniorSafeWhatsAppReply } from "@/lib/senior-safe-ai";
+import {
+  classifyWhatsAppInboundMessage,
+  generateSeniorSafeWhatsAppReply,
+} from "@/lib/senior-safe-ai";
 import {
   findSignupByPhone,
   isOptOutMessage,
@@ -23,7 +26,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
  * 1) Confirmación de alerta de emergencia (guardianes: SI, OK, RECIBIDO, token ack…)
  * 2) ACTIVAR / join sandbox → vincula WhatsApp del contratante
  * 3) SOS → dispara alerta real
- * 4) Texto libre → IA con contexto oficial Senior Safe (Groq/OpenAI)
+ * 4) Texto libre → Groq enrutador (EMERGENCY_ACK | COMMERCIAL_QUERY) + respuesta IA
  * 5) Respuesta TwiML <Message> en segundos
  */
 
@@ -122,9 +125,19 @@ export const Route = createFileRoute("/api/public/twilio-whatsapp-webhook")({
           );
         }
 
-        // 4) Pregunta de texto libre → cerebro IA
+        // 4) Texto libre → enrutador Groq + ack o respuesta comercial
         if (rawBody.length >= 2) {
           try {
+            const route = await classifyWhatsAppInboundMessage(rawBody);
+
+            if (route === "EMERGENCY_ACK") {
+              const ackReply = await processWhatsAppAlertAck(phone, rawBody, { forceAck: true });
+              if (ackReply) return twimlMessage(ackReply);
+              return twimlMessage(
+                "Senior Safe 🛡️\nRecibimos tu mensaje. Si respondes a una alerta activa, verifica que tu número esté registrado como guardián en la familia.",
+              );
+            }
+
             const aiReply = await generateSeniorSafeWhatsAppReply(rawBody);
             return twimlMessage(aiReply);
           } catch (e) {

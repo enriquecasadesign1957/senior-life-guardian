@@ -98,6 +98,15 @@ export function twilioWhatsappFrom(): string {
   return process.env.TWILIO_WHATSAPP_FROM?.trim() || TWILIO_WHATSAPP_SANDBOX_FROM;
 }
 
+/** E.164 sin prefijo + para enlaces wa.me del número oficial Chile. */
+export const SENIOR_SAFE_WHATSAPP_COMMERCIAL_E164 = "56229147733";
+
+export function seniorSafeWhatsAppMeUrl(text?: string): string {
+  const base = `https://wa.me/${SENIOR_SAFE_WHATSAPP_COMMERCIAL_E164}`;
+  if (!text?.trim()) return base;
+  return `${base}?text=${encodeURIComponent(text.trim())}`;
+}
+
 export async function sendTwilioMessage(opts: {
   to: string;
   from: string;

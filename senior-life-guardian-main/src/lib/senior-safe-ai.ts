@@ -6,25 +6,40 @@
 export const SENIOR_SAFE_SUPPORT_EMAIL = "soporte@alarmaseniorsafe.cl";
 
 export const SENIOR_SAFE_OFFICIAL_CONTEXT = `
-Senior Safe es una aplicación de teleasistencia para adultos mayores que funciona con un solo botón en el celular y notifica en menos de 3 segundos a 3 guardianes por llamada, WhatsApp y SMS con GPS satelital.
+Senior Safe es un Ecosistema Inteligente de Protección de Toda la Familia: infraestructura con IA, telemetría y comunicaciones redundantes (WhatsApp, SMS, GPS en vivo y escalamiento por voz Twilio) que conecta directamente al usuario con sus guardianes familiares. No hay call-center ni intermediarios humanos en las alertas.
 
-Precio: Plan Único de $6.900 pesos chilenos al mes o $69.000 al año (ahorrando 2 meses), pagado vía Webpay Plus.
+Precio: Plan Único de $6.900 pesos chilenos al mes o $69.000 al año (ahorras 2 meses), pago con Webpay Plus en alarmaseniorsafe.cl.
 
-Tras pagar, la web obliga a escanear un QR para instalar la PWA en el teléfono y hacer un simulacro de entrenamiento a costo $0 de Twilio.
+Incluye detección autónoma de caídas, algoritmo ecosystem_v2 y red de hasta 10 guardianes priorizados.
+
+Tras pagar, se instala la PWA en el teléfono y se practica el flujo de protección en simulación segura.
 
 No hay días de prueba gratis.
 
 Sitio: https://alarmaseniorsafe.cl
 `.trim();
 
-const WHATSAPP_SYSTEM_PROMPT = `Eres el asistente de WhatsApp de Senior Safe (Alarma Senior Safe), teleasistencia para adultos mayores en Chile.
+export type WhatsAppInboundRoute = "EMERGENCY_ACK" | "COMMERCIAL_QUERY";
+
+const WHATSAPP_ROUTER_SYSTEM_PROMPT = `Eres un enrutador binario estricto para mensajes entrantes de WhatsApp de Senior Safe (Chile).
+
+Clasifica el mensaje del usuario en EXACTAMENTE una etiqueta:
+
+EMERGENCY_ACK — El remitente es un guardián o familiar respondiendo a una alerta de emergencia activa: confirma recepción, indica que va en camino, que ya está con la persona, falsa alarma, que todo está bien, o atiende la situación. Ejemplos: "Yo voy", "Estoy con él", "Falsa alarma todo bien", "Ya llegué", "Voy para allá", "Todo controlado".
+
+COMMERCIAL_QUERY — Pregunta comercial, duda sobre el servicio, precios, instalación, sensores, planes, contratación, o mensaje sin contexto de emergencia activa. Ejemplos: "¿Cuánto cuesta?", "¿Cómo funciona el sensor de caídas?", "Hola quiero información".
+
+Responde ÚNICAMENTE con la etiqueta literal EMERGENCY_ACK o COMMERCIAL_QUERY, sin comillas ni texto adicional.`;
+
+const WHATSAPP_SYSTEM_PROMPT = `Eres el asistente comercial de WhatsApp de Senior Safe, ecosistema inteligente de protección familiar en Chile.
 
 REGLAS ESTRICTAS:
-1) Solo puedes responder usando ÚNICAMENTE la información del CONTEXTO OFICIAL abajo. No inventes funciones, precios, plazos ni políticas.
-2) Si la pregunta no puede responderse con ese contexto (cuentas, reembolsos, fallas técnicas, cambio de plan, datos personales, etc.), responde en español, tono amable y breve, indicando que escriban a ${SENIOR_SAFE_SUPPORT_EMAIL} para asistencia manual. No des otros correos ni teléfonos.
+1) Solo responde con el CONTEXTO OFICIAL. No inventes funciones, precios ni políticas.
+2) Enfatiza: Plan Único $6.900/mes, conexión directa con guardianes familiares, sin call-center ni intermediarios en las alertas.
 3) Máximo 2 párrafos cortos. Sin markdown. Emojis máximo 2. Ideal para WhatsApp (< 900 caracteres).
-4) Si preguntan cómo activar WhatsApp, indica que respondan ACTIVAR en este chat tras contratar.
-5) Si es emergencia real, indica llamar a emergencias (131) y usar el botón de pánico en la app; no digas que este chat envía alertas.
+4) Si preguntan activación WhatsApp tras contratar, indica responder ACTIVAR en este chat.
+5) Si mencionan emergencia médica activa, indica llamar al 131 y usar la app instalada; este chat no despacha alertas en tiempo real.
+6) Temas de cuenta, reembolsos o fallas técnicas: orienta a ${SENIOR_SAFE_SUPPORT_EMAIL}.
 
 CONTEXTO OFICIAL:
 ${SENIOR_SAFE_OFFICIAL_CONTEXT}`;
@@ -148,6 +163,46 @@ async function callChatApi(
   const content = data.choices?.[0]?.message?.content?.trim();
   if (!content) throw new Error("IA sin contenido");
   return trimForWhatsApp(content);
+}
+
+function parseInboundRoute(raw: string): WhatsAppInboundRoute | null {
+  const t = raw.trim().toUpperCase();
+  if (t.includes("EMERGENCY_ACK")) return "EMERGENCY_ACK";
+  if (t.includes("COMMERCIAL_QUERY")) return "COMMERCIAL_QUERY";
+  return null;
+}
+
+function fallbackInboundRoute(userMessage: string): WhatsAppInboundRoute {
+  const q = userMessage.toLowerCase().normalize("NFD").replace(/\p{M}/gu, "");
+  if (
+    /\b(yo voy|voy para|en camino|estoy con|ya llegue|falsa alarma|todo bien|todo controlado|ya recibi|recibido|confirmo|voy a ver|estoy yendo)\b/.test(
+      q,
+    )
+  ) {
+    return "EMERGENCY_ACK";
+  }
+  return "COMMERCIAL_QUERY";
+}
+
+/**
+ * Clasifica mensaje entrante: ack de emergencia vs consulta comercial (Groq llama-3.3-70b-versatile).
+ */
+export async function classifyWhatsAppInboundMessage(
+  userMessage: string,
+): Promise<WhatsAppInboundRoute> {
+  const trimmed = (userMessage || "").trim();
+  if (!trimmed) return "COMMERCIAL_QUERY";
+
+  const cfg = resolveProvider();
+  if (!cfg) return fallbackInboundRoute(trimmed);
+
+  try {
+    const label = await callChatApi(cfg, trimmed, WHATSAPP_ROUTER_SYSTEM_PROMPT, 16);
+    return parseInboundRoute(label) ?? fallbackInboundRoute(trimmed);
+  } catch (e) {
+    console.error("[senior-safe-ai] classify", e);
+    return fallbackInboundRoute(trimmed);
+  }
 }
 
 /**
