@@ -73,3 +73,8 @@ export function checkoutUrl(opts?: {
   const periodo = opts?.periodo ?? "mensual";
   return `/checkout?mode=contratar&plan=${PLAN_KEY}&periodo=${periodo}`;
 }
+
+/** Enlace absoluto para renovar (emails de vencimiento). */
+export function renewalCheckoutUrl(periodo: BillingPeriod): string {
+  return `https://alarmaseniorsafe.cl${checkoutUrl({ periodo })}`;
+}

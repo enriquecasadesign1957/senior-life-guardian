@@ -13,8 +13,10 @@ export const TRANSBANK_SANDBOX_API_KEY =
 const SANDBOX_API_HOST = "https://webpay3gint.transbank.cl";
 const PRODUCTION_API_HOST = "https://webpay3g.transbank.cl";
 
+import { PRODUCTION_SITE_URL } from "@/lib/app-url";
+
 /** Dominio oficial — fallback si el hosting no expone URL pública o apunta a localhost. */
-export const OFFICIAL_APP_URL = "https://alarmaseniorsafe.cl";
+export const OFFICIAL_APP_URL = PRODUCTION_SITE_URL;
 
 const CREATE_PATH = "/rswebpaytransaction/api/webpay/v1.2/transactions";
 

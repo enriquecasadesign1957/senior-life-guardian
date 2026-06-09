@@ -1,0 +1,24 @@
+---
+description: Avisar al usuario si un cambio puede afectar otras funciones del sistema
+alwaysApply: true
+---
+
+# Aviso de impacto cruzado
+
+Cuando el usuario pida **agregar, modificar o eliminar** algo, **antes de implementar** revisa si el cambio puede afectar otras partes del sistema.
+
+Si hay riesgo de impacto cruzado, **avísale explícitamente** con:
+
+1. **Qué se va a cambiar** (archivos, flujos o integraciones).
+2. **Qué otras funciones pueden verse afectadas** (ej. pagos, alertas, emails, PWA, guardianes, cron, Supabase, Twilio, Webpay).
+3. **Riesgo estimado** (bajo / medio / alto) y consecuencia práctica para el usuario final.
+4. **Alternativa más segura**, si existe (cambio acotado, feature flag, migración, prueba en cuenta de prueba).
+
+Implementa solo después de que el usuario confirme o ajuste el alcance, **salvo** que el impacto sea claramente trivial y local (typo, comentario, copy aislado).
+
+Ejemplos de impacto que siempre deben mencionarse:
+
+- Cambiar cascada de alertas → afecta Twilio, costos, tiempos de respuesta.
+- Cambiar renovación/suspensión → afecta checkout, `subscription_status`, botón de emergencia.
+- Cambiar manifest/iconos PWA → afecta instalación y caché en dispositivos ya instalados.
+- Migraciones Supabase → afecta producción y datos existentes.

@@ -2,6 +2,7 @@
  * Envío de correo vía SMTP de Zoho Mail (sin dependencias externas).
  */
 import tls from "node:tls";
+import { SENIOR_SAFE_SUPPORT_EMAIL } from "@/lib/senior-safe-ai";
 
 export const ZOHO_SUPPORT_AUDIT_BCC = "enriquecasadesign@gmail.com";
 
@@ -13,6 +14,8 @@ export type SendSupportEmailInput = {
   /** Message-ID del correo entrante (para threading). */
   inReplyTo?: string | null;
   references?: string | null;
+  /** Cabeceras extra (p. ej. correos transaccionales de facturación). */
+  extraHeaders?: Record<string, string>;
 };
 
 export type ZohoSmtpConfig = {
@@ -30,8 +33,8 @@ export function getZohoSmtpConfig(): ZohoSmtpConfig | null {
   const password = process.env.ZOHO_SMTP_PASSWORD?.trim();
   if (!user || !password) return null;
 
-  const fromName = process.env.ZOHO_SMTP_FROM_NAME?.trim() || "Senior Safe — Soporte";
-  const fromEmail = process.env.ZOHO_SMTP_FROM?.trim() || user;
+  const fromName = process.env.ZOHO_SMTP_FROM_NAME?.trim() || "Senior Safe";
+  const fromEmail = process.env.ZOHO_SMTP_FROM?.trim() || user || SENIOR_SAFE_SUPPORT_EMAIL;
 
   return {
     host: process.env.ZOHO_SMTP_HOST?.trim() || "smtp.zoho.com",
@@ -61,13 +64,17 @@ function buildMimeMessage(input: SendSupportEmailInput, cfg: ZohoSmtpConfig): st
     `From: ${cfg.from}`,
     `To: ${escapeHeaderValue(input.to)}`,
     `Bcc: ${cfg.bcc}`,
+    `Reply-To: ${SENIOR_SAFE_SUPPORT_EMAIL}`,
     `Subject: =?UTF-8?B?${b64(input.subject)}?=`,
     `Date: ${date}`,
     `Message-ID: ${messageId}`,
     `MIME-Version: 1.0`,
     `Content-Type: multipart/alternative; boundary="${boundary}"`,
-    `X-Mailer: Senior Safe Support Bot`,
   ];
+
+  for (const [key, value] of Object.entries(input.extraHeaders ?? {})) {
+    if (value) headers.push(`${key}: ${escapeHeaderValue(value)}`);
+  }
 
   if (input.inReplyTo) {
     headers.push(`In-Reply-To: ${escapeHeaderValue(input.inReplyTo)}`);
@@ -171,6 +178,18 @@ class SmtpSession {
   }
 }
 
+/** Correo transaccional de facturación/renovación (mejor entrega que soporte automático). */
+export async function sendBillingEmailViaZoho(input: SendSupportEmailInput): Promise<void> {
+  return sendSupportEmailViaZoho({
+    ...input,
+    extraHeaders: {
+      "X-Entity-Ref-ID": `billing-${Date.now()}`,
+      Precedence: "normal",
+      ...input.extraHeaders,
+    },
+  });
+}
+
 export async function sendSupportEmailViaZoho(input: SendSupportEmailInput): Promise<void> {
   const cfg = getZohoSmtpConfig();
   if (!cfg) {
@@ -230,7 +249,7 @@ export function wrapSupportHtmlReply(bodyText: string, customerName?: string): s
         <p style="margin:0 0 16px;font-size:15px;color:#334155;">${greeting}</p>
         ${paragraphs}
         <p style="margin:20px 0 0;font-size:14px;color:#64748b;">Atentamente,<br/><strong style="color:#0f766e;">Equipo de Soporte — Senior Safe</strong><br/>
-        <a href="mailto:soporte@alarmaseniorsafe.cl" style="color:#0f766e;">soporte@alarmaseniorsafe.cl</a> ·
+        <a href="mailto:${SENIOR_SAFE_SUPPORT_EMAIL}" style="color:#0f766e;">${SENIOR_SAFE_SUPPORT_EMAIL}</a> ·
         <a href="https://alarmaseniorsafe.cl" style="color:#0f766e;">alarmaseniorsafe.cl</a></p>
       </td>
     </tr>

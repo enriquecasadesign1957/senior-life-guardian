@@ -1,7 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { normalizePhoneE164 } from "@/lib/phone-utils";
+import { fetchAppConfiguration } from "@/lib/account-lookup";
+import {
+  addFamilyContact,
+  deleteFamilyContact,
+  listFamilyContacts,
+  updateFamilyContact,
+} from "@/lib/contacts-storage";
+import { persistUserPin, readStoredPinHash } from "@/lib/pin-storage";
 import { sendGuardianInvite } from "@/lib/guardians.functions";
 import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
 
@@ -20,58 +27,42 @@ const appConfigInput = z.object({
   message: "Se requiere una cuenta para cargar la configuración.",
 });
 
+async function sendInviteBestEffort(
+  signupId: string,
+  contact: { id: string; nombre: string; telefono: string; parentesco: string },
+): Promise<void> {
+  try {
+    const { data: senior } = await supabaseAdmin
+      .from(CONTRACT_SIGNUPS_TABLE)
+      .select("nombre")
+      .eq("id", signupId)
+      .maybeSingle();
+
+    await sendGuardianInvite({
+      guardianTel: contact.telefono,
+      guardianWa: null,
+      guardianName: contact.nombre,
+      seniorName: (senior as { nombre?: string } | null)?.nombre ?? "Tu familiar",
+      parentesco: contact.parentesco,
+      signupId,
+      guardianId: contact.id,
+    });
+  } catch {
+    /* best-effort */
+  }
+}
+
 /** Carga la configuración existente para que la app no reinicie el onboarding. */
 export const getAppConfiguration = createServerFn({ method: "POST" })
   .inputValidator((input) => appConfigInput.parse(input))
-  .handler(async ({ data }) => {
-    let query = supabaseAdmin
-      .from(CONTRACT_SIGNUPS_TABLE)
-      .select("id,nombre,email,telefono,plan,periodo,purchase_mode,subscription_status,payment_status")
-      .limit(1);
-
-    if (data.signupId) query = query.eq("id", data.signupId);
-    else if (data.email) query = query.eq("email", data.email.trim().toLowerCase());
-    else if (data.telefono) query = query.eq("telefono", data.telefono.trim());
-
-    const { data: user, error: userError } = await query.maybeSingle();
-    if (userError) throw userError;
-    if (!user) return { configured: false, user: null, contacts: [], pinConfigured: false };
-
-    const [{ data: contacts, error: contactsError }, { data: pin, error: pinError }] = await Promise.all([
-      supabaseAdmin
-        .from("emergency_contacts")
-        .select("id,nombre,telefono,parentesco,created_at")
-        .eq("contract_signup_id", user.id)
-        .order("created_at", { ascending: true }),
-      supabaseAdmin
-        .from("user_pins")
-        .select("contract_signup_id")
-        .eq("contract_signup_id", user.id)
-        .maybeSingle(),
-    ]);
-
-    if (contactsError) throw contactsError;
-    if (pinError) throw pinError;
-
-    return {
-      configured: true,
-      user,
-      contacts: contacts ?? [],
-      pinConfigured: Boolean(pin),
-    };
-  });
+  .handler(async ({ data }) => fetchAppConfiguration(data));
 
 /** Lista familiares del usuario (por contract_signup_id). */
 export const listFamily = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ signupId: idSchema }).parse(input))
   .handler(async ({ data }) => {
-    const { data: rows, error } = await supabaseAdmin
-      .from("emergency_contacts")
-      .select("id,nombre,telefono,parentesco,created_at")
-      .eq("contract_signup_id", data.signupId)
-      .order("created_at", { ascending: true });
-    if (error) throw error;
-    return { contacts: rows ?? [] };
+    const contacts = await listFamilyContacts(data.signupId);
+    return { contacts };
   });
 
 export const addFamily = createServerFn({ method: "POST" })
@@ -79,73 +70,31 @@ export const addFamily = createServerFn({ method: "POST" })
     z.object({ signupId: idSchema, contact: contactInput }).parse(input),
   )
   .handler(async ({ data }) => {
-    const { count } = await supabaseAdmin
-      .from("emergency_contacts")
-      .select("id", { count: "exact", head: true })
-      .eq("contract_signup_id", data.signupId);
-    if ((count ?? 0) >= 5) throw new Error("Máximo 5 familiares.");
+    const result = await addFamilyContact(data.signupId, data.contact);
+    if (!result.ok) throw new Error(result.error);
 
-    const rawTel = data.contact.telefono.trim();
-    const telefono = normalizePhoneE164(rawTel) || rawTel;
-    const { data: existing } = await supabaseAdmin
-      .from("emergency_contacts")
-      .select("id")
-      .eq("contract_signup_id", data.signupId)
-      .eq("telefono", telefono)
-      .maybeSingle();
-    if (existing) throw new Error("Ya existe un familiar con ese teléfono.");
+    const row = result.contact!;
 
-    const { data: row, error } = await supabaseAdmin
-      .from("emergency_contacts")
-      .insert({
-        contract_signup_id: data.signupId,
-        nombre: data.contact.nombre.trim(),
-        telefono,
-        parentesco: data.contact.parentesco.trim(),
-      })
-      .select("id,nombre,telefono,parentesco,created_at")
-      .single();
-    if (error) {
-      if ((error as any).code === "23505") throw new Error("Ya existe un familiar con ese teléfono.");
-      throw error;
-    }
-
-    // Pre-registrar como family_member para OTP del Portal Familia (best-effort).
     try {
       const { data: existingFm } = await supabaseAdmin
         .from("family_members")
         .select("id")
         .eq("contract_signup_id", data.signupId)
-        .eq("telefono", telefono)
+        .eq("telefono", row.telefono)
         .maybeSingle();
       if (!existingFm) {
         await supabaseAdmin.from("family_members").insert({
           contract_signup_id: data.signupId,
-          nombre: data.contact.nombre.trim(),
-          telefono,
-          parentesco: data.contact.parentesco.trim(),
+          nombre: row.nombre,
+          telefono: row.telefono,
+          parentesco: row.parentesco,
         });
       }
-    } catch { /* silencioso */ }
+    } catch {
+      /* silencioso */
+    }
 
-    // Enviar invitación al Portal Familia (best-effort, no bloquea la UI del onboarding).
-    try {
-      const { data: senior } = await supabaseAdmin
-        .from(CONTRACT_SIGNUPS_TABLE)
-        .select("nombre")
-        .eq("id", data.signupId)
-        .maybeSingle();
-      await sendGuardianInvite({
-        guardianTel: telefono,
-        guardianWa: null,
-        guardianName: data.contact.nombre.trim(),
-        seniorName: (senior as any)?.nombre ?? "Tu familiar",
-        parentesco: data.contact.parentesco.trim(),
-        signupId: data.signupId,
-        guardianId: row.id,
-      });
-    } catch { /* best-effort */ }
-
+    await sendInviteBestEffort(data.signupId, row);
     return { contact: row };
   });
 
@@ -154,19 +103,9 @@ export const updateFamily = createServerFn({ method: "POST" })
     z.object({ signupId: idSchema, id: idSchema, contact: contactInput }).parse(input),
   )
   .handler(async ({ data }) => {
-    const { data: row, error } = await supabaseAdmin
-      .from("emergency_contacts")
-      .update({
-        nombre: data.contact.nombre.trim(),
-        telefono: data.contact.telefono.trim(),
-        parentesco: data.contact.parentesco.trim(),
-      })
-      .eq("id", data.id)
-      .eq("contract_signup_id", data.signupId)
-      .select("id,nombre,telefono,parentesco,created_at")
-      .single();
-    if (error) throw error;
-    return { contact: row };
+    const result = await updateFamilyContact(data.signupId, data.id, data.contact);
+    if (!result.ok) throw new Error(result.error);
+    return { contact: result.contact! };
   });
 
 export const deleteFamily = createServerFn({ method: "POST" })
@@ -174,12 +113,8 @@ export const deleteFamily = createServerFn({ method: "POST" })
     z.object({ signupId: idSchema, id: idSchema }).parse(input),
   )
   .handler(async ({ data }) => {
-    const { error } = await supabaseAdmin
-      .from("emergency_contacts")
-      .delete()
-      .eq("id", data.id)
-      .eq("contract_signup_id", data.signupId);
-    if (error) throw error;
+    const result = await deleteFamilyContact(data.signupId, data.id);
+    if (!result.ok) throw new Error(result.error);
     return { ok: true };
   });
 
@@ -192,31 +127,11 @@ export const resendFamilyInvite = createServerFn({ method: "POST" })
     z.object({ signupId: idSchema, contactId: idSchema }).parse(input),
   )
   .handler(async ({ data }) => {
-    const { data: contact, error } = await supabaseAdmin
-      .from("emergency_contacts")
-      .select("id, nombre, telefono, whatsapp, parentesco")
-      .eq("id", data.contactId)
-      .eq("contract_signup_id", data.signupId)
-      .maybeSingle();
-    if (error) throw error;
+    const contacts = await listFamilyContacts(data.signupId);
+    const contact = contacts.find((c) => c.id === data.contactId);
     if (!contact) throw new Error("Guardián no encontrado.");
 
-    const { data: senior } = await supabaseAdmin
-      .from(CONTRACT_SIGNUPS_TABLE)
-      .select("nombre")
-      .eq("id", data.signupId)
-      .maybeSingle();
-
-    await sendGuardianInvite({
-      guardianTel: contact.telefono,
-      guardianWa: (contact as any).whatsapp ?? null,
-      guardianName: contact.nombre,
-      seniorName: (senior as any)?.nombre ?? "Tu familiar",
-      parentesco: contact.parentesco,
-      signupId: data.signupId,
-      guardianId: contact.id,
-    });
-
+    await sendInviteBestEffort(data.signupId, contact);
     return { ok: true };
   });
 
@@ -226,13 +141,8 @@ export const setUserPin = createServerFn({ method: "POST" })
     z.object({ signupId: idSchema, pinHash: z.string().min(16).max(256) }).parse(input),
   )
   .handler(async ({ data }) => {
-    const { error } = await supabaseAdmin
-      .from("user_pins")
-      .upsert(
-        { contract_signup_id: data.signupId, pin_hash: data.pinHash, updated_at: new Date().toISOString() },
-        { onConflict: "contract_signup_id" },
-      );
-    if (error) throw error;
+    const result = await persistUserPin(data.signupId, data.pinHash);
+    if (!result.ok) throw new Error(result.error ?? "pin_save_failed");
     return { ok: true };
   });
 
@@ -242,12 +152,7 @@ export const verifyPin = createServerFn({ method: "POST" })
     z.object({ signupId: idSchema, pinHash: z.string().min(16).max(256) }).parse(input),
   )
   .handler(async ({ data }) => {
-    const { data: row, error } = await supabaseAdmin
-      .from("user_pins")
-      .select("pin_hash")
-      .eq("contract_signup_id", data.signupId)
-      .maybeSingle();
-    if (error) throw error;
-    if (!row) return { ok: false, configured: false };
-    return { ok: row.pin_hash === data.pinHash, configured: true };
+    const stored = await readStoredPinHash(data.signupId);
+    if (!stored) return { ok: false, configured: false };
+    return { ok: stored === data.pinHash, configured: true };
   });

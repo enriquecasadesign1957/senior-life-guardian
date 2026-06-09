@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { z } from "zod";
 import { PostPaymentInstallScreen } from "@/components/post-payment-install-screen";
 import { isPwaStandalone } from "@/lib/device";
-import { APP_ENTRENAMIENTO_SEARCH, clearRequiresPwaInstall } from "@/lib/post-payment";
+import { buildAppHandoffSearch, clearRequiresPwaInstall } from "@/lib/post-payment";
 
 const searchSchema = z.object({
   entrenamiento: z.string().optional(),
@@ -12,7 +12,15 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute("/instalar-app")({
-  validateSearch: (s) => searchSchema.parse(s),
+  validateSearch: (raw) => {
+    const parsed = searchSchema.safeParse(raw);
+    if (parsed.success) return parsed.data;
+    return {
+      entrenamiento: typeof raw.entrenamiento === "string" ? raw.entrenamiento : undefined,
+      pago: raw.pago === "ok" ? ("ok" as const) : undefined,
+      ss: undefined,
+    };
+  },
   head: () => ({
     meta: [
       { title: "Instalar Senior Safe — Paso final" },
@@ -31,9 +39,9 @@ function InstalarAppPage() {
     if (typeof window === "undefined") return;
     if (isPwaStandalone()) {
       clearRequiresPwaInstall();
-      navigate({ to: "/app", search: APP_ENTRENAMIENTO_SEARCH });
+      navigate({ to: "/app", search: buildAppHandoffSearch(search.ss ?? null) });
     }
-  }, [navigate]);
+  }, [navigate, search.ss]);
 
   return (
     <PostPaymentInstallScreen

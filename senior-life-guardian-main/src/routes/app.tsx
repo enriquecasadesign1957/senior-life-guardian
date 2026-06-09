@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   Shield, MapPin, Users, Battery, Wifi, Bell, CheckCircle2,
   X, Home, Settings, Heart, MessageCircle, Navigation, Clock,
-  Plus, Pencil, Trash2, KeyRound, Loader2, GraduationCap,
+  Plus, Pencil, Trash2, KeyRound, Loader2, GraduationCap, Activity,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -286,6 +286,10 @@ function AppHome() {
     status: fallStatus,
     cancelarAlerta,
     requestPermission: requestFallPermission,
+    isMonitoring: fallMonitoring,
+    needsMotionPermission: fallNeedsPermission,
+    motionSupported: fallMotionSupported,
+    probarCuentaRegresiva,
   } = useFallDetection({
     signupId: userId,
     enabled: !!userId && stage === "idle",
@@ -293,11 +297,18 @@ function AppHome() {
     dispatchEmergency: dispatchFallEmergency,
   });
 
-  useEffect(() => {
-    if (fallStatus === "permission_required" && userId) {
-      void requestFallPermission();
+  const handleFallPermission = useCallback(async () => {
+    const ok = await requestFallPermission();
+    if (ok) {
+      toast.success("Sensor de caídas activado. Mantén la app abierta o en segundo plano.");
+      return;
     }
-  }, [fallStatus, userId, requestFallPermission]);
+    if (!fallMotionSupported) {
+      toast.error("Este teléfono no expone el acelerómetro al navegador.");
+      return;
+    }
+    toast.error("Permiso de movimiento denegado. En iPhone: Ajustes → Safari → Sensores de movimiento.");
+  }, [fallMotionSupported, requestFallPermission]);
 
   const [alertSummary, setAlertSummary] = useState<{
     delivered: number;
@@ -546,6 +557,25 @@ function AppHome() {
               </div>
             </div>
           </div>
+          {userId && fallMotionSupported && (
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+              <button
+                type="button"
+                onClick={handleFallPermission}
+                className="inline-flex items-center gap-1.5 underline-offset-2 hover:underline"
+              >
+                <Activity className="w-4 h-4" />
+                Caídas {fallMonitoring ? "activo" : "tocar para activar"}
+              </button>
+              <button
+                type="button"
+                onClick={probarCuentaRegresiva}
+                className="underline underline-offset-2 text-white/85"
+              >
+                Probar simulación
+              </button>
+            </div>
+          )}
         </section>
 
         {/* Install app banner — visible only when not installed */}
@@ -590,15 +620,36 @@ function AppHome() {
           </section>
         )}
 
-        {accountConfigured && (!gpsAllowed || !notificationsAllowed || !batteryChecked) && (
+        {accountConfigured && (!gpsAllowed || !notificationsAllowed || !batteryChecked || fallNeedsPermission || !fallMotionSupported) && (
           <section aria-label="Permisos del teléfono" className="bg-card border border-border rounded-3xl p-4 mb-5 shadow-sm">
             <h2 className="font-bold text-foreground text-lg mb-1">Solo faltan permisos del teléfono</h2>
             <p className="text-sm text-muted-foreground mb-3">Son necesarios para protegerte en emergencias.</p>
             <div className="space-y-2">
               <PermissionButton icon={MapPin} label="Activar GPS" done={gpsAllowed} onClick={requestGps} />
               <PermissionButton icon={Bell} label="Activar notificaciones" done={notificationsAllowed} onClick={requestNotifications} />
+              {fallMotionSupported ? (
+                <PermissionButton
+                  icon={Activity}
+                  label="Activar sensor de caídas"
+                  done={fallMonitoring}
+                  onClick={handleFallPermission}
+                />
+              ) : (
+                <p className="text-sm text-amber-700 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+                  Este dispositivo no permite detección automática de caídas en el navegador. Usa el botón de emergencia.
+                </p>
+              )}
               <PermissionButton icon={Battery} label="Revisar batería / segundo plano" done={batteryChecked} onClick={markBatteryReady} />
             </div>
+            {fallMonitoring && (
+              <button
+                type="button"
+                onClick={probarCuentaRegresiva}
+                className="mt-3 w-full text-sm font-semibold text-muted-foreground underline underline-offset-2"
+              >
+                Probar cuenta regresiva de caída (simulación, no envía alerta)
+              </button>
+            )}
           </section>
         )}
 

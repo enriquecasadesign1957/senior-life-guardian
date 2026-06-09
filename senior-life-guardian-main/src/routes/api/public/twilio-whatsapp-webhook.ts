@@ -3,6 +3,7 @@ import {
   classifyWhatsAppInboundMessage,
   generateSeniorSafeWhatsAppReply,
 } from "@/lib/senior-safe-ai";
+import { twilioWhatsappCommercialFrom } from "@/lib/twilio";
 import {
   findSignupByPhone,
   isOptOutMessage,
@@ -14,6 +15,7 @@ import {
   twimlMessage,
 } from "@/lib/twilio-inbound";
 import { isEmergencyAlertAckMessage, processWhatsAppAlertAck } from "@/lib/whatsapp-alert-ack";
+import { saveWhatsAppInboxMessage } from "@/lib/whatsapp-inbox";
 import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
@@ -23,12 +25,76 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
  *   https://alarmaseniorsafe.cl/api/public/twilio-whatsapp-webhook
  *
  * Flujos:
- * 1) Confirmación de alerta de emergencia (guardianes: SI, OK, RECIBIDO, token ack…)
- * 2) ACTIVAR / join sandbox → vincula WhatsApp del contratante
- * 3) SOS → dispara alerta real
- * 4) Texto libre → Groq enrutador (EMERGENCY_ACK | COMMERCIAL_QUERY) + respuesta IA
- * 5) Respuesta TwiML <Message> en segundos
+ * - Inbox comercial (TWILIO_WHATSAPP_COMMERCIAL_FROM / +56971404580): IA comercial Groq
+ * - Inbox alertas (+56229147733): confirmación emergencia, ACTIVAR, SOS, texto libre
  */
+
+function isCommercialInbox(recipientClean: string, commercialClean: string): boolean {
+  if (!recipientClean || !commercialClean) return false;
+  if (recipientClean === commercialClean) return true;
+  const recipientDigits = recipientClean.replace(/\D/g, "");
+  const commercialDigits = commercialClean.replace(/\D/g, "");
+  return (
+    recipientDigits === commercialDigits ||
+    recipientDigits.endsWith(commercialDigits.slice(-9)) ||
+    commercialDigits.endsWith(recipientDigits.slice(-9))
+  );
+}
+
+async function replyCommercial(phone: string, message: string): Promise<Response> {
+  await saveWhatsAppInboxMessage({
+    inbox: "commercial",
+    direction: "outbound",
+    peerPhone: phone,
+    body: message,
+  });
+  return twimlMessage(message);
+}
+
+async function handleCommercialInbox(
+  phone: string,
+  rawBody: string,
+  textUpper: string,
+): Promise<Response> {
+  await saveWhatsAppInboxMessage({
+    inbox: "commercial",
+    direction: "inbound",
+    peerPhone: phone,
+    body: rawBody,
+  });
+
+  if (isOptOutMessage(textUpper)) {
+    return replyCommercial(
+      phone,
+      "Recibido. No te enviaremos más mensajes por aquí. Para consultas sobre Senior Safe, escríbenos cuando quieras.",
+    );
+  }
+
+  if (rawBody.length >= 2) {
+    try {
+      const route = await classifyWhatsAppInboundMessage(rawBody);
+
+      if (route === "EMERGENCY_ACK") {
+        const ackReply = await processWhatsAppAlertAck(phone, rawBody, { forceAck: true });
+        if (ackReply) return replyCommercial(phone, ackReply);
+        return replyCommercial(
+          phone,
+          "Senior Safe 🛡️\nRecibimos tu mensaje. Si respondes a una alerta activa, verifica que tu número esté registrado como guardián en la familia.",
+        );
+      }
+
+      const aiReply = await generateSeniorSafeWhatsAppReply(rawBody);
+      return replyCommercial(phone, aiReply);
+    } catch (e) {
+      console.error("[whatsapp-webhook] commercial ai", e);
+    }
+  }
+
+  return replyCommercial(
+    phone,
+    "Senior Safe 🛡️\n\n¡Hola! Pregúntanos por el Plan Único ($6.900/mes), instalación o cómo funciona el ecosistema familiar. También puedes escribir a hola@alarmaseniorsafe.cl",
+  );
+}
 
 export const Route = createFileRoute("/api/public/twilio-whatsapp-webhook")({
   server: {
@@ -38,11 +104,41 @@ export const Route = createFileRoute("/api/public/twilio-whatsapp-webhook")({
 
       POST: async ({ request }) => {
         let from = "";
+        let to = "";
         let body = "";
         try {
           const parsed = await parseTwilioInbound(request);
           from = parsed.from;
+          to = parsed.to;
           body = parsed.body;
+
+          const cleanString = (num: string) =>
+            num.replace(/^whatsapp:/i, "").replace(/^\+/, "").trim();
+          const recipientClean = cleanString(parsed.to || "");
+          const commercialClean = cleanString(twilioWhatsappCommercialFrom());
+
+          console.log("[DIAGNÓSTICO SENIOR SAFE]", {
+            recipientClean,
+            commercialClean,
+            rawTo: parsed.to,
+          });
+
+          if (isCommercialInbox(recipientClean, commercialClean)) {
+            const phone = normalizeTwilioPhone(from);
+            const rawBody = (body || "").trim();
+            const textUpper = rawBody.toUpperCase();
+
+            await logInbound("whatsapp_commercial_inbound", {
+              from,
+              to,
+              body: rawBody,
+              phone,
+              recipientClean,
+              commercialClean,
+            });
+
+            return handleCommercialInbox(phone, rawBody, textUpper);
+          }
         } catch {
           return twimlMessage("No pudimos procesar tu mensaje. Intenta nuevamente.");
         }
@@ -51,7 +147,7 @@ export const Route = createFileRoute("/api/public/twilio-whatsapp-webhook")({
         const rawBody = (body || "").trim();
         const textUpper = rawBody.toUpperCase();
 
-        await logInbound("whatsapp_inbound", { from, body: rawBody, phone, textUpper });
+        await logInbound("whatsapp_inbound", { from, to, body: rawBody, phone, textUpper });
 
         if (isOptOutMessage(textUpper)) {
           return twimlMessage(

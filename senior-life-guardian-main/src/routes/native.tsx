@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Bell, Shield, MapPin, Users, CheckCircle2, Loader2, X, Heart, KeyRound } from "lucide-react";
+import { Bell, Shield, MapPin, Users, CheckCircle2, Loader2, X, Heart, KeyRound, Activity } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -254,6 +254,10 @@ function NativeApp() {
     status: fallStatus,
     cancelarAlerta,
     requestPermission: requestFallPermission,
+    isMonitoring: fallMonitoring,
+    needsMotionPermission: fallNeedsPermission,
+    motionSupported: fallMotionSupported,
+    probarCuentaRegresiva,
   } = useFallDetection({
     signupId: userId,
     enabled: !!userId && stage === "idle",
@@ -261,11 +265,18 @@ function NativeApp() {
     dispatchEmergency: dispatchFallEmergency,
   });
 
-  useEffect(() => {
-    if (fallStatus === "permission_required" && userId) {
-      void requestFallPermission();
+  const handleFallPermission = async () => {
+    const ok = await requestFallPermission();
+    if (ok) {
+      toast.success("Sensor de caídas activado.");
+      return;
     }
-  }, [fallStatus, userId, requestFallPermission]);
+    if (!fallMotionSupported) {
+      toast.error("Este teléfono no expone el acelerómetro al navegador.");
+      return;
+    }
+    toast.error("Permiso de movimiento denegado. En iPhone: Ajustes → Safari → Sensores de movimiento.");
+  };
 
   const triggerAlert = async () => {
     if (sendingRef.current) return;
@@ -467,7 +478,7 @@ function NativeApp() {
               </div>
             </div>
           </div>
-          <div className="mt-4 flex items-center gap-4 text-sm">
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
             <button
               type="button"
               onClick={() => requestGps(true)}
@@ -476,11 +487,34 @@ function NativeApp() {
             >
               <MapPin className="w-4 h-4" /> GPS {gpsOk ? "activo" : "tocar para activar"}
             </button>
+            {fallMotionSupported ? (
+              <button
+                type="button"
+                onClick={handleFallPermission}
+                className="inline-flex items-center gap-1.5 underline-offset-2 hover:underline"
+                aria-label={fallMonitoring ? "Sensor de caídas activo" : "Activar sensor de caídas"}
+              >
+                <Activity className="w-4 h-4" />
+                Caídas {fallMonitoring ? "activo" : fallNeedsPermission ? "tocar para activar" : "inactivo"}
+              </button>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 opacity-80">
+                <Activity className="w-4 h-4" /> Caídas no disponible
+              </span>
+            )}
             <span className="inline-flex items-center gap-1.5">
               <Users className="w-4 h-4" /> {familyCount}
             </span>
           </div>
-
+          {fallMotionSupported && (
+            <button
+              type="button"
+              onClick={probarCuentaRegresiva}
+              className="mt-3 text-xs text-white/85 underline underline-offset-2"
+            >
+              Probar cuenta regresiva (simulación)
+            </button>
+          )}
         </section>
 
         {/* BOTÓN EMERGENCIA */}

@@ -119,7 +119,7 @@ function CheckoutPage() {
       toast.success(`Pago mock aprobado (${mock.authorizationCode})`);
       navigate({
         to: POST_PAYMENT_INSTALL_PATH,
-        search: { pago: "ok", entrenamiento: "1" },
+        search: { pago: "ok", entrenamiento: "1", ss: signup.id },
       });
     } catch (err) {
       console.error("Mock approve error:", err);
@@ -282,31 +282,32 @@ function CheckoutPage() {
                   Al continuar aceptas los <Link to="/terminos" className="underline">Términos</Link> y la <Link to="/privacidad" className="underline">Política de privacidad</Link>.
                 </p>
 
-                {/* QA / Modo desarrollo (sandbox) — bloqueado en producción por el server */}
-                <div className="mt-4 pt-5 border-t border-dashed border-border">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-[11px] uppercase tracking-wide font-bold text-muted-foreground">
-                      QA · Modo desarrollo (sandbox)
+                {!import.meta.env.PROD && (
+                  <div className="mt-4 pt-5 border-t border-dashed border-border">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[11px] uppercase tracking-wide font-bold text-muted-foreground">
+                        QA · Modo desarrollo (sandbox)
+                      </p>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "color-mix(in oklab, #f59e0b 16%, white)", color: "#92400e" }}>
+                        NO PRODUCCIÓN
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Simula una aprobación de pago sin pasar por Webpay. Crea la suscripción,
+                      activa el onboarding y habilita el Portal Familia. No realiza ningún cobro real.
                     </p>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "color-mix(in oklab, #f59e0b 16%, white)", color: "#92400e" }}>
-                      NO PRODUCCIÓN
-                    </span>
+                    <button
+                      type="button"
+                      onClick={handleMockApprove}
+                      disabled={mockLoading || loading}
+                      className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full border-2 font-semibold text-sm disabled:opacity-60"
+                      style={{ borderColor: GREEN, color: GREEN, background: "color-mix(in oklab, #16a34a 6%, white)" }}
+                    >
+                      {mockLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                      {mockLoading ? "Aprobando…" : "Aprobar manualmente (mock)"}
+                    </button>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-3">
-                    Simula una aprobación de pago sin pasar por Webpay. Crea la suscripción,
-                    activa el onboarding y habilita el Portal Familia. No realiza ningún cobro real.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleMockApprove}
-                    disabled={mockLoading || loading}
-                    className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full border-2 font-semibold text-sm disabled:opacity-60"
-                    style={{ borderColor: GREEN, color: GREEN, background: "color-mix(in oklab, #16a34a 6%, white)" }}
-                  >
-                    {mockLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                    {mockLoading ? "Aprobando…" : "Aprobar manualmente (mock)"}
-                  </button>
-                </div>
+                )}
               </form>
 
               {/* SUMMARY */}

@@ -55,6 +55,7 @@ function GuardiansPage() {
   const [signupId, setSignupId] = useState<string | null>(null);
   const [guardians, setGuardians] = useState<Guardian[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<Guardian>>({
@@ -88,12 +89,21 @@ function GuardiansPage() {
   }, [navigate]);
 
   const reload = async (id: string) => {
-    const res = await list({ data: { signupId: id } });
-    setGuardians(res.guardians as Guardian[]);
+    try {
+      const res = await list({ data: { signupId: id } });
+      setGuardians(res.guardians as Guardian[]);
+      setLoadError(null);
+    } catch (e: unknown) {
+      const message = errorMessage(e, "No pudimos cargar tus guardianes.");
+      setLoadError(message);
+      setGuardians([]);
+      toast.error(message);
+    }
   };
 
   useEffect(() => {
     if (!signupId) return;
+    setLoading(true);
     reload(signupId).finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signupId]);
@@ -186,6 +196,20 @@ function GuardiansPage() {
       </header>
 
       <main className="max-w-2xl mx-auto p-4 space-y-3">
+        {loadError && (
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-4 text-sm text-red-800">
+            {loadError}
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-3"
+              onClick={() => signupId && reload(signupId)}
+            >
+              Reintentar
+            </Button>
+          </div>
+        )}
+
         {showAdd && (
           <GuardianForm
             form={form}

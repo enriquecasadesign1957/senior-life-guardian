@@ -11,6 +11,10 @@
   ],
   "vars": {
     "PUBLIC_APP_URL": "https://alarmaseniorsafe.cl",
-    "TRANSBANK_ENVIRONMENT": "production"
+    "TRANSBANK_ENVIRONMENT": "production",
+    "TWILIO_WHATSAPP_COMMERCIAL_FROM": "56971404580"
+  },
+  "triggers": {
+    "crons": ["0 14 * * *"]
   }
 }

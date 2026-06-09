@@ -1,6 +1,6 @@
 // Kill-switch service worker: limpia cachés y se desregistra en dispositivos
 // donde una versión previa de la PWA quedó instalada.
-const CACHE_NAME = "seniorsafe-killswitch-v2026-05-29";
+const CACHE_NAME = "seniorsafe-killswitch-v2026-06-06";
 self.addEventListener("install", (e) => e.waitUntil(self.skipWaiting()));
 self.addEventListener("activate", (e) =>
   e.waitUntil((async () => {

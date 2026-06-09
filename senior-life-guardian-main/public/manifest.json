@@ -1,14 +1,14 @@
 {
-  "name": "Senior Life Guardian",
-  "short_name": "Senior Life",
+  "name": "Senior Safe",
+  "short_name": "Senior Safe",
   "description": "Tu red de cuidado familiar siempre activa. Alertas inmediatas por WhatsApp, SMS y llamada.",
   "start_url": "/native?source=pwa",
-  "id": "senior-life-guardian",
+  "id": "senior-safe",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
-  "background_color": "#0d4f5c",
+  "background_color": "#000000",
   "theme_color": "#0d4f5c",
   "lang": "es-CL",
   "dir": "ltr",
@@ -16,19 +16,19 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/senior-life-guardian-192.webp",
+      "src": "/senior-safe-192.webp",
       "sizes": "192x192",
       "type": "image/webp",
       "purpose": "any"
     },
     {
-      "src": "/senior-life-guardian-512.webp",
+      "src": "/senior-safe-512.webp",
       "sizes": "512x512",
       "type": "image/webp",
       "purpose": "any"
     },
     {
-      "src": "/senior-life-guardian-512.webp",
+      "src": "/senior-safe-512.webp",
       "sizes": "512x512",
       "type": "image/webp",
       "purpose": "maskable"
@@ -42,7 +42,7 @@
       "url": "/native?sos=1",
       "icons": [
         {
-          "src": "/senior-life-guardian-192.webp",
+          "src": "/senior-safe-192.webp",
           "sizes": "192x192",
           "type": "image/webp"
         }
@@ -55,7 +55,7 @@
       "url": "/native",
       "icons": [
         {
-          "src": "/senior-life-guardian-192.webp",
+          "src": "/senior-safe-192.webp",
           "sizes": "192x192",
           "type": "image/webp"
         }

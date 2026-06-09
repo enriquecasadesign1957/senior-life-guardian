@@ -30,15 +30,21 @@ import { Route as FamiliaGuardianesRouteImport } from './routes/familia.guardian
 import { Route as FamiliaDashboardRouteImport } from './routes/familia.dashboard'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AdminResetRouteImport } from './routes/admin.reset'
+import { Route as AdminInboxRouteImport } from './routes/admin.inbox'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as FamiliaAckTokenRouteImport } from './routes/familia.ack.$token'
 import { Route as ApiPublicZohoEmailWebhookRouteImport } from './routes/api/public/zoho-email-webhook'
+import { Route as ApiPublicVerifyPinRouteImport } from './routes/api/public/verify-pin'
 import { Route as ApiPublicTwilioWhatsappWebhookRouteImport } from './routes/api/public/twilio-whatsapp-webhook'
 import { Route as ApiPublicTwilioVoiceWebhookRouteImport } from './routes/api/public/twilio-voice-webhook'
 import { Route as ApiPublicTwilioStatusCallbackRouteImport } from './routes/api/public/twilio-status-callback'
 import { Route as ApiPublicTwilioSmsWebhookRouteImport } from './routes/api/public/twilio-sms-webhook'
 import { Route as ApiPublicSendWelcomeWhatsappRouteImport } from './routes/api/public/send-welcome-whatsapp'
 import { Route as ApiPublicSendWelcomeTrialRouteImport } from './routes/api/public/send-welcome-trial'
+import { Route as ApiPublicSavePinRouteImport } from './routes/api/public/save-pin'
+import { Route as ApiPublicLookupAccountRouteImport } from './routes/api/public/lookup-account'
+import { Route as ApiPublicFamilyRouteImport } from './routes/api/public/family'
+import { Route as ApiCronProcessSubscriptionRenewalsRouteImport } from './routes/api/cron/process-subscription-renewals'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
@@ -148,6 +154,11 @@ const AdminResetRoute = AdminResetRouteImport.update({
   path: '/admin/reset',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminInboxRoute = AdminInboxRouteImport.update({
+  id: '/admin/inbox',
+  path: '/admin/inbox',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   id: '/lovable/email/suppression',
   path: '/lovable/email/suppression',
@@ -164,6 +175,11 @@ const ApiPublicZohoEmailWebhookRoute =
     path: '/api/public/zoho-email-webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicVerifyPinRoute = ApiPublicVerifyPinRouteImport.update({
+  id: '/api/public/verify-pin',
+  path: '/api/public/verify-pin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicTwilioWhatsappWebhookRoute =
   ApiPublicTwilioWhatsappWebhookRouteImport.update({
     id: '/api/public/twilio-whatsapp-webhook',
@@ -198,6 +214,27 @@ const ApiPublicSendWelcomeTrialRoute =
   ApiPublicSendWelcomeTrialRouteImport.update({
     id: '/api/public/send-welcome-trial',
     path: '/api/public/send-welcome-trial',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicSavePinRoute = ApiPublicSavePinRouteImport.update({
+  id: '/api/public/save-pin',
+  path: '/api/public/save-pin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicLookupAccountRoute = ApiPublicLookupAccountRouteImport.update({
+  id: '/api/public/lookup-account',
+  path: '/api/public/lookup-account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicFamilyRoute = ApiPublicFamilyRouteImport.update({
+  id: '/api/public/family',
+  path: '/api/public/family',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCronProcessSubscriptionRenewalsRoute =
+  ApiCronProcessSubscriptionRenewalsRouteImport.update({
+    id: '/api/cron/process-subscription-renewals',
+    path: '/api/cron/process-subscription-renewals',
     getParentRoute: () => rootRouteImport,
   } as any)
 const LovableEmailTransactionalSendRoute =
@@ -236,17 +273,23 @@ export interface FileRoutesByFullPath {
   '/terminos': typeof TerminosRoute
   '/tutorial': typeof TutorialRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/admin/inbox': typeof AdminInboxRoute
   '/admin/reset': typeof AdminResetRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/familia/dashboard': typeof FamiliaDashboardRoute
   '/familia/guardianes': typeof FamiliaGuardianesRoute
   '/webpay/retorno': typeof WebpayRetornoRoute
+  '/api/cron/process-subscription-renewals': typeof ApiCronProcessSubscriptionRenewalsRoute
+  '/api/public/family': typeof ApiPublicFamilyRoute
+  '/api/public/lookup-account': typeof ApiPublicLookupAccountRoute
+  '/api/public/save-pin': typeof ApiPublicSavePinRoute
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
   '/api/public/send-welcome-whatsapp': typeof ApiPublicSendWelcomeWhatsappRoute
   '/api/public/twilio-sms-webhook': typeof ApiPublicTwilioSmsWebhookRoute
   '/api/public/twilio-status-callback': typeof ApiPublicTwilioStatusCallbackRoute
   '/api/public/twilio-voice-webhook': typeof ApiPublicTwilioVoiceWebhookRoute
   '/api/public/twilio-whatsapp-webhook': typeof ApiPublicTwilioWhatsappWebhookRoute
+  '/api/public/verify-pin': typeof ApiPublicVerifyPinRoute
   '/api/public/zoho-email-webhook': typeof ApiPublicZohoEmailWebhookRoute
   '/familia/ack/$token': typeof FamiliaAckTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -271,17 +314,23 @@ export interface FileRoutesByTo {
   '/terminos': typeof TerminosRoute
   '/tutorial': typeof TutorialRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/admin/inbox': typeof AdminInboxRoute
   '/admin/reset': typeof AdminResetRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/familia/dashboard': typeof FamiliaDashboardRoute
   '/familia/guardianes': typeof FamiliaGuardianesRoute
   '/webpay/retorno': typeof WebpayRetornoRoute
+  '/api/cron/process-subscription-renewals': typeof ApiCronProcessSubscriptionRenewalsRoute
+  '/api/public/family': typeof ApiPublicFamilyRoute
+  '/api/public/lookup-account': typeof ApiPublicLookupAccountRoute
+  '/api/public/save-pin': typeof ApiPublicSavePinRoute
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
   '/api/public/send-welcome-whatsapp': typeof ApiPublicSendWelcomeWhatsappRoute
   '/api/public/twilio-sms-webhook': typeof ApiPublicTwilioSmsWebhookRoute
   '/api/public/twilio-status-callback': typeof ApiPublicTwilioStatusCallbackRoute
   '/api/public/twilio-voice-webhook': typeof ApiPublicTwilioVoiceWebhookRoute
   '/api/public/twilio-whatsapp-webhook': typeof ApiPublicTwilioWhatsappWebhookRoute
+  '/api/public/verify-pin': typeof ApiPublicVerifyPinRoute
   '/api/public/zoho-email-webhook': typeof ApiPublicZohoEmailWebhookRoute
   '/familia/ack/$token': typeof FamiliaAckTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -307,17 +356,23 @@ export interface FileRoutesById {
   '/terminos': typeof TerminosRoute
   '/tutorial': typeof TutorialRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/admin/inbox': typeof AdminInboxRoute
   '/admin/reset': typeof AdminResetRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/familia/dashboard': typeof FamiliaDashboardRoute
   '/familia/guardianes': typeof FamiliaGuardianesRoute
   '/webpay/retorno': typeof WebpayRetornoRoute
+  '/api/cron/process-subscription-renewals': typeof ApiCronProcessSubscriptionRenewalsRoute
+  '/api/public/family': typeof ApiPublicFamilyRoute
+  '/api/public/lookup-account': typeof ApiPublicLookupAccountRoute
+  '/api/public/save-pin': typeof ApiPublicSavePinRoute
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
   '/api/public/send-welcome-whatsapp': typeof ApiPublicSendWelcomeWhatsappRoute
   '/api/public/twilio-sms-webhook': typeof ApiPublicTwilioSmsWebhookRoute
   '/api/public/twilio-status-callback': typeof ApiPublicTwilioStatusCallbackRoute
   '/api/public/twilio-voice-webhook': typeof ApiPublicTwilioVoiceWebhookRoute
   '/api/public/twilio-whatsapp-webhook': typeof ApiPublicTwilioWhatsappWebhookRoute
+  '/api/public/verify-pin': typeof ApiPublicVerifyPinRoute
   '/api/public/zoho-email-webhook': typeof ApiPublicZohoEmailWebhookRoute
   '/familia/ack/$token': typeof FamiliaAckTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -344,17 +399,23 @@ export interface FileRouteTypes {
     | '/terminos'
     | '/tutorial'
     | '/unsubscribe'
+    | '/admin/inbox'
     | '/admin/reset'
     | '/email/unsubscribe'
     | '/familia/dashboard'
     | '/familia/guardianes'
     | '/webpay/retorno'
+    | '/api/cron/process-subscription-renewals'
+    | '/api/public/family'
+    | '/api/public/lookup-account'
+    | '/api/public/save-pin'
     | '/api/public/send-welcome-trial'
     | '/api/public/send-welcome-whatsapp'
     | '/api/public/twilio-sms-webhook'
     | '/api/public/twilio-status-callback'
     | '/api/public/twilio-voice-webhook'
     | '/api/public/twilio-whatsapp-webhook'
+    | '/api/public/verify-pin'
     | '/api/public/zoho-email-webhook'
     | '/familia/ack/$token'
     | '/lovable/email/suppression'
@@ -379,17 +440,23 @@ export interface FileRouteTypes {
     | '/terminos'
     | '/tutorial'
     | '/unsubscribe'
+    | '/admin/inbox'
     | '/admin/reset'
     | '/email/unsubscribe'
     | '/familia/dashboard'
     | '/familia/guardianes'
     | '/webpay/retorno'
+    | '/api/cron/process-subscription-renewals'
+    | '/api/public/family'
+    | '/api/public/lookup-account'
+    | '/api/public/save-pin'
     | '/api/public/send-welcome-trial'
     | '/api/public/send-welcome-whatsapp'
     | '/api/public/twilio-sms-webhook'
     | '/api/public/twilio-status-callback'
     | '/api/public/twilio-voice-webhook'
     | '/api/public/twilio-whatsapp-webhook'
+    | '/api/public/verify-pin'
     | '/api/public/zoho-email-webhook'
     | '/familia/ack/$token'
     | '/lovable/email/suppression'
@@ -414,17 +481,23 @@ export interface FileRouteTypes {
     | '/terminos'
     | '/tutorial'
     | '/unsubscribe'
+    | '/admin/inbox'
     | '/admin/reset'
     | '/email/unsubscribe'
     | '/familia/dashboard'
     | '/familia/guardianes'
     | '/webpay/retorno'
+    | '/api/cron/process-subscription-renewals'
+    | '/api/public/family'
+    | '/api/public/lookup-account'
+    | '/api/public/save-pin'
     | '/api/public/send-welcome-trial'
     | '/api/public/send-welcome-whatsapp'
     | '/api/public/twilio-sms-webhook'
     | '/api/public/twilio-status-callback'
     | '/api/public/twilio-voice-webhook'
     | '/api/public/twilio-whatsapp-webhook'
+    | '/api/public/verify-pin'
     | '/api/public/zoho-email-webhook'
     | '/familia/ack/$token'
     | '/lovable/email/suppression'
@@ -450,15 +523,21 @@ export interface RootRouteChildren {
   TerminosRoute: typeof TerminosRoute
   TutorialRoute: typeof TutorialRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
+  AdminInboxRoute: typeof AdminInboxRoute
   AdminResetRoute: typeof AdminResetRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   WebpayRetornoRoute: typeof WebpayRetornoRoute
+  ApiCronProcessSubscriptionRenewalsRoute: typeof ApiCronProcessSubscriptionRenewalsRoute
+  ApiPublicFamilyRoute: typeof ApiPublicFamilyRoute
+  ApiPublicLookupAccountRoute: typeof ApiPublicLookupAccountRoute
+  ApiPublicSavePinRoute: typeof ApiPublicSavePinRoute
   ApiPublicSendWelcomeTrialRoute: typeof ApiPublicSendWelcomeTrialRoute
   ApiPublicSendWelcomeWhatsappRoute: typeof ApiPublicSendWelcomeWhatsappRoute
   ApiPublicTwilioSmsWebhookRoute: typeof ApiPublicTwilioSmsWebhookRoute
   ApiPublicTwilioStatusCallbackRoute: typeof ApiPublicTwilioStatusCallbackRoute
   ApiPublicTwilioVoiceWebhookRoute: typeof ApiPublicTwilioVoiceWebhookRoute
   ApiPublicTwilioWhatsappWebhookRoute: typeof ApiPublicTwilioWhatsappWebhookRoute
+  ApiPublicVerifyPinRoute: typeof ApiPublicVerifyPinRoute
   ApiPublicZohoEmailWebhookRoute: typeof ApiPublicZohoEmailWebhookRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -615,6 +694,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminResetRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/inbox': {
+      id: '/admin/inbox'
+      path: '/admin/inbox'
+      fullPath: '/admin/inbox'
+      preLoaderRoute: typeof AdminInboxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/suppression': {
       id: '/lovable/email/suppression'
       path: '/lovable/email/suppression'
@@ -634,6 +720,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/zoho-email-webhook'
       fullPath: '/api/public/zoho-email-webhook'
       preLoaderRoute: typeof ApiPublicZohoEmailWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/verify-pin': {
+      id: '/api/public/verify-pin'
+      path: '/api/public/verify-pin'
+      fullPath: '/api/public/verify-pin'
+      preLoaderRoute: typeof ApiPublicVerifyPinRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/twilio-whatsapp-webhook': {
@@ -676,6 +769,34 @@ declare module '@tanstack/react-router' {
       path: '/api/public/send-welcome-trial'
       fullPath: '/api/public/send-welcome-trial'
       preLoaderRoute: typeof ApiPublicSendWelcomeTrialRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/save-pin': {
+      id: '/api/public/save-pin'
+      path: '/api/public/save-pin'
+      fullPath: '/api/public/save-pin'
+      preLoaderRoute: typeof ApiPublicSavePinRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/lookup-account': {
+      id: '/api/public/lookup-account'
+      path: '/api/public/lookup-account'
+      fullPath: '/api/public/lookup-account'
+      preLoaderRoute: typeof ApiPublicLookupAccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/family': {
+      id: '/api/public/family'
+      path: '/api/public/family'
+      fullPath: '/api/public/family'
+      preLoaderRoute: typeof ApiPublicFamilyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron/process-subscription-renewals': {
+      id: '/api/cron/process-subscription-renewals'
+      path: '/api/cron/process-subscription-renewals'
+      fullPath: '/api/cron/process-subscription-renewals'
+      preLoaderRoute: typeof ApiCronProcessSubscriptionRenewalsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lovable/email/transactional/send': {
@@ -734,15 +855,22 @@ const rootRouteChildren: RootRouteChildren = {
   TerminosRoute: TerminosRoute,
   TutorialRoute: TutorialRoute,
   UnsubscribeRoute: UnsubscribeRoute,
+  AdminInboxRoute: AdminInboxRoute,
   AdminResetRoute: AdminResetRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   WebpayRetornoRoute: WebpayRetornoRoute,
+  ApiCronProcessSubscriptionRenewalsRoute:
+    ApiCronProcessSubscriptionRenewalsRoute,
+  ApiPublicFamilyRoute: ApiPublicFamilyRoute,
+  ApiPublicLookupAccountRoute: ApiPublicLookupAccountRoute,
+  ApiPublicSavePinRoute: ApiPublicSavePinRoute,
   ApiPublicSendWelcomeTrialRoute: ApiPublicSendWelcomeTrialRoute,
   ApiPublicSendWelcomeWhatsappRoute: ApiPublicSendWelcomeWhatsappRoute,
   ApiPublicTwilioSmsWebhookRoute: ApiPublicTwilioSmsWebhookRoute,
   ApiPublicTwilioStatusCallbackRoute: ApiPublicTwilioStatusCallbackRoute,
   ApiPublicTwilioVoiceWebhookRoute: ApiPublicTwilioVoiceWebhookRoute,
   ApiPublicTwilioWhatsappWebhookRoute: ApiPublicTwilioWhatsappWebhookRoute,
+  ApiPublicVerifyPinRoute: ApiPublicVerifyPinRoute,
   ApiPublicZohoEmailWebhookRoute: ApiPublicZohoEmailWebhookRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,

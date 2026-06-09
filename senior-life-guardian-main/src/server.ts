@@ -77,4 +77,13 @@ export default {
       return brandedErrorResponse();
     }
   },
+
+  /** Cloudflare Cron: avisos de renovación y suspensión por falta de pago. */
+  async scheduled(_event: ScheduledEvent, _env: unknown, ctx: ExecutionContext) {
+    ctx.waitUntil(
+      import("./lib/subscription-renewal").then(({ runSubscriptionRenewalJob }) =>
+        runSubscriptionRenewalJob(),
+      ),
+    );
+  },
 };

@@ -12,6 +12,7 @@ import {
 } from "@/lib/transbank-webpay";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { Json } from "@/integrations/supabase/types";
+import { clearRenewalNoticeFlags } from "@/lib/subscription-renewal";
 
 /** Serializa la respuesta cruda de Transbank al tipo Json de Supabase. */
 function toSupabaseJson(value: Record<string, unknown>): Json {
@@ -171,6 +172,7 @@ export const confirmWebpayTransaction = createServerFn({ method: "POST" })
             webpay_response_code: result.responseCode,
           })
           .eq("id", tx.contract_signup_id);
+        await clearRenewalNoticeFlags(tx.contract_signup_id);
       } else {
         await supabaseAdmin
           .from(CONTRACT_SIGNUPS_TABLE)
@@ -292,6 +294,7 @@ export const mockApproveWebpay = createServerFn({ method: "POST" })
         webpay_response_code: 0,
       })
       .eq("id", signupId);
+    await clearRenewalNoticeFlags(signupId);
 
     return {
       ok: true,
@@ -334,6 +337,7 @@ export const activateSubscription = createServerFn({ method: "POST" })
       .eq("id", data.signupId);
 
     if (error) throw error;
+    await clearRenewalNoticeFlags(data.signupId);
     return { ok: true, renewalDate: renewal.toISOString() };
   });
 

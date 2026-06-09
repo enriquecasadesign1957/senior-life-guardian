@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, XCircle, Loader2, MessageCircle } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { confirmWebpayTransaction, mockApproveWebpay } from "@/lib/webpay.functions";
-import { markRequiresPwaInstall } from "@/lib/post-payment";
+import { markRequiresPwaInstall, persistSignupHandoff } from "@/lib/post-payment";
 import { PostPaymentInstallScreen } from "@/components/post-payment-install-screen";
 
 type SearchParams = {
@@ -70,18 +70,25 @@ function WebpayReturnPage() {
     cardLast4?: string | null;
   }>({});
   const [mockBusy, setMockBusy] = useState(false);
+  const [signupId, setSignupId] = useState<string | null>(null);
   const mockApprove = useServerFn(mockApproveWebpay);
+
+  const readSignupId = (): string | null => {
+    try {
+      const raw = sessionStorage.getItem("seniorsafe_user");
+      if (!raw) return null;
+      return JSON.parse(raw)?.id ?? null;
+    } catch {
+      return null;
+    }
+  };
 
   const handleMockApprove = async () => {
     setMockBusy(true);
     try {
-      let signupId: string | undefined;
-      try {
-        const raw = sessionStorage.getItem("seniorsafe_user");
-        if (raw) signupId = JSON.parse(raw)?.id;
-      } catch { /* ignore */ }
-      const r = await mockApprove({ data: { token: search.token_ws, signupId } });
-      setInfo({ authorizationCode: r.authorizationCode, buyOrder: r.buyOrder, cardLast4: "6623" });
+      const signupIdForMock = readSignupId() ?? undefined;
+      const r = await mockApprove({ data: { token: search.token_ws, signupId: signupIdForMock } });
+      setInfo({ authorizationCode: r.authorizationCode, buyOrder: r.buyOrder });
       try {
         const raw = sessionStorage.getItem("seniorsafe_user");
         if (raw) {
@@ -93,6 +100,7 @@ function WebpayReturnPage() {
           }));
         }
       } catch { /* ignore */ }
+      setSignupId(readSignupId());
       markRequiresPwaInstall();
       setState("success");
     } catch (e) {
@@ -126,18 +134,26 @@ function WebpayReturnPage() {
             buyOrder: r.buyOrder,
             cardLast4: r.cardLast4,
           });
-          // Marcar suscripción activa en sessionStorage
-          try {
-            const raw = sessionStorage.getItem("seniorsafe_user");
-            if (raw) {
-              const u = JSON.parse(raw);
-              sessionStorage.setItem("seniorsafe_user", JSON.stringify({
-                ...u,
-                purchase_mode: "contratar",
-                subscription_status: "active",
-              }));
-            }
-          } catch { /* ignore */ }
+          const resolvedId = r.signupId ?? readSignupId();
+          if (resolvedId) {
+            persistSignupHandoff(resolvedId, {
+              purchase_mode: "contratar",
+              subscription_status: "active",
+            });
+          } else {
+            try {
+              const raw = sessionStorage.getItem("seniorsafe_user");
+              if (raw) {
+                const u = JSON.parse(raw);
+                sessionStorage.setItem("seniorsafe_user", JSON.stringify({
+                  ...u,
+                  purchase_mode: "contratar",
+                  subscription_status: "active",
+                }));
+              }
+            } catch { /* ignore */ }
+          }
+          setSignupId(resolvedId);
           markRequiresPwaInstall();
           setState("success");
         } else {
@@ -152,7 +168,13 @@ function WebpayReturnPage() {
   }, [search.token_ws, search.TBK_TOKEN, confirm]);
 
   if (state === "success") {
-    return <PostPaymentInstallScreen paymentSummary={info} showPaymentSuccess />;
+    return (
+      <PostPaymentInstallScreen
+        paymentSummary={info}
+        signupId={signupId}
+        showPaymentSuccess
+      />
+    );
   }
 
   return (
@@ -197,24 +219,25 @@ function WebpayReturnPage() {
                   </a>
                 </div>
 
-                <div className="mt-6 pt-6 border-t border-dashed border-border text-left">
-                  <p className="text-xs uppercase tracking-wide font-semibold text-muted-foreground mb-2">
-                    Modo desarrollo (sandbox)
-                  </p>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Si Transbank sandbox está inestable, puedes simular una aprobación
-                    para continuar validando el flujo. No realiza ningún cobro real.
-                  </p>
-                  <button
-                    onClick={handleMockApprove}
-                    disabled={mockBusy}
-                    className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full border-2 font-semibold disabled:opacity-60"
-                    style={{ borderColor: GREEN, color: GREEN, background: "color-mix(in oklab, #16a34a 6%, white)" }}
-                  >
-                    {mockBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                    {mockBusy ? "Aprobando…" : "Aprobar manualmente (mock)"}
-                  </button>
-                </div>
+                {!import.meta.env.PROD && (
+                  <div className="mt-6 pt-6 border-t border-dashed border-border text-left">
+                    <p className="text-xs uppercase tracking-wide font-semibold text-muted-foreground mb-2">
+                      Solo entorno local
+                    </p>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Opción de respaldo para desarrolladores. No aparece en producción.
+                    </p>
+                    <button
+                      onClick={handleMockApprove}
+                      disabled={mockBusy}
+                      className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full border-2 font-semibold disabled:opacity-60"
+                      style={{ borderColor: GREEN, color: GREEN, background: "color-mix(in oklab, #16a34a 6%, white)" }}
+                    >
+                      {mockBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                      {mockBusy ? "Aprobando…" : "Aprobar manualmente (dev)"}
+                    </button>
+                  </div>
+                )}
               </>
             )}
           </div>

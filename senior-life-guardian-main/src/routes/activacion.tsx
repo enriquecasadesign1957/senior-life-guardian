@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -19,8 +19,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useServerFn } from "@tanstack/react-start";
 import { setUserPin, addFamily, resendFamilyInvite } from "@/lib/family.functions";
+import { addFamilyWithFallback, familyErrorMessage } from "@/lib/family-actions";
+import { savePinErrorMessage, saveUserPinWithFallback } from "@/lib/pin-actions";
 import { toast } from "sonner";
-import { POST_PAYMENT_INSTALL_PATH } from "@/lib/post-payment";
 
 export const Route = createFileRoute("/activacion")({
   head: () => ({
@@ -79,7 +80,6 @@ async function fireConfetti() {
 }
 
 function ActivacionPage() {
-  const navigate = useNavigate();
   const [user, setUser] = useState<TrialUser | null>(null);
   const [completed, setCompleted] = useState<Record<StepKey, boolean>>({
     pin: false, contactos: false, gps: false, emergencia: false, app: false,
@@ -95,10 +95,12 @@ function ActivacionPage() {
   const progress = useMemo(() => Math.round((doneCount / total) * 100), [doneCount, total]);
   const allDone = doneCount === total;
 
-  // Post-pago: bienvenida va directo al mock de entrenamiento en la app
+  // Hidrata usuario desde sesión post-checkout (sin redirigir: debe completar PIN y familiares aquí).
   useEffect(() => {
     try {
-      const raw = sessionStorage.getItem("seniorsafe_user");
+      const raw =
+        sessionStorage.getItem("seniorsafe_user") ||
+        localStorage.getItem("seniorsafe_user_backup");
       if (!raw) return;
       const parsed = JSON.parse(raw) as TrialUser & {
         purchase_mode?: string;
@@ -107,17 +109,8 @@ function ActivacionPage() {
         trial_active?: boolean;
       };
       setUser(parsed);
-      const paid =
-        parsed.payment_status === "paid" ||
-        parsed.subscription_status === "active";
-      if (paid) {
-        navigate({
-          to: POST_PAYMENT_INSTALL_PATH,
-          search: { pago: "ok", entrenamiento: "1" },
-        });
-      }
     } catch { /* ignore */ }
-  }, [navigate]);
+  }, []);
 
   // Load persisted progress (legacy / sin redirect)
   useEffect(() => {
@@ -275,7 +268,7 @@ function ActivacionPage() {
 }
 
 /* ---------------- Step 1: Acceder a la app ---------------- */
-const APP_URL = "https://senior-safe-link.lovable.app";
+const APP_URL = "https://alarmaseniorsafe.cl/instalar-app";
 
 function StepAppModal({ open, onClose, onDone, userPhone, signupId }: { open: boolean; onClose: () => void; onDone: () => void; userPhone: string | null; signupId: string | null }) {
   const [showInstall, setShowInstall] = useState(false);
@@ -347,16 +340,22 @@ function StepPinModal({ open, onClose, onDone, userId }: { open: boolean; onClos
     }
     setSaving(true);
     try {
-      if (userId) {
-        const pin_hash = await hashPin(pin, userId);
-        await setPinFn({ data: { signupId: userId, pinHash: pin_hash } });
+      if (!userId) {
+        toast.error("Sesión no encontrada.");
+        return;
+      }
+      const pin_hash = await hashPin(pin, userId);
+      const saved = await saveUserPinWithFallback(setPinFn, userId, pin_hash);
+      if (!saved.ok) {
+        toast.error(savePinErrorMessage(saved.error));
+        return;
       }
       try { localStorage.setItem("seniorsafe_pin_set", "true"); } catch {}
+      toast.success("PIN guardado correctamente.");
       onDone();
     } catch (e) {
       console.error(e);
-      // Don't block onboarding on DB error
-      onDone();
+      toast.error(savePinErrorMessage());
     } finally {
       setSaving(false);
     }
@@ -442,17 +441,16 @@ function StepContactsModal({ open, onClose, onDone, userId }: { open: boolean; o
     try {
       let createdId: string | undefined;
       if (userId) {
-        const res = await addFamilyFn({
-          data: {
-            signupId: userId,
-            contact: {
-              nombre: form.nombre.trim(),
-              telefono: form.telefono.trim(),
-              parentesco: form.parentesco.trim(),
-            },
-          },
+        const res = await addFamilyWithFallback(addFamilyFn, userId, {
+          nombre: form.nombre.trim(),
+          telefono: form.telefono.trim(),
+          parentesco: form.parentesco.trim(),
         });
-        createdId = (res as any)?.contact?.id;
+        if (!res.contact) {
+          toast.error(familyErrorMessage(res.error));
+          return;
+        }
+        createdId = res.contact.id;
       }
       persist([...contacts, { ...form, id: createdId }]);
       setForm({ nombre: "", telefono: "", parentesco: "" });

@@ -81,7 +81,7 @@ Edita `vars` en `wrangler.jsonc`:
 
 ## Zoho Mail (correo automático)
 
-- SMTP: `smtp.zoho.com:465` (usuario `soporte@alarmaseniorsafe.cl`, contraseña de aplicación).
+- SMTP: `smtp.zoho.com:465` (`ZOHO_SMTP_USER` y `ZOHO_SMTP_FROM`: `hola@alarmaseniorsafe.cl`, contraseña de aplicación).
 - BCC auditoría: `enriquecasadesign@gmail.com` (configurable con `ZOHO_SMTP_BCC`).
 
 ## Notas

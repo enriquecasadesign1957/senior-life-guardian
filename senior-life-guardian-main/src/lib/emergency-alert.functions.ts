@@ -10,6 +10,10 @@ import {
   twilioVoiceFrom,
   twilioWhatsappFrom,
 } from "@/lib/twilio";
+import {
+  isSubscriptionServiceAllowed,
+  subscriptionBlockedMessage,
+} from "@/lib/subscription-access";
 
 // Acepta el formato { lat, lng } y también el formato nativo de
 // @capacitor/geolocation: { latitude, longitude, accuracy } o
@@ -71,7 +75,21 @@ const Schema = z.object({
 });
 
 const MAX_INITIAL_CONTACTS = 3;
-const VOICE_ESCALATION_DELAY_MS = 20_000;
+/** SMS inmediato; WhatsApp 10 s después. */
+const WHATSAPP_CASCADE_DELAY_MS = 10_000;
+/** Llamada 10 s después del envío de WhatsApp si no hay confirmación. */
+const VOICE_ESCALATION_AFTER_WHATSAPP_MS = 10_000;
+
+const ALGORITHM_ID = "ecosystem_v3_cascade";
+
+function twilioStatusCallbackUrl(alertId: string, channel: "sms" | "whatsapp"): string {
+  const base = (
+    process.env.PUBLIC_APP_URL ||
+    (import.meta.env.PUBLIC_APP_URL as string | undefined) ||
+    "https://alarmaseniorsafe.cl"
+  ).replace(/\/$/, "");
+  return `${base}/api/public/twilio-status-callback?alertId=${encodeURIComponent(alertId)}&channel=${channel}`;
+}
 
 type ResolvedGps = {
   lat: number;
@@ -106,13 +124,29 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function isAlertAcknowledged(logId: string): Promise<boolean> {
+type AlertEngagementRow = {
+  acknowledged_at: string | null;
+  metadata: Record<string, unknown> | null;
+};
+
+function isAlertEngagedFromRow(row: AlertEngagementRow | null): boolean {
+  if (!row) return false;
+  if (row.acknowledged_at) return true;
+  const meta = (row.metadata ?? {}) as Record<string, unknown>;
+  return typeof meta.whatsapp_read_at === "string" && meta.whatsapp_read_at.length > 0;
+}
+
+async function getAlertEngagement(logId: string): Promise<AlertEngagementRow | null> {
   const { data: row } = await supabaseAdmin
     .from("alert_logs")
-    .select("acknowledged_at")
+    .select("acknowledged_at, metadata")
     .eq("id", logId)
     .maybeSingle();
-  return !!row?.acknowledged_at;
+  return (row as AlertEngagementRow | null) ?? null;
+}
+
+async function isAlertEngaged(logId: string): Promise<boolean> {
+  return isAlertEngagedFromRow(await getAlertEngagement(logId));
 }
 
 
@@ -186,9 +220,10 @@ function toEmergencyRecipient(row: EmergencyContactRow): EmergencyRecipient | nu
 }
 
 /**
- * Algoritmo de emergencia — Ecosistema Inteligente:
- *  Fase 1: SMS + WhatsApp en paralelo (máx. 3 contactos activos por prioridad).
- *  Fase 2: Tras 20s, escalamiento telefónico secuencial si no hay confirmación.
+ * Algoritmo de emergencia — cascada:
+ *  Fase 1: SMS inmediato (máx. 3 contactos activos por prioridad).
+ *  Fase 2: WhatsApp siempre 10 s después del SMS (aunque ya haya confirmación por SMS).
+ *  Fase 3: Llamada 10 s después del WhatsApp solo si no hubo confirmación ni lectura de WA.
  * Registra cada canal en alert_logs.
  */
 export const sendEmergencyAlert = createServerFn({ method: "POST" })
@@ -202,7 +237,7 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
     // Resolver usuario + familiares
     const { data: user, error: userErr } = await supabaseAdmin
       .from(CONTRACT_SIGNUPS_TABLE)
-      .select("id, nombre, telefono")
+      .select("id, nombre, telefono, subscription_status")
       .eq("id", data.signupId)
       .maybeSingle();
 
@@ -210,7 +245,16 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
       return { ok: false, error: "user_not_found", results: [] as ChannelResult[] };
     }
 
-    const { data: contactRows, error: contactsErr } = await supabaseAdmin
+    if (!data.trainingMode && !isSubscriptionServiceAllowed(user.subscription_status)) {
+      return {
+        ok: false,
+        error: "subscription_inactive",
+        message: subscriptionBlockedMessage(user.subscription_status),
+        results: [] as ChannelResult[],
+      };
+    }
+
+    const extendedContacts = await supabaseAdmin
       .from("emergency_contacts")
       .select(
         "id, nombre, telefono, whatsapp, parentesco, recibe_sms, recibe_whatsapp, recibe_llamada",
@@ -220,8 +264,28 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
       .order("prioridad", { ascending: true })
       .order("created_at", { ascending: true });
 
-    if (contactsErr) {
-      console.error("[sendEmergencyAlert] emergency_contacts:", contactsErr.message);
+    let contactRows = extendedContacts.data;
+    if (extendedContacts.error) {
+      const missingColumn = /column .* does not exist/i.test(extendedContacts.error.message ?? "");
+      if (missingColumn) {
+        const basicContacts = await supabaseAdmin
+          .from("emergency_contacts")
+          .select("id, nombre, telefono, parentesco")
+          .eq("contract_signup_id", data.signupId)
+          .order("created_at", { ascending: true });
+        contactRows = (basicContacts.data ?? []).map((row) => ({
+          ...row,
+          whatsapp: null,
+          recibe_sms: true,
+          recibe_whatsapp: true,
+          recibe_llamada: true,
+        }));
+        if (basicContacts.error) {
+          console.error("[sendEmergencyAlert] emergency_contacts:", basicContacts.error.message);
+        }
+      } else {
+        console.error("[sendEmergencyAlert] emergency_contacts:", extendedContacts.error.message);
+      }
     }
 
     const recipients: EmergencyRecipient[] = (contactRows ?? [])
@@ -282,8 +346,12 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
           timestamp,
           ack_url: ackUrl,
           gps_source: resolvedGps?.source ?? "unavailable",
-          algorithm: "ecosystem_v2",
+          algorithm: ALGORITHM_ID,
           max_initial_contacts: MAX_INITIAL_CONTACTS,
+          cascade: {
+            whatsapp_delay_ms: WHATSAPP_CASCADE_DELAY_MS,
+            voice_delay_after_whatsapp_ms: VOICE_ESCALATION_AFTER_WHATSAPP_MS,
+          },
         },
 
 
@@ -296,18 +364,21 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
     const results: ChannelResult[] = [];
 
     if (data.trainingMode) {
-      const simulatedAt = new Date().toISOString();
+      const baseMs = Date.now();
+      const simAt = (offsetMs: number) => new Date(baseMs + offsetMs).toISOString();
       for (const c of topContacts) {
         if (c.recibe_sms) {
-          results.push({ channel: "sms", to: c.phone, status: "sent", sid: "TRAINING_SIM", error: null, event: "sms_simulated", at: simulatedAt });
+          results.push({ channel: "sms", to: c.phone, status: "sent", sid: "TRAINING_SIM", error: null, event: "sms_simulated", at: simAt(0) });
         }
+      }
+      for (const c of topContacts) {
         if (c.recibe_whatsapp) {
-          results.push({ channel: "whatsapp", to: c.whatsappPhone, status: "sent", sid: "TRAINING_SIM", error: null, event: "whatsapp_simulated", at: simulatedAt });
+          results.push({ channel: "whatsapp", to: c.whatsappPhone, status: "sent", sid: "TRAINING_SIM", error: null, event: "whatsapp_simulated", at: simAt(WHATSAPP_CASCADE_DELAY_MS) });
         }
       }
       for (const c of callEscalationContacts) {
         if (c.recibe_llamada) {
-          results.push({ channel: "call", to: c.phone, status: "sent", sid: "TRAINING_SIM", error: null, event: "call_simulated", at: simulatedAt });
+          results.push({ channel: "call", to: c.phone, status: "sent", sid: "TRAINING_SIM", error: null, event: "call_simulated", at: simAt(WHATSAPP_CASCADE_DELAY_MS + VOICE_ESCALATION_AFTER_WHATSAPP_MS) });
         }
       }
       if (recipients.length === 0) {
@@ -330,7 +401,8 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
               timestamp,
               training: true,
               results,
-              message: "Entrenamiento: sin envíos reales a Twilio",
+              message: "Entrenamiento: cascada SMS → WhatsApp (+10s) → llamada (+10s) sin Twilio",
+              algorithm: ALGORITHM_ID,
             },
             error_message: null,
           })
@@ -364,16 +436,22 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
         results.push({ channel, to, status: "skipped", error, event, at: nowIso() });
       };
 
-      // ── FASE 1: SMS + WhatsApp en paralelo (máx. 3 contactos) ──
-      const phase1Tasks: Promise<ChannelResult>[] = [];
+      const alertId = logRow?.id ?? null;
+
+      // ── FASE 1: SMS inmediato (máx. 3 contactos) ──
+      const smsTasks: Promise<ChannelResult>[] = [];
 
       for (const c of topContacts) {
         if (c.recibe_sms) {
           if (!smsFrom) {
             pushSkipped("sms", c.phone, "missing TWILIO_SMS_FROM", "sms_skipped");
           } else {
-            phase1Tasks.push(
-              twilioPost("/Messages.json", { To: c.phone, From: smsFrom, Body: textMessage })
+            const smsBody: Record<string, string> = { To: c.phone, From: smsFrom, Body: textMessage };
+            if (alertId) {
+              smsBody.StatusCallback = twilioStatusCallbackUrl(alertId, "sms");
+            }
+            smsTasks.push(
+              twilioPost("/Messages.json", smsBody)
                 .then((r) => ({
                   channel: "sms" as const,
                   to: c.phone,
@@ -396,14 +474,50 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
         } else {
           pushSkipped("sms", c.phone, "recibe_sms_disabled", "sms_skipped");
         }
+      }
 
+      const smsSettled = await Promise.allSettled(smsTasks);
+      for (const outcome of smsSettled) {
+        if (outcome.status === "fulfilled") results.push(outcome.value);
+      }
+
+      if (alertId) {
+        const smsSent = results.filter((r) => r.channel === "sms" && r.status === "sent");
+        await supabaseAdmin
+          .from("alert_logs")
+          .update({
+            status: smsSent.length > 0 ? "partial" : "pending",
+            metadata: {
+              maps_link: mapsLink,
+              timestamp,
+              ack_url: ackUrl,
+              gps_source: resolvedGps?.source ?? "unavailable",
+              algorithm: ALGORITHM_ID,
+              phase: "sms_complete",
+              sms_contacts: topContacts.map((contact) => contact.id),
+              results: [...results],
+            },
+          } as never)
+          .eq("id", alertId);
+      }
+
+      await sleep(WHATSAPP_CASCADE_DELAY_MS);
+
+      // ── FASE 2: WhatsApp siempre 10 s después del SMS ──
+      const waTasks: Promise<ChannelResult>[] = [];
+
+      for (const c of topContacts) {
         if (c.recibe_whatsapp) {
-          phase1Tasks.push(
-            twilioPost("/Messages.json", {
-              To: `whatsapp:${c.whatsappPhone}`,
-              From: waFrom,
-              Body: textMessage,
-            })
+          const waBody: Record<string, string> = {
+            To: `whatsapp:${c.whatsappPhone}`,
+            From: waFrom,
+            Body: textMessage,
+          };
+          if (alertId) {
+            waBody.StatusCallback = twilioStatusCallbackUrl(alertId, "whatsapp");
+          }
+          waTasks.push(
+            twilioPost("/Messages.json", waBody)
               .then((r) => ({
                 channel: "whatsapp" as const,
                 to: c.whatsappPhone,
@@ -427,38 +541,37 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
         }
       }
 
-      const phase1Settled = await Promise.allSettled(phase1Tasks);
-      for (const outcome of phase1Settled) {
+      const waSettled = await Promise.allSettled(waTasks);
+      for (const outcome of waSettled) {
         if (outcome.status === "fulfilled") results.push(outcome.value);
       }
 
-      if (logRow?.id) {
-        const phase1Sent = results.filter((r) => r.status === "sent");
+      if (alertId) {
         await supabaseAdmin
           .from("alert_logs")
           .update({
-            status: phase1Sent.length > 0 ? "partial" : "pending",
             metadata: {
               maps_link: mapsLink,
               timestamp,
               ack_url: ackUrl,
               gps_source: resolvedGps?.source ?? "unavailable",
-              algorithm: "ecosystem_v2",
-              phase: "phase1_complete",
-              phase1_contacts: topContacts.map((contact) => contact.id),
+              algorithm: ALGORITHM_ID,
+              phase: "whatsapp_complete",
+              sms_contacts: topContacts.map((contact) => contact.id),
+              whatsapp_contacts: topContacts.map((contact) => contact.id),
               results: [...results],
             },
           } as never)
-          .eq("id", logRow.id);
+          .eq("id", alertId);
       }
 
-      // ── FASE 2: escalamiento telefónico secuencial tras 20s ──
-      await sleep(VOICE_ESCALATION_DELAY_MS);
+      // ── FASE 3: llamada solo si no hubo confirmación ni lectura de WhatsApp ──
+      await sleep(VOICE_ESCALATION_AFTER_WHATSAPP_MS);
 
-      const acknowledgedBeforeCalls = logRow?.id ? await isAlertAcknowledged(logRow.id) : false;
+      const engagedBeforeCalls = alertId ? await isAlertEngaged(alertId) : false;
 
-      if (acknowledgedBeforeCalls) {
-        pushSkipped("call", "-", "acknowledged_before_escalation", "call_escalation_skipped");
+      if (engagedBeforeCalls) {
+        pushSkipped("call", "-", "engaged_before_escalation", "call_escalation_skipped");
       } else if (!voiceFrom) {
         for (const c of callEscalationContacts) {
           pushSkipped("call", c.phone, "missing TWILIO_VOICE_FROM", "call_skipped");
@@ -467,8 +580,8 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
         pushSkipped("call", "-", "no_call_recipients", "call_escalation_skipped");
       } else {
         for (const c of callEscalationContacts) {
-          if (logRow?.id && (await isAlertAcknowledged(logRow.id))) {
-            pushSkipped("call", c.phone, "acknowledged_during_escalation", "call_escalation_stopped");
+          if (alertId && (await isAlertEngaged(alertId))) {
+            pushSkipped("call", c.phone, "engaged_during_escalation", "call_escalation_stopped");
             break;
           }
 
@@ -494,7 +607,7 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
             });
           }
 
-          if (logRow?.id && (await isAlertAcknowledged(logRow.id))) {
+          if (alertId && (await isAlertEngaged(alertId))) {
             break;
           }
         }
@@ -521,9 +634,10 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
             timestamp,
             ack_url: ackUrl,
             gps_source: resolvedGps?.source ?? "unavailable",
-            algorithm: "ecosystem_v2",
+            algorithm: ALGORITHM_ID,
             phase: "complete",
-            phase1_contacts: topContacts.map((c) => c.id),
+            sms_contacts: topContacts.map((c) => c.id),
+            whatsapp_contacts: topContacts.map((c) => c.id),
             call_escalation_contacts: callEscalationContacts.map((c) => c.id),
             results,
             from: { waFrom, smsFrom, voiceFrom },

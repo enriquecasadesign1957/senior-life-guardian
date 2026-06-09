@@ -2,8 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const GRAVITY_MS2 = 9.80665;
 const IMPACT_THRESHOLD_G = 3.8;
+const IMPACT_THRESHOLD_NO_GRAVITY_G = 2.5;
 const QUIET_TARGET_G = 1;
 const QUIET_VARIATION_G = 0.2;
+const QUIET_NO_GRAVITY_G = 0.35;
 const IMMOBILITY_DURATION_MS = 3_000;
 const IMPACT_WINDOW_MS = 8_000;
 const COUNTDOWN_SECONDS = 30;
@@ -15,6 +17,7 @@ export type FallGps = { lat: number; lng: number; accuracy?: number };
 
 export type FallDetectionStatus =
   | "inactive"
+  | "unsupported"
   | "permission_required"
   | "monitoring"
   | "awaiting_immobility"
@@ -33,20 +36,64 @@ export type UseFallDetectionReturn = {
   countdownSeconds: number;
   isCountdownActive: boolean;
   permissionGranted: boolean;
+  isMonitoring: boolean;
+  needsMotionPermission: boolean;
+  motionSupported: boolean;
   requestPermission: () => Promise<boolean>;
   cancelarAlerta: () => void;
+  /** Dispara la cuenta regresiva sin sensor (prueba de flujo). */
+  probarCuentaRegresiva: () => void;
 };
 
 type DeviceMotionEventWithPermission = typeof DeviceMotionEvent & {
   requestPermission?: () => Promise<PermissionState>;
 };
 
+type AccelSample = { g: number; hasGravity: boolean };
+
+export function isMotionApiAvailable(): boolean {
+  return typeof window !== "undefined" && "DeviceMotionEvent" in window;
+}
+
+/** iOS 13+ exige un gesto del usuario para activar el acelerómetro. */
+export function motionPermissionNeedsGesture(): boolean {
+  if (typeof window === "undefined") return false;
+  const MotionCtor = DeviceMotionEvent as DeviceMotionEventWithPermission;
+  return typeof MotionCtor.requestPermission === "function";
+}
+
 function magnitudeG(ax: number, ay: number, az: number): number {
   return Math.sqrt(ax * ax + ay * ay + az * az) / GRAVITY_MS2;
 }
 
-function isQuietState(g: number): boolean {
-  return Math.abs(g - QUIET_TARGET_G) <= QUIET_VARIATION_G;
+function readAccelSample(event: DeviceMotionEvent): AccelSample | null {
+  const withGravity = event.accelerationIncludingGravity;
+  if (withGravity?.x != null && withGravity.y != null && withGravity.z != null) {
+    return {
+      g: magnitudeG(withGravity.x, withGravity.y, withGravity.z),
+      hasGravity: true,
+    };
+  }
+
+  const raw = event.acceleration;
+  if (raw?.x != null && raw?.y != null && raw?.z != null) {
+    return {
+      g: magnitudeG(raw.x, raw.y, raw.z),
+      hasGravity: false,
+    };
+  }
+
+  return null;
+}
+
+function isImpact(g: number, hasGravity: boolean): boolean {
+  return hasGravity ? g > IMPACT_THRESHOLD_G : g > IMPACT_THRESHOLD_NO_GRAVITY_G;
+}
+
+function isQuietState(g: number, hasGravity: boolean): boolean {
+  return hasGravity
+    ? Math.abs(g - QUIET_TARGET_G) <= QUIET_VARIATION_G
+    : g <= QUIET_NO_GRAVITY_G;
 }
 
 function createSirenController() {
@@ -98,6 +145,8 @@ function createSirenController() {
 
 async function requestMotionPermission(): Promise<boolean> {
   if (typeof window === "undefined") return false;
+  if (!isMotionApiAvailable()) return false;
+
   const MotionCtor = DeviceMotionEvent as DeviceMotionEventWithPermission;
   if (typeof MotionCtor.requestPermission === "function") {
     try {
@@ -120,10 +169,12 @@ export function useFallDetection(opts: UseFallDetectionOptions): UseFallDetectio
   const statusRef = useRef<FallDetectionStatus>("inactive");
   const immobilityStartRef = useRef<number | null>(null);
   const impactAtRef = useRef<number | null>(null);
+  const accelModeRef = useRef<boolean>(true);
   const countdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const vibrateTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sirenRef = useRef(createSirenController());
   const dispatchingRef = useRef(false);
+  const testRunRef = useRef(false);
 
   const setStatusSafe = useCallback((next: FallDetectionStatus) => {
     statusRef.current = next;
@@ -158,6 +209,7 @@ export function useFallDetection(opts: UseFallDetectionOptions): UseFallDetectio
     immobilityStartRef.current = null;
     impactAtRef.current = null;
     dispatchingRef.current = false;
+    testRunRef.current = false;
     setCountdownSeconds(COUNTDOWN_SECONDS);
     if (permissionGranted && enabled && signupId) {
       setStatusSafe("monitoring");
@@ -207,6 +259,15 @@ export function useFallDetection(opts: UseFallDetectionOptions): UseFallDetectio
         stopVibration();
         stopSiren();
 
+        if (testRunRef.current) {
+          testRunRef.current = false;
+          immobilityStartRef.current = null;
+          impactAtRef.current = null;
+          setCountdownSeconds(COUNTDOWN_SECONDS);
+          setStatusSafe(permissionGranted && enabled && signupId ? "monitoring" : "inactive");
+          return;
+        }
+
         if (dispatchingRef.current || !signupId) return;
         dispatchingRef.current = true;
         setStatusSafe("dispatching");
@@ -240,18 +301,25 @@ export function useFallDetection(opts: UseFallDetectionOptions): UseFallDetectio
     stopVibration,
   ]);
 
+  const probarCuentaRegresiva = useCallback(() => {
+    if (!signupId || !enabled) return;
+    testRunRef.current = true;
+    startCountdown();
+  }, [enabled, signupId, startCountdown]);
+
   const handleMotion = useCallback(
     (event: DeviceMotionEvent) => {
-      const acc = event.accelerationIncludingGravity;
-      if (!acc || acc.x == null || acc.y == null || acc.z == null) return;
+      const sample = readAccelSample(event);
+      if (!sample) return;
 
-      const g = magnitudeG(acc.x, acc.y, acc.z);
+      accelModeRef.current = sample.hasGravity;
+      const { g } = sample;
       const phase = statusRef.current;
       if (phase !== "monitoring" && phase !== "awaiting_immobility") return;
 
       const now = Date.now();
 
-      if (phase === "monitoring" && g > IMPACT_THRESHOLD_G) {
+      if (phase === "monitoring" && isImpact(g, sample.hasGravity)) {
         impactAtRef.current = now;
         immobilityStartRef.current = null;
         setStatusSafe("awaiting_immobility");
@@ -267,7 +335,7 @@ export function useFallDetection(opts: UseFallDetectionOptions): UseFallDetectio
           return;
         }
 
-        if (isQuietState(g)) {
+        if (isQuietState(g, sample.hasGravity)) {
           if (immobilityStartRef.current == null) {
             immobilityStartRef.current = now;
           } else if (now - immobilityStartRef.current >= IMMOBILITY_DURATION_MS) {
@@ -284,6 +352,12 @@ export function useFallDetection(opts: UseFallDetectionOptions): UseFallDetectio
   );
 
   const requestPermission = useCallback(async () => {
+    if (!isMotionApiAvailable()) {
+      setStatusSafe("unsupported");
+      setPermissionGranted(false);
+      return false;
+    }
+
     const ok = await requestMotionPermission();
     setPermissionGranted(ok);
     if (ok && enabled && signupId) {
@@ -297,7 +371,20 @@ export function useFallDetection(opts: UseFallDetectionOptions): UseFallDetectio
   useEffect(() => {
     if (!enabled || !signupId || typeof window === "undefined") {
       cancelarAlerta();
+      setPermissionGranted(false);
       setStatusSafe("inactive");
+      return;
+    }
+
+    if (!isMotionApiAvailable()) {
+      setPermissionGranted(false);
+      setStatusSafe("unsupported");
+      return;
+    }
+
+    if (motionPermissionNeedsGesture()) {
+      setPermissionGranted(false);
+      setStatusSafe("permission_required");
       return;
     }
 
@@ -339,8 +426,12 @@ export function useFallDetection(opts: UseFallDetectionOptions): UseFallDetectio
     countdownSeconds,
     isCountdownActive: status === "countdown",
     permissionGranted,
+    isMonitoring: status === "monitoring" || status === "awaiting_immobility",
+    needsMotionPermission: status === "permission_required",
+    motionSupported: isMotionApiAvailable(),
     requestPermission,
     cancelarAlerta,
+    probarCuentaRegresiva,
   };
 }
 

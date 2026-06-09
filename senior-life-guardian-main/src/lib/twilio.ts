@@ -98,6 +98,14 @@ export function twilioWhatsappFrom(): string {
   return process.env.TWILIO_WHATSAPP_FROM?.trim() || TWILIO_WHATSAPP_SANDBOX_FROM;
 }
 
+/** Número WhatsApp comercial (To) para bifurcar el webhook entrante. */
+export function twilioWhatsappCommercialFrom(): string {
+  return (
+    process.env.TWILIO_WHATSAPP_COMMERCIAL_FROM?.trim() ||
+    SENIOR_SAFE_WHATSAPP_COMMERCIAL_E164
+  );
+}
+
 /**
  * E.164 sin prefijo + para enlaces wa.me comerciales (solo UI).
  * Temporal: celular personal — Meta no abre wa.me con red fija Twilio +56229147733.

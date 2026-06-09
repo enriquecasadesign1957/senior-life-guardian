@@ -11,6 +11,10 @@ import emergencyButton from "@/assets/emergency-button.jpg";
 import seniorCouple from "@/assets/senior-couple.jpg";
 import seniorPhone from "@/assets/senior-phone.jpg";
 import logo from "@/assets/logo-senior-safe.png";
+import screenRedProteccion from "@/assets/screen-red-proteccion.png";
+import screenUbicacionGps from "@/assets/screen-ubicacion-gps.png";
+import screenAlertaMulticanal from "@/assets/screen-alerta-multicanal.png";
+import screenModoFamiliar from "@/assets/screen-modo-familiar.png";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import {
   PLAN,
@@ -323,7 +327,7 @@ function ComunicacionRedundanteBento() {
             Cuatro pilares de resiliencia ante emergencias reales.
           </h2>
           <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
-            El algoritmo <strong className="font-semibold text-foreground">ecosystem_v2</strong> dispara canales en paralelo y escala por voz solo si la familia no confirma — sin depender de una sola tecnología.
+            El algoritmo <strong className="font-semibold text-foreground">ecosystem_v3_cascade</strong> envía SMS al instante y WhatsApp siempre a los 10 segundos; la llamada solo entra si nadie confirma ni abre el mensaje — sin depender de una sola tecnología.
           </p>
         </div>
 
@@ -537,8 +541,8 @@ const FLOW_STEPS = [
     n: 3,
     icon: Send,
     color: GREEN,
-    title: "Canales redundantes en paralelo",
-    desc: "WhatsApp con IA Groq, SMS de respaldo y enlace Google Maps a los tres guardianes prioritarios. Si no hay confirmación, escalamiento por voz Twilio.",
+    title: "Cascada SMS → WhatsApp → voz",
+    desc: "SMS inmediato, WhatsApp 10 s después y enlace Google Maps a los tres guardianes prioritarios. La llamada solo si no hay confirmación ni lectura del mensaje.",
     detail: "Multicanal automático",
   },
 ] as const;
@@ -774,10 +778,10 @@ function Prueba() {
 
 function Capturas() {
   const screens = [
-    { title: "Red de protección", color: RED, icon: Shield },
-    { title: "Ubicación GPS", color: PETROL, icon: MapPin },
-    { title: "Alerta multicanal", color: "#f59e0b", icon: MessageCircle },
-    { title: "Modo familiar", color: GREEN, icon: Users },
+    { title: "Red de protección", color: RED, icon: Shield, image: screenRedProteccion, alt: "Pantalla de red de protección con guardianes conectados" },
+    { title: "Ubicación GPS", color: PETROL, icon: MapPin, image: screenUbicacionGps, alt: "Pantalla de ubicación GPS en tiempo real" },
+    { title: "Alerta multicanal", color: "#f59e0b", icon: MessageCircle, image: screenAlertaMulticanal, alt: "Pantalla de alerta multicanal SMS, WhatsApp y llamada" },
+    { title: "Modo familiar", color: GREEN, icon: Users, image: screenModoFamiliar, alt: "Pantalla modo familiar con estado de la red" },
   ];
   return (
     <section className="py-20 md:py-24" style={{ background: "var(--gradient-soft)" }}>
@@ -789,15 +793,28 @@ function Capturas() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {screens.map((s) => (
             <div key={s.title} className="bg-card border border-border rounded-3xl p-6 hover:shadow-xl transition">
-              <div className="aspect-[9/16] rounded-2xl mb-5 flex items-center justify-center relative overflow-hidden" style={{ background: `linear-gradient(160deg, ${DEEP}, ${PETROL})` }}>
-                <div className="absolute inset-x-0 top-0 h-6 flex justify-center items-end">
-                  <div className="w-20 h-4 bg-black/40 rounded-b-2xl" />
+              <div className="aspect-[9/16] rounded-2xl mb-5 relative overflow-hidden bg-black shadow-inner">
+                <img
+                  src={s.image}
+                  alt={s.alt}
+                  loading="lazy"
+                  className="absolute inset-0 h-full w-full object-cover object-top"
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.55) 100%)" }}
+                />
+                <div className="absolute inset-x-0 top-0 z-10 h-7 flex justify-center items-end pointer-events-none">
+                  <div className="w-24 h-5 bg-black/50 rounded-b-2xl backdrop-blur-sm" />
                 </div>
-                <div className="text-center text-white px-4">
-                  <span className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl" style={{ background: s.color }}>
-                    <s.icon className="w-10 h-10" />
+                <div className="absolute inset-x-0 bottom-0 z-10 p-4 text-center text-white">
+                  <span
+                    className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-2 shadow-lg ring-2 ring-white/30"
+                    style={{ background: s.color }}
+                  >
+                    <s.icon className="w-7 h-7" />
                   </span>
-                  <div className="text-base font-bold">{s.title}</div>
+                  <div className="text-sm font-bold drop-shadow-md">{s.title}</div>
                 </div>
               </div>
               <h3 className="font-bold text-foreground text-center">{s.title}</h3>

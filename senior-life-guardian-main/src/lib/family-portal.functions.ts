@@ -61,12 +61,28 @@ export const requestFamilyCode = createServerFn({ method: "POST" })
 
     if (!member) {
       // ¿Existe como emergency_contact? Auto-migrar a family_members.
-      const { data: ec } = await supabaseAdmin
+      let ec: { contract_signup_id: string; nombre: string; parentesco: string } | null = null;
+      const byPhone = await supabaseAdmin
         .from("emergency_contacts")
         .select("contract_signup_id, nombre, parentesco")
-        .or(`telefono.eq.${tel},whatsapp.eq.${tel}`)
+        .eq("telefono", tel)
         .limit(1)
         .maybeSingle();
+      if (!byPhone.error) {
+        ec = byPhone.data;
+      }
+
+      if (!ec) {
+        const byWhatsapp = await supabaseAdmin
+          .from("emergency_contacts")
+          .select("contract_signup_id, nombre, parentesco, whatsapp")
+          .eq("whatsapp", tel)
+          .limit(1)
+          .maybeSingle();
+        if (!byWhatsapp.error) {
+          ec = byWhatsapp.data;
+        }
+      }
       if (!ec) {
         await logAccess(null, null, "code_request_unknown", { telefono: tel });
         throw new Error("Este número no está registrado como familiar.");

@@ -5,6 +5,11 @@ export function normalizeTwilioPhone(phone: string): string {
   return (phone || "").replace(/^whatsapp:/i, "").replace(/[^\d+]/g, "");
 }
 
+/** Normaliza números Twilio para comparación agnóstica (whatsapp:/+, espacios). */
+export function cleanTwilioAddress(num: string): string {
+  return (num || "").replace(/^whatsapp:/i, "").replace(/^\+/, "").trim();
+}
+
 export function escapeTwimlText(message: string): string {
   return message
     .replace(/&/g, "&amp;")
@@ -19,19 +24,32 @@ export function twimlMessage(message: string): Response {
     `<Response><Message>${escapeTwimlText(message)}</Message></Response>`;
   return new Response(xml, {
     status: 200,
-    headers: { "Content-Type": "text/xml; charset=utf-8" },
+    headers: {
+      "Content-Type": "text/xml",
+      "Cache-Control": "no-cache",
+    },
   });
 }
 
-export async function parseTwilioInbound(request: Request): Promise<{ from: string; body: string }> {
+export async function parseTwilioInbound(
+  request: Request,
+): Promise<{ from: string; to: string; body: string }> {
   const ct = request.headers.get("content-type") || "";
   if (ct.includes("application/json")) {
     const j = (await request.json()) as Record<string, unknown>;
-    return { from: String(j.From ?? ""), body: String(j.Body ?? "") };
+    return {
+      from: String(j.From ?? ""),
+      to: String(j.To ?? ""),
+      body: String(j.Body ?? ""),
+    };
   }
   const text = await request.text();
   const params = new URLSearchParams(text);
-  return { from: params.get("From") ?? "", body: params.get("Body") ?? "" };
+  return {
+    from: params.get("From") ?? "",
+    to: params.get("To") ?? "",
+    body: params.get("Body") ?? "",
+  };
 }
 
 export async function logInbound(eventType: string, meta: Record<string, unknown>) {
