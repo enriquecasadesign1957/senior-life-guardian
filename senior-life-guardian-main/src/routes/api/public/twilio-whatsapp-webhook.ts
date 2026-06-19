@@ -72,17 +72,7 @@ async function handleCommercialInbox(
 
   if (rawBody.length >= 2) {
     try {
-      const route = await classifyWhatsAppInboundMessage(rawBody);
-
-      if (route === "EMERGENCY_ACK") {
-        const ackReply = await processWhatsAppAlertAck(phone, rawBody, { forceAck: true });
-        if (ackReply) return replyCommercial(phone, ackReply);
-        return replyCommercial(
-          phone,
-          "Senior Safe 🛡️\nRecibimos tu mensaje. Si respondes a una alerta activa, verifica que tu número esté registrado como guardián en la familia.",
-        );
-      }
-
+      // Inbox comercial: solo consultas comerciales con historial Groq (sin ack de emergencia).
       const aiReply = await generateSeniorSafeWhatsAppReply(rawBody, phone);
       return replyCommercial(phone, aiReply);
     } catch (e) {
@@ -228,10 +218,14 @@ export const Route = createFileRoute("/api/public/twilio-whatsapp-webhook")({
 
             if (route === "EMERGENCY_ACK") {
               const ackReply = await processWhatsAppAlertAck(phone, rawBody, { forceAck: true });
-              if (ackReply) return twimlMessage(ackReply);
-              return twimlMessage(
-                "Senior Safe 🛡️\nRecibimos tu mensaje. Si respondes a una alerta activa, verifica que tu número esté registrado como guardián en la familia.",
-              );
+              const noPendingAlert =
+                ackReply?.includes("No hay alertas de emergencia pendientes") ?? false;
+              if (ackReply && !noPendingAlert) return twimlMessage(ackReply);
+              if (!ackReply && !noPendingAlert) {
+                return twimlMessage(
+                  "Senior Safe 🛡️\nRecibimos tu mensaje. Si respondes a una alerta activa, verifica que tu número esté registrado como guardián en la familia.",
+                );
+              }
             }
 
             const aiReply = await generateSeniorSafeWhatsAppReply(rawBody, phone);

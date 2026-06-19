@@ -332,6 +332,8 @@ EMERGENCY_ACK — El remitente es un guardián o familiar respondiendo a una ale
 
 COMMERCIAL_QUERY — Pregunta comercial, duda sobre el servicio, precios, instalación, sensores, planes, contratación, o mensaje sin contexto de emergencia activa. Ejemplos: "¿Cuánto cuesta?", "¿Cómo funciona el sensor de caídas?", "Hola quiero información".
 
+IMPORTANTE: "Sí", "Ok", "Dale", "Claro" u otras respuestas cortas aisladas, sin mencionar alerta/emergencia/camino/voy, son SIEMPRE COMMERCIAL_QUERY (respuestas a una pregunta del asistente comercial).
+
 Responde ÚNICAMENTE con la etiqueta literal EMERGENCY_ACK o COMMERCIAL_QUERY, sin comillas ni texto adicional.`;
 
 const EMAIL_SYSTEM_PROMPT = `Eres el asistente de correo de Senior Safe (Alarma Senior Safe), protección familiar para adultos mayores en Chile.
@@ -543,6 +545,7 @@ export async function classifyWhatsAppInboundMessage(
 ): Promise<WhatsAppInboundRoute> {
   const trimmed = (userMessage || "").trim();
   if (!trimmed) return "COMMERCIAL_QUERY";
+  if (isShortContinuationMessage(trimmed)) return "COMMERCIAL_QUERY";
 
   const cfg = resolveProvider();
   if (!cfg) return fallbackInboundRoute(trimmed);
