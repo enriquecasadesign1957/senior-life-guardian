@@ -4,6 +4,8 @@
  */
 
 import { SENIOR_SAFE_INSTALL_GUIDE_URL } from "@/lib/app-url";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { normalizeTwilioPhone } from "@/lib/twilio-inbound";
 import {
   CANCELLATION_POLICY_SUMMARY,
   CANCELLATION_TERMS_WHATSAPP_REPLY,
@@ -18,7 +20,7 @@ export const SENIOR_SAFE_OFFICIAL_CONTEXT = `
 RESUMEN
 Senior Safe no es un dispositivo físico adicional: es un ecosistema de protección inteligente basado en una aplicación para smartphone. Usa IA, los sensores del teléfono y comunicación redundante para alertar a la familia de inmediato ante caídas o emergencias. Conecta directamente al usuario con hasta 3 guardianes familiares priorizados. No hay call-center ni intermediarios humanos en las alertas.
 
-Contratación: https://alarmaseniorsafe.cl — pago seguro con Webpay Plus (crédito, débito o prepago).
+Contratación: https://alarmaseniorsafe.cl/checkout — pago seguro con Transbank Oneclick (crédito o débito).
 Tras pagar: instalar la PWA en el teléfono y practicar el flujo en simulación segura. No hay días de prueba gratis.
 Activación WhatsApp tras contratar: responder ACTIVAR en el chat comercial de Senior Safe.
 
@@ -35,7 +37,7 @@ P: ¿Cómo funciona la alerta en cascada?
 R: Cuatro canales en tiempo real: (A) WhatsApp + IA que procesa confirmaciones de lectura; (B) SMS de respaldo simultáneo; (C) GPS en vivo con enlace Google Maps; (D) llamadas de voz automáticas y secuenciales a guardianes si nadie confirma en los primeros segundos.
 
 P: ¿A quién notifica?
-R: Directamente al núcleo familiar, sin centrales externas. Hasta 3 guardianes (hijos, nietos, vecinos, cuidadores) con orden de prioridad. SMS al instante, WhatsApp a los 15 s, llamada a los 30 s si nadie confirma.
+R: Directamente al núcleo familiar, sin centrales externas. Hasta 3 guardianes (hijos, nietos, vecinos, cuidadores) con orden de prioridad. SMS al instante, WhatsApp a los 15 s, llamada automática a los 60 s si nadie confirma.
 
 P: ¿Cuánto tarda la alerta?
 R: Menos de 3 segundos desde el impacto detectado o el botón SOS hasta la primera notificación a la red familiar.
@@ -79,7 +81,7 @@ P: ¿Qué pasa si cancelo el plan mensual o anual?
 R: Misma respuesta: derivar a ${SENIOR_SAFE_TERMS_CANCELLATION_URL} (Términos y Condiciones, sección Cancelación y reembolsos).
 
 P: ¿Medios de pago?
-R: 100% en línea con Webpay Plus: tarjetas de crédito, débito o prepago.
+R: 100% en línea con Transbank Oneclick: tarjetas de crédito o débito.
 
 FAQ — SOPORTE
 
@@ -97,6 +99,231 @@ Para gestión de cuenta, facturación o fallas técnicas de un caso concreto: de
 
 export type WhatsAppInboundRoute = "EMERGENCY_ACK" | "COMMERCIAL_QUERY";
 
+/** Audiencia comercial WhatsApp: hijo/a preocupado vs adulto mayor. */
+export type WhatsAppCommercialAudience = "child" | "senior";
+
+const WHATSAPP_CHILD_SYSTEM_PROMPT = `Eres un Asesor de Seguridad Experto, Empático y Altamente Profesional de Alarmas Senior Safe (Chile). Atiendes por WhatsApp a hijos/as (30-55 años) que buscan proteger a sus padres o adultos mayores.
+
+OBJETIVO: Brindar tranquilidad mental. Que sientan que hay una solución concreta, confiable y fácil de activar — no presión de venta.
+
+TONO:
+- Respetuoso, comprensivo, cercano pero corporativo.
+- Español chileno neutro-profesional: "Hola,", "Perfecto,", "Con gusto te explico".
+- Entiendes modismos como "abuelito", "caídas", "cobertura", "viven solos".
+- Evita exceso de jerga juvenil ("cachai", "bacán"). Sin ser frío ni robótico.
+- Máximo 1 emoji suave por mensaje (🛡️ o 💙). Sin markdown.
+
+FORMATO DE RESPUESTA (OBLIGATORIO):
+- Nunca bloques gigantes: máximo 3 párrafos cortos por mensaje.
+- Usa viñetas (•) para beneficios técnicos.
+- Ideal <900 caracteres total.
+
+ENFOQUE DE VALOR (prioriza en este orden):
+1) Alerta inmediata al celular del hijo/familia (WhatsApp, SMS, ubicación).
+2) Botón de pánico de un solo toque en el celular del adulto mayor.
+3) Facilidad de uso — diseño simple, sin aparatos extra ni collares.
+4) Si nadie confirma, escalamiento con llamada automática (~60 s).
+5) Plan Único: $6.900/mes o $69.000/año · sin permanencia · pago seguro Transbank Oneclick.
+
+CIERRE OBLIGATORIO: Termina SIEMPRE con una pregunta abierta que avance la conversación. Ejemplos:
+- "¿Viven solos tus padres o pasan gran parte del día sin compañía?"
+- "¿Tu papá o tu mamá ya usa smartphone con WhatsApp?"
+- "¿Te gustaría que te explique cómo se activa en menos de 10 minutos?"
+
+REGLAS ESTRICTAS:
+- Solo información del CONTEXTO OFICIAL adjunto. No inventes funciones, precios ni plazos.
+- Contratación: https://alarmaseniorsafe.cl/checkout
+- Tras contratar: responder ACTIVAR en este chat y compartir guía de instalación: ${SENIOR_SAFE_INSTALL_GUIDE_URL}
+- No hay días de prueba gratis; sí hay simulacro de entrenamiento tras contratar.
+- Emergencia médica ACTIVA ahora: indicar llamar al 131; este chat no despacha alertas.
+- Reembolso/cancelación: derivar a Términos (sección Cancelación y reembolsos): ${SENIOR_SAFE_TERMS_CANCELLATION_URL}
+- Casos técnicos (cuenta, factura, falla): responder EXACTAMENTE: ${TRIGGER_TECHNICAL_EMAIL_REDIRECT}
+
+CONTINUIDAD (CRÍTICO):
+- Recibirás el historial reciente del chat. NO reinicies con saludos genéricos ni repitas el pitch inicial.
+- Si el usuario responde "sí", "ok", "dale" o similar, responde DIRECTAMENTE lo que ofreciste en tu mensaje anterior.
+- No repitas las mismas viñetas si ya las mencionaste.
+
+CONTEXTO OFICIAL:
+${SENIOR_SAFE_OFFICIAL_CONTEXT}`;
+
+const WHATSAPP_SENIOR_SYSTEM_PROMPT = `Eres un Asesor de Asistencia y Seguridad de Alarmas Senior Safe (Chile). Le habla un adulto mayor (60+ años) que quiere mantener su independencia y sentirse seguro en casa.
+
+OBJETIVO: Tranquilizarlo. Que entienda que puede cuidarse solo, sin molestar a sus hijos, con algo simple en su celular.
+
+TONO:
+- Ultra amigable, paciente, sumamente respetuoso. Siempre "Usted".
+- Español claro de Chile. Sin tecnicismos (no diga GPS, SMS, API, PWA, base de datos).
+- Use en su lugar: "ubicación en el mapa", "mensaje de texto", "aplicación en su celular", "botón de emergencia".
+- Emojis sutiles y amigables: 👍 🙂 (máximo 2 por mensaje). Sin markdown.
+
+FORMATO DE RESPUESTA (OBLIGATORIO):
+- Muy corto: máximo 2 o 3 líneas por mensaje.
+- Una idea por línea. Frases simples (máximo 12 palabras).
+- Ideal <500 caracteres total.
+- Use saltos de línea para que se lea fácil en WhatsApp.
+
+ENFOQUE DE VALOR (priorice):
+1) Usted sigue independiente en su casa 👍
+2) No será una carga para sus hijos — el sistema avisa a su familia por usted
+3) Un solo botón en su celular → ayuda inmediata a quienes usted elija
+4) También avisa por WhatsApp y envía dónde está
+5) Si nadie responde, llamamos por teléfono automáticamente
+6) $6.900 al mes · sin contrato · cancela cuando quiera
+
+CIERRE OBLIGATORIO: Pregunta directa y sencilla. Ejemplos:
+- "¿Le gustaría que le explique cómo funciona el botón de emergencia o prefiere saber el valor del plan?"
+- "¿Usted ya usa WhatsApp en su celular?"
+- "¿Le ayudo a contratar paso a paso?"
+
+REGLAS ESTRICTAS:
+- Solo información del CONTEXTO OFICIAL adjunto. No invente nada.
+- Contratación: https://alarmaseniorsafe.cl/checkout — "Le ayudamos en cada paso."
+- Si ya pagó: escriba ACTIVAR en este chat.
+- Guía de instalación: ${SENIOR_SAFE_INSTALL_GUIDE_URL}
+- Emergencia ACTIVA ahora: llame al 131. Este chat no envía alertas.
+- Reembolso/cancelación: indique revisar Términos: ${SENIOR_SAFE_TERMS_CANCELLATION_URL}
+- Problemas de cuenta o factura: responda EXACTAMENTE: ${TRIGGER_TECHNICAL_EMAIL_REDIRECT}
+
+CONTINUIDAD (CRÍTICO):
+- Recibirá el historial reciente del chat. NO reinicie con saludos genéricos ni repita la presentación.
+- Si el usuario responde "sí", "ok" o similar, explique DIRECTAMENTE lo que ofreció en su mensaje anterior.
+- Mantenga siempre "usted". No vuelva a presentar Senior Safe desde cero.
+
+CONTEXTO OFICIAL:
+${SENIOR_SAFE_OFFICIAL_CONTEXT}`;
+
+function whatsAppSystemPromptForAudience(audience: WhatsAppCommercialAudience): string {
+  return audience === "senior" ? WHATSAPP_SENIOR_SYSTEM_PROMPT : WHATSAPP_CHILD_SYSTEM_PROMPT;
+}
+
+function normalizeForAudienceMatch(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "");
+}
+
+const SENIOR_AUDIENCE_SIGNAL =
+  /\b(para mi|para m[ií]|yo vivo solo|yo vivo sola|vivo solo|vivo sola|tengo 6[0-9]|tengo 7[0-9]|tengo 8[0-9]|soy adulto mayor|soy jubilad|en mi celular|para mi casa|no quiero molestar a mis hijos|mi independencia|instalar en mi telefono|utm_audience=senior|ref_senior|audience=senior)\b/;
+
+const CHILD_AUDIENCE_SIGNAL =
+  /\b(mi mam[aá]|mi papa|mi pap[aá]|mis padres|mi abuelit|mi viejit|mi madre|mi padre|proteger a mi|para mi mam[aá]|para mi pap[aá]|viven solos mis|me preocupa|utm_audience=child|utm_content=hijos|ref_hijos|audience=child)\b/;
+
+/** Detecta si el chat es hijo/a preocupado o adulto mayor (heurística + historial). */
+export function detectWhatsAppCommercialAudience(combinedText: string): WhatsAppCommercialAudience {
+  const q = normalizeForAudienceMatch(combinedText);
+  const seniorHits = q.match(SENIOR_AUDIENCE_SIGNAL)?.length ?? 0;
+  const childHits = q.match(CHILD_AUDIENCE_SIGNAL)?.length ?? 0;
+  if (seniorHits > childHits) return "senior";
+  if (childHits > seniorHits) return "child";
+  if (/\b(ustedes pueden ayudarme|necesito para mi|quiero contratar para mi)\b/.test(q)) {
+    return "senior";
+  }
+  return "child";
+}
+
+async function loadRecentCommercialInboundBodies(peerPhone: string, limit = 6): Promise<string[]> {
+  const peer = normalizeTwilioPhone(peerPhone);
+  if (!peer) return [];
+  try {
+    const { data } = await supabaseAdmin
+      .from("whatsapp_inbox_messages")
+      .select("body")
+      .eq("inbox", "commercial")
+      .eq("direction", "inbound")
+      .eq("peer_phone", peer)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    return (data ?? []).map((r) => String(r.body ?? "").trim()).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+type CommercialChatTurn = { role: "user" | "assistant"; content: string };
+
+const WHATSAPP_COMMERCIAL_HISTORY_LIMIT = 10;
+
+function stripWhatsAppBrandPrefix(body: string): string {
+  return body.replace(/^Senior Safe 🛡️\s*/i, "").trim();
+}
+
+function isShortContinuationMessage(text: string): boolean {
+  const q = normalizeForAudienceMatch(text);
+  return /^(si|s[ií]|ok|oka|dale|claro|por favor|pf|bueno|ya|sep|exacto|cuentame|me interesa|quiero saber|a ver|mas info|m[aá]s info|porfa|afirmativo)[\s!.?]*$/u.test(
+    q,
+  );
+}
+
+async function loadCommercialChatHistory(
+  peerPhone: string,
+  limit = WHATSAPP_COMMERCIAL_HISTORY_LIMIT,
+): Promise<CommercialChatTurn[]> {
+  const peer = normalizeTwilioPhone(peerPhone);
+  if (!peer) return [];
+  try {
+    const { data } = await supabaseAdmin
+      .from("whatsapp_inbox_messages")
+      .select("direction, body, created_at")
+      .eq("inbox", "commercial")
+      .eq("peer_phone", peer)
+      .order("created_at", { ascending: false })
+      .limit(limit * 2);
+
+    return (data ?? [])
+      .slice()
+      .reverse()
+      .map((row) => ({
+        role: row.direction === "inbound" ? ("user" as const) : ("assistant" as const),
+        content: stripWhatsAppBrandPrefix(String(row.body ?? "")).slice(0, 2000),
+      }))
+      .filter((turn) => turn.content.length > 0)
+      .slice(-limit);
+  } catch {
+    return [];
+  }
+}
+
+function audienceFromAssistantTone(outboundText: string): WhatsAppCommercialAudience | null {
+  const q = outboundText.toLowerCase();
+  if (/\b(usted|le gustaría|le explico|su familia|le ayudo|para usted)\b/.test(q)) {
+    return "senior";
+  }
+  if (/\b(tus padres|tu papá|tu mamá|te explico|tus seres queridos)\b/.test(q)) {
+    return "child";
+  }
+  return null;
+}
+
+export async function resolveWhatsAppCommercialAudience(
+  userMessage: string,
+  peerPhone?: string,
+): Promise<WhatsAppCommercialAudience> {
+  const inboundParts = peerPhone ? await loadRecentCommercialInboundBodies(peerPhone, 8) : [];
+  const threadText = [...inboundParts, userMessage.trim()].filter(Boolean).join("\n");
+  const fromKeywords = detectWhatsAppCommercialAudience(threadText);
+
+  if (!peerPhone) return fromKeywords;
+
+  const history = await loadCommercialChatHistory(peerPhone);
+  const fullThreadText = history.map((t) => t.content).join("\n");
+  const fromFullThread = detectWhatsAppCommercialAudience(fullThreadText);
+
+  if (isShortContinuationMessage(userMessage)) {
+    const lastAssistant = [...history].reverse().find((t) => t.role === "assistant");
+    if (lastAssistant) {
+      const toneAudience = audienceFromAssistantTone(lastAssistant.content);
+      if (toneAudience) return toneAudience;
+    }
+    return fromFullThread !== "child" ? fromFullThread : fromKeywords;
+  }
+
+  if (fromKeywords !== "child") return fromKeywords;
+  if (fromFullThread !== "child") return fromFullThread;
+  return "child";
+}
+
 const WHATSAPP_ROUTER_SYSTEM_PROMPT = `Eres un enrutador binario estricto para mensajes entrantes de WhatsApp de Senior Safe (Chile).
 
 Clasifica el mensaje del usuario en EXACTAMENTE una etiqueta:
@@ -106,29 +333,6 @@ EMERGENCY_ACK — El remitente es un guardián o familiar respondiendo a una ale
 COMMERCIAL_QUERY — Pregunta comercial, duda sobre el servicio, precios, instalación, sensores, planes, contratación, o mensaje sin contexto de emergencia activa. Ejemplos: "¿Cuánto cuesta?", "¿Cómo funciona el sensor de caídas?", "Hola quiero información".
 
 Responde ÚNICAMENTE con la etiqueta literal EMERGENCY_ACK o COMMERCIAL_QUERY, sin comillas ni texto adicional.`;
-
-const WHATSAPP_SYSTEM_PROMPT = `Eres el asistente comercial de WhatsApp de Senior Safe, ecosistema inteligente de protección familiar en Chile.
-
-TONO (muy importante):
-- Cálido, amigable y humano. Hablas como alguien de confianza que entiende la preocupación por un adulto mayor querido.
-- Usa "tú", frases cercanas y empáticas. Ejemplos de apertura: "¡Qué bueno que nos escribes!", "Con gusto te cuento", "Entiendo tu preocupación".
-- Transmite tranquilidad y claridad, sin sonar robótico ni demasiado formal.
-- Puedes usar 1 emoji suave al inicio o al cierre (🛡️, 😊, 💙) además del que ya lleva la marca.
-
-REGLAS ESTRICTAS:
-1) Solo responde con el CONTEXTO OFICIAL y el FAQ. No inventes funciones, precios ni políticas.
-2) Si la pregunta coincide con una entrada del FAQ, usa esa respuesta con tono cálido y breve para WhatsApp.
-3) Enfatiza con naturalidad: Plan Único $6.900/mes, alertas directo a la familia, sin call-center en las emergencias.
-4) Máximo 2 párrafos cortos. Sin markdown. Ideal para WhatsApp (< 900 caracteres).
-5) Si preguntan activación WhatsApp tras contratar, indica responder ACTIVAR en este chat.
-6) Si preguntan instalación, descarga, configuración inicial o uso diario de la app, comparte con calidez la guía: ${SENIOR_SAFE_INSTALL_GUIDE_URL}
-7) Si mencionan emergencia médica activa, con calma indica llamar al 131 y usar la app instalada; este chat no despacha alertas en tiempo real.
-8) Para soporte general, invita amablemente a escribir por WhatsApp o a ${SENIOR_SAFE_COMMERCIAL_EMAIL}.
-9) Si preguntan reembolso, devolución de dinero, cancelación del plan, baja del servicio (mensual o anual), responde con tono cálido indicando que debe revisar el apartado «Cancelación y reembolsos» en Términos y Condiciones: ${SENIOR_SAFE_TERMS_CANCELLATION_URL}. No recites todo el texto legal; prioriza ese enlace. Puedes añadir una frase breve: no hay reembolso proporcional.
-10) Si la pregunta es técnica (cuenta, fallas, facturación de un caso concreto, datos personales) y NO puedes responderla con el CONTEXTO OFICIAL, responde ÚNICAMENTE y EXACTAMENTE esta cadena sin ningún otro carácter: ${TRIGGER_TECHNICAL_EMAIL_REDIRECT}
-
-CONTEXTO OFICIAL:
-${SENIOR_SAFE_OFFICIAL_CONTEXT}`;
 
 const EMAIL_SYSTEM_PROMPT = `Eres el asistente de correo de Senior Safe (Alarma Senior Safe), protección familiar para adultos mayores en Chile.
 
@@ -168,21 +372,29 @@ function resolveProvider(): { provider: AiProvider; apiKey: string; model: strin
   return null;
 }
 
-function trimForWhatsApp(text: string, max = 950): string {
-  const t = text.replace(/\s+/g, " ").trim();
+function trimForWhatsApp(text: string, max = 950, preserveLines = false): string {
+  const t = preserveLines
+    ? text.replace(/\n{3,}/g, "\n\n").trim()
+    : text.replace(/[^\S\n]+/g, " ").replace(/\n+/g, " ").trim();
   if (t.length <= max) return t;
   return `${t.slice(0, max - 3)}...`;
 }
 
 /** Respuesta estática si no hay API key configurada. */
-function fallbackReply(userMessage: string): string {
+function fallbackReply(userMessage: string, audience: WhatsAppCommercialAudience = "child"): string {
   const q = userMessage.toLowerCase();
   const base = "Senior Safe 🛡️\n";
 
-  if (/precio|cuanto cuesta|valor|plan|pago|webpay|\$|6900|69\.?000/.test(q)) {
+  if (/precio|cuanto cuesta|valor|plan|pago|oneclick|webpay|\$|6900|69\.?000/.test(q)) {
+    if (audience === "senior") {
+      return (
+        base +
+        "El plan cuesta $6.900 al mes, sin contrato 🙂\nPuede cancelar cuando quiera.\n¿Le gustaría que le explique el botón de emergencia o prefiere el link para contratar?"
+      );
+    }
     return (
       base +
-      "¡Con gusto! El Plan Único cuesta $6.900 al mes o $69.000 al año (ahorras 2 meses). Pagas seguro con Webpay en alarmaseniorsafe.cl 😊"
+      "Perfecto. El Plan Único cuesta $6.900 al mes o $69.000 al año (ahorras 2 meses). Pagas seguro con Oneclick en alarmaseniorsafe.cl/checkout 💙"
     );
   }
   if (/prueba|trial|gratis|demo/.test(q)) {
@@ -192,9 +404,15 @@ function fallbackReply(userMessage: string): string {
     );
   }
   if (/como funciona|que es|servicio|app/.test(q)) {
+    if (audience === "senior") {
+      return (
+        base +
+        "Es una aplicación sencilla en su celular con un botón grande de emergencia.\nSi lo presiona, avisamos a su familia por WhatsApp 👍\n¿Le gustaría saber el valor del plan?"
+      );
+    }
     return (
       base +
-      "Senior Safe es una app en el celular que avisa a tu familia en menos de 3 segundos por llamada, WhatsApp y SMS, con GPS incluido. Puedes contratar en alarmaseniorsafe.cl 💙"
+      "Senior Safe es una app en el celular que avisa a tu familia en segundos por WhatsApp, SMS y ubicación. Si nadie confirma, llama sola (~60 s). Contrata en alarmaseniorsafe.cl/checkout 💙"
     );
   }
   if (/instal|descarg|qr|pwa|configur|como uso|usar la app|paso a paso/.test(q)) {
@@ -244,11 +462,28 @@ async function callChatApi(
   systemPrompt: string,
   maxTokens: number,
   temperature = 0.25,
+  trimOpts?: { max?: number; preserveLines?: boolean },
+  history: CommercialChatTurn[] = [],
 ): Promise<string> {
   const url =
     cfg.provider === "groq"
       ? "https://api.groq.com/openai/v1/chat/completions"
       : "https://api.openai.com/v1/chat/completions";
+
+  const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
+    { role: "system", content: systemPrompt },
+  ];
+
+  for (const turn of history) {
+    messages.push({ role: turn.role, content: turn.content });
+  }
+
+  const lastTurn = history[history.length - 1];
+  const alreadyHasCurrentUser =
+    lastTurn?.role === "user" && lastTurn.content.trim() === userMessage.trim();
+  if (!alreadyHasCurrentUser) {
+    messages.push({ role: "user", content: userMessage.slice(0, 4000) });
+  }
 
   const res = await fetch(url, {
     method: "POST",
@@ -260,10 +495,7 @@ async function callChatApi(
       model: cfg.model,
       temperature,
       max_tokens: maxTokens,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userMessage.slice(0, 4000) },
-      ],
+      messages,
     }),
   });
 
@@ -281,7 +513,7 @@ async function callChatApi(
 
   const content = data.choices?.[0]?.message?.content?.trim();
   if (!content) throw new Error("IA sin contenido");
-  return trimForWhatsApp(content);
+  return trimForWhatsApp(content, trimOpts?.max ?? 950, trimOpts?.preserveLines ?? false);
 }
 
 function parseInboundRoute(raw: string): WhatsAppInboundRoute | null {
@@ -326,28 +558,57 @@ export async function classifyWhatsAppInboundMessage(
 
 /**
  * Genera respuesta para pregunta de texto libre (WhatsApp).
+ * Detecta audiencia (hijo/a vs adulto mayor) y elige system prompt Groq.
  */
-export async function generateSeniorSafeWhatsAppReply(userMessage: string): Promise<string> {
+export async function generateSeniorSafeWhatsAppReply(
+  userMessage: string,
+  peerPhone?: string,
+): Promise<string> {
   const trimmed = (userMessage || "").trim();
+  const audience = await resolveWhatsAppCommercialAudience(trimmed, peerPhone);
+
   if (!trimmed) {
+    if (audience === "senior") {
+      return (
+        "Senior Safe 🛡️\nBuenos días, gracias por escribirnos 🙂\n" +
+        "¿Le gustaría que le explique cómo funciona el botón de emergencia o prefiere saber el valor del plan?"
+      );
+    }
     return `Senior Safe 🛡️\n¡Hola! ¿En qué te podemos ayudar hoy? Cuéntanos tu duda o escríbenos a ${SENIOR_SAFE_COMMERCIAL_EMAIL} 😊`;
   }
 
   const cfg = resolveProvider();
   if (!cfg) {
-    const fallback = fallbackReply(trimmed);
+    const fallback = fallbackReply(trimmed, audience);
     if (fallback.includes(TRIGGER_TECHNICAL_EMAIL_REDIRECT)) {
       return formatWhatsAppCommercialReply(fallback, trimmed);
     }
     return fallback;
   }
 
+  const systemPrompt = whatsAppSystemPromptForAudience(audience);
+  const maxTokens = audience === "senior" ? 220 : 320;
+  const temperature = audience === "senior" ? 0.35 : 0.42;
+  const trimMax = audience === "senior" ? 520 : 950;
+  const history = peerPhone ? await loadCommercialChatHistory(peerPhone) : [];
+
   try {
-    const reply = await callChatApi(cfg, trimmed, WHATSAPP_SYSTEM_PROMPT, 320, 0.42);
+    const reply = await callChatApi(
+      cfg,
+      trimmed,
+      systemPrompt,
+      maxTokens,
+      temperature,
+      {
+        max: trimMax,
+        preserveLines: audience === "senior",
+      },
+      history,
+    );
     return formatWhatsAppCommercialReply(reply, trimmed);
   } catch (e) {
     console.error("[senior-safe-ai]", e);
-    const fallback = fallbackReply(trimmed);
+    const fallback = fallbackReply(trimmed, audience);
     if (fallback.includes(TRIGGER_TECHNICAL_EMAIL_REDIRECT)) {
       return formatWhatsAppCommercialReply(fallback, trimmed);
     }
@@ -360,7 +621,9 @@ function trimForEmail(text: string, max = 3500): string {
 }
 
 function fallbackEmailReply(userMessage: string): string {
-  const plain = fallbackReply(userMessage).replace(/^Senior Safe 🛡️\n?/, "").trim();
+  const plain = fallbackReply(userMessage, detectWhatsAppCommercialAudience(userMessage))
+    .replace(/^Senior Safe 🛡️\n?/, "")
+    .trim();
   return plain
     .replace(/ACTIVAR en este chat/gi, "ACTIVAR por WhatsApp desde la app")
     .replace(/escribe a/gi, "escriba a");

@@ -83,7 +83,7 @@ async function handleCommercialInbox(
         );
       }
 
-      const aiReply = await generateSeniorSafeWhatsAppReply(rawBody);
+      const aiReply = await generateSeniorSafeWhatsAppReply(rawBody, phone);
       return replyCommercial(phone, aiReply);
     } catch (e) {
       console.error("[whatsapp-webhook] commercial ai", e);
@@ -234,7 +234,7 @@ export const Route = createFileRoute("/api/public/twilio-whatsapp-webhook")({
               );
             }
 
-            const aiReply = await generateSeniorSafeWhatsAppReply(rawBody);
+            const aiReply = await generateSeniorSafeWhatsAppReply(rawBody, phone);
             return twimlMessage(aiReply);
           } catch (e) {
             console.error("[whatsapp-webhook] ai", e);
