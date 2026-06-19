@@ -10,9 +10,10 @@ import {
   inboxListThreads,
   inboxSendReply,
 } from "@/lib/whatsapp-inbox.functions";
+import { ADMIN_PIN_SESSION_KEY } from "@/lib/admin-auth";
 import type { InboxMessage, InboxThread } from "@/lib/whatsapp-inbox";
 
-const PIN_KEY = "seniorsafe_inbox_pin";
+const PIN_KEY = ADMIN_PIN_SESSION_KEY;
 
 export const Route = createFileRoute("/admin/inbox")({
   component: AdminInboxPage,
@@ -303,6 +304,9 @@ function AdminInboxPage() {
       )}
 
       <div className="px-4 py-2 text-center border-t">
+        <Link to="/admin/transbank-validacion" className="text-xs text-muted-foreground underline">
+          Validación Transbank Oneclick
+        </Link>
         <Link to="/admin/reset" className="text-xs text-muted-foreground underline">
           Admin
         </Link>

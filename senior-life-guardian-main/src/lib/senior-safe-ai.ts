@@ -3,17 +3,28 @@
  * Solo responde con el contexto oficial de Senior Safe.
  */
 
+import { SENIOR_SAFE_INSTALL_GUIDE_URL } from "@/lib/app-url";
+import {
+  CANCELLATION_POLICY_SUMMARY,
+  CANCELLATION_TERMS_WHATSAPP_REPLY,
+  SENIOR_SAFE_TERMS_CANCELLATION_URL,
+} from "@/lib/subscription-cancellation-policy";
+
 export const SENIOR_SAFE_SUPPORT_EMAIL = "hola@alarmaseniorsafe.cl";
 export const SENIOR_SAFE_COMMERCIAL_EMAIL = SENIOR_SAFE_SUPPORT_EMAIL;
 export const TRIGGER_TECHNICAL_EMAIL_REDIRECT = "TRIGGER_TECHNICAL_EMAIL_REDIRECT";
 
 export const SENIOR_SAFE_OFFICIAL_CONTEXT = `
 RESUMEN
-Senior Safe no es un dispositivo físico adicional: es un ecosistema de protección inteligente basado en una aplicación para smartphone. Usa IA, los sensores del teléfono y comunicación redundante para alertar a la familia de inmediato ante caídas o emergencias. Conecta directamente al usuario con hasta 10 guardianes familiares priorizados. No hay call-center ni intermediarios humanos en las alertas.
+Senior Safe no es un dispositivo físico adicional: es un ecosistema de protección inteligente basado en una aplicación para smartphone. Usa IA, los sensores del teléfono y comunicación redundante para alertar a la familia de inmediato ante caídas o emergencias. Conecta directamente al usuario con hasta 3 guardianes familiares priorizados. No hay call-center ni intermediarios humanos en las alertas.
 
 Contratación: https://alarmaseniorsafe.cl — pago seguro con Webpay Plus (crédito, débito o prepago).
 Tras pagar: instalar la PWA en el teléfono y practicar el flujo en simulación segura. No hay días de prueba gratis.
 Activación WhatsApp tras contratar: responder ACTIVAR en el chat comercial de Senior Safe.
+
+GUÍA DE INSTALACIÓN Y USO (paso a paso, fácil de entender):
+${SENIOR_SAFE_INSTALL_GUIDE_URL}
+Úsala cuando pregunten cómo descargar, instalar, configurar o usar la app a diario.
 
 FAQ — FUNCIONAMIENTO
 
@@ -24,7 +35,7 @@ P: ¿Cómo funciona la alerta en cascada?
 R: Cuatro canales en tiempo real: (A) WhatsApp + IA que procesa confirmaciones de lectura; (B) SMS de respaldo simultáneo; (C) GPS en vivo con enlace Google Maps; (D) llamadas de voz automáticas y secuenciales a guardianes si nadie confirma en los primeros segundos.
 
 P: ¿A quién notifica?
-R: Directamente al núcleo familiar, sin centrales externas. Hasta 10 guardianes (hijos, nietos, vecinos, cuidadores) con orden de prioridad inteligente.
+R: Directamente al núcleo familiar, sin centrales externas. Hasta 3 guardianes (hijos, nietos, vecinos, cuidadores) con orden de prioridad. SMS al instante, WhatsApp a los 15 s, llamada a los 30 s si nadie confirma.
 
 P: ¿Cuánto tarda la alerta?
 R: Menos de 3 segundos desde el impacto detectado o el botón SOS hasta la primera notificación a la red familiar.
@@ -56,6 +67,17 @@ R: Plan Único: $6.900/mes o $69.000/año (ahorras 2 meses). Protección complet
 P: ¿Hay permanencia o contrato de amarre?
 R: No. Cancelación simple, sin permanencia, multas ni explicaciones.
 
+POLÍTICA DE CANCELACIÓN Y REEMBOLSOS (detalle legal en Términos y Condiciones):
+${CANCELLATION_POLICY_SUMMARY}
+Enlace apartado legal: ${SENIOR_SAFE_TERMS_CANCELLATION_URL}
+Para solicitar baja: ${SENIOR_SAFE_SUPPORT_EMAIL}.
+
+P: ¿Hay reembolso si cancelo? / ¿Me devuelven plata si cancelo el anual?
+R: Indica amablemente que debe leer el apartado «Cancelación y reembolsos» en Términos y Condiciones: ${SENIOR_SAFE_TERMS_CANCELLATION_URL}. No cites el detalle completo en WhatsApp salvo que insista; prioriza ese enlace.
+
+P: ¿Qué pasa si cancelo el plan mensual o anual?
+R: Misma respuesta: derivar a ${SENIOR_SAFE_TERMS_CANCELLATION_URL} (Términos y Condiciones, sección Cancelación y reembolsos).
+
 P: ¿Medios de pago?
 R: 100% en línea con Webpay Plus: tarjetas de crédito, débito o prepago.
 
@@ -64,7 +86,13 @@ FAQ — SOPORTE
 P: ¿Tienen atención por dudas?
 R: Sí. El Plan Único incluye soporte prioritario 24/7 para configuración de guardianes y la app. WhatsApp comercial o correo ${SENIOR_SAFE_SUPPORT_EMAIL}.
 
-Para gestión de cuenta, reembolsos, facturación o fallas técnicas específicas de un caso: derivar a ${SENIOR_SAFE_SUPPORT_EMAIL} con detalle del caso.
+P: ¿Cómo descargo o instalo la app?
+R: Guía paso a paso en ${SENIOR_SAFE_INSTALL_GUIDE_URL} — contratar, abrir enlace en el celular, instalar en pantalla de inicio (Android/iPhone), configurar PIN y guardianes, escribir ACTIVAR por WhatsApp.
+
+P: ¿Cómo se usa la app día a día?
+R: Ver sección "Uso diario" en ${SENIOR_SAFE_INSTALL_GUIDE_URL}: botón SOS rojo para emergencias; sensor de caídas con sirena 30 s para cancelar si está bien.
+
+Para gestión de cuenta, facturación o fallas técnicas de un caso concreto: derivar a ${SENIOR_SAFE_SUPPORT_EMAIL}. Para reembolsos y cancelación: ${SENIOR_SAFE_TERMS_CANCELLATION_URL}.
 `.trim();
 
 export type WhatsAppInboundRoute = "EMERGENCY_ACK" | "COMMERCIAL_QUERY";
@@ -93,9 +121,11 @@ REGLAS ESTRICTAS:
 3) Enfatiza con naturalidad: Plan Único $6.900/mes, alertas directo a la familia, sin call-center en las emergencias.
 4) Máximo 2 párrafos cortos. Sin markdown. Ideal para WhatsApp (< 900 caracteres).
 5) Si preguntan activación WhatsApp tras contratar, indica responder ACTIVAR en este chat.
-6) Si mencionan emergencia médica activa, con calma indica llamar al 131 y usar la app instalada; este chat no despacha alertas en tiempo real.
-7) Para soporte general, invita amablemente a escribir por WhatsApp o a ${SENIOR_SAFE_COMMERCIAL_EMAIL}.
-8) Si la pregunta es técnica (cuenta, reembolsos, fallas, facturación, datos personales, configuración avanzada de un caso concreto) y NO puedes responderla con el CONTEXTO OFICIAL, responde ÚNICAMENTE y EXACTAMENTE esta cadena sin ningún otro carácter: ${TRIGGER_TECHNICAL_EMAIL_REDIRECT}
+6) Si preguntan instalación, descarga, configuración inicial o uso diario de la app, comparte con calidez la guía: ${SENIOR_SAFE_INSTALL_GUIDE_URL}
+7) Si mencionan emergencia médica activa, con calma indica llamar al 131 y usar la app instalada; este chat no despacha alertas en tiempo real.
+8) Para soporte general, invita amablemente a escribir por WhatsApp o a ${SENIOR_SAFE_COMMERCIAL_EMAIL}.
+9) Si preguntan reembolso, devolución de dinero, cancelación del plan, baja del servicio (mensual o anual), responde con tono cálido indicando que debe revisar el apartado «Cancelación y reembolsos» en Términos y Condiciones: ${SENIOR_SAFE_TERMS_CANCELLATION_URL}. No recites todo el texto legal; prioriza ese enlace. Puedes añadir una frase breve: no hay reembolso proporcional.
+10) Si la pregunta es técnica (cuenta, fallas, facturación de un caso concreto, datos personales) y NO puedes responderla con el CONTEXTO OFICIAL, responde ÚNICAMENTE y EXACTAMENTE esta cadena sin ningún otro carácter: ${TRIGGER_TECHNICAL_EMAIL_REDIRECT}
 
 CONTEXTO OFICIAL:
 ${SENIOR_SAFE_OFFICIAL_CONTEXT}`;
@@ -167,14 +197,17 @@ function fallbackReply(userMessage: string): string {
       "Senior Safe es una app en el celular que avisa a tu familia en menos de 3 segundos por llamada, WhatsApp y SMS, con GPS incluido. Puedes contratar en alarmaseniorsafe.cl 💙"
     );
   }
-  if (/instal|qr|pwa|app/.test(q)) {
+  if (/instal|descarg|qr|pwa|configur|como uso|usar la app|paso a paso/.test(q)) {
     return (
       base +
-      "Después de pagar, escaneas el QR para instalar la app en el teléfono y haces un simulacro guiado. ¡Es más fácil de lo que parece!"
+      `Te dejamos la guía completa paso a paso aquí: ${SENIOR_SAFE_INSTALL_GUIDE_URL} 😊 Si te atoras, escríbenos por aquí mismo.`
     );
   }
   if (/activar|whatsapp/.test(q)) {
     return base + "Si ya contrataste, responde ACTIVAR en este chat y te ayudamos a vincular tus alertas por WhatsApp 😊";
+  }
+  if (/reembolso|cancelar|dar de baja|baja del plan|cancelaci|devuelven plata|devoluci/.test(q)) {
+    return base + `Con gusto te oriento 😊 ${CANCELLATION_TERMS_WHATSAPP_REPLY}`;
   }
 
   if (looksOutOfScope(q)) {
@@ -372,9 +405,10 @@ export async function generateSeniorSafeEmailReply(
   }
 }
 
-/** Heurística: temas que casi seguro requieren soporte humano. */
+/** Heurística: temas que casi seguro requieren soporte humano (excluye política de cancelación/reembolso). */
 function looksOutOfScope(text: string): boolean {
-  return /reembolso|cancelar suscri|mi cuenta|no funciona|error|factura|boleta|cambiar numero|eliminar|datos personales|hablar con|soporte|humano|agente/i.test(
+  if (/reembolso|cancelar|dar de baja|baja del plan|cancelaci/.test(text)) return false;
+  return /mi cuenta|no funciona|error|factura|boleta|cambiar numero|eliminar|datos personales|hablar con|soporte|humano|agente/i.test(
     text,
   );
 }

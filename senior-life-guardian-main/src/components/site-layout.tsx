@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Menu, X, Phone, Mail, Globe, Shield } from "lucide-react";
+import { Menu, X, Mail, Globe, Shield, BookOpen } from "lucide-react";
 import logo from "@/assets/logo-senior-safe.png";
 import { PLAN_KEY } from "@/lib/plans";
+import { isDemoMode } from "@/lib/demo/demo-config";
 
 const defaultCheckoutSearch = {
   mode: "contratar" as const,
@@ -15,8 +16,9 @@ export function SiteHeader() {
   const links = [
     { label: "¿Qué es?", href: "/#que-es" },
     { label: "Funciones técnicas", href: "/#funciones" },
-    { label: "Cómo funciona", href: "/#como" },
+    { label: "Cómo funciona", href: "/como-funciona", isRoute: true },
     { label: "Planes", href: "/#planes" },
+    { label: "Guía de uso", href: "/guia", isRoute: true },
     { label: "Contacto", href: "/#contacto" },
   ];
   return (
@@ -26,22 +28,50 @@ export function SiteHeader() {
           <img src={logo} alt="Alarma Senior Safe" className="h-10 w-auto" />
         </Link>
         <div className="hidden md:flex items-center gap-7 text-sm text-muted-foreground font-medium">
-          {links.map((l) => (
-            <a key={l.href} href={l.href} className="hover:text-foreground transition-colors">{l.label}</a>
-          ))}
+          {links.map((l) =>
+            l.isRoute ? (
+              <Link key={l.href} to={l.href} className="hover:text-foreground transition-colors">{l.label}</Link>
+            ) : (
+              <a key={l.href} href={l.href} className="hover:text-foreground transition-colors">{l.label}</a>
+            ),
+          )}
         </div>
-        <Link to="/checkout" search={defaultCheckoutSearch} className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--brand-petrol-deep)] text-white text-sm font-semibold hover:opacity-90 transition">
-          Contratar
-        </Link>
+        <div className="hidden md:flex items-center gap-3">
+          {isDemoMode() && (
+            <Link
+              to="/demo"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-amber-400/50 bg-amber-50 text-amber-900 text-sm font-semibold hover:bg-amber-100 transition"
+            >
+              Demo municipal
+            </Link>
+          )}
+          <Link
+            to="/guia"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-[var(--brand-petrol)]/30 text-[var(--brand-petrol-deep)] text-sm font-semibold hover:bg-[var(--brand-petrol)]/5 transition"
+          >
+            <BookOpen className="w-4 h-4" />
+            Guía
+          </Link>
+          <Link to="/checkout" search={defaultCheckoutSearch} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--brand-petrol-deep)] text-white text-sm font-semibold hover:opacity-90 transition">
+            Contratar
+          </Link>
+        </div>
         <button className="md:hidden text-foreground" onClick={() => setOpen(!open)} aria-label="Menu">
           {open ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
       </nav>
       {open && (
         <div className="md:hidden border-t border-border px-6 py-5 flex flex-col gap-4 bg-white">
-          {links.map((l) => (
-            <a key={l.href} href={l.href} onClick={() => setOpen(false)} className="text-foreground py-1">{l.label}</a>
-          ))}
+          {links.map((l) =>
+            l.isRoute ? (
+              <Link key={l.href} to={l.href} onClick={() => setOpen(false)} className="text-foreground py-1">{l.label}</Link>
+            ) : (
+              <a key={l.href} href={l.href} onClick={() => setOpen(false)} className="text-foreground py-1">{l.label}</a>
+            ),
+          )}
+          <Link to="/guia" onClick={() => setOpen(false)} className="px-5 py-4 rounded-full border border-[var(--brand-petrol)]/30 text-[var(--brand-petrol-deep)] font-semibold text-center">
+            Guía de instalación
+          </Link>
           <Link to="/checkout" search={defaultCheckoutSearch} onClick={() => setOpen(false)} className="px-5 py-4 rounded-full bg-[var(--brand-petrol-deep)] text-white font-semibold text-center">Contratar</Link>
         </div>
       )}
@@ -70,8 +100,9 @@ export function SiteFooter() {
           <ul className="space-y-3 text-sm">
             <li><a href="/#que-es" className="text-white/85 hover:text-white">¿Qué es?</a></li>
             <li><a href="/#funciones" className="text-white/85 hover:text-white">Funciones técnicas</a></li>
-            <li><a href="/#como" className="text-white/85 hover:text-white">Cómo funciona</a></li>
+            <li><Link to="/como-funciona" className="text-white/85 hover:text-white">Cómo funciona</Link></li>
             <li><a href="/#planes" className="text-white/85 hover:text-white">Planes</a></li>
+            <li><Link to="/guia" className="text-white/85 hover:text-white">Guía de instalación</Link></li>
             <li><Link to="/checkout" search={defaultCheckoutSearch} className="text-white/85 hover:text-white">Contratar</Link></li>
           </ul>
         </div>

@@ -19,5 +19,6 @@ export default defineConfig({
       nodeCompat: true,
       deployConfig: true,
     },
+    plugins: ["./server/plugins/cloudflare-wait-until.ts"],
   },
 });

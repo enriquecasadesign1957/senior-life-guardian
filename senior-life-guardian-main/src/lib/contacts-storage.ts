@@ -1,5 +1,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { normalizePhoneE164 } from "@/lib/phone-utils";
+import { MAX_GUARDIANS } from "@/lib/guardian-limits";
+import { syncContactsToEmergencyDb } from "@/lib/emergency-recipients";
 
 const DATA_BUCKET = "seniorsafe-pins";
 
@@ -112,7 +114,10 @@ async function persistContacts(
   contacts: FamilyContact[],
 ): Promise<{ ok: boolean; error?: string; method?: string }> {
   const storageResult = await writeContactsToStorage(signupId, contacts);
-  if (storageResult.ok) return { ok: true, method: "storage" };
+  if (storageResult.ok) {
+    await syncContactsToEmergencyDb(signupId, contacts);
+    return { ok: true, method: "storage" };
+  }
 
   if (contacts.length === 0) {
     const { error } = await supabaseAdmin
@@ -152,7 +157,7 @@ function normalizeContactInput(input: FamilyContactInput): FamilyContactInput {
   };
 }
 
-/** Agrega un familiar (máx. 5, sin teléfonos duplicados). */
+/** Agrega un familiar (máx. 3, sin teléfonos duplicados). */
 export async function addFamilyContact(
   signupId: string,
   raw: FamilyContactInput,
@@ -160,7 +165,9 @@ export async function addFamilyContact(
   const contact = normalizeContactInput(raw);
   const existing = await loadMutableContacts(signupId);
 
-  if (existing.length >= 5) return { ok: false, error: "Máximo 5 familiares." };
+  if (existing.length >= MAX_GUARDIANS) {
+    return { ok: false, error: `Máximo ${MAX_GUARDIANS} guardianes.` };
+  }
   if (existing.some((c) => c.telefono === contact.telefono)) {
     return { ok: false, error: "Ya existe un familiar con ese teléfono." };
   }

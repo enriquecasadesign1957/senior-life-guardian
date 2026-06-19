@@ -35,6 +35,7 @@ const GREEN = "#16a34a";
 
 export type PaymentSummary = {
   amount?: number | null;
+  /** Webpay Plus — orden única */
   buyOrder?: string | null;
   authorizationCode?: string | null;
   cardLast4?: string | null;
@@ -119,6 +120,7 @@ export function PostPaymentInstallScreen({
   showPaymentSuccess = true,
 }: Props) {
   const navigate = useNavigate();
+  const displaySummary = paymentSummary ?? {};
   const [signupId, setSignupId] = useState<string | null>(() => resolveSignupId(signupIdProp));
   const [installed, setInstalled] = useState(false);
   const [installing, setInstalling] = useState(false);
@@ -239,39 +241,39 @@ export function PostPaymentInstallScreen({
             <p className="mt-2 text-muted-foreground text-base leading-relaxed">
               Tu suscripción Senior Safe está activa. Instala la app en tu teléfono y crea tu PIN de 4 dígitos para agregar familiares.
             </p>
-            {paymentSummary &&
-              (paymentSummary.amount != null ||
-                paymentSummary.buyOrder ||
-                paymentSummary.authorizationCode ||
-                paymentSummary.cardLast4) && (
+            {displaySummary &&
+              (displaySummary.amount != null ||
+                displaySummary.buyOrder ||
+                displaySummary.authorizationCode ||
+                displaySummary.cardLast4) && (
               <div className="mt-5 text-left bg-card border border-border rounded-2xl p-4 text-sm space-y-2 shadow-sm">
                 <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
                   Comprobante Webpay Plus
                 </p>
-                {paymentSummary.amount != null && (
+                {displaySummary.amount != null && (
                   <div className="flex justify-between gap-4">
                     <span className="text-muted-foreground">Monto pagado</span>
                     <span className="font-semibold">
-                      ${paymentSummary.amount.toLocaleString("es-CL")} CLP
+                      ${displaySummary.amount.toLocaleString("es-CL")} CLP
                     </span>
                   </div>
                 )}
-                {paymentSummary.authorizationCode && (
+                {displaySummary.authorizationCode && (
                   <div className="flex justify-between gap-4">
                     <span className="text-muted-foreground">Código de autorización</span>
-                    <span className="font-mono text-xs">{paymentSummary.authorizationCode}</span>
+                    <span className="font-mono text-xs">{displaySummary.authorizationCode}</span>
                   </div>
                 )}
-                {paymentSummary.cardLast4 && (
+                {displaySummary.cardLast4 && (
                   <div className="flex justify-between gap-4">
                     <span className="text-muted-foreground">Tarjeta</span>
-                    <span className="font-mono text-xs">**** {paymentSummary.cardLast4}</span>
+                    <span className="font-mono text-xs">**** {displaySummary.cardLast4}</span>
                   </div>
                 )}
-                {paymentSummary.buyOrder && (
+                {displaySummary.buyOrder && (
                   <div className="flex justify-between gap-4">
                     <span className="text-muted-foreground">Orden de compra</span>
-                    <span className="font-mono text-xs break-all text-right">{paymentSummary.buyOrder}</span>
+                    <span className="font-mono text-xs break-all text-right">{displaySummary.buyOrder}</span>
                   </div>
                 )}
               </div>

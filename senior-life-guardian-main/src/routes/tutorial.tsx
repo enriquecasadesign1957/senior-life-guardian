@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
-  Bell, MessageCircle, Users, Clock, Shield,
-  ArrowRight, ArrowLeft, CheckCircle2, Phone, MapPin,
+  Bell, MessageCircle, Users, Shield,
+  ArrowRight, ArrowLeft, CheckCircle2, Phone, MapPin, Heart, AlertTriangle,
 } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 
@@ -67,7 +67,7 @@ const SCREENS: Screen[] = [
   {
     badge: "Paso 2",
     title: "Qué ocurre después",
-    body: "La aplicación te pregunta si necesitas ayuda. Si dices SÍ —o no respondes— se envía la alerta automáticamente.",
+    body: "La aplicación te pregunta qué tipo de ayuda necesitas. Tocas una opción y la alerta se envía al instante.",
     bullets: [
       { icon: MessageCircle, text: "Mensaje al WhatsApp familiar" },
       { icon: Phone, text: "Llamada automática de respaldo" },
@@ -76,12 +76,24 @@ const SCREENS: Screen[] = [
     illustration: (
       <PhoneFrame accent={AMBER}>
         <div className="text-center w-full">
-          <div className="text-base font-bold text-foreground mb-4">¿Necesitas ayuda?</div>
-          <div className="space-y-3">
-            <div className="w-full py-4 rounded-2xl text-white font-bold shadow-lg" style={{ background: GREEN }}>SÍ, AYUDA</div>
-            <div className="w-full py-3 rounded-2xl bg-muted text-muted-foreground font-semibold text-sm">Estoy bien</div>
+          <div className="text-base font-bold text-foreground mb-4">¿Qué tipo de ayuda necesitas?</div>
+          <div className="space-y-2">
+            {[
+              { label: "Salud", color: RED, Icon: Heart },
+              { label: "Accidente", color: "#ea580c", Icon: AlertTriangle },
+              { label: "Delincuencia", color: "#7c3aed", Icon: Shield },
+            ].map(({ label, color, Icon }) => (
+              <div
+                key={label}
+                className="w-full py-3 px-3 rounded-2xl text-white font-bold text-sm shadow-md flex items-center gap-2"
+                style={{ background: color }}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                {label}
+              </div>
+            ))}
           </div>
-          <div className="mt-4 text-[11px] text-muted-foreground">Enviando en 5 segundos...</div>
+          <div className="mt-3 w-full py-2.5 rounded-2xl bg-muted text-muted-foreground font-semibold text-xs">Cancelar — estoy bien</div>
         </div>
       </PhoneFrame>
     ),
@@ -113,22 +125,22 @@ const SCREENS: Screen[] = [
   },
   {
     badge: "Paso 4",
-    title: "Si no respondes, ayuda igual",
-    body: "Si no contestas en pocos segundos, la alerta se envía sola. Nunca te quedas solo.",
+    title: "Si hay una caída",
+    body: "El teléfono puede detectar una caída y enviar alerta de accidente si no cancelas a tiempo.",
     bullets: [
-      { icon: Clock, text: "Alerta automática en 5 segundos" },
+      { icon: AlertTriangle, text: "Alerta automática por caída detectada" },
       { icon: Phone, text: "Llamada hasta que un familiar responda" },
     ],
     illustration: (
       <PhoneFrame accent={RED}>
         <div className="text-center">
-          <div className="w-28 h-28 mx-auto rounded-full flex items-center justify-center text-white shadow-xl mb-4" style={{ background: RED }}>
-            <Clock className="w-14 h-14" />
+          <div className="w-28 h-28 mx-auto rounded-full flex items-center justify-center text-white shadow-xl mb-4" style={{ background: "#ea580c" }}>
+            <AlertTriangle className="w-14 h-14" />
           </div>
-          <div className="text-3xl font-bold text-foreground">5</div>
-          <div className="text-xs font-semibold text-muted-foreground mt-1">Enviando alerta...</div>
+          <div className="text-base font-bold text-foreground">¿Te caíste?</div>
+          <div className="text-xs font-semibold text-muted-foreground mt-1">Accidente — avisando a tu familia</div>
           <div className="mt-3 h-2 w-full rounded-full bg-muted overflow-hidden">
-            <div className="h-full w-2/3 rounded-full" style={{ background: RED }} />
+            <div className="h-full w-2/3 rounded-full" style={{ background: "#ea580c" }} />
           </div>
         </div>
       </PhoneFrame>

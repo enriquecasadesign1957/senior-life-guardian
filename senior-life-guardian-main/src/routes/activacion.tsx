@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from '@tanstack/react-router'
+import { MAX_GUARDIANS } from "@/lib/guardian-limits";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -436,7 +437,7 @@ function StepContactsModal({ open, onClose, onDone, userId }: { open: boolean; o
       toast.error("Completa todos los campos");
       return;
     }
-    if (contacts.length >= 5) { toast.error("Máximo 5 contactos"); return; }
+    if (contacts.length >= MAX_GUARDIANS) { toast.error(`Máximo ${MAX_GUARDIANS} guardianes`); return; }
     setSaving(true);
     try {
       let createdId: string | undefined;

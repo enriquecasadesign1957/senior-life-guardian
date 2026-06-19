@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { acknowledgeAlertByToken, acknowledgeAlertByIdAndToken, normalizeAckToken } from "@/lib/ack-alert";
 import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
 
 function phoneLast9(phone: string): string {
@@ -12,7 +13,8 @@ export function isEmergencyAlertAckMessage(body: string): boolean {
   const upper = t.toUpperCase().normalize("NFD").replace(/\p{M}/gu, "");
 
   if (/FAMILIA\/ACK\/[A-Z0-9]+/i.test(t)) return true;
-  if (/\b[A-F0-9]{32,48}\b/i.test(t) && t.length < 80) return true;
+  if (/\/a\/[a-f0-9]{12,}/i.test(t)) return true;
+  if (/\b[A-F0-9]{12,48}\b/i.test(t) && t.length < 80) return true;
 
   return (
     /^(SI|SÍ|OK|OKEY|LISTO|VISTO|ACEPTO|CONFIRMO|CONFIRMADO|RECIBIDO|RECIBIDA|RECIBI|YA RECIBI|YA LO VI|ALERTA RECIBIDA|CONFIRMACION)\b/.test(
@@ -22,41 +24,41 @@ export function isEmergencyAlertAckMessage(body: string): boolean {
   );
 }
 
-function extractAckToken(body: string): string | null {
-  const url = body.match(/familia\/ack\/([a-z0-9]+)/i);
-  if (url?.[1]) return url[1];
-  const bare = body.trim().match(/\b([a-f0-9]{32,48})\b/i);
-  return bare?.[1] ?? null;
+function extractAckToken(body: string): { alertId?: string; token: string } | null {
+  const withId = body.match(/\/a\/([0-9a-f-]{36})\/([a-z0-9]+)/i);
+  if (withId?.[1] && withId?.[2]) {
+    return { alertId: withId[1], token: normalizeAckToken(withId[2]) };
+  }
+  const short = body.match(/\/a\/([a-z0-9]+)/i);
+  if (short?.[1] && short[1].length >= 12) return { token: normalizeAckToken(short[1]) };
+  const api = body.match(/ack-alert\/([a-z0-9]+)/i);
+  if (api?.[1]) return { token: normalizeAckToken(api[1]) };
+  const legacy = body.match(/familia\/ack\/([a-z0-9]+)/i);
+  if (legacy?.[1]) return { token: normalizeAckToken(legacy[1]) };
+  const bare = body.trim().match(/\b([a-f0-9]{12,48})\b/i);
+  return bare?.[1] ? { token: normalizeAckToken(bare[1]) } : null;
 }
 
-async function ackByToken(token: string, guardianName?: string | null): Promise<string | null> {
-  const { data: alert } = await supabaseAdmin
-    .from("alert_logs")
-    .select("id, acknowledged_at, acknowledgement_expires_at, contract_signup_id")
-    .eq("acknowledgement_token", token)
-    .maybeSingle();
-
-  if (!alert) return null;
-  if (alert.acknowledged_at) {
-    return "Senior Safe 🛡️\n✅ Esta alerta ya había sido confirmada. Gracias.";
+async function ackByToken(
+  parsed: { alertId?: string; token: string },
+  guardianName?: string | null,
+): Promise<string | null> {
+  try {
+    const result = parsed.alertId
+      ? await acknowledgeAlertByIdAndToken(parsed.alertId, parsed.token, guardianName ?? undefined)
+      : await acknowledgeAlertByToken(parsed.token, guardianName ?? undefined);
+    const seniorName = await fetchSeniorFirstName(result.contract_signup_id);
+    if (result.already) {
+      return "Senior Safe 🛡️\n✅ Esta alerta ya había sido confirmada. Gracias.";
+    }
+    return `Senior Safe 🛡️\n✅ Alerta confirmada. Le avisaremos a ${seniorName} que ya recibiste la notificación. Gracias.`;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "";
+    if (msg.includes("expiró")) {
+      return "Senior Safe 🛡️\nEl link de confirmación expiró. Si aún necesitas ayuda, contacta al senior directamente.";
+    }
+    return null;
   }
-  if (
-    alert.acknowledgement_expires_at &&
-    new Date(alert.acknowledgement_expires_at).getTime() < Date.now()
-  ) {
-    return "Senior Safe 🛡️\nEl link de confirmación expiró. Si aún necesitas ayuda, contacta al senior directamente.";
-  }
-
-  await supabaseAdmin
-    .from("alert_logs")
-    .update({
-      acknowledged_at: new Date().toISOString(),
-      acknowledgement_by_name: guardianName?.slice(0, 120) ?? null,
-    })
-    .eq("id", alert.id);
-
-  const seniorName = await fetchSeniorFirstName(alert.contract_signup_id);
-  return `Senior Safe 🛡️\n✅ Alerta confirmada. Le avisaremos a ${seniorName} que ya recibiste la notificación. Gracias.`;
 }
 
 async function fetchSeniorFirstName(signupId: string | null): Promise<string> {
@@ -97,10 +99,10 @@ export async function processWhatsAppAlertAck(
   body: string,
   options?: { forceAck?: boolean },
 ): Promise<string | null> {
-  const token = extractAckToken(body);
-  if (token) {
+  const parsed = extractAckToken(body);
+  if (parsed) {
     const guardian = await findGuardianByPhone(phone);
-    return ackByToken(token, guardian?.nombre ?? null);
+    return ackByToken(parsed, guardian?.nombre ?? null);
   }
 
   if (!options?.forceAck && !isEmergencyAlertAckMessage(body)) return null;

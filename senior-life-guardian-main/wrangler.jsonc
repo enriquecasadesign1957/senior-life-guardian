@@ -12,9 +12,33 @@
   "vars": {
     "PUBLIC_APP_URL": "https://alarmaseniorsafe.cl",
     "TRANSBANK_ENVIRONMENT": "production",
+    "TRANSBANK_PAYMENT_MODE": "oneclick_mall",
     "TWILIO_WHATSAPP_COMMERCIAL_FROM": "56971404580"
   },
   "triggers": {
     "crons": ["0 14 * * *"]
+  },
+  "env": {
+    "demo": {
+      "name": "senior-life-guardian-demo",
+      "custom_domains": [
+        {
+          "domain": "demo.alarmaseniorsafe.cl",
+          "zone_name": "alarmaseniorsafe.cl"
+        }
+      ],
+      "vars": {
+        "PUBLIC_APP_URL": "https://demo.alarmaseniorsafe.cl",
+        "DEMO_MODE": "true",
+        "TRANSBANK_ENVIRONMENT": "sandbox",
+        "TRANSBANK_FORCE_SANDBOX": "1",
+        "TRANSBANK_PAYMENT_MODE": "oneclick_mall",
+        "TWILIO_SIMULATION": "1",
+        "TWILIO_WHATSAPP_COMMERCIAL_FROM": "56971404580"
+      },
+      "triggers": {
+        "crons": []
+      }
+    }
   }
 }

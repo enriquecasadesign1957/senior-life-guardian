@@ -23,6 +23,11 @@ dist-ssr
 .wrangler/
 .dev.vars
 
+# Transbank sandbox validation (tokens — no subir en repo público)
+public/oneclick-*.json
+public/oneclick-*.html
+scripts/tmp-token-aprobada.mjs
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

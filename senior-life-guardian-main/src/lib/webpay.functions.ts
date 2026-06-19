@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { normalizePlanKey, planAmount, planKeySchema, periodoSchema } from "@/lib/plans";
+import { normalizePlanKey, planKeySchema, periodoSchema } from "@/lib/plans";
+import { chargeAmountFromSignup } from "@/lib/discount-codes";
+import { recordDiscountRedemption, resolveDiscountForCheckout } from "@/lib/discount.functions";
 import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
 import {
   buildWebpayReturnUrl,
@@ -12,7 +14,8 @@ import {
 } from "@/lib/transbank-webpay";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { Json } from "@/integrations/supabase/types";
-import { clearRenewalNoticeFlags } from "@/lib/subscription-renewal";
+import { clearRenewalNoticeFlags } from "@/lib/subscription-renewal-flags";
+import { deleteOneclickMallInscription } from "@/lib/transbank-oneclick-mall";
 
 /** Serializa la respuesta cruda de Transbank al tipo Json de Supabase. */
 function toSupabaseJson(value: Record<string, unknown>): Json {
@@ -36,7 +39,9 @@ export const initWebpayTransaction = createServerFn({ method: "POST" })
 
     const { data: signup, error: signupErr } = await supabaseAdmin
       .from(CONTRACT_SIGNUPS_TABLE)
-      .select("id")
+      .select(
+        "id,plan,periodo,discount_code,discount_code_id,discount_percent,list_price,payment_status",
+      )
       .eq("id", data.signupId)
       .maybeSingle();
 
@@ -45,7 +50,23 @@ export const initWebpayTransaction = createServerFn({ method: "POST" })
       throw new Error("No encontramos tu registro de contratación. Vuelve a completar el checkout.");
     }
 
-    const amount = planAmount(data.plan, data.periodo);
+    const periodo = (signup.periodo as "mensual" | "anual") || data.periodo;
+    const plan = normalizePlanKey(signup.plan || data.plan);
+
+    let amount = chargeAmountFromSignup(plan, periodo, {
+      list_price: signup.list_price,
+      discount_percent: signup.discount_percent,
+    });
+
+    if (signup.discount_code) {
+      try {
+        const resolved = await resolveDiscountForCheckout(signup.discount_code, plan, periodo);
+        amount = resolved.finalPrice;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Código de convenio inválido.";
+        throw new Error(`${message} Actualiza el checkout e intenta nuevamente.`);
+      }
+    }
     const buyOrder = generateWebpayBuyOrder();
     const sessionId = generateWebpaySessionId(data.signupId);
     const returnUrl = buildWebpayReturnUrl();
@@ -151,9 +172,14 @@ export const confirmWebpayTransaction = createServerFn({ method: "POST" })
       if (result.ok) {
         const { data: signup } = await supabaseAdmin
           .from(CONTRACT_SIGNUPS_TABLE)
-          .select("periodo")
+          .select("periodo,payment_status,discount_code_id")
           .eq("id", tx.contract_signup_id)
           .maybeSingle();
+
+        await recordDiscountRedemption({
+          discount_code_id: signup?.discount_code_id ?? null,
+          payment_status: signup?.payment_status ?? null,
+        });
 
         const periodo = (signup?.periodo as "mensual" | "anual") || "mensual";
         const now = new Date();
@@ -347,9 +373,31 @@ export const activateSubscription = createServerFn({ method: "POST" })
 export const cancelSubscription = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ signupId: z.string().uuid() }).parse(input))
   .handler(async ({ data }) => {
+    const { data: signup } = await supabaseAdmin
+      .from(CONTRACT_SIGNUPS_TABLE)
+      .select("oneclick_username,oneclick_tbk_user,payment_provider")
+      .eq("id", data.signupId)
+      .maybeSingle();
+
+    if (
+      signup?.payment_provider === "oneclick_mall" &&
+      signup.oneclick_username &&
+      signup.oneclick_tbk_user
+    ) {
+      try {
+        await deleteOneclickMallInscription(signup.oneclick_tbk_user, signup.oneclick_username);
+      } catch (err) {
+        console.error("[oneclick] delete inscription on cancel failed", err);
+      }
+    }
+
     const { error } = await supabaseAdmin
       .from(CONTRACT_SIGNUPS_TABLE)
-      .update({ subscription_status: "cancelled" })
+      .update({
+        subscription_status: "cancelled",
+        oneclick_inscription_status: "deleted",
+        oneclick_tbk_user: null,
+      })
       .eq("id", data.signupId);
     if (error) throw error;
     return { ok: true };

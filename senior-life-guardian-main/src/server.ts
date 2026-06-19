@@ -1,4 +1,5 @@
 import "./lib/error-capture";
+import { bindWorkerExecutionContext, type WorkerExecutionContext } from "./lib/cloudflare-context";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
@@ -68,6 +69,7 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    bindWorkerExecutionContext(ctx as WorkerExecutionContext);
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
@@ -78,7 +80,7 @@ export default {
     }
   },
 
-  /** Cloudflare Cron: avisos de renovación y suspensión por falta de pago. */
+  /** Cloudflare Cron: avisos de renovación, cobro recurrente Oneclick y suspensión por falta de pago. */
   async scheduled(_event: ScheduledEvent, _env: unknown, ctx: ExecutionContext) {
     ctx.waitUntil(
       import("./lib/subscription-renewal").then(({ runSubscriptionRenewalJob }) =>

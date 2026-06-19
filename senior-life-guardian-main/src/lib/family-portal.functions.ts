@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
 import { normalizePhoneE164 } from "@/lib/phone-utils";
 import { sendTwilioChannelMessage } from "@/lib/twilio";
+import { acknowledgeAlertByToken } from "@/lib/ack-alert";
 
 const CODE_TTL_MIN = 10;
 const MAX_ATTEMPTS = 3;
@@ -293,35 +294,7 @@ export const ackAlertByToken = createServerFn({ method: "POST" })
       .object({ token: z.string().min(16).max(128), nombre: z.string().max(120).optional() })
       .parse(input),
   )
-  .handler(async ({ data }) => {
-    const { data: alert } = await supabaseAdmin
-      .from("alert_logs")
-      .select("id, acknowledged_at, acknowledgement_expires_at, contract_signup_id")
-      .eq("acknowledgement_token", data.token)
-      .maybeSingle();
-
-    if (!alert) throw new Error("Link no válido.");
-    if (alert.acknowledged_at) {
-      return { ok: true, already: true, contract_signup_id: alert.contract_signup_id };
-    }
-    if (
-      alert.acknowledgement_expires_at &&
-      new Date(alert.acknowledgement_expires_at).getTime() < Date.now()
-    ) {
-      throw new Error("Este link de confirmación expiró.");
-    }
-
-    const { error } = await supabaseAdmin
-      .from("alert_logs")
-      .update({
-        acknowledged_at: new Date().toISOString(),
-        acknowledgement_by_name: data.nombre?.slice(0, 120) ?? null,
-      })
-      .eq("id", alert.id);
-    if (error) throw error;
-
-    return { ok: true, already: false, contract_signup_id: alert.contract_signup_id };
-  });
+  .handler(async ({ data }) => acknowledgeAlertByToken(data.token, data.nombre));
 
 // ============================================================
 // 5) ¿Hay acknowledge? (consultado puntualmente desde /native)

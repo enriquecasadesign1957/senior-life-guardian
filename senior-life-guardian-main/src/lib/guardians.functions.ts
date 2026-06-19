@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { MAX_GUARDIANS } from "@/lib/guardian-limits";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
@@ -180,7 +181,9 @@ export const addGuardian = createServerFn({ method: "POST" })
     z.object({ signupId: idSchema, guardian: guardianInput }).parse(input),
   )
   .handler(async ({ data }) => {
-    if ((await guardianCount(data.signupId)) >= 10) throw new Error("Máximo 10 guardianes.");
+    if ((await guardianCount(data.signupId)) >= MAX_GUARDIANS) {
+      throw new Error(`Máximo ${MAX_GUARDIANS} guardianes.`);
+    }
 
     const tel = normalizePhoneE164(data.guardian.telefono);
     if (!tel) throw new Error("Teléfono inválido.");

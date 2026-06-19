@@ -1,3 +1,4 @@
+import { assertAdminPin } from "@/lib/admin-auth";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { sendTwilioMessage, twilioWhatsappCommercialFrom, twilioWhatsappFrom } from "@/lib/twilio";
 import { normalizeTwilioPhone } from "@/lib/twilio-inbound";
@@ -22,13 +23,7 @@ export type InboxThread = {
 };
 
 function assertInboxPin(pin: string): void {
-  const expected = process.env.ADMIN_INBOX_PIN?.trim();
-  if (!expected) {
-    throw new Error("Bandeja no configurada (falta ADMIN_INBOX_PIN en el servidor).");
-  }
-  if (pin !== expected) {
-    throw new Error("PIN incorrecto.");
-  }
+  assertAdminPin(pin);
 }
 
 function toWhatsAppAddress(e164ish: string): string {

@@ -15,6 +15,7 @@ import {
   deleteGuardian,
   toggleGuardianActive,
 } from "@/lib/guardians.functions";
+import { MAX_GUARDIANS } from "@/lib/guardian-limits";
 
 export const Route = createFileRoute("/familia/guardianes")({
   head: () => ({
@@ -184,7 +185,12 @@ function GuardiansPage() {
           <h1 className="font-bold">Mis Guardianes</h1>
           <Button
             size="sm"
+            disabled={guardians.length >= MAX_GUARDIANS}
             onClick={() => {
+              if (guardians.length >= MAX_GUARDIANS) {
+                toast.error(`Máximo ${MAX_GUARDIANS} guardianes.`);
+                return;
+              }
               resetForm();
               setShowAdd(true);
               setEditing(null);
@@ -221,6 +227,12 @@ function GuardiansPage() {
             onSave={handleAdd}
             title="Nuevo guardián"
           />
+        )}
+
+        {guardians.length >= MAX_GUARDIANS && (
+          <p className="text-sm text-muted-foreground bg-white rounded-2xl p-4 border">
+            Ya tienes {MAX_GUARDIANS} guardianes (máximo). En emergencias se notifica a los 3 prioritarios por SMS, WhatsApp y llamada escalonada.
+          </p>
         )}
 
         {guardians.length === 0 && !showAdd && (

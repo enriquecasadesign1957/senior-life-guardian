@@ -371,16 +371,32 @@ export type Database = {
         Row: {
           created_at: string
           direccion: string | null
+          discount_code: string | null
+          discount_code_id: string | null
+          discount_partner: string | null
+          discount_percent: number | null
           email: string
           id: string
           last_payment_at: string | null
+          list_price: number | null
           nombre: string
           onboarding_completed: boolean
+          oneclick_card_last4: string | null
+          oneclick_inscription_status: string | null
+          oneclick_inscription_token: string | null
+          oneclick_mall_buy_order: string | null
+          oneclick_store_buy_order: string | null
+          oneclick_tbk_user: string | null
+          oneclick_username: string | null
+          payment_provider: string
           payment_status: string
           periodo: string
           plan: string
           purchase_mode: string
           renewal_date: string | null
+          recurring_billing_consent_version: string | null
+          recurring_billing_consented_at: string | null
+          recurring_billing_charge_for: string | null
           subscription_status: string
           telefono: string
           updated_at: string
@@ -396,16 +412,32 @@ export type Database = {
         Insert: {
           created_at?: string
           direccion?: string | null
+          discount_code?: string | null
+          discount_code_id?: string | null
+          discount_partner?: string | null
+          discount_percent?: number | null
           email: string
           id?: string
           last_payment_at?: string | null
+          list_price?: number | null
           nombre: string
           onboarding_completed?: boolean
+          oneclick_card_last4?: string | null
+          oneclick_inscription_status?: string | null
+          oneclick_inscription_token?: string | null
+          oneclick_mall_buy_order?: string | null
+          oneclick_store_buy_order?: string | null
+          oneclick_tbk_user?: string | null
+          oneclick_username?: string | null
+          payment_provider?: string
           payment_status?: string
           periodo?: string
           plan?: string
           purchase_mode?: string
           renewal_date?: string | null
+          recurring_billing_consent_version?: string | null
+          recurring_billing_consented_at?: string | null
+          recurring_billing_charge_for?: string | null
           subscription_status?: string
           telefono: string
           updated_at?: string
@@ -421,16 +453,32 @@ export type Database = {
         Update: {
           created_at?: string
           direccion?: string | null
+          discount_code?: string | null
+          discount_code_id?: string | null
+          discount_partner?: string | null
+          discount_percent?: number | null
           email?: string
           id?: string
           last_payment_at?: string | null
+          list_price?: number | null
           nombre?: string
           onboarding_completed?: boolean
+          oneclick_card_last4?: string | null
+          oneclick_inscription_status?: string | null
+          oneclick_inscription_token?: string | null
+          oneclick_mall_buy_order?: string | null
+          oneclick_store_buy_order?: string | null
+          oneclick_tbk_user?: string | null
+          oneclick_username?: string | null
+          payment_provider?: string
           payment_status?: string
           periodo?: string
           plan?: string
           purchase_mode?: string
           renewal_date?: string | null
+          recurring_billing_consent_version?: string | null
+          recurring_billing_consented_at?: string | null
+          recurring_billing_charge_for?: string | null
           subscription_status?: string
           telefono?: string
           updated_at?: string
@@ -442,6 +490,60 @@ export type Database = {
           webpay_session_id?: string | null
           webpay_token?: string | null
           whatsapp_activated?: boolean
+        }
+        Relationships: []
+      }
+      discount_codes: {
+        Row: {
+          active: boolean
+          applies_annual: boolean
+          applies_monthly: boolean
+          code: string
+          created_at: string
+          id: string
+          label: string
+          max_redemptions: number | null
+          notes: string | null
+          partner_slug: string
+          percent_off: number
+          redemption_count: number
+          updated_at: string
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          active?: boolean
+          applies_annual?: boolean
+          applies_monthly?: boolean
+          code: string
+          created_at?: string
+          id?: string
+          label: string
+          max_redemptions?: number | null
+          notes?: string | null
+          partner_slug: string
+          percent_off: number
+          redemption_count?: number
+          updated_at?: string
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          active?: boolean
+          applies_annual?: boolean
+          applies_monthly?: boolean
+          code?: string
+          created_at?: string
+          id?: string
+          label?: string
+          max_redemptions?: number | null
+          notes?: string | null
+          partner_slug?: string
+          percent_off?: number
+          redemption_count?: number
+          updated_at?: string
+          valid_from?: string | null
+          valid_until?: string | null
         }
         Relationships: []
       }
@@ -489,6 +591,65 @@ export type Database = {
           contract_signup_id?: string
         }
         Relationships: []
+      }
+      oneclick_transactions: {
+        Row: {
+          amount: number
+          authorization_code: string | null
+          contract_signup_id: string | null
+          created_at: string
+          environment: string
+          id: string
+          mall_buy_order: string
+          operation: string
+          payment_type_code: string | null
+          raw_response: Json | null
+          response_code: number | null
+          status: string
+          store_buy_order: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          authorization_code?: string | null
+          contract_signup_id?: string | null
+          created_at?: string
+          environment?: string
+          id?: string
+          mall_buy_order: string
+          operation?: string
+          payment_type_code?: string | null
+          raw_response?: Json | null
+          response_code?: number | null
+          status?: string
+          store_buy_order: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          authorization_code?: string | null
+          contract_signup_id?: string | null
+          created_at?: string
+          environment?: string
+          id?: string
+          mall_buy_order?: string
+          operation?: string
+          payment_type_code?: string | null
+          raw_response?: Json | null
+          response_code?: number | null
+          status?: string
+          store_buy_order?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oneclick_transactions_contract_signup_id_fkey"
+            columns: ["contract_signup_id"]
+            isOneToOne: false
+            referencedRelation: "contract_signups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       webpay_transactions: {
         Row: {

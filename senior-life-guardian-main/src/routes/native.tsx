@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Bell, Shield, MapPin, Users, CheckCircle2, Loader2, X, Heart, KeyRound, Activity } from "lucide-react";
+import { Bell, Shield, MapPin, Users, CheckCircle2, Loader2, X, Heart, KeyRound, Activity, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,12 +10,16 @@ import { getAppConfiguration, listFamily } from "@/lib/family.functions";
 import { persistSignupHandoff } from "@/lib/post-payment";
 import { loginAccountByEmail, loginErrorMessage } from "@/lib/account-login";
 import { listFamilyWithFallback } from "@/lib/family-actions";
-import { sendEmergencyAlert } from "@/lib/emergency-alert.functions";
+import { sendEmergencyAlert, cancelEmergencyAlert } from "@/lib/emergency-alert.functions";
 import { sendWellnessNotice } from "@/lib/wellness.functions";
 import { upsertHeartbeat } from "@/lib/heartbeat.functions";
 import { checkLastAlertAck } from "@/lib/family-portal.functions";
 import { getCurrentCoordsWithError, getCurrentCoords, ensureGeoPermission } from "@/lib/geo";
 import { FallDetectionOverlay, useFallDetection } from "@/hooks/useFallDetection";
+import {
+  EMERGENCY_CATEGORIES,
+  type EmergencyCategory,
+} from "@/lib/emergency-category";
 
 export const Route = createFileRoute("/native")({
   head: () => ({
@@ -32,6 +36,12 @@ const DEEP = "var(--brand-petrol-deep)";
 const GREEN = "#16a34a";
 const RED = "#dc2626";
 
+const CATEGORY_ICONS = {
+  salud: Heart,
+  accidente: AlertTriangle,
+  delincuencia: Shield,
+} as const;
+
 type Stage = "idle" | "confirm" | "sending" | "sent";
 type Contact = { id: string; nombre: string; parentesco: string; telefono: string };
 
@@ -39,6 +49,7 @@ function NativeApp() {
   const loadConfig = useServerFn(getAppConfiguration);
   const list = useServerFn(listFamily);
   const sendAlert = useServerFn(sendEmergencyAlert);
+  const cancelAlert = useServerFn(cancelEmergencyAlert);
   const sendWellness = useServerFn(sendWellnessNotice);
   const heartbeat = useServerFn(upsertHeartbeat);
   const checkAck = useServerFn(checkLastAlertAck);
@@ -61,7 +72,6 @@ function NativeApp() {
 
   // emergency state
   const [stage, setStage] = useState<Stage>("idle");
-  const [countdown, setCountdown] = useState(5);
   const [summary, setSummary] = useState<{ delivered: number; total: number; status: string } | null>(null);
 
   // 1) Auto-hidratar desde almacenamiento local
@@ -200,24 +210,9 @@ function NativeApp() {
     return () => { alive = false; };
   }, [userId, list]);
 
-  // 4) Countdown emergencia
-  useEffect(() => {
-    if (stage !== "confirm") return;
-    setCountdown(5);
-    if ("vibrate" in navigator) navigator.vibrate?.(80);
-    const id = setInterval(() => {
-      setCountdown((c) => {
-        if ("vibrate" in navigator) navigator.vibrate?.(30);
-        if (c <= 1) { clearInterval(id); triggerAlert(); return 0; }
-        return c - 1;
-      });
-    }, 1000);
-    return () => clearInterval(id);
-  }, [stage]);
-
-  // 5) Envío AUTOMÁTICO: disparado por el handler del botón (NO useEffect).
-  //    Bloquea reentradas con sendingRef y congela la UI con stage="sending".
+  // 4) Envío: disparado al elegir tipo de emergencia.
   const sendingRef = useRef(false);
+  const emergencySendGenRef = useRef(0);
 
   const fetchFallGps = useCallback(async () => {
     const gps = await getCurrentCoords({ highAccuracy: true, timeoutMs: 5000, maximumAgeMs: 30000 });
@@ -235,6 +230,7 @@ function NativeApp() {
         data: {
           signupId: userId,
           gps: gps ? { lat: gps.lat, lng: gps.lng, accuracy: gps.accuracy } : null,
+          emergencyCategory: "accidente",
         },
       });
       const results = (res as { results?: Array<{ status: string }> })?.results ?? [];
@@ -278,76 +274,81 @@ function NativeApp() {
     toast.error("Permiso de movimiento denegado. En iPhone: Ajustes → Safari → Sensores de movimiento.");
   };
 
-  const triggerAlert = async () => {
+  const triggerAlert = async (category: EmergencyCategory) => {
     if (sendingRef.current) return;
     if (!userId) return;
     sendingRef.current = true;
+    const gen = emergencySendGenRef.current;
 
-
-
-
-
-    // 1) Estado síncrono: congela la UI antes de cualquier await.
     setStage("sending");
     setSummary(null);
     if ("vibrate" in navigator) navigator.vibrate?.([100, 60, 100]);
 
     try {
-      const phones = contacts
-        .map((c) => String(c.telefono ?? "").replace(/[^\d+]/g, ""))
-        .filter((p) => p.length >= 6);
-
-      // FASE 1 (Segundo 0): Llamada telefónica INMEDIATA al primer guardián.
-      if (phones.length > 0) {
-        try {
-          window.open(`tel:${phones[0]}`, "_system");
-        } catch {
-          try { window.location.href = `tel:${phones[0]}`; } catch {}
-        }
-      }
-
-      // FASE 2 (paralelo): GPS real con timeout 3s; si falla, mandamos sin GPS.
       setLocating(true);
       const gpsPromise = getCurrentCoords({ highAccuracy: true, timeoutMs: 3000, maximumAgeMs: 0 });
       const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000));
       const gps = await Promise.race([gpsPromise, timeout]);
       setLocating(false);
+      if (emergencySendGenRef.current !== gen) return;
       if (gps) {
         setLastCoords(gps);
         setGpsOk(true);
       }
       const coords = gps ?? lastCoords;
 
-      // FASE 3: Disparar backend Twilio (SMS + WhatsApp automáticos, invisible).
-      try {
-        const res = await sendAlert({
-          data: {
-            signupId: userId,
-            gps: coords ? { lat: coords.lat, lng: coords.lng, accuracy: coords.accuracy } : null,
-          },
-        });
-        const results = (res as any)?.results ?? [];
-        const delivered = results.filter((r: any) => r.status === "sent").length;
-        const total = results.length || phones.length;
-        setSummary({ delivered, total, status: (res as any)?.status ?? "sent" });
-        if (delivered > 0) {
-          toast.success(`Alerta enviada (${delivered}/${total} canales).`);
-        } else if (phones.length === 0) {
-          toast.error("No hay guardianes configurados en tu cuenta.");
-        } else {
-          toast.error("No se pudo enviar la alerta. Reintenta.");
-        }
-      } catch (e) {
-        console.error("sendAlert", e);
-        toast.error("Error al enviar la alerta automática.");
-        setSummary({ delivered: 0, total: phones.length, status: "failed" });
+      const res = await sendAlert({
+        data: {
+          signupId: userId,
+          gps: coords ? { lat: coords.lat, lng: coords.lng, accuracy: coords.accuracy } : null,
+          emergencyCategory: category,
+          graceBeforeSend: true,
+        },
+      });
+      if (emergencySendGenRef.current !== gen) return;
+      if ((res as { status?: string })?.status === "cancelled_by_senior") {
+        toast.message("Alerta cancelada. No se envió a tu familia.");
+        setStage("confirm");
+        return;
+      }
+      const results = (res as any)?.results ?? [];
+      const smsSent = results.filter((r: any) => r.status === "sent" && r.channel === "sms").length;
+      const callSent = results.filter((r: any) => r.status === "sent" && r.channel === "call").length;
+      const guardianTotal = Math.max(1, contacts.filter((c) => c.recibe_sms !== false).length || contacts.length);
+      const status = (res as any)?.status ?? (smsSent > 0 ? "partial" : "failed");
+      setSummary({ delivered: smsSent, total: guardianTotal, status });
+      if (smsSent > 0) {
+        const callNote = callSent > 0 ? " Llamada iniciada." : " WhatsApp y llamada enviados si nadie confirmó.";
+        toast.success(`Alerta enviada (${smsSent} SMS).${callNote}`);
+      } else if (contacts.length === 0) {
+        toast.error("No hay guardianes configurados en tu cuenta.");
+      } else if ((res as any)?.error === "subscription_inactive") {
+        toast.error((res as any)?.message ?? "Tu suscripción no está activa.");
+      } else {
+        const twilioErr = results.find((r: any) => r.channel === "sms" && r.error)?.error;
+        toast.error(twilioErr ? `SMS no enviado: ${String(twilioErr).slice(0, 120)}` : "No se pudo enviar la alerta. Reintenta.");
       }
 
-      setStage("sent");
+      if (emergencySendGenRef.current === gen) setStage("sent");
+    } catch (e) {
+      console.error("sendAlert", e);
+      if (emergencySendGenRef.current === gen) {
+        toast.error("Error al enviar la alerta automática.");
+        setSummary({ delivered: 0, total: Math.max(1, contacts.length), status: "failed" });
+      }
     } finally {
       sendingRef.current = false;
     }
+  };
 
+  const cancelEmergencySending = () => {
+    emergencySendGenRef.current += 1;
+    sendingRef.current = false;
+    if (userId) void cancelAlert({ data: { signupId: userId } });
+    setLocating(false);
+    setSummary(null);
+    setStage("confirm");
+    toast.message("Alerta cancelada. No se avisará a tu familia.");
   };
 
 
@@ -617,26 +618,34 @@ function NativeApp() {
             <div className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center text-white" style={{ background: RED }}>
               <Bell className="w-10 h-10" />
             </div>
-            <h2 className="text-2xl font-bold mb-2">Enviando alerta en {countdown}s</h2>
-            <p className="text-muted-foreground mb-3">Cancela si fue un error.</p>
-            <div className="mb-4 text-sm flex items-center justify-center gap-2 text-muted-foreground">
-              {locating ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Obteniendo ubicación…</>
-              ) : lastCoords ? (
-                <><MapPin className="w-4 h-4 text-green-600" /> Ubicación lista</>
-              ) : (
-                <><MapPin className="w-4 h-4 text-amber-600" /> Sin ubicación aún</>
-              )}
+            <h2 className="text-2xl font-bold mb-2">¿Qué tipo de ayuda necesitas?</h2>
+            <p className="text-muted-foreground mb-4 text-sm">Toca una opción y avisaremos a tu familia al instante.</p>
+            <div className="grid grid-cols-1 gap-3 mb-4">
+              {EMERGENCY_CATEGORIES.map((category) => {
+                const Icon = CATEGORY_ICONS[category.id];
+                return (
+                  <button
+                    key={category.id}
+                    type="button"
+                    disabled={sendingRef.current}
+                    onClick={() => void triggerAlert(category.id)}
+                    className="w-full py-4 px-3 rounded-2xl text-white text-left font-bold shadow-md active:scale-[0.98] transition flex items-center gap-3"
+                    style={{ background: category.color }}
+                  >
+                    <span className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                      <Icon className="w-6 h-6" />
+                    </span>
+                    <span>
+                      <span className="block text-lg leading-tight">{category.label}</span>
+                      <span className="block text-xs font-medium text-white/90 mt-0.5">{category.subtitle}</span>
+                    </span>
+                  </button>
+                );
+              })}
             </div>
-            <div className="flex gap-3">
-              <Button variant="outline" className="flex-1 h-14 text-base" onClick={() => setStage("idle")}>
-                <X className="w-5 h-5 mr-1" /> Cancelar
-              </Button>
-              <Button className="flex-1 h-14 text-base text-white" disabled={sendingRef.current} style={{ background: RED }} onClick={() => triggerAlert()}>
-                Enviar ya
-              </Button>
-
-            </div>
+            <Button variant="outline" className="w-full h-14 text-base" onClick={() => setStage("idle")}>
+              <X className="w-5 h-5 mr-1" /> Cancelar — estoy bien
+            </Button>
           </div>
         </div>
       )}
@@ -645,8 +654,11 @@ function NativeApp() {
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-6">
           <div className="bg-card rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
             <Loader2 className="w-12 h-12 mx-auto mb-3 animate-spin" style={{ color: RED }} />
-            <h2 className="text-xl font-bold">{locating ? "Obteniendo ubicación…" : "Enviando WhatsApp, SMS y llamada…"}</h2>
-            <p className="text-muted-foreground mt-1 text-sm">No cierres la app.</p>
+            <h2 className="text-xl font-bold">{locating ? "Obteniendo ubicación…" : "Enviando alerta completa…"}</h2>
+            <p className="text-muted-foreground mt-1 text-sm">Preparando aviso… Tienes unos segundos para cancelar. Luego SMS, WhatsApp y llamada si nadie confirma.</p>
+            <Button variant="outline" className="w-full h-14 text-base mt-5" onClick={cancelEmergencySending}>
+              <X className="w-5 h-5 mr-1" /> Cancelar — estoy bien
+            </Button>
           </div>
         </div>
       )}
@@ -654,13 +666,24 @@ function NativeApp() {
       {stage === "sent" && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-6">
           <div className="bg-card rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
-            <div className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center text-white" style={{ background: GREEN }}>
-              <CheckCircle2 className="w-10 h-10" />
+            <div
+              className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center text-white"
+              style={{ background: summary && summary.delivered > 0 ? GREEN : RED }}
+            >
+              {summary && summary.delivered > 0 ? (
+                <CheckCircle2 className="w-10 h-10" />
+              ) : (
+                <Bell className="w-10 h-10" />
+              )}
             </div>
-            <h2 className="text-2xl font-bold mb-1">Alerta enviada</h2>
+            <h2 className="text-2xl font-bold mb-1">
+              {summary && summary.delivered > 0 ? "Alerta enviada" : "No se pudo enviar"}
+            </h2>
             {summary && (
               <p className="text-muted-foreground mb-5">
-                {summary.delivered} de {summary.total} envíos completados.
+                {summary.delivered > 0
+                  ? `${summary.delivered} de ${summary.total} SMS enviados. WhatsApp y llamada se enviaron en la misma alerta si nadie confirmó.`
+                  : `0 de ${summary.total} SMS enviados. Revisa guardianes y conexión, o llama directamente.`}
               </p>
             )}
             <Button className="w-full h-14 text-base" onClick={() => setStage("idle")}>Cerrar</Button>

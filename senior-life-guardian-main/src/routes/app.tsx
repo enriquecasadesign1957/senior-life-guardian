@@ -6,6 +6,7 @@ import {
   Shield, MapPin, Users, Battery, Wifi, Bell, CheckCircle2,
   X, Home, Settings, Heart, MessageCircle, Navigation, Clock,
   Plus, Pencil, Trash2, KeyRound, Loader2, GraduationCap, Activity,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -17,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import {
   getAppConfiguration, listFamily, addFamily, updateFamily, deleteFamily, verifyPin, setUserPin,
 } from "@/lib/family.functions";
-import { sendEmergencyAlert } from "@/lib/emergency-alert.functions";
+import { sendEmergencyAlert, cancelEmergencyAlert } from "@/lib/emergency-alert.functions";
 import {
   isTrainingDone,
   markTrainingDone,
@@ -39,6 +40,12 @@ import {
 } from "@/lib/family-actions";
 import { savePinErrorMessage, saveUserPinWithFallback, verifyPinWithFallback } from "@/lib/pin-actions";
 import { FallDetectionOverlay, useFallDetection } from "@/hooks/useFallDetection";
+import {
+  EMERGENCY_CATEGORIES,
+  emergencyCategoryLabel,
+  type EmergencyCategory,
+} from "@/lib/emergency-category";
+import { MAX_GUARDIANS } from "@/lib/guardian-limits";
 
 const appSearchSchema = z.object({
   entrenamiento: z.enum(["1"]).optional(),
@@ -84,6 +91,12 @@ type TrialUser = {
   payment_status?: string | null;
 };
 
+const CATEGORY_ICONS = {
+  salud: Heart,
+  accidente: AlertTriangle,
+  delincuencia: Shield,
+} as const;
+
 const PALETTE = ["#0ea5e9", "#a855f7", "#f59e0b", "#16a34a", "#dc2626"];
 const colorFor = (i: number) => PALETTE[i % PALETTE.length];
 const initialOf = (n: string) => (n.trim()[0] ?? "?").toUpperCase();
@@ -97,7 +110,7 @@ async function hashPin(pin: string, salt: string) {
 function AppHome() {
   const routeSearch = Route.useSearch();
   const [stage, setStage] = useState<Stage>("idle");
-  const [countdown, setCountdown] = useState(5);
+  const [emergencyCategory, setEmergencyCategory] = useState<EmergencyCategory | null>(null);
   const [deliveredTo, setDeliveredTo] = useState<number>(0);
 
   const [userId, setUserId] = useState<string | null>(null);
@@ -120,6 +133,7 @@ function AppHome() {
   const [trainingDone, setTrainingDone] = useState(false);
   const isTrainingRunRef = useRef(false);
   const [trainingRunActive, setTrainingRunActive] = useState(false);
+  const emergencySendGenRef = useRef(0);
   const [clientReady, setClientReady] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
   const [loginBusy, setLoginBusy] = useState(false);
@@ -228,23 +242,11 @@ function AppHome() {
   }, [configReady, userId, contacts.length, list]);
 
   const familyCount = contacts.length;
-
-  // Countdown for auto-confirm (NO PIN — accesible bajo estrés)
-  useEffect(() => {
-    if (stage !== "confirm") return;
-    setCountdown(5);
-    if ("vibrate" in navigator) navigator.vibrate?.(80);
-    const id = setInterval(() => {
-      setCountdown((c) => {
-        if ("vibrate" in navigator) navigator.vibrate?.(30);
-        if (c <= 1) { clearInterval(id); setStage("sending"); return 0; }
-        return c - 1;
-      });
-    }, 1000);
-    return () => clearInterval(id);
-  }, [stage]);
+  const alertContacts = useMemo(() => contacts.slice(0, MAX_GUARDIANS), [contacts]);
+  const alertFamilyCount = alertContacts.length;
 
   const sendAlert = useServerFn(sendEmergencyAlert);
+  const cancelAlert = useServerFn(cancelEmergencyAlert);
 
   const fetchFallGps = useCallback(async () => {
     if (!("geolocation" in navigator)) return null;
@@ -271,7 +273,9 @@ function AppHome() {
   const dispatchFallEmergency = useCallback(
     async (gps: { lat: number; lng: number; accuracy?: number } | null) => {
       if (!userId) return;
-      const res: any = await sendAlert({ data: { signupId: userId, gps } });
+      const res: any = await sendAlert({
+        data: { signupId: userId, gps, emergencyCategory: "accidente" },
+      });
       const sent = (res?.results ?? []).filter((r: any) => r.status === "sent").length;
       if (sent > 0) toast.success("Alerta por caída enviada a tu familia.");
       else if (res?.status === "no_recipients") toast.error("No hay familiares configurados.");
@@ -322,6 +326,7 @@ function AppHome() {
       isTrainingRunRef.current = true;
       setTrainingRunActive(true);
       if ("vibrate" in navigator) navigator.vibrate?.(60);
+      setEmergencyCategory(null);
       setStage("confirm");
       return;
     }
@@ -332,27 +337,56 @@ function AppHome() {
     isTrainingRunRef.current = false;
     setTrainingRunActive(false);
     if ("vibrate" in navigator) navigator.vibrate?.(120);
+    setEmergencyCategory(null);
     setStage("confirm");
   };
 
+  const chooseEmergencyCategory = (category: EmergencyCategory) => {
+    if ("vibrate" in navigator) navigator.vibrate?.(80);
+    setEmergencyCategory(category);
+    setStage("sending");
+  };
+
+  const cancelEmergencySending = () => {
+    emergencySendGenRef.current += 1;
+    if (userId) void cancelAlert({ data: { signupId: userId } });
+    setDeliveredTo(0);
+    setAlertSummary(null);
+    setEmergencyCategory(null);
+    setStage("confirm");
+    toast.message("Alerta cancelada. No se avisará a tu familia.");
+  };
+
+  const cancelEmergencyFlow = () => {
+    emergencySendGenRef.current += 1;
+    if (userId) void cancelAlert({ data: { signupId: userId } });
+    setEmergencyCategory(null);
+    setStage("idle");
+  };
+
   useEffect(() => {
-    if (stage !== "sending") return;
+    if (stage !== "sending" || !emergencyCategory) return;
+    const gen = emergencySendGenRef.current;
     let cancelled = false;
     setDeliveredTo(0);
     setAlertSummary(null);
     if ("vibrate" in navigator) navigator.vibrate?.([100, 60, 100]);
 
     // Progreso visual mientras se ejecuta el envío real
-    const total = Math.max(1, familyCount);
+    const total = Math.max(1, alertFamilyCount);
     const ticks: ReturnType<typeof setTimeout>[] = [];
     for (let i = 0; i < total; i++) {
-      ticks.push(setTimeout(() => setDeliveredTo((d) => Math.min(total, d + 1)), 400 + i * 350));
+      ticks.push(setTimeout(() => {
+        if (emergencySendGenRef.current !== gen) return;
+        setDeliveredTo((d) => Math.min(total, d + 1));
+      }, 400 + i * 350));
     }
 
     (async () => {
+      if (emergencySendGenRef.current !== gen) return;
       if (!userId) {
         toast.error("Sesión no encontrada. No pudimos enviar la alerta.");
-        if (!cancelled) setStage("sent");
+        if (!cancelled && emergencySendGenRef.current === gen) setStage("sent");
         return;
       }
 
@@ -367,16 +401,33 @@ function AppHome() {
         );
       });
 
+      if (emergencySendGenRef.current !== gen) return;
+
       try {
         const trainingMode = isTrainingRunRef.current;
         const res: any = await sendAlert({
-          data: { signupId: userId, gps, trainingMode },
+          data: {
+            signupId: userId,
+            gps,
+            trainingMode,
+            emergencyCategory,
+            graceBeforeSend: !trainingMode,
+          },
         });
-        if (cancelled) return;
+        if (cancelled || emergencySendGenRef.current !== gen) return;
+        if (res?.status === "cancelled_by_senior") {
+          toast.message("Alerta cancelada. No se envió a tu familia.");
+          if (emergencySendGenRef.current === gen) setStage("confirm");
+          return;
+        }
         const sent = (res?.results ?? []).filter((r: any) => r.status === "sent").length;
+        const smsSent = (res?.results ?? []).filter(
+          (r: any) => r.status === "sent" && r.channel === "sms",
+        ).length;
+        const smsGuardians = Math.max(1, alertFamilyCount);
         setAlertSummary({
-          delivered: sent,
-          total: res?.results?.length ?? 0,
+          delivered: smsSent,
+          total: smsGuardians,
           status: res?.status ?? "unknown",
           training: !!res?.training || trainingMode,
         });
@@ -386,23 +437,28 @@ function AppHome() {
           isTrainingRunRef.current = false;
           setTrainingRunActive(false);
           toast.success("Entrenamiento completado. Sin llamadas ni mensajes reales.");
-        } else if (res?.status === "delivered") toast.success("Alerta enviada a tu familia.");
-        else if (res?.status === "partial") toast.warning("Alerta enviada parcialmente.");
-        else if (res?.status === "no_recipients") toast.error("No hay familiares configurados.");
+        } else if (res?.status === "delivered" || (res?.status === "partial" && smsSent > 0)) {
+          toast.success("Alerta enviada a tu familia.");
+        } else if (res?.status === "partial") toast.warning("Alerta enviada parcialmente.");
+        else if (res?.status === "no_recipients") toast.error("No hay guardianes configurados. Agrega uno en Administrar familiares.");
+        else if ((res?.results?.length ?? 0) === 0) toast.error("No se pudo contactar a ningún guardián. Revisa que tengan teléfono válido.");
         else toast.error("No pudimos enviar la alerta. Llama directamente.");
       } catch (e) {
         console.error(e);
-        if (!cancelled) toast.error("Error enviando la alerta.");
+        if (!cancelled && emergencySendGenRef.current === gen) toast.error("Error enviando la alerta.");
       } finally {
-        if (!cancelled) {
+        if (!cancelled && emergencySendGenRef.current === gen) {
           setDeliveredTo(total);
           setStage("sent");
         }
       }
     })();
 
-    return () => { cancelled = true; ticks.forEach(clearTimeout); };
-  }, [stage, familyCount, userId, sendAlert]);
+    return () => {
+      cancelled = true;
+      ticks.forEach(clearTimeout);
+    };
+  }, [stage, alertFamilyCount, userId, sendAlert, cancelAlert, emergencyCategory]);
 
   const requestManage = () => {
     if (!userId && !readStoredSignupId()) {
@@ -717,8 +773,8 @@ function AppHome() {
           <p className="mt-4 text-center text-sm text-muted-foreground max-w-[18rem]">
             {loadingContacts || !configReady ? (
               <>Cargando tu red familiar…</>
-            ) : familyCount > 0 ? (
-              <>Avisaremos a <strong className="text-foreground">{familyCount} familiar{familyCount === 1 ? "" : "es"}</strong> con tu ubicación exacta.</>
+            ) : alertFamilyCount > 0 ? (
+              <>Avisaremos a <strong className="text-foreground">{alertFamilyCount} guardián{alertFamilyCount === 1 ? "" : "es"}</strong> (SMS, WhatsApp y llamada escalonada).</>
             ) : (
               <>Agrega un familiar en <strong className="text-foreground">Tu red familiar</strong> para que reciba tus alertas.</>
             )}
@@ -880,60 +936,55 @@ function AppHome() {
           <div className="relative bg-card rounded-3xl shadow-2xl w-full max-w-md p-7 text-center">
             {stage === "confirm" && (
               <>
-                <div className="relative w-24 h-24 mx-auto mb-5">
+                <div className="relative w-20 h-20 mx-auto mb-5">
                   <span className="absolute inset-0 rounded-full animate-ping" style={{ background: "rgba(220,38,38,0.25)" }} aria-hidden="true" />
-                  <div className="relative w-24 h-24 rounded-full flex items-center justify-center text-white shadow-lg" style={{ background: RED }}>
-                    <Bell className="w-12 h-12" aria-hidden="true" />
+                  <div className="relative w-20 h-20 rounded-full flex items-center justify-center text-white shadow-lg" style={{ background: RED }}>
+                    <Bell className="w-10 h-10" aria-hidden="true" />
                   </div>
                 </div>
-                <h2 id="emergency-dialog-title" className="text-3xl font-bold text-foreground tracking-tight">
-                  ¿Necesitas ayuda?
+                <h2 id="emergency-dialog-title" className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
+                  ¿Qué tipo de ayuda necesitas?
                 </h2>
-                <p className="mt-3 text-lg text-muted-foreground">
+                <p className="mt-3 text-base md:text-lg text-muted-foreground">
                   {trainingRunActive
-                    ? "Simulación: no se contactará a nadie por teléfono ni WhatsApp."
-                    : "Avisaremos a tu familia por WhatsApp con tu ubicación."}
+                    ? "Simulación: elige un tipo. No se contactará a nadie."
+                    : "Toca una opción y avisaremos a tu familia al instante."}
                 </p>
 
-                <div className="mt-6 flex items-center justify-center" aria-live="polite" aria-atomic="true">
-                  <div className="relative w-28 h-28">
-                    <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                      <circle cx="50" cy="50" r="44" fill="none" stroke="hsl(var(--muted))" strokeWidth="8" />
-                      <circle
-                        cx="50" cy="50" r="44" fill="none" stroke={RED} strokeWidth="8" strokeLinecap="round"
-                        strokeDasharray={2 * Math.PI * 44}
-                        strokeDashoffset={2 * Math.PI * 44 * (1 - countdown / 5)}
-                        style={{ transition: "stroke-dashoffset 1s linear" }}
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-4xl font-bold text-foreground tabular-nums">{countdown}</span>
-                      <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">segundos</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-7 grid grid-cols-1 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setStage("sending")}
-                    className="w-full py-5 rounded-2xl text-white text-xl font-bold shadow-lg active:scale-[0.98] transition focus-visible:ring-4 focus-visible:ring-red-300"
-                    style={{ background: RED }}
-                  >
-                    SÍ, NECESITO AYUDA
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setStage("idle")}
-                    className="w-full py-5 rounded-2xl bg-muted text-foreground text-xl font-bold active:scale-[0.98] transition focus-visible:ring-4 focus-visible:ring-slate-300"
-                  >
-                    Estoy bien, cancelar
-                  </button>
+                <div className="mt-6 grid grid-cols-1 gap-3">
+                  {EMERGENCY_CATEGORIES.map((category) => {
+                    const Icon = CATEGORY_ICONS[category.id];
+                    return (
+                      <button
+                        key={category.id}
+                        type="button"
+                        onClick={() => chooseEmergencyCategory(category.id)}
+                        className="w-full py-5 px-4 rounded-2xl text-white text-left font-bold shadow-lg active:scale-[0.98] transition focus-visible:ring-4 focus-visible:ring-red-300 flex items-center gap-4"
+                        style={{ background: category.color }}
+                      >
+                        <span className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+                          <Icon className="w-8 h-8" aria-hidden="true" />
+                        </span>
+                        <span>
+                          <span className="block text-xl leading-tight">{category.label}</span>
+                          <span className="block text-sm font-medium text-white/90 mt-1">{category.subtitle}</span>
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
 
                 <button
                   type="button"
-                  onClick={() => setStage("idle")}
+                  onClick={cancelEmergencyFlow}
+                  className="mt-5 w-full py-4 rounded-2xl bg-muted text-foreground text-lg font-bold active:scale-[0.98] transition focus-visible:ring-4 focus-visible:ring-slate-300"
+                >
+                  Cancelar — estoy bien
+                </button>
+
+                <button
+                  type="button"
+                  onClick={cancelEmergencyFlow}
                   aria-label="Cerrar"
                   className="absolute top-4 right-4 w-11 h-11 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition focus-visible:ring-2 focus-visible:ring-foreground"
                 >
@@ -950,10 +1001,10 @@ function AppHome() {
                 <h2 id="emergency-dialog-title" className="text-2xl font-bold text-foreground tracking-tight">
                   Avisando a tu familia
                 </h2>
-                <p className="mt-2 text-lg text-muted-foreground">Enviando WhatsApp con tu ubicación…</p>
+                <p className="mt-2 text-lg text-muted-foreground">Preparando aviso… Tienes unos segundos para cancelar si fue un error. Luego: SMS, WhatsApp y llamada si nadie confirma.</p>
 
                 <ul className="mt-6 space-y-2 text-left" aria-live="polite" aria-atomic="false">
-                  {(contacts.length > 0 ? contacts : [{ id: "x", nombre: "Tu familiar", parentesco: "—", telefono: "" }]).map((f, i) => {
+                  {(alertContacts.length > 0 ? alertContacts : [{ id: "x", nombre: "Tu guardián", parentesco: "—", telefono: "" }]).map((f, i) => {
                     const done = i < deliveredTo;
                     return (
                       <li
@@ -983,15 +1034,39 @@ function AppHome() {
                     );
                   })}
                 </ul>
+
+                <button
+                  type="button"
+                  onClick={cancelEmergencySending}
+                  className="mt-6 w-full py-4 rounded-2xl bg-muted text-foreground text-lg font-bold active:scale-[0.98] transition focus-visible:ring-4 focus-visible:ring-slate-300"
+                >
+                  Cancelar — estoy bien
+                </button>
               </>
             )}
 
             {stage === "sent" && (
               <>
                 <div className="relative w-24 h-24 mx-auto mb-5">
-                  <span className="absolute inset-0 rounded-full animate-ping" style={{ background: "rgba(22,163,74,0.30)" }} aria-hidden="true" />
-                  <div className="relative w-24 h-24 rounded-full flex items-center justify-center text-white shadow-lg" style={{ background: GREEN }}>
-                    <CheckCircle2 className="w-12 h-12" aria-hidden="true" />
+                  <span
+                    className="absolute inset-0 rounded-full animate-ping"
+                    style={{
+                      background:
+                        alertSummary && alertSummary.delivered > 0
+                          ? "rgba(22,163,74,0.30)"
+                          : "rgba(220,38,38,0.25)",
+                    }}
+                    aria-hidden="true"
+                  />
+                  <div
+                    className="relative w-24 h-24 rounded-full flex items-center justify-center text-white shadow-lg"
+                    style={{ background: alertSummary && alertSummary.delivered > 0 ? GREEN : RED }}
+                  >
+                    {alertSummary && alertSummary.delivered > 0 ? (
+                      <CheckCircle2 className="w-12 h-12" aria-hidden="true" />
+                    ) : (
+                      <Bell className="w-12 h-12" aria-hidden="true" />
+                    )}
                   </div>
                 </div>
                 <h2 id="emergency-dialog-title" className="text-3xl font-bold text-foreground tracking-tight">
@@ -999,14 +1074,18 @@ function AppHome() {
                     ? "Entrenamiento completado"
                     : alertSummary && alertSummary.delivered > 0
                       ? "Ayuda en camino"
-                      : "Alerta procesada"}
+                      : "No se pudo enviar el SMS"}
                 </h2>
                 <p className="mt-3 text-lg text-muted-foreground">
                   {alertSummary?.training
-                    ? "Simulaste el flujo completo. En una emergencia real, tu familia recibirá WhatsApp, SMS y llamada."
-                    : alertSummary
-                      ? `WhatsApp, SMS y llamada: ${alertSummary.delivered} de ${alertSummary.total} envíos correctos.`
-                      : "Tu familia recibió la alerta con tu ubicación."}
+                    ? "Simulaste el flujo completo. En una emergencia real: SMS al instante, WhatsApp a los 15 s y llamada a los 30 s si nadie confirma."
+                    : alertSummary?.status === "no_recipients" || (alertSummary && alertSummary.total === 0)
+                      ? "No encontramos guardianes para avisar. Ve a Administrar familiares y agrega al menos uno con teléfono +56 9…"
+                      : alertSummary && alertSummary.delivered > 0
+                        ? `${alertSummary.delivered} de ${alertSummary.total} SMS enviados. WhatsApp y llamada se enviaron si nadie confirmó.`
+                        : alertSummary
+                          ? `0 de ${alertSummary.total} SMS enviados. Revisa guardianes o llama directamente.`
+                          : "Tus guardianes recibieron la alerta con tu ubicación."}
                 </p>
 
                 <div className="mt-5 rounded-2xl bg-muted p-4 text-left">
@@ -1019,7 +1098,7 @@ function AppHome() {
 
                 <button
                   type="button"
-                  onClick={() => setStage("idle")}
+                  onClick={cancelEmergencyFlow}
                   className="mt-6 w-full py-5 rounded-2xl text-white text-xl font-bold shadow-lg active:scale-[0.98] transition focus-visible:ring-4 focus-visible:ring-slate-300"
                   style={{ background: DEEP }}
                 >
@@ -1293,7 +1372,7 @@ function ManageFamilyDialog({
         setContacts(contacts.map(c => c.id === editingId ? (res.contact as Contact) : c));
         toast.success("Familiar actualizado");
       } else {
-        if (contacts.length >= 5) { toast.error("Máximo 5 familiares."); return; }
+        if (contacts.length >= MAX_GUARDIANS) { toast.error(`Máximo ${MAX_GUARDIANS} guardianes.`); return; }
         const res = await addFamilyWithFallback(add, signupId, form);
         if (!res.contact) {
           toast.error(familyErrorMessage(res.error));

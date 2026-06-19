@@ -108,8 +108,8 @@ export function twilioWhatsappCommercialFrom(): string {
 
 /**
  * E.164 sin prefijo + para enlaces wa.me comerciales (solo UI).
- * Temporal: celular personal — Meta no abre wa.me con red fija Twilio +56229147733.
- * Backend/alertas siguen en TWILIO_WHATSAPP_FROM (whatsapp:+56229147733).
+ * También origen de WhatsApp de emergencia (ver emergency-whatsapp-send.ts).
+ * SMS/voz siguen en +56229147733; la red fija no entrega WA proactivo en Meta.
  */
 export const SENIOR_SAFE_WHATSAPP_COMMERCIAL_E164 = "56971404580";
 

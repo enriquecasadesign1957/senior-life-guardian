@@ -67,7 +67,29 @@ function normalizeAppBaseUrl(raw: string | undefined): string | null {
   return trimmed;
 }
 
+function normalizeLocalAppUrl(raw: string | undefined): string | null {
+  const trimmed = (raw ?? "").trim().replace(/\/$/, "");
+  if (!trimmed) return null;
+  if (/^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?$/i.test(trimmed)) {
+    return trimmed;
+  }
+  return null;
+}
+
+/** Dev local: wrangler.jsonc fija producción; forzar integración Transbank. */
+export function isTransbankLocalValidation(): boolean {
+  if (import.meta.env?.DEV) return true;
+  return (
+    process.env.TRANSBANK_FORCE_SANDBOX === "1" ||
+    Boolean(normalizeLocalAppUrl(process.env.LOCAL_PUBLIC_APP_URL))
+  );
+}
+
 export function resolvePublicAppUrl(): string {
+  const localOverride = normalizeLocalAppUrl(process.env.LOCAL_PUBLIC_APP_URL);
+  if (localOverride) return localOverride;
+  if (import.meta.env?.DEV) return "http://localhost:8082";
+
   const fromEnv =
     normalizeAppBaseUrl(process.env.PUBLIC_APP_URL) ||
     normalizeAppBaseUrl(process.env.WEBPAY_RETURN_URL) ||
@@ -84,6 +106,7 @@ export function buildWebpayReturnUrl(): string {
 }
 
 function parseTransbankEnvironment(): TransbankEnvironment {
+  if (isTransbankLocalValidation()) return "sandbox";
   const raw = (process.env.TRANSBANK_ENVIRONMENT ?? "sandbox").trim().toLowerCase();
   if (raw === "production" || raw === "prod") return "production";
   return "sandbox";
@@ -92,15 +115,18 @@ function parseTransbankEnvironment(): TransbankEnvironment {
 export function getTransbankConfig(): TransbankConfig {
   const environment = parseTransbankEnvironment();
   const isProd = environment === "production";
+  const localValidation = isTransbankLocalValidation();
   return {
     environment,
     apiHost: isProd ? PRODUCTION_API_HOST : SANDBOX_API_HOST,
-    commerceCode:
-      process.env.TRANSBANK_CC?.trim() ||
-      (isProd ? "" : TRANSBANK_SANDBOX_COMMERCE_CODE),
-    apiKey:
-      process.env.TRANSBANK_API_KEY?.trim() ||
-      (isProd ? "" : TRANSBANK_SANDBOX_API_KEY),
+    commerceCode: localValidation
+      ? TRANSBANK_SANDBOX_COMMERCE_CODE
+      : process.env.TRANSBANK_CC?.trim() ||
+        (isProd ? "" : TRANSBANK_SANDBOX_COMMERCE_CODE),
+    apiKey: localValidation
+      ? TRANSBANK_SANDBOX_API_KEY
+      : process.env.TRANSBANK_API_KEY?.trim() ||
+        (isProd ? "" : TRANSBANK_SANDBOX_API_KEY),
   };
 }
 

@@ -1,13 +1,16 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback, useRef } from "react";
 import { z } from "zod";
 import {
   Shield, Lock, CreditCard, Clock, CheckCircle2, ArrowRight,
-  Bell, MapPin, MessageCircle, Users, Heart, X, Loader2, AlertCircle,
+  Bell, MapPin, MessageCircle, Users, Heart, X, Loader2, AlertCircle, Tag,
 } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { createPurchaseSignup } from "@/lib/purchase-signup.functions";
+import { validateDiscountViaApi } from "@/lib/validate-discount-api";
+import { initOneclickCheckout } from "@/lib/oneclick.functions";
+import { redirectToOneclickInscription } from "@/lib/oneclick-redirect";
 import { initWebpayTransaction, mockApproveWebpay } from "@/lib/webpay.functions";
 import { redirectToWebpayPlus } from "@/lib/webpay-redirect";
 import { markRequiresPwaInstall, POST_PAYMENT_INSTALL_PATH } from "@/lib/post-payment";
@@ -22,6 +25,18 @@ import {
 } from "@/lib/plans";
 import { WhatsAppFloat } from "@/components/whatsapp-float";
 import { toast } from "sonner";
+import { CANCELLATION_POLICY_BULLETS } from "@/lib/subscription-cancellation-policy";
+import {
+  RECURRING_BILLING_CONSENT_CHECKBOX_LABEL,
+  RECURRING_BILLING_DISCLOSURE_BULLETS,
+  RECURRING_BILLING_DISCLOSURE_FOOTER,
+  RECURRING_BILLING_SUPPORT_EMAIL,
+  RECURRING_BILLING_TERMS_LINK_LABEL,
+  SENIOR_SAFE_TERMS_CANCELLATION_URL,
+} from "@/lib/recurring-billing-consent";
+import { Checkbox } from "@/components/ui/checkbox";
+import { normalizeDiscountCodeInput, type PublicDiscountPreview } from "@/lib/discount-codes";
+import { getServerErrorMessage } from "@/lib/server-error-message";
 
 const searchSchema = z.object({
   mode: z
@@ -31,6 +46,7 @@ const searchSchema = z.object({
     .transform((m) => (m === "trial" ? "contratar" : m)),
   plan: planKeySchema.optional().default(PLAN_KEY).transform(normalizePlanKey),
   periodo: periodoSchema.optional().default("mensual"),
+  codigo: z.string().trim().max(64).optional(),
 });
 
 export const Route = createFileRoute("/checkout")({
@@ -38,7 +54,7 @@ export const Route = createFileRoute("/checkout")({
   head: () => ({
     meta: [
       { title: "Checkout — Senior Safe" },
-      { name: "description", content: "Contrata Senior Safe con pago seguro Webpay Plus. Activación inmediata tras confirmar el pago." },
+      { name: "description", content: "Contrata Senior Safe con pago seguro Oneclick (Transbank). Activación inmediata tras confirmar el pago." },
     ],
   }),
   component: CheckoutPage,
@@ -65,6 +81,7 @@ function CheckoutPage() {
   const search = useSearch({ from: "/checkout" });
   const createPurchase = useServerFn(createPurchaseSignup);
   const initWebpay = useServerFn(initWebpayTransaction);
+  const initOneclick = useServerFn(initOneclickCheckout);
   const mockApprove = useServerFn(mockApproveWebpay);
 
   const [yearly, setYearly] = useState(search.periodo === "anual");
@@ -74,10 +91,59 @@ function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
   const [mockLoading, setMockLoading] = useState(false);
+  const [discountInput, setDiscountInput] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState<PublicDiscountPreview | null>(null);
+  const [discountError, setDiscountError] = useState<string | null>(null);
+  const [discountLoading, setDiscountLoading] = useState(false);
+  const [recurringConsent, setRecurringConsent] = useState(false);
+  const discountRequestRef = useRef(0);
 
-  const price = yearly ? PLAN.yearly : PLAN.monthly;
+  const listPrice = yearly ? PLAN.yearly : PLAN.monthly;
+  const price = appliedDiscount?.finalPrice ?? listPrice;
   const savings = useMemo(() => annualSavingsClp(), []);
   const planKey = PLAN_KEY;
+  const periodo = yearly ? "anual" : "mensual";
+
+  const applyDiscountCode = useCallback(async (
+    rawCode?: string,
+    periodoOverride?: "mensual" | "anual",
+  ) => {
+    const code = normalizeDiscountCodeInput(rawCode ?? discountInput);
+    if (!code) {
+      setAppliedDiscount(null);
+      setDiscountError(null);
+      return;
+    }
+
+    const activePeriodo = periodoOverride ?? periodo;
+    const requestId = ++discountRequestRef.current;
+
+    setDiscountLoading(true);
+    setDiscountError(null);
+    try {
+      const discount = await validateDiscountViaApi(code, planKey, activePeriodo);
+      if (requestId !== discountRequestRef.current) return;
+
+      setAppliedDiscount(discount);
+      setDiscountInput(discount.code);
+      toast.success(`Convenio aplicado: ${discount.percentOff}% de descuento`);
+    } catch (err) {
+      if (requestId !== discountRequestRef.current) return;
+      setAppliedDiscount(null);
+      setDiscountError(getServerErrorMessage(err, "No pudimos validar el código."));
+    } finally {
+      if (requestId === discountRequestRef.current) {
+        setDiscountLoading(false);
+      }
+    }
+  }, [discountInput, periodo, planKey]);
+
+  const setBillingPeriod = (nextYearly: boolean) => {
+    setYearly(nextYearly);
+    if (appliedDiscount) {
+      void applyDiscountCode(appliedDiscount.code, nextYearly ? "anual" : "mensual");
+    }
+  };
 
   const handleMockApprove = async () => {
     setSubmitError(null);
@@ -91,7 +157,6 @@ function CheckoutPage() {
     }
     setErrors({});
     setMockLoading(true);
-    const periodo = yearly ? "anual" : "mensual";
     try {
       const { signup } = await createPurchase({ data: {
         nombre: r.data.name,
@@ -100,6 +165,8 @@ function CheckoutPage() {
         direccion: r.data.address || null,
         plan: planKey,
         periodo,
+        discountCode: appliedDiscount?.code ?? "",
+        recurringBillingConsent: recurringConsent,
       } });
 
       const mock = await mockApprove({ data: { signupId: signup.id } });
@@ -141,7 +208,6 @@ function CheckoutPage() {
     setErrors({});
     setLoading(true);
 
-    const periodo = yearly ? "anual" : "mensual";
     const baseData = {
       nombre: r.data.name,
       email: r.data.email.toLowerCase(),
@@ -149,6 +215,8 @@ function CheckoutPage() {
       direccion: r.data.address || null,
       plan: planKey,
       periodo,
+      discountCode: appliedDiscount?.code ?? "",
+      recurringBillingConsent: recurringConsent,
     };
 
     try {
@@ -162,6 +230,39 @@ function CheckoutPage() {
         sessionStorage.setItem("seniorsafe_user", JSON.stringify(userPayload));
         localStorage.setItem("seniorsafe_user_backup", JSON.stringify(userPayload));
       } catch { /* ignore */ }
+
+      let useOneclick = false;
+      try {
+        const oc = await initOneclick({
+          data: {
+            signupId: signup.id,
+            plan: planKey,
+            periodo: periodo as "mensual" | "anual",
+          },
+        });
+        useOneclick = true;
+        const tbkToken = oc.tbkToken ?? oc.token;
+        if (!oc.url || !tbkToken) {
+          throw new Error("Transbank no devolvió la URL o el token de inscripción Oneclick.");
+        }
+        setLoading(false);
+        setRedirecting(true);
+        toast.message("Redirigiendo a Oneclick…", {
+          description: "Inscribirás tu tarjeta en Transbank para pagos recurrentes.",
+        });
+        redirectToOneclickInscription(tbkToken, oc.url);
+        return;
+      } catch (oneclickErr) {
+        if (import.meta.env.DEV) {
+          throw oneclickErr;
+        }
+        const msg = (oneclickErr as Error)?.message ?? "";
+        if (!msg.includes("Oneclick Mall no está habilitado")) {
+          throw oneclickErr;
+        }
+      }
+
+      if (useOneclick) return;
 
       const wp = await initWebpay({
         data: {
@@ -189,7 +290,7 @@ function CheckoutPage() {
       setSubmitError(
         msg
           ? msg
-          : "No pudimos iniciar el pago con Webpay. Intenta nuevamente o contáctanos por WhatsApp.",
+          : "No pudimos iniciar el pago con Oneclick. Intenta nuevamente o contáctanos por WhatsApp.",
       );
       setLoading(false);
       setRedirecting(false);
@@ -203,13 +304,13 @@ function CheckoutPage() {
         <div className="max-w-6xl mx-auto px-6 py-12 md:py-16">
           <div className="text-center mb-8 max-w-2xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold" style={{ background: "color-mix(in oklab, var(--brand-petrol) 12%, white)", color: DEEP }}>
-              <Lock className="w-4 h-4" /> Pago seguro Webpay Plus
+              <Lock className="w-4 h-4" /> Pago seguro Oneclick · Transbank
             </div>
             <h1 className="mt-5 text-3xl md:text-5xl font-bold tracking-tight text-foreground leading-[1.1]">
               Contrata Senior Safe
             </h1>
             <p className="mt-4 text-base md:text-lg text-muted-foreground">
-              Pago obligatorio con Webpay Plus. Tras aprobar, entras a la app con modo entrenamiento (sin alertas reales).
+              Pago con Oneclick (Transbank). Tras aprobar, entras a la app con modo entrenamiento (sin alertas reales).
             </p>
           </div>
 
@@ -232,10 +333,10 @@ function CheckoutPage() {
                 <div>
                   <label className="text-sm font-bold text-foreground mb-3 block">2. Período de facturación</label>
                   <div className="inline-flex items-center bg-muted rounded-full p-1.5 w-full sm:w-auto">
-                    <button type="button" onClick={() => setYearly(false)} className={`flex-1 sm:flex-none px-5 py-2 rounded-full text-sm font-semibold transition ${!yearly ? "text-white" : "text-muted-foreground"}`} style={!yearly ? { background: DEEP } : undefined}>
+                    <button type="button" onClick={() => setBillingPeriod(false)} className={`flex-1 sm:flex-none px-5 py-2 rounded-full text-sm font-semibold transition ${!yearly ? "text-white" : "text-muted-foreground"}`} style={!yearly ? { background: DEEP } : undefined}>
                       Mensual · ${fmt(PLAN.monthly)}
                     </button>
-                    <button type="button" onClick={() => setYearly(true)} className={`flex-1 sm:flex-none px-5 py-2 rounded-full text-sm font-semibold transition flex items-center justify-center gap-2 ${yearly ? "text-white" : "text-muted-foreground"}`} style={yearly ? { background: DEEP } : undefined}>
+                    <button type="button" onClick={() => setBillingPeriod(true)} className={`flex-1 sm:flex-none px-5 py-2 rounded-full text-sm font-semibold transition flex items-center justify-center gap-2 ${yearly ? "text-white" : "text-muted-foreground"}`} style={yearly ? { background: DEEP } : undefined}>
                       Anual · ${fmt(PLAN.yearly)}
                       <span className="px-2 py-0.5 rounded-full text-white text-[10px] font-bold" style={{ background: GREEN }}>{PLAN.yearlySavingsLabel.toUpperCase()}</span>
                     </button>
@@ -250,6 +351,123 @@ function CheckoutPage() {
                     <Field label="Teléfono / WhatsApp" name="phone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} error={errors.phone} placeholder="+56 9 ..." />
                     <Field label="Dirección (opcional)" name="address" value={form.address} onChange={(v) => setForm({ ...form, address: v })} error={errors.address} placeholder="Calle, comuna, ciudad" />
                   </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-bold text-foreground mb-3 block">4. Código de convenio municipal (opcional)</label>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Si tienes Tarjeta Vecino u otro convenio municipal, ingresa tu código y pulsa Aplicar.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <input
+                      type="text"
+                      value={discountInput}
+                      onChange={(e) => {
+                        setDiscountInput(e.target.value);
+                        if (discountError) setDiscountError(null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          void applyDiscountCode();
+                        }
+                      }}
+                      placeholder="Código de convenio"
+                      className={`flex-1 px-4 py-3 rounded-xl border bg-background text-foreground text-base outline-none transition focus:border-foreground/40 uppercase ${discountError ? "border-destructive" : "border-border"}`}
+                      autoComplete="off"
+                      spellCheck={false}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => void applyDiscountCode()}
+                      disabled={!normalizeDiscountCodeInput(discountInput)}
+                      aria-busy={discountLoading}
+                      className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border-2 font-semibold text-sm disabled:opacity-60 shrink-0 min-w-[120px]"
+                      style={{ borderColor: PETROL, color: DEEP, background: "color-mix(in oklab, var(--brand-petrol) 6%, white)" }}
+                    >
+                      {discountLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Tag className="w-4 h-4" />}
+                      {discountLoading ? "Validando…" : "Aplicar"}
+                    </button>
+                  </div>
+                  {discountError && <p className="mt-2 text-xs text-destructive">{discountError}</p>}
+                  {appliedDiscount && (
+                    <div
+                      className="mt-3 p-4 rounded-2xl border text-sm"
+                      style={{
+                        borderColor: "color-mix(in oklab, #16a34a 30%, white)",
+                        background: "color-mix(in oklab, #16a34a 6%, white)",
+                        color: GREEN,
+                      }}
+                    >
+                      <div className="font-bold text-foreground">{appliedDiscount.label}</div>
+                      <div className="text-muted-foreground mt-1">
+                        {appliedDiscount.percentOff}% de descuento · Ahorras ${fmt(appliedDiscount.discountAmount)}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDiscountInput("");
+                          setAppliedDiscount(null);
+                          setDiscountError(null);
+                        }}
+                        className="mt-2 text-xs font-semibold underline text-muted-foreground"
+                      >
+                        Quitar código
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-sm font-bold text-foreground mb-3 block">
+                    5. Cobros recurrentes (opcional)
+                  </label>
+                  <div
+                    className="rounded-2xl border p-4 md:p-5 space-y-3 text-sm text-muted-foreground leading-relaxed"
+                    style={{
+                      borderColor: "color-mix(in oklab, var(--brand-petrol) 22%, white)",
+                      background: "color-mix(in oklab, var(--brand-petrol) 4%, white)",
+                    }}
+                  >
+                    <p className="font-semibold text-foreground">Cobros automáticos de tu suscripción</p>
+                    <ul className="space-y-2 list-disc pl-4">
+                      {RECURRING_BILLING_DISCLOSURE_BULLETS.map((line) => (
+                        <li key={line}>{line}</li>
+                      ))}
+                    </ul>
+                    <p>{RECURRING_BILLING_DISCLOSURE_FOOTER}</p>
+                    <p>
+                      <a
+                        href={SENIOR_SAFE_TERMS_CANCELLATION_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-semibold underline"
+                        style={{ color: DEEP }}
+                      >
+                        {RECURRING_BILLING_TERMS_LINK_LABEL}
+                      </a>
+                      {" · "}
+                      Cancelar:{" "}
+                      <a
+                        href={`mailto:${RECURRING_BILLING_SUPPORT_EMAIL}`}
+                        className="font-semibold underline"
+                        style={{ color: DEEP }}
+                      >
+                        {RECURRING_BILLING_SUPPORT_EMAIL}
+                      </a>
+                    </p>
+                  </div>
+                  <label className="mt-4 flex items-start gap-3 cursor-pointer">
+                    <Checkbox
+                      id="recurring-consent"
+                      checked={recurringConsent}
+                      onCheckedChange={(checked) => setRecurringConsent(checked === true)}
+                      className="mt-1"
+                    />
+                    <span className="text-sm text-foreground leading-relaxed">
+                      {RECURRING_BILLING_CONSENT_CHECKBOX_LABEL}
+                    </span>
+                  </label>
                 </div>
 
                 {submitError && (
@@ -268,12 +486,12 @@ function CheckoutPage() {
                   {loading || redirecting ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      {redirecting ? "Abriendo pasarela Webpay…" : "Conectando con Transbank…"}
+                      {redirecting ? "Abriendo pasarela Oneclick…" : "Conectando con Transbank…"}
                     </>
                   ) : (
                     <>
                       <CreditCard className="w-5 h-5" />
-                      Pagar con Webpay · ${fmt(price)}
+                      Pagar con Oneclick · ${fmt(price)}
                     </>
                   )}
                 </button>
@@ -324,10 +542,18 @@ function CheckoutPage() {
                     </span>
                   </div>
 
-                  <div className="mt-5 flex items-baseline gap-1.5">
+                  <div className="mt-5 flex items-baseline gap-1.5 flex-wrap">
+                    {appliedDiscount && (
+                      <span className="text-lg text-muted-foreground line-through mr-1">${fmt(listPrice)}</span>
+                    )}
                     <span className="text-4xl font-bold tracking-tight text-foreground">${fmt(price)}</span>
                     <span className="text-muted-foreground text-sm">/{yearly ? "año" : "mes"}</span>
                   </div>
+                  {appliedDiscount && (
+                    <div className="mt-2 text-sm font-semibold" style={{ color: GREEN }}>
+                      Convenio {appliedDiscount.code}: −{appliedDiscount.percentOff}% (−${fmt(appliedDiscount.discountAmount)})
+                    </div>
+                  )}
                   {yearly && (
                     <div className="mt-1 text-sm font-semibold" style={{ color: GREEN }}>
                       {PLAN.yearlySavingsLabel} (${fmt(savings)} menos que 12 meses)
@@ -371,10 +597,28 @@ function CheckoutPage() {
 
                 {/* Trust */}
                 <div className="bg-card border border-border rounded-3xl p-6 grid grid-cols-2 gap-4 shadow-sm">
-                  <Trust icon={CreditCard} title="Webpay Plus" sub="Pago en CLP" />
+                  <Trust icon={CreditCard} title="Oneclick" sub="Pago en CLP" />
                   <Trust icon={Lock} title="SSL 256-bit" sub="Datos cifrados" />
                   <Trust icon={MessageCircle} title="Soporte 24/7" sub="WhatsApp directo" />
-                  <Trust icon={X} title="Sin permanencia" sub="Cancela cuando quieras" />
+                  <Trust icon={X} title="Sin permanencia" sub="Sin cargo extra al cancelar" />
+                </div>
+
+                <div className="bg-card border border-border rounded-3xl p-6 shadow-sm">
+                  <div className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground mb-3">
+                    Cancelación y reembolsos
+                  </div>
+                  <ul className="space-y-2.5 text-sm text-muted-foreground leading-relaxed list-disc pl-4">
+                    {CANCELLATION_POLICY_BULLETS.map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
+                  <p className="mt-4 text-xs text-muted-foreground">
+                    Al continuar aceptas esta política y nuestros{" "}
+                    <Link to="/terminos" className="font-semibold underline" style={{ color: DEEP }}>
+                      Términos y Condiciones
+                    </Link>
+                    .
+                  </p>
                 </div>
               </aside>
             </div>

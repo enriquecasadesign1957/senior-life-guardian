@@ -4,17 +4,21 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
-    "build": "vite build",
+    "dev": "node scripts/sync-dev-vars.mjs && cross-env NODE_OPTIONS=--use-system-ca vite dev",
+    "build": "cross-env VITE_DEMO_MODE=false vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
-    "cf:build": "vite build",
-    "cf:clean-wrangler-cache": "node -e \"try{require('node:fs').rmSync('.wrangler',{recursive:true,force:true})}catch(e){}\"",
+    "cf:build": "cross-env VITE_DEMO_MODE=false vite build",
+    "cf:build:demo": "cross-env VITE_DEMO_MODE=true vite build",
+    "cf:clean-wrangler-cache": "node scripts/clean-wrangler-cache.mjs",
     "cf:wrangler": "cross-env NODE_OPTIONS=--use-system-ca wrangler",
     "cf:deploy": "npm run cf:build && npm run cf:clean-wrangler-cache && npm run cf:wrangler -- deploy --cwd dist/server --no-bundle",
     "cf:deploy:preview": "npm run cf:build && npm run cf:clean-wrangler-cache && npm run cf:wrangler -- deploy --cwd dist/server --env preview --no-bundle",
+    "cf:deploy:demo": "npm run cf:build:demo && npm run cf:clean-wrangler-cache && npm run cf:wrangler -- deploy --cwd dist/server --env demo --no-bundle",
     "deploy": "npm run cf:deploy",
     "deploy:preview": "npm run cf:deploy:preview",
+    "deploy:demo": "npm run cf:deploy:demo",
+    "dev:demo": "node scripts/sync-dev-vars.mjs && cross-env VITE_DEMO_MODE=true DEMO_MODE=true NODE_OPTIONS=--use-system-ca vite dev --port 8082 --strictPort",
     "cf:secrets": "npm run cf:wrangler -- secret list --cwd dist/server",
     "lint": "eslint .",
     "format": "prettier --write ."
@@ -99,10 +103,5 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
     "vite": "^7.3.1"
-  },
-  "pnpm": {
-    "overrides": {
-      "entities": "4.5.0"
-    }
   }
 }

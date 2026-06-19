@@ -3,10 +3,16 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { normalizePlanKey, planKeySchema, periodoSchema } from "@/lib/plans";
 import {
+  clearDiscountSignupFields,
+  discountSignupFields,
+} from "@/lib/discount-codes";
+import { resolveDiscountForCheckout } from "@/lib/discount.functions";
+import {
   CONTRACT_SIGNUP_SELECT,
   CONTRACT_SIGNUPS_TABLE,
   contractSignupPendingPayload,
 } from "@/lib/signups-db";
+import { RECURRING_BILLING_CONSENT_VERSION } from "@/lib/recurring-billing-consent";
 
 /**
  * Crea un registro de contratación directa (Plan Único) antes de iniciar Webpay.
@@ -20,11 +26,13 @@ export const createPurchaseSignup = createServerFn({ method: "POST" })
       direccion: z.string().max(255).nullable().optional(),
       plan: planKeySchema.transform(normalizePlanKey),
       periodo: periodoSchema,
+      discountCode: z.string().trim().max(64).optional().or(z.literal("")),
+      recurringBillingConsent: z.boolean().optional().default(false),
     }).parse(input),
   )
   .handler(async ({ data }) => {
     const email = data.email.trim().toLowerCase();
-    const payload = contractSignupPendingPayload({
+    const basePayload = contractSignupPendingPayload({
       nombre: data.nombre,
       email,
       telefono: data.telefono,
@@ -32,6 +40,27 @@ export const createPurchaseSignup = createServerFn({ method: "POST" })
       plan: data.plan,
       periodo: data.periodo,
     });
+
+    let discountFields = clearDiscountSignupFields();
+    const rawCode = data.discountCode?.trim();
+    if (rawCode) {
+      const resolved = await resolveDiscountForCheckout(rawCode, data.plan, data.periodo);
+      discountFields = discountSignupFields(resolved);
+    }
+
+    const payload = {
+      ...basePayload,
+      ...discountFields,
+      ...(data.recurringBillingConsent
+        ? {
+            recurring_billing_consented_at: new Date().toISOString(),
+            recurring_billing_consent_version: RECURRING_BILLING_CONSENT_VERSION,
+          }
+        : {
+            recurring_billing_consented_at: null,
+            recurring_billing_consent_version: null,
+          }),
+    };
 
     const { data: existing, error: existingError } = await supabaseAdmin
       .from(CONTRACT_SIGNUPS_TABLE)

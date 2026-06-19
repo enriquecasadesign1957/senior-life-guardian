@@ -1,12 +1,19 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { isDemoMode } from "@/lib/demo/demo-config";
 import {
   Shield, MessageCircle, MapPin, CheckCircle2,
   Mail, ArrowRight, Heart, AlertCircle, Users, Zap, Smartphone,
   Clock, Activity, Star, Accessibility, Home,
   PhoneCall, Radio, Navigation, Send,
-  Brain, Sparkles, Layers,
+  Brain, Sparkles, Layers, HelpCircle,
 } from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import emergencyButton from "@/assets/emergency-button.jpg";
 import seniorCouple from "@/assets/senior-couple.jpg";
 import seniorPhone from "@/assets/senior-phone.jpg";
@@ -24,6 +31,7 @@ import {
 } from "@/lib/plans";
 import { WhatsAppFloat } from "@/components/whatsapp-float";
 import { seniorSafeWhatsAppMeUrl } from "@/lib/twilio";
+import { CANCELLATION_POLICY_FAQ_ANSWER, CANCELLATION_POLICY_SUMMARY } from "@/lib/subscription-cancellation-policy";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -165,6 +173,13 @@ function Hero() {
               Ya tengo cuenta · Entrar
               <CheckCircle2 className="w-5 h-5" />
             </a>
+            <Link
+              to="/guia"
+              className="inline-flex items-center justify-center gap-3 px-7 py-5 rounded-full text-base font-bold shadow-xl hover:scale-[1.03] transition-all duration-300 text-white bg-white/15 ring-2 ring-white/25 backdrop-blur-sm"
+            >
+              Guía de instalación
+              <Smartphone className="w-5 h-5" />
+            </Link>
           </div>
           <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-white/80 animate-fade-in" style={{ animationDelay: "300ms" }}>
             <div className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 backdrop-blur-sm">
@@ -173,9 +188,9 @@ function Hero() {
             <div className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 backdrop-blur-sm">
               <CheckCircle2 className="w-4 h-4" /> Cancelación simple
             </div>
-            <a href="#como" className="underline underline-offset-4 hover:text-white transition-colors">
+            <Link to="/como-funciona" className="underline underline-offset-4 hover:text-white transition-colors">
               Cómo funciona
-            </a>
+            </Link>
           </div>
         </div>
 
@@ -192,7 +207,7 @@ function QueEs() {
     { icon: Layers, color: DEEP, title: "Ecosistema unificado", desc: "Una sola plataforma conecta senior, familia y canales de respuesta." },
     { icon: Zap, color: "#f59e0b", title: "Alertas resilientes", desc: "WhatsApp, SMS, GPS y voz en cascada ante emergencias reales." },
     { icon: MapPin, color: PETROL, title: "Telemetría en vivo", desc: "Coordenadas exactas y contexto operativo en cada evento." },
-    { icon: Users, color: GREEN, title: "Red familiar priorizada", desc: "Hasta 10 guardianes con orden de escalamiento inteligente." },
+    { icon: Users, color: GREEN, title: "Red familiar priorizada", desc: "Hasta 3 guardianes con orden de escalamiento inteligente." },
     { icon: Smartphone, color: RED, title: "Diseño senior-first", desc: "Interfaz clara, accesible y pensada para el uso diario en casa." },
   ];
   return (
@@ -206,6 +221,24 @@ function QueEs() {
           <p className="mt-5 text-lg text-muted-foreground leading-relaxed">
             Senior Safe integra inteligencia artificial, sensores del teléfono y comunicaciones redundantes para que tu familia reciba ayuda cuando más importa — sin depender de un solo canal.
           </p>
+          <div className="mt-8 flex flex-col items-center text-center gap-4">
+            <p className="text-base md:text-lg text-foreground/90 font-medium max-w-2xl leading-relaxed">
+              Te invitamos a entrar y recorrer el flujo SOS paso a paso: botón de emergencia, aviso a la familia y
+              mapa con ubicación — como en la app real, sin instalar nada.
+            </p>
+            <Link
+              to="/como-funciona"
+              className="inline-flex items-center justify-center gap-2 px-10 py-5 md:px-12 md:py-6 rounded-2xl font-bold text-lg md:text-xl text-white no-underline transition-all duration-200 hover:scale-[1.03] hover:shadow-xl active:scale-[0.98]"
+              style={{
+                backgroundColor: "#007bff",
+                boxShadow: "0 8px 24px rgba(0,123,255,0.35)",
+                fontFamily: "system-ui, sans-serif",
+              }}
+            >
+              📱 Entrar — ver cómo funciona en tu celular →
+            </Link>
+            <p className="text-sm text-muted-foreground">Recorrido interactivo · unos 2 minutos · gratis</p>
+          </div>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-5">
           {items.map((it) => (
@@ -542,14 +575,14 @@ const FLOW_STEPS = [
     icon: Send,
     color: GREEN,
     title: "Cascada SMS → WhatsApp → voz",
-    desc: "SMS inmediato, WhatsApp 10 s después y enlace Google Maps a los tres guardianes prioritarios. La llamada solo si no hay confirmación ni lectura del mensaje.",
+    desc: "SMS al instante, WhatsApp a los 15 s y enlace Google Maps a los tres guardianes prioritarios. Llamada a los 30 s solo si nadie confirma recepción.",
     detail: "Multicanal automático",
   },
 ] as const;
 
 function Como() {
   return (
-    <section id="como" className="py-20 md:py-24 bg-background">
+    <section id="como-funciona" className="py-20 md:py-24 bg-background">
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center max-w-2xl mx-auto mb-14">
           <div className="text-sm font-bold uppercase tracking-[0.18em] mb-3" style={{ color: RED }}>
@@ -682,6 +715,7 @@ function Planes() {
           <div className="text-sm font-bold uppercase tracking-[0.18em] mb-3" style={{ color: PETROL }}>{PLAN.displayName}</div>
           <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight">{PLAN.tagline}</h2>
           <p className="mt-4 text-lg text-muted-foreground">Sin permanencia. Cancela cuando quieras.</p>
+          <p className="mt-2 text-sm text-muted-foreground max-w-xl mx-auto">{CANCELLATION_POLICY_SUMMARY}</p>
           <div className="mt-7 inline-flex items-center bg-card border border-border rounded-full p-1.5 shadow-sm">
             <button
               onClick={() => setYearly(false)}
@@ -826,6 +860,181 @@ function Capturas() {
   );
 }
 
+function PreguntasFrecuentes() {
+  const sections = [
+    {
+      title: "Funcionamiento",
+      icon: Smartphone,
+      items: [
+        {
+          q: "¿Qué es exactamente Senior Safe?",
+          a: "Senior Safe no es un dispositivo físico adicional, sino un ecosistema de protección inteligente basado en una aplicación para smartphone. Utiliza Inteligencia Artificial, los sensores del propio teléfono y un sistema de comunicación redundante para alertar a la familia de inmediato ante caídas o emergencias.",
+        },
+        {
+          q: "¿Cómo funciona el sistema de alerta en cascada?",
+          a: "Ante una emergencia, nuestro algoritmo activa cuatro canales de respaldo en tiempo real: (A) WhatsApp + IA para confirmar lecturas; (B) SMS de respaldo simultáneo; (C) GPS en vivo con enlace Google Maps; (D) llamadas de voz automáticas y secuenciales a los guardianes si nadie confirma en los primeros segundos.",
+        },
+        {
+          q: "¿A quién notifica la aplicación cuando ocurre una emergencia?",
+          a: "Las alertas van directamente al núcleo familiar, sin pasar por centrales de monitoreo externas ni intermediarios. Puedes configurar hasta 3 guardianes (hijos, nietos, vecinos o cuidadores) con orden de prioridad.",
+        },
+        {
+          q: "¿Cuánto tarda en llegar una alerta a la familia?",
+          a: "El sistema es ultra rápido. Desde que se detecta el impacto o se presiona el botón SOS, la primera notificación tarda menos de 3 segundos en ser despachada a la red familiar.",
+        },
+      ],
+    },
+    {
+      title: "Caídas y emergencias",
+      icon: AlertCircle,
+      items: [
+        {
+          q: "¿Cómo funciona la detección automática de caídas?",
+          a: "La aplicación transforma el smartphone en un guardián continuo: (1) el acelerómetro analiza impactos abruptos superiores a 3.8G; (2) valida 3 segundos de inmovilidad para evitar falsos positivos; (3) activa vibración y sirena por 30 segundos — si el usuario está bien puede cancelar; si no responde, la ayuda se despacha de inmediato.",
+        },
+        {
+          q: "¿Qué pasa si el adulto mayor no puede presionar el botón?",
+          a: "No se preocupe. Si el sistema detecta una caída crítica seguida de inmovilidad, la alerta se envía de forma completamente autónoma, incluso si el usuario queda inconsciente o en estado de shock.",
+        },
+        {
+          q: "¿La localización GPS funciona fuera de la casa?",
+          a: "Sí. El sistema inyecta coordenadas satelitales en vivo. Esto permite saber la ubicación exacta del adulto mayor dentro del hogar, caminando, de compras o en terreno abierto.",
+        },
+      ],
+    },
+    {
+      title: "Uso diario",
+      icon: Accessibility,
+      items: [
+        {
+          q: "¿Es difícil de usar para un adulto mayor?",
+          a: "Para nada. Senior Safe cuenta con un diseño Senior-First: botones grandes, textos claros y acciones muy visibles, pensado para operarse en segundos y sin complicaciones tecnológicas.",
+        },
+        {
+          q: "¿Qué requisitos debe cumplir el teléfono del adulto mayor?",
+          a: "Solo requiere un smartphone compatible con la aplicación. Al contratar recibirá instrucciones de instalación paso a paso. No necesita comprar aparatos ni collares adicionales.",
+        },
+        {
+          q: "¿Cómo descargo e instalo la app?",
+          a: "Guía completa en alarmaseniorsafe.cl/guia: contratar, abrir el enlace en el celular, agregar a la pantalla de inicio (Android o iPhone), configurar PIN y guardianes, y escribir ACTIVAR por WhatsApp.",
+        },
+      ],
+    },
+    {
+      title: "Planes y pagos",
+      icon: CheckCircle2,
+      items: [
+        {
+          q: "¿Cuánto cuesta el servicio?",
+          a: `Ofrecemos un Plan Único de protección completa: $${formatPlanPrice(PLAN.monthly)} al mes o $${formatPlanPrice(PLAN.yearly)} al año (${PLAN.yearlySavingsLabel.toLowerCase()}).`,
+        },
+        {
+          q: "¿Existe algún contrato de amarre o permanencia?",
+          a: "No, ninguno. Puede dar de baja el plan cuando lo desee, sin multas. " + CANCELLATION_POLICY_SUMMARY,
+        },
+        {
+          q: "¿Hay reembolso si cancelo el plan?",
+          a: CANCELLATION_POLICY_FAQ_ANSWER,
+        },
+        {
+          q: "¿Cuáles son los medios de pago disponibles?",
+          a: "Los pagos se realizan de manera 100% segura en línea a través de Webpay Plus, utilizando tarjetas de crédito, débito o prepago.",
+        },
+      ],
+    },
+    {
+      title: "Soporte",
+      icon: PhoneCall,
+      items: [
+        {
+          q: "¿Tienen atención en caso de dudas?",
+          a: "Sí, el Plan Único incluye soporte prioritario 24/7. Si tiene problemas con la configuración de guardianes o la aplicación, nuestro equipo estará disponible por WhatsApp o en hola@alarmaseniorsafe.cl.",
+        },
+      ],
+    },
+  ];
+
+  return (
+    <section id="faq" className="py-20 md:py-24" style={{ background: "var(--gradient-soft)" }}>
+      <div className="max-w-4xl mx-auto px-6">
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <div className="text-sm font-bold uppercase tracking-[0.18em] mb-3" style={{ color: PETROL }}>
+            Preguntas frecuentes
+          </div>
+          <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight">
+            Resolvemos tus dudas.
+          </h2>
+          <p className="mt-4 text-lg text-muted-foreground">
+            Todo lo que necesitas saber sobre Senior Safe antes de contratar.
+          </p>
+        </div>
+
+        <div className="bg-card border border-border rounded-3xl shadow-lg overflow-hidden">
+          <div
+            className="px-6 py-5 border-b border-border flex items-center gap-3"
+            style={{ background: `linear-gradient(135deg, ${DEEP}08, ${PETROL}12)` }}
+          >
+            <span
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0"
+              style={{ background: `linear-gradient(135deg, ${DEEP}, ${PETROL})` }}
+            >
+              <HelpCircle className="w-5 h-5" />
+            </span>
+            <div>
+              <div className="font-bold text-foreground">FAQ Senior Safe</div>
+              <div className="text-sm text-muted-foreground">Funcionamiento, caídas, planes y soporte</div>
+            </div>
+          </div>
+
+          <div className="px-6 md:px-8 py-2">
+            {sections.map((section, sectionIdx) => (
+              <div key={section.title} className={sectionIdx > 0 ? "mt-6 pt-6 border-t border-border" : "pt-4"}>
+                <div className="flex items-center gap-2 mb-3">
+                  <section.icon className="w-4 h-4 shrink-0" style={{ color: PETROL }} />
+                  <h3 className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: PETROL }}>
+                    {section.title}
+                  </h3>
+                </div>
+                <Accordion type="single" collapsible className="w-full">
+                  {section.items.map((item, itemIdx) => (
+                    <AccordionItem
+                      key={item.q}
+                      value={`${sectionIdx}-${itemIdx}`}
+                      className="border-border/70"
+                    >
+                      <AccordionTrigger className="text-base font-semibold text-foreground hover:no-underline py-4">
+                        {item.q}
+                      </AccordionTrigger>
+                      <AccordionContent className="text-base text-muted-foreground leading-relaxed">
+                        {item.a}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <p className="text-center mt-8 text-sm text-muted-foreground">
+          ¿Necesitas instalar la app?{" "}
+          <Link to="/guia" className="font-semibold hover:underline" style={{ color: PETROL }}>
+            Ver guía paso a paso
+          </Link>
+          {" · "}
+          <a
+            href={seniorSafeWhatsAppMeUrl("Hola Senior Safe, tengo una consulta")}
+            className="font-semibold hover:underline"
+            style={{ color: PETROL }}
+          >
+            Escríbenos por WhatsApp
+          </a>
+        </p>
+      </div>
+    </section>
+  );
+}
+
 function Testimonios() {
   const items = [
     { name: "Carmen R.", role: "Hija", quote: "Ahora puedo estar tranquila sabiendo que mi madre puede avisarnos inmediatamente." },
@@ -934,6 +1143,10 @@ function Field({ label, type = "text", placeholder, value, onChange }: { label: 
 }
 
 function Landing() {
+  if (isDemoMode()) {
+    return <Navigate to="/demo" search={{ institucion: "las-condes" }} replace />;
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
       <SiteHeader />
@@ -949,6 +1162,7 @@ function Landing() {
         <Capturas />
         <Planes />
         <Prueba />
+        <PreguntasFrecuentes />
         <Testimonios />
         <Contacto />
       </main>

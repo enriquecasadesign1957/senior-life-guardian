@@ -1,4 +1,5 @@
 import type { FamilyContact, FamilyContactInput } from "@/lib/contacts-storage";
+import { MAX_GUARDIANS } from "@/lib/guardian-limits";
 
 const FAMILY_TIMEOUT_MS = 12_000;
 
@@ -131,7 +132,7 @@ export async function deleteFamilyWithFallback(
 }
 
 export function familyErrorMessage(error?: string): string {
-  if (error === "Máximo 5 familiares." || error === "Ya existe un familiar con ese teléfono.") {
+  if (error === `Máximo ${MAX_GUARDIANS} guardianes.` || error === "Ya existe un familiar con ese teléfono.") {
     return error;
   }
   switch (error) {

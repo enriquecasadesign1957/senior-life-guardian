@@ -16,38 +16,69 @@ import { Route as PrivacidadRouteImport } from './routes/privacidad'
 import { Route as PlanesRouteImport } from './routes/planes'
 import { Route as NativeRouteImport } from './routes/native'
 import { Route as InstalarAppRouteImport } from './routes/instalar-app'
+import { Route as GuiaRouteImport } from './routes/guia'
 import { Route as FlujoRouteImport } from './routes/flujo'
 import { Route as FamiliaRouteImport } from './routes/familia'
+import { Route as DemoRouteImport } from './routes/demo'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as BienvenidaPremiumRouteImport } from './routes/bienvenida-premium'
 import { Route as AppRouteImport } from './routes/app'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ActivarWhatsappRouteImport } from './routes/activar-whatsapp'
 import { Route as ActivacionRouteImport } from './routes/activacion'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DemoIndexRouteImport } from './routes/demo/index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as WebpayRetornoRouteImport } from './routes/webpay.retorno'
+import { Route as OneclickRetornoRouteImport } from './routes/oneclick.retorno'
+import { Route as OneclickInscripcionAbandonadaRouteImport } from './routes/oneclick.inscripcion-abandonada'
+import { Route as OneclickDebitRetornoRouteImport } from './routes/oneclick.debit-retorno'
+import { Route as OneclickDebitRejectValidacionRouteImport } from './routes/oneclick.debit-reject-validacion'
+import { Route as OneclickCreditRetornoRouteImport } from './routes/oneclick.credit-retorno'
 import { Route as FamiliaGuardianesRouteImport } from './routes/familia.guardianes'
 import { Route as FamiliaDashboardRouteImport } from './routes/familia.dashboard'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as DemoReportesRouteImport } from './routes/demo/reportes'
+import { Route as DemoPresentacionRouteImport } from './routes/demo/presentacion'
+import { Route as DemoPerfilRouteImport } from './routes/demo/perfil'
+import { Route as DemoMonitoreoRouteImport } from './routes/demo/monitoreo'
+import { Route as DemoMapaRouteImport } from './routes/demo/mapa'
+import { Route as DemoFlujoRouteImport } from './routes/demo/flujo'
+import { Route as DemoEjecutivoRouteImport } from './routes/demo/ejecutivo'
+import { Route as DemoAnaliticaRouteImport } from './routes/demo/analitica'
+import { Route as DemoAlertasRouteImport } from './routes/demo/alertas'
+import { Route as CTokenRouteImport } from './routes/c.$token'
+import { Route as AdminTransbankValidacionRouteImport } from './routes/admin.transbank-validacion'
 import { Route as AdminResetRouteImport } from './routes/admin.reset'
 import { Route as AdminInboxRouteImport } from './routes/admin.inbox'
+import { Route as AdminDiscountsRouteImport } from './routes/admin.discounts'
+import { Route as AdminAccountsRouteImport } from './routes/admin.accounts'
+import { Route as ATokenRouteImport } from './routes/a.$token'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as FamiliaAckTokenRouteImport } from './routes/familia.ack.$token'
 import { Route as ApiPublicZohoEmailWebhookRouteImport } from './routes/api/public/zoho-email-webhook'
 import { Route as ApiPublicVerifyPinRouteImport } from './routes/api/public/verify-pin'
+import { Route as ApiPublicValidateDiscountRouteImport } from './routes/api/public/validate-discount'
 import { Route as ApiPublicTwilioWhatsappWebhookRouteImport } from './routes/api/public/twilio-whatsapp-webhook'
 import { Route as ApiPublicTwilioVoiceWebhookRouteImport } from './routes/api/public/twilio-voice-webhook'
 import { Route as ApiPublicTwilioStatusCallbackRouteImport } from './routes/api/public/twilio-status-callback'
 import { Route as ApiPublicTwilioSmsWebhookRouteImport } from './routes/api/public/twilio-sms-webhook'
+import { Route as ApiPublicTwilioEmergencyCallRouteImport } from './routes/api/public/twilio-emergency-call'
 import { Route as ApiPublicSendWelcomeWhatsappRouteImport } from './routes/api/public/send-welcome-whatsapp'
 import { Route as ApiPublicSendWelcomeTrialRouteImport } from './routes/api/public/send-welcome-trial'
 import { Route as ApiPublicSavePinRouteImport } from './routes/api/public/save-pin'
 import { Route as ApiPublicLookupAccountRouteImport } from './routes/api/public/lookup-account'
 import { Route as ApiPublicFamilyRouteImport } from './routes/api/public/family'
 import { Route as ApiCronProcessSubscriptionRenewalsRouteImport } from './routes/api/cron/process-subscription-renewals'
+import { Route as ATokenCRouteImport } from './routes/a.$token.c'
+import { Route as AAlertIdAckTokenRouteImport } from './routes/a.$alertId.$ackToken'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
+import { Route as ApiPublicAckAlertTokenRouteImport } from './routes/api/public/ack-alert.$token'
+import { Route as ApiInternalEmergencyCascadeAlertIdRouteImport } from './routes/api/internal/emergency-cascade.$alertId'
 
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
   id: '/unsubscribe',
@@ -84,6 +115,11 @@ const InstalarAppRoute = InstalarAppRouteImport.update({
   path: '/instalar-app',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GuiaRoute = GuiaRouteImport.update({
+  id: '/guia',
+  path: '/guia',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FlujoRoute = FlujoRouteImport.update({
   id: '/flujo',
   path: '/flujo',
@@ -94,9 +130,19 @@ const FamiliaRoute = FamiliaRouteImport.update({
   path: '/familia',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DemoRoute = DemoRouteImport.update({
+  id: '/demo',
+  path: '/demo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComoFuncionaRoute = ComoFuncionaRouteImport.update({
+  id: '/como-funciona',
+  path: '/como-funciona',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckoutRoute = CheckoutRouteImport.update({
@@ -114,6 +160,11 @@ const AppRoute = AppRouteImport.update({
   path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ActivarWhatsappRoute = ActivarWhatsappRouteImport.update({
   id: '/activar-whatsapp',
   path: '/activar-whatsapp',
@@ -129,9 +180,46 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DemoIndexRoute = DemoIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DemoRoute,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const WebpayRetornoRoute = WebpayRetornoRouteImport.update({
   id: '/webpay/retorno',
   path: '/webpay/retorno',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OneclickRetornoRoute = OneclickRetornoRouteImport.update({
+  id: '/oneclick/retorno',
+  path: '/oneclick/retorno',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OneclickInscripcionAbandonadaRoute =
+  OneclickInscripcionAbandonadaRouteImport.update({
+    id: '/oneclick/inscripcion-abandonada',
+    path: '/oneclick/inscripcion-abandonada',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const OneclickDebitRetornoRoute = OneclickDebitRetornoRouteImport.update({
+  id: '/oneclick/debit-retorno',
+  path: '/oneclick/debit-retorno',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OneclickDebitRejectValidacionRoute =
+  OneclickDebitRejectValidacionRouteImport.update({
+    id: '/oneclick/debit-reject-validacion',
+    path: '/oneclick/debit-reject-validacion',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const OneclickCreditRetornoRoute = OneclickCreditRetornoRouteImport.update({
+  id: '/oneclick/credit-retorno',
+  path: '/oneclick/credit-retorno',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FamiliaGuardianesRoute = FamiliaGuardianesRouteImport.update({
@@ -149,14 +237,85 @@ const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   path: '/email/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminResetRoute = AdminResetRouteImport.update({
-  id: '/admin/reset',
-  path: '/admin/reset',
+const DemoReportesRoute = DemoReportesRouteImport.update({
+  id: '/reportes',
+  path: '/reportes',
+  getParentRoute: () => DemoRoute,
+} as any)
+const DemoPresentacionRoute = DemoPresentacionRouteImport.update({
+  id: '/presentacion',
+  path: '/presentacion',
+  getParentRoute: () => DemoRoute,
+} as any)
+const DemoPerfilRoute = DemoPerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => DemoRoute,
+} as any)
+const DemoMonitoreoRoute = DemoMonitoreoRouteImport.update({
+  id: '/monitoreo',
+  path: '/monitoreo',
+  getParentRoute: () => DemoRoute,
+} as any)
+const DemoMapaRoute = DemoMapaRouteImport.update({
+  id: '/mapa',
+  path: '/mapa',
+  getParentRoute: () => DemoRoute,
+} as any)
+const DemoFlujoRoute = DemoFlujoRouteImport.update({
+  id: '/flujo',
+  path: '/flujo',
+  getParentRoute: () => DemoRoute,
+} as any)
+const DemoEjecutivoRoute = DemoEjecutivoRouteImport.update({
+  id: '/ejecutivo',
+  path: '/ejecutivo',
+  getParentRoute: () => DemoRoute,
+} as any)
+const DemoAnaliticaRoute = DemoAnaliticaRouteImport.update({
+  id: '/analitica',
+  path: '/analitica',
+  getParentRoute: () => DemoRoute,
+} as any)
+const DemoAlertasRoute = DemoAlertasRouteImport.update({
+  id: '/alertas',
+  path: '/alertas',
+  getParentRoute: () => DemoRoute,
+} as any)
+const CTokenRoute = CTokenRouteImport.update({
+  id: '/c/$token',
+  path: '/c/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminTransbankValidacionRoute =
+  AdminTransbankValidacionRouteImport.update({
+    id: '/transbank-validacion',
+    path: '/transbank-validacion',
+    getParentRoute: () => AdminRoute,
+  } as any)
+const AdminResetRoute = AdminResetRouteImport.update({
+  id: '/reset',
+  path: '/reset',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminInboxRoute = AdminInboxRouteImport.update({
-  id: '/admin/inbox',
-  path: '/admin/inbox',
+  id: '/inbox',
+  path: '/inbox',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminDiscountsRoute = AdminDiscountsRouteImport.update({
+  id: '/discounts',
+  path: '/discounts',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAccountsRoute = AdminAccountsRouteImport.update({
+  id: '/accounts',
+  path: '/accounts',
+  getParentRoute: () => AdminRoute,
+} as any)
+const ATokenRoute = ATokenRouteImport.update({
+  id: '/a/$token',
+  path: '/a/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
@@ -180,6 +339,12 @@ const ApiPublicVerifyPinRoute = ApiPublicVerifyPinRouteImport.update({
   path: '/api/public/verify-pin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicValidateDiscountRoute =
+  ApiPublicValidateDiscountRouteImport.update({
+    id: '/api/public/validate-discount',
+    path: '/api/public/validate-discount',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicTwilioWhatsappWebhookRoute =
   ApiPublicTwilioWhatsappWebhookRouteImport.update({
     id: '/api/public/twilio-whatsapp-webhook',
@@ -202,6 +367,12 @@ const ApiPublicTwilioSmsWebhookRoute =
   ApiPublicTwilioSmsWebhookRouteImport.update({
     id: '/api/public/twilio-sms-webhook',
     path: '/api/public/twilio-sms-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicTwilioEmergencyCallRoute =
+  ApiPublicTwilioEmergencyCallRouteImport.update({
+    id: '/api/public/twilio-emergency-call',
+    path: '/api/public/twilio-emergency-call',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicSendWelcomeWhatsappRoute =
@@ -237,6 +408,16 @@ const ApiCronProcessSubscriptionRenewalsRoute =
     path: '/api/cron/process-subscription-renewals',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ATokenCRoute = ATokenCRouteImport.update({
+  id: '/c',
+  path: '/c',
+  getParentRoute: () => ATokenRoute,
+} as any)
+const AAlertIdAckTokenRoute = AAlertIdAckTokenRouteImport.update({
+  id: '/a/$alertId/$ackToken',
+  path: '/a/$alertId/$ackToken',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailTransactionalSendRoute =
   LovableEmailTransactionalSendRouteImport.update({
     id: '/lovable/email/transactional/send',
@@ -255,17 +436,32 @@ const LovableEmailQueueProcessRoute =
     path: '/lovable/email/queue/process',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicAckAlertTokenRoute = ApiPublicAckAlertTokenRouteImport.update({
+  id: '/api/public/ack-alert/$token',
+  path: '/api/public/ack-alert/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiInternalEmergencyCascadeAlertIdRoute =
+  ApiInternalEmergencyCascadeAlertIdRouteImport.update({
+    id: '/api/internal/emergency-cascade/$alertId',
+    path: '/api/internal/emergency-cascade/$alertId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/activacion': typeof ActivacionRoute
   '/activar-whatsapp': typeof ActivarWhatsappRoute
+  '/admin': typeof AdminRouteWithChildren
   '/app': typeof AppRoute
   '/bienvenida-premium': typeof BienvenidaPremiumRoute
   '/checkout': typeof CheckoutRoute
+  '/como-funciona': typeof ComoFuncionaRoute
   '/dashboard': typeof DashboardRoute
+  '/demo': typeof DemoRouteWithChildren
   '/familia': typeof FamiliaRouteWithChildren
   '/flujo': typeof FlujoRoute
+  '/guia': typeof GuiaRoute
   '/instalar-app': typeof InstalarAppRoute
   '/native': typeof NativeRoute
   '/planes': typeof PlanesRoute
@@ -273,26 +469,53 @@ export interface FileRoutesByFullPath {
   '/terminos': typeof TerminosRoute
   '/tutorial': typeof TutorialRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/a/$token': typeof ATokenRouteWithChildren
+  '/admin/accounts': typeof AdminAccountsRoute
+  '/admin/discounts': typeof AdminDiscountsRoute
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/reset': typeof AdminResetRoute
+  '/admin/transbank-validacion': typeof AdminTransbankValidacionRoute
+  '/c/$token': typeof CTokenRoute
+  '/demo/alertas': typeof DemoAlertasRoute
+  '/demo/analitica': typeof DemoAnaliticaRoute
+  '/demo/ejecutivo': typeof DemoEjecutivoRoute
+  '/demo/flujo': typeof DemoFlujoRoute
+  '/demo/mapa': typeof DemoMapaRoute
+  '/demo/monitoreo': typeof DemoMonitoreoRoute
+  '/demo/perfil': typeof DemoPerfilRoute
+  '/demo/presentacion': typeof DemoPresentacionRoute
+  '/demo/reportes': typeof DemoReportesRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/familia/dashboard': typeof FamiliaDashboardRoute
   '/familia/guardianes': typeof FamiliaGuardianesRoute
+  '/oneclick/credit-retorno': typeof OneclickCreditRetornoRoute
+  '/oneclick/debit-reject-validacion': typeof OneclickDebitRejectValidacionRoute
+  '/oneclick/debit-retorno': typeof OneclickDebitRetornoRoute
+  '/oneclick/inscripcion-abandonada': typeof OneclickInscripcionAbandonadaRoute
+  '/oneclick/retorno': typeof OneclickRetornoRoute
   '/webpay/retorno': typeof WebpayRetornoRoute
+  '/admin/': typeof AdminIndexRoute
+  '/demo/': typeof DemoIndexRoute
+  '/a/$alertId/$ackToken': typeof AAlertIdAckTokenRoute
+  '/a/$token/c': typeof ATokenCRoute
   '/api/cron/process-subscription-renewals': typeof ApiCronProcessSubscriptionRenewalsRoute
   '/api/public/family': typeof ApiPublicFamilyRoute
   '/api/public/lookup-account': typeof ApiPublicLookupAccountRoute
   '/api/public/save-pin': typeof ApiPublicSavePinRoute
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
   '/api/public/send-welcome-whatsapp': typeof ApiPublicSendWelcomeWhatsappRoute
+  '/api/public/twilio-emergency-call': typeof ApiPublicTwilioEmergencyCallRoute
   '/api/public/twilio-sms-webhook': typeof ApiPublicTwilioSmsWebhookRoute
   '/api/public/twilio-status-callback': typeof ApiPublicTwilioStatusCallbackRoute
   '/api/public/twilio-voice-webhook': typeof ApiPublicTwilioVoiceWebhookRoute
   '/api/public/twilio-whatsapp-webhook': typeof ApiPublicTwilioWhatsappWebhookRoute
+  '/api/public/validate-discount': typeof ApiPublicValidateDiscountRoute
   '/api/public/verify-pin': typeof ApiPublicVerifyPinRoute
   '/api/public/zoho-email-webhook': typeof ApiPublicZohoEmailWebhookRoute
   '/familia/ack/$token': typeof FamiliaAckTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/internal/emergency-cascade/$alertId': typeof ApiInternalEmergencyCascadeAlertIdRoute
+  '/api/public/ack-alert/$token': typeof ApiPublicAckAlertTokenRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -304,9 +527,11 @@ export interface FileRoutesByTo {
   '/app': typeof AppRoute
   '/bienvenida-premium': typeof BienvenidaPremiumRoute
   '/checkout': typeof CheckoutRoute
+  '/como-funciona': typeof ComoFuncionaRoute
   '/dashboard': typeof DashboardRoute
   '/familia': typeof FamiliaRouteWithChildren
   '/flujo': typeof FlujoRoute
+  '/guia': typeof GuiaRoute
   '/instalar-app': typeof InstalarAppRoute
   '/native': typeof NativeRoute
   '/planes': typeof PlanesRoute
@@ -314,26 +539,53 @@ export interface FileRoutesByTo {
   '/terminos': typeof TerminosRoute
   '/tutorial': typeof TutorialRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/a/$token': typeof ATokenRouteWithChildren
+  '/admin/accounts': typeof AdminAccountsRoute
+  '/admin/discounts': typeof AdminDiscountsRoute
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/reset': typeof AdminResetRoute
+  '/admin/transbank-validacion': typeof AdminTransbankValidacionRoute
+  '/c/$token': typeof CTokenRoute
+  '/demo/alertas': typeof DemoAlertasRoute
+  '/demo/analitica': typeof DemoAnaliticaRoute
+  '/demo/ejecutivo': typeof DemoEjecutivoRoute
+  '/demo/flujo': typeof DemoFlujoRoute
+  '/demo/mapa': typeof DemoMapaRoute
+  '/demo/monitoreo': typeof DemoMonitoreoRoute
+  '/demo/perfil': typeof DemoPerfilRoute
+  '/demo/presentacion': typeof DemoPresentacionRoute
+  '/demo/reportes': typeof DemoReportesRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/familia/dashboard': typeof FamiliaDashboardRoute
   '/familia/guardianes': typeof FamiliaGuardianesRoute
+  '/oneclick/credit-retorno': typeof OneclickCreditRetornoRoute
+  '/oneclick/debit-reject-validacion': typeof OneclickDebitRejectValidacionRoute
+  '/oneclick/debit-retorno': typeof OneclickDebitRetornoRoute
+  '/oneclick/inscripcion-abandonada': typeof OneclickInscripcionAbandonadaRoute
+  '/oneclick/retorno': typeof OneclickRetornoRoute
   '/webpay/retorno': typeof WebpayRetornoRoute
+  '/admin': typeof AdminIndexRoute
+  '/demo': typeof DemoIndexRoute
+  '/a/$alertId/$ackToken': typeof AAlertIdAckTokenRoute
+  '/a/$token/c': typeof ATokenCRoute
   '/api/cron/process-subscription-renewals': typeof ApiCronProcessSubscriptionRenewalsRoute
   '/api/public/family': typeof ApiPublicFamilyRoute
   '/api/public/lookup-account': typeof ApiPublicLookupAccountRoute
   '/api/public/save-pin': typeof ApiPublicSavePinRoute
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
   '/api/public/send-welcome-whatsapp': typeof ApiPublicSendWelcomeWhatsappRoute
+  '/api/public/twilio-emergency-call': typeof ApiPublicTwilioEmergencyCallRoute
   '/api/public/twilio-sms-webhook': typeof ApiPublicTwilioSmsWebhookRoute
   '/api/public/twilio-status-callback': typeof ApiPublicTwilioStatusCallbackRoute
   '/api/public/twilio-voice-webhook': typeof ApiPublicTwilioVoiceWebhookRoute
   '/api/public/twilio-whatsapp-webhook': typeof ApiPublicTwilioWhatsappWebhookRoute
+  '/api/public/validate-discount': typeof ApiPublicValidateDiscountRoute
   '/api/public/verify-pin': typeof ApiPublicVerifyPinRoute
   '/api/public/zoho-email-webhook': typeof ApiPublicZohoEmailWebhookRoute
   '/familia/ack/$token': typeof FamiliaAckTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/internal/emergency-cascade/$alertId': typeof ApiInternalEmergencyCascadeAlertIdRoute
+  '/api/public/ack-alert/$token': typeof ApiPublicAckAlertTokenRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -343,12 +595,16 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/activacion': typeof ActivacionRoute
   '/activar-whatsapp': typeof ActivarWhatsappRoute
+  '/admin': typeof AdminRouteWithChildren
   '/app': typeof AppRoute
   '/bienvenida-premium': typeof BienvenidaPremiumRoute
   '/checkout': typeof CheckoutRoute
+  '/como-funciona': typeof ComoFuncionaRoute
   '/dashboard': typeof DashboardRoute
+  '/demo': typeof DemoRouteWithChildren
   '/familia': typeof FamiliaRouteWithChildren
   '/flujo': typeof FlujoRoute
+  '/guia': typeof GuiaRoute
   '/instalar-app': typeof InstalarAppRoute
   '/native': typeof NativeRoute
   '/planes': typeof PlanesRoute
@@ -356,26 +612,53 @@ export interface FileRoutesById {
   '/terminos': typeof TerminosRoute
   '/tutorial': typeof TutorialRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/a/$token': typeof ATokenRouteWithChildren
+  '/admin/accounts': typeof AdminAccountsRoute
+  '/admin/discounts': typeof AdminDiscountsRoute
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/reset': typeof AdminResetRoute
+  '/admin/transbank-validacion': typeof AdminTransbankValidacionRoute
+  '/c/$token': typeof CTokenRoute
+  '/demo/alertas': typeof DemoAlertasRoute
+  '/demo/analitica': typeof DemoAnaliticaRoute
+  '/demo/ejecutivo': typeof DemoEjecutivoRoute
+  '/demo/flujo': typeof DemoFlujoRoute
+  '/demo/mapa': typeof DemoMapaRoute
+  '/demo/monitoreo': typeof DemoMonitoreoRoute
+  '/demo/perfil': typeof DemoPerfilRoute
+  '/demo/presentacion': typeof DemoPresentacionRoute
+  '/demo/reportes': typeof DemoReportesRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/familia/dashboard': typeof FamiliaDashboardRoute
   '/familia/guardianes': typeof FamiliaGuardianesRoute
+  '/oneclick/credit-retorno': typeof OneclickCreditRetornoRoute
+  '/oneclick/debit-reject-validacion': typeof OneclickDebitRejectValidacionRoute
+  '/oneclick/debit-retorno': typeof OneclickDebitRetornoRoute
+  '/oneclick/inscripcion-abandonada': typeof OneclickInscripcionAbandonadaRoute
+  '/oneclick/retorno': typeof OneclickRetornoRoute
   '/webpay/retorno': typeof WebpayRetornoRoute
+  '/admin/': typeof AdminIndexRoute
+  '/demo/': typeof DemoIndexRoute
+  '/a/$alertId/$ackToken': typeof AAlertIdAckTokenRoute
+  '/a/$token/c': typeof ATokenCRoute
   '/api/cron/process-subscription-renewals': typeof ApiCronProcessSubscriptionRenewalsRoute
   '/api/public/family': typeof ApiPublicFamilyRoute
   '/api/public/lookup-account': typeof ApiPublicLookupAccountRoute
   '/api/public/save-pin': typeof ApiPublicSavePinRoute
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
   '/api/public/send-welcome-whatsapp': typeof ApiPublicSendWelcomeWhatsappRoute
+  '/api/public/twilio-emergency-call': typeof ApiPublicTwilioEmergencyCallRoute
   '/api/public/twilio-sms-webhook': typeof ApiPublicTwilioSmsWebhookRoute
   '/api/public/twilio-status-callback': typeof ApiPublicTwilioStatusCallbackRoute
   '/api/public/twilio-voice-webhook': typeof ApiPublicTwilioVoiceWebhookRoute
   '/api/public/twilio-whatsapp-webhook': typeof ApiPublicTwilioWhatsappWebhookRoute
+  '/api/public/validate-discount': typeof ApiPublicValidateDiscountRoute
   '/api/public/verify-pin': typeof ApiPublicVerifyPinRoute
   '/api/public/zoho-email-webhook': typeof ApiPublicZohoEmailWebhookRoute
   '/familia/ack/$token': typeof FamiliaAckTokenRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/internal/emergency-cascade/$alertId': typeof ApiInternalEmergencyCascadeAlertIdRoute
+  '/api/public/ack-alert/$token': typeof ApiPublicAckAlertTokenRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -386,12 +669,16 @@ export interface FileRouteTypes {
     | '/'
     | '/activacion'
     | '/activar-whatsapp'
+    | '/admin'
     | '/app'
     | '/bienvenida-premium'
     | '/checkout'
+    | '/como-funciona'
     | '/dashboard'
+    | '/demo'
     | '/familia'
     | '/flujo'
+    | '/guia'
     | '/instalar-app'
     | '/native'
     | '/planes'
@@ -399,26 +686,53 @@ export interface FileRouteTypes {
     | '/terminos'
     | '/tutorial'
     | '/unsubscribe'
+    | '/a/$token'
+    | '/admin/accounts'
+    | '/admin/discounts'
     | '/admin/inbox'
     | '/admin/reset'
+    | '/admin/transbank-validacion'
+    | '/c/$token'
+    | '/demo/alertas'
+    | '/demo/analitica'
+    | '/demo/ejecutivo'
+    | '/demo/flujo'
+    | '/demo/mapa'
+    | '/demo/monitoreo'
+    | '/demo/perfil'
+    | '/demo/presentacion'
+    | '/demo/reportes'
     | '/email/unsubscribe'
     | '/familia/dashboard'
     | '/familia/guardianes'
+    | '/oneclick/credit-retorno'
+    | '/oneclick/debit-reject-validacion'
+    | '/oneclick/debit-retorno'
+    | '/oneclick/inscripcion-abandonada'
+    | '/oneclick/retorno'
     | '/webpay/retorno'
+    | '/admin/'
+    | '/demo/'
+    | '/a/$alertId/$ackToken'
+    | '/a/$token/c'
     | '/api/cron/process-subscription-renewals'
     | '/api/public/family'
     | '/api/public/lookup-account'
     | '/api/public/save-pin'
     | '/api/public/send-welcome-trial'
     | '/api/public/send-welcome-whatsapp'
+    | '/api/public/twilio-emergency-call'
     | '/api/public/twilio-sms-webhook'
     | '/api/public/twilio-status-callback'
     | '/api/public/twilio-voice-webhook'
     | '/api/public/twilio-whatsapp-webhook'
+    | '/api/public/validate-discount'
     | '/api/public/verify-pin'
     | '/api/public/zoho-email-webhook'
     | '/familia/ack/$token'
     | '/lovable/email/suppression'
+    | '/api/internal/emergency-cascade/$alertId'
+    | '/api/public/ack-alert/$token'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -430,9 +744,11 @@ export interface FileRouteTypes {
     | '/app'
     | '/bienvenida-premium'
     | '/checkout'
+    | '/como-funciona'
     | '/dashboard'
     | '/familia'
     | '/flujo'
+    | '/guia'
     | '/instalar-app'
     | '/native'
     | '/planes'
@@ -440,26 +756,53 @@ export interface FileRouteTypes {
     | '/terminos'
     | '/tutorial'
     | '/unsubscribe'
+    | '/a/$token'
+    | '/admin/accounts'
+    | '/admin/discounts'
     | '/admin/inbox'
     | '/admin/reset'
+    | '/admin/transbank-validacion'
+    | '/c/$token'
+    | '/demo/alertas'
+    | '/demo/analitica'
+    | '/demo/ejecutivo'
+    | '/demo/flujo'
+    | '/demo/mapa'
+    | '/demo/monitoreo'
+    | '/demo/perfil'
+    | '/demo/presentacion'
+    | '/demo/reportes'
     | '/email/unsubscribe'
     | '/familia/dashboard'
     | '/familia/guardianes'
+    | '/oneclick/credit-retorno'
+    | '/oneclick/debit-reject-validacion'
+    | '/oneclick/debit-retorno'
+    | '/oneclick/inscripcion-abandonada'
+    | '/oneclick/retorno'
     | '/webpay/retorno'
+    | '/admin'
+    | '/demo'
+    | '/a/$alertId/$ackToken'
+    | '/a/$token/c'
     | '/api/cron/process-subscription-renewals'
     | '/api/public/family'
     | '/api/public/lookup-account'
     | '/api/public/save-pin'
     | '/api/public/send-welcome-trial'
     | '/api/public/send-welcome-whatsapp'
+    | '/api/public/twilio-emergency-call'
     | '/api/public/twilio-sms-webhook'
     | '/api/public/twilio-status-callback'
     | '/api/public/twilio-voice-webhook'
     | '/api/public/twilio-whatsapp-webhook'
+    | '/api/public/validate-discount'
     | '/api/public/verify-pin'
     | '/api/public/zoho-email-webhook'
     | '/familia/ack/$token'
     | '/lovable/email/suppression'
+    | '/api/internal/emergency-cascade/$alertId'
+    | '/api/public/ack-alert/$token'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -468,12 +811,16 @@ export interface FileRouteTypes {
     | '/'
     | '/activacion'
     | '/activar-whatsapp'
+    | '/admin'
     | '/app'
     | '/bienvenida-premium'
     | '/checkout'
+    | '/como-funciona'
     | '/dashboard'
+    | '/demo'
     | '/familia'
     | '/flujo'
+    | '/guia'
     | '/instalar-app'
     | '/native'
     | '/planes'
@@ -481,26 +828,53 @@ export interface FileRouteTypes {
     | '/terminos'
     | '/tutorial'
     | '/unsubscribe'
+    | '/a/$token'
+    | '/admin/accounts'
+    | '/admin/discounts'
     | '/admin/inbox'
     | '/admin/reset'
+    | '/admin/transbank-validacion'
+    | '/c/$token'
+    | '/demo/alertas'
+    | '/demo/analitica'
+    | '/demo/ejecutivo'
+    | '/demo/flujo'
+    | '/demo/mapa'
+    | '/demo/monitoreo'
+    | '/demo/perfil'
+    | '/demo/presentacion'
+    | '/demo/reportes'
     | '/email/unsubscribe'
     | '/familia/dashboard'
     | '/familia/guardianes'
+    | '/oneclick/credit-retorno'
+    | '/oneclick/debit-reject-validacion'
+    | '/oneclick/debit-retorno'
+    | '/oneclick/inscripcion-abandonada'
+    | '/oneclick/retorno'
     | '/webpay/retorno'
+    | '/admin/'
+    | '/demo/'
+    | '/a/$alertId/$ackToken'
+    | '/a/$token/c'
     | '/api/cron/process-subscription-renewals'
     | '/api/public/family'
     | '/api/public/lookup-account'
     | '/api/public/save-pin'
     | '/api/public/send-welcome-trial'
     | '/api/public/send-welcome-whatsapp'
+    | '/api/public/twilio-emergency-call'
     | '/api/public/twilio-sms-webhook'
     | '/api/public/twilio-status-callback'
     | '/api/public/twilio-voice-webhook'
     | '/api/public/twilio-whatsapp-webhook'
+    | '/api/public/validate-discount'
     | '/api/public/verify-pin'
     | '/api/public/zoho-email-webhook'
     | '/familia/ack/$token'
     | '/lovable/email/suppression'
+    | '/api/internal/emergency-cascade/$alertId'
+    | '/api/public/ack-alert/$token'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -510,12 +884,16 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ActivacionRoute: typeof ActivacionRoute
   ActivarWhatsappRoute: typeof ActivarWhatsappRoute
+  AdminRoute: typeof AdminRouteWithChildren
   AppRoute: typeof AppRoute
   BienvenidaPremiumRoute: typeof BienvenidaPremiumRoute
   CheckoutRoute: typeof CheckoutRoute
+  ComoFuncionaRoute: typeof ComoFuncionaRoute
   DashboardRoute: typeof DashboardRoute
+  DemoRoute: typeof DemoRouteWithChildren
   FamiliaRoute: typeof FamiliaRouteWithChildren
   FlujoRoute: typeof FlujoRoute
+  GuiaRoute: typeof GuiaRoute
   InstalarAppRoute: typeof InstalarAppRoute
   NativeRoute: typeof NativeRoute
   PlanesRoute: typeof PlanesRoute
@@ -523,23 +901,33 @@ export interface RootRouteChildren {
   TerminosRoute: typeof TerminosRoute
   TutorialRoute: typeof TutorialRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
-  AdminInboxRoute: typeof AdminInboxRoute
-  AdminResetRoute: typeof AdminResetRoute
+  ATokenRoute: typeof ATokenRouteWithChildren
+  CTokenRoute: typeof CTokenRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  OneclickCreditRetornoRoute: typeof OneclickCreditRetornoRoute
+  OneclickDebitRejectValidacionRoute: typeof OneclickDebitRejectValidacionRoute
+  OneclickDebitRetornoRoute: typeof OneclickDebitRetornoRoute
+  OneclickInscripcionAbandonadaRoute: typeof OneclickInscripcionAbandonadaRoute
+  OneclickRetornoRoute: typeof OneclickRetornoRoute
   WebpayRetornoRoute: typeof WebpayRetornoRoute
+  AAlertIdAckTokenRoute: typeof AAlertIdAckTokenRoute
   ApiCronProcessSubscriptionRenewalsRoute: typeof ApiCronProcessSubscriptionRenewalsRoute
   ApiPublicFamilyRoute: typeof ApiPublicFamilyRoute
   ApiPublicLookupAccountRoute: typeof ApiPublicLookupAccountRoute
   ApiPublicSavePinRoute: typeof ApiPublicSavePinRoute
   ApiPublicSendWelcomeTrialRoute: typeof ApiPublicSendWelcomeTrialRoute
   ApiPublicSendWelcomeWhatsappRoute: typeof ApiPublicSendWelcomeWhatsappRoute
+  ApiPublicTwilioEmergencyCallRoute: typeof ApiPublicTwilioEmergencyCallRoute
   ApiPublicTwilioSmsWebhookRoute: typeof ApiPublicTwilioSmsWebhookRoute
   ApiPublicTwilioStatusCallbackRoute: typeof ApiPublicTwilioStatusCallbackRoute
   ApiPublicTwilioVoiceWebhookRoute: typeof ApiPublicTwilioVoiceWebhookRoute
   ApiPublicTwilioWhatsappWebhookRoute: typeof ApiPublicTwilioWhatsappWebhookRoute
+  ApiPublicValidateDiscountRoute: typeof ApiPublicValidateDiscountRoute
   ApiPublicVerifyPinRoute: typeof ApiPublicVerifyPinRoute
   ApiPublicZohoEmailWebhookRoute: typeof ApiPublicZohoEmailWebhookRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
+  ApiInternalEmergencyCascadeAlertIdRoute: typeof ApiInternalEmergencyCascadeAlertIdRoute
+  ApiPublicAckAlertTokenRoute: typeof ApiPublicAckAlertTokenRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
   LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
@@ -596,6 +984,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InstalarAppRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/guia': {
+      id: '/guia'
+      path: '/guia'
+      fullPath: '/guia'
+      preLoaderRoute: typeof GuiaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/flujo': {
       id: '/flujo'
       path: '/flujo'
@@ -610,11 +1005,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FamiliaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/demo': {
+      id: '/demo'
+      path: '/demo'
+      fullPath: '/demo'
+      preLoaderRoute: typeof DemoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/como-funciona': {
+      id: '/como-funciona'
+      path: '/como-funciona'
+      fullPath: '/como-funciona'
+      preLoaderRoute: typeof ComoFuncionaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checkout': {
@@ -638,6 +1047,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/activar-whatsapp': {
       id: '/activar-whatsapp'
       path: '/activar-whatsapp'
@@ -659,11 +1075,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/demo/': {
+      id: '/demo/'
+      path: '/'
+      fullPath: '/demo/'
+      preLoaderRoute: typeof DemoIndexRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/webpay/retorno': {
       id: '/webpay/retorno'
       path: '/webpay/retorno'
       fullPath: '/webpay/retorno'
       preLoaderRoute: typeof WebpayRetornoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oneclick/retorno': {
+      id: '/oneclick/retorno'
+      path: '/oneclick/retorno'
+      fullPath: '/oneclick/retorno'
+      preLoaderRoute: typeof OneclickRetornoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oneclick/inscripcion-abandonada': {
+      id: '/oneclick/inscripcion-abandonada'
+      path: '/oneclick/inscripcion-abandonada'
+      fullPath: '/oneclick/inscripcion-abandonada'
+      preLoaderRoute: typeof OneclickInscripcionAbandonadaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oneclick/debit-retorno': {
+      id: '/oneclick/debit-retorno'
+      path: '/oneclick/debit-retorno'
+      fullPath: '/oneclick/debit-retorno'
+      preLoaderRoute: typeof OneclickDebitRetornoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oneclick/debit-reject-validacion': {
+      id: '/oneclick/debit-reject-validacion'
+      path: '/oneclick/debit-reject-validacion'
+      fullPath: '/oneclick/debit-reject-validacion'
+      preLoaderRoute: typeof OneclickDebitRejectValidacionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oneclick/credit-retorno': {
+      id: '/oneclick/credit-retorno'
+      path: '/oneclick/credit-retorno'
+      fullPath: '/oneclick/credit-retorno'
+      preLoaderRoute: typeof OneclickCreditRetornoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/familia/guardianes': {
@@ -687,18 +1152,116 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/demo/reportes': {
+      id: '/demo/reportes'
+      path: '/reportes'
+      fullPath: '/demo/reportes'
+      preLoaderRoute: typeof DemoReportesRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/demo/presentacion': {
+      id: '/demo/presentacion'
+      path: '/presentacion'
+      fullPath: '/demo/presentacion'
+      preLoaderRoute: typeof DemoPresentacionRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/demo/perfil': {
+      id: '/demo/perfil'
+      path: '/perfil'
+      fullPath: '/demo/perfil'
+      preLoaderRoute: typeof DemoPerfilRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/demo/monitoreo': {
+      id: '/demo/monitoreo'
+      path: '/monitoreo'
+      fullPath: '/demo/monitoreo'
+      preLoaderRoute: typeof DemoMonitoreoRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/demo/mapa': {
+      id: '/demo/mapa'
+      path: '/mapa'
+      fullPath: '/demo/mapa'
+      preLoaderRoute: typeof DemoMapaRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/demo/flujo': {
+      id: '/demo/flujo'
+      path: '/flujo'
+      fullPath: '/demo/flujo'
+      preLoaderRoute: typeof DemoFlujoRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/demo/ejecutivo': {
+      id: '/demo/ejecutivo'
+      path: '/ejecutivo'
+      fullPath: '/demo/ejecutivo'
+      preLoaderRoute: typeof DemoEjecutivoRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/demo/analitica': {
+      id: '/demo/analitica'
+      path: '/analitica'
+      fullPath: '/demo/analitica'
+      preLoaderRoute: typeof DemoAnaliticaRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/demo/alertas': {
+      id: '/demo/alertas'
+      path: '/alertas'
+      fullPath: '/demo/alertas'
+      preLoaderRoute: typeof DemoAlertasRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/c/$token': {
+      id: '/c/$token'
+      path: '/c/$token'
+      fullPath: '/c/$token'
+      preLoaderRoute: typeof CTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/transbank-validacion': {
+      id: '/admin/transbank-validacion'
+      path: '/transbank-validacion'
+      fullPath: '/admin/transbank-validacion'
+      preLoaderRoute: typeof AdminTransbankValidacionRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/reset': {
       id: '/admin/reset'
-      path: '/admin/reset'
+      path: '/reset'
       fullPath: '/admin/reset'
       preLoaderRoute: typeof AdminResetRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/inbox': {
       id: '/admin/inbox'
-      path: '/admin/inbox'
+      path: '/inbox'
       fullPath: '/admin/inbox'
       preLoaderRoute: typeof AdminInboxRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/discounts': {
+      id: '/admin/discounts'
+      path: '/discounts'
+      fullPath: '/admin/discounts'
+      preLoaderRoute: typeof AdminDiscountsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/accounts': {
+      id: '/admin/accounts'
+      path: '/accounts'
+      fullPath: '/admin/accounts'
+      preLoaderRoute: typeof AdminAccountsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/a/$token': {
+      id: '/a/$token'
+      path: '/a/$token'
+      fullPath: '/a/$token'
+      preLoaderRoute: typeof ATokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lovable/email/suppression': {
@@ -729,6 +1292,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicVerifyPinRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/validate-discount': {
+      id: '/api/public/validate-discount'
+      path: '/api/public/validate-discount'
+      fullPath: '/api/public/validate-discount'
+      preLoaderRoute: typeof ApiPublicValidateDiscountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/twilio-whatsapp-webhook': {
       id: '/api/public/twilio-whatsapp-webhook'
       path: '/api/public/twilio-whatsapp-webhook'
@@ -755,6 +1325,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/twilio-sms-webhook'
       fullPath: '/api/public/twilio-sms-webhook'
       preLoaderRoute: typeof ApiPublicTwilioSmsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/twilio-emergency-call': {
+      id: '/api/public/twilio-emergency-call'
+      path: '/api/public/twilio-emergency-call'
+      fullPath: '/api/public/twilio-emergency-call'
+      preLoaderRoute: typeof ApiPublicTwilioEmergencyCallRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/send-welcome-whatsapp': {
@@ -799,6 +1376,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCronProcessSubscriptionRenewalsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/a/$token/c': {
+      id: '/a/$token/c'
+      path: '/c'
+      fullPath: '/a/$token/c'
+      preLoaderRoute: typeof ATokenCRouteImport
+      parentRoute: typeof ATokenRoute
+    }
+    '/a/$alertId/$ackToken': {
+      id: '/a/$alertId/$ackToken'
+      path: '/a/$alertId/$ackToken'
+      fullPath: '/a/$alertId/$ackToken'
+      preLoaderRoute: typeof AAlertIdAckTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/transactional/send': {
       id: '/lovable/email/transactional/send'
       path: '/lovable/email/transactional/send'
@@ -820,8 +1411,70 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/ack-alert/$token': {
+      id: '/api/public/ack-alert/$token'
+      path: '/api/public/ack-alert/$token'
+      fullPath: '/api/public/ack-alert/$token'
+      preLoaderRoute: typeof ApiPublicAckAlertTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/internal/emergency-cascade/$alertId': {
+      id: '/api/internal/emergency-cascade/$alertId'
+      path: '/api/internal/emergency-cascade/$alertId'
+      fullPath: '/api/internal/emergency-cascade/$alertId'
+      preLoaderRoute: typeof ApiInternalEmergencyCascadeAlertIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
+
+interface AdminRouteChildren {
+  AdminAccountsRoute: typeof AdminAccountsRoute
+  AdminDiscountsRoute: typeof AdminDiscountsRoute
+  AdminInboxRoute: typeof AdminInboxRoute
+  AdminResetRoute: typeof AdminResetRoute
+  AdminTransbankValidacionRoute: typeof AdminTransbankValidacionRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAccountsRoute: AdminAccountsRoute,
+  AdminDiscountsRoute: AdminDiscountsRoute,
+  AdminInboxRoute: AdminInboxRoute,
+  AdminResetRoute: AdminResetRoute,
+  AdminTransbankValidacionRoute: AdminTransbankValidacionRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
+interface DemoRouteChildren {
+  DemoAlertasRoute: typeof DemoAlertasRoute
+  DemoAnaliticaRoute: typeof DemoAnaliticaRoute
+  DemoEjecutivoRoute: typeof DemoEjecutivoRoute
+  DemoFlujoRoute: typeof DemoFlujoRoute
+  DemoMapaRoute: typeof DemoMapaRoute
+  DemoMonitoreoRoute: typeof DemoMonitoreoRoute
+  DemoPerfilRoute: typeof DemoPerfilRoute
+  DemoPresentacionRoute: typeof DemoPresentacionRoute
+  DemoReportesRoute: typeof DemoReportesRoute
+  DemoIndexRoute: typeof DemoIndexRoute
+}
+
+const DemoRouteChildren: DemoRouteChildren = {
+  DemoAlertasRoute: DemoAlertasRoute,
+  DemoAnaliticaRoute: DemoAnaliticaRoute,
+  DemoEjecutivoRoute: DemoEjecutivoRoute,
+  DemoFlujoRoute: DemoFlujoRoute,
+  DemoMapaRoute: DemoMapaRoute,
+  DemoMonitoreoRoute: DemoMonitoreoRoute,
+  DemoPerfilRoute: DemoPerfilRoute,
+  DemoPresentacionRoute: DemoPresentacionRoute,
+  DemoReportesRoute: DemoReportesRoute,
+  DemoIndexRoute: DemoIndexRoute,
+}
+
+const DemoRouteWithChildren = DemoRoute._addFileChildren(DemoRouteChildren)
 
 interface FamiliaRouteChildren {
   FamiliaDashboardRoute: typeof FamiliaDashboardRoute
@@ -838,16 +1491,31 @@ const FamiliaRouteChildren: FamiliaRouteChildren = {
 const FamiliaRouteWithChildren =
   FamiliaRoute._addFileChildren(FamiliaRouteChildren)
 
+interface ATokenRouteChildren {
+  ATokenCRoute: typeof ATokenCRoute
+}
+
+const ATokenRouteChildren: ATokenRouteChildren = {
+  ATokenCRoute: ATokenCRoute,
+}
+
+const ATokenRouteWithChildren =
+  ATokenRoute._addFileChildren(ATokenRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ActivacionRoute: ActivacionRoute,
   ActivarWhatsappRoute: ActivarWhatsappRoute,
+  AdminRoute: AdminRouteWithChildren,
   AppRoute: AppRoute,
   BienvenidaPremiumRoute: BienvenidaPremiumRoute,
   CheckoutRoute: CheckoutRoute,
+  ComoFuncionaRoute: ComoFuncionaRoute,
   DashboardRoute: DashboardRoute,
+  DemoRoute: DemoRouteWithChildren,
   FamiliaRoute: FamiliaRouteWithChildren,
   FlujoRoute: FlujoRoute,
+  GuiaRoute: GuiaRoute,
   InstalarAppRoute: InstalarAppRoute,
   NativeRoute: NativeRoute,
   PlanesRoute: PlanesRoute,
@@ -855,10 +1523,16 @@ const rootRouteChildren: RootRouteChildren = {
   TerminosRoute: TerminosRoute,
   TutorialRoute: TutorialRoute,
   UnsubscribeRoute: UnsubscribeRoute,
-  AdminInboxRoute: AdminInboxRoute,
-  AdminResetRoute: AdminResetRoute,
+  ATokenRoute: ATokenRouteWithChildren,
+  CTokenRoute: CTokenRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  OneclickCreditRetornoRoute: OneclickCreditRetornoRoute,
+  OneclickDebitRejectValidacionRoute: OneclickDebitRejectValidacionRoute,
+  OneclickDebitRetornoRoute: OneclickDebitRetornoRoute,
+  OneclickInscripcionAbandonadaRoute: OneclickInscripcionAbandonadaRoute,
+  OneclickRetornoRoute: OneclickRetornoRoute,
   WebpayRetornoRoute: WebpayRetornoRoute,
+  AAlertIdAckTokenRoute: AAlertIdAckTokenRoute,
   ApiCronProcessSubscriptionRenewalsRoute:
     ApiCronProcessSubscriptionRenewalsRoute,
   ApiPublicFamilyRoute: ApiPublicFamilyRoute,
@@ -866,13 +1540,18 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSavePinRoute: ApiPublicSavePinRoute,
   ApiPublicSendWelcomeTrialRoute: ApiPublicSendWelcomeTrialRoute,
   ApiPublicSendWelcomeWhatsappRoute: ApiPublicSendWelcomeWhatsappRoute,
+  ApiPublicTwilioEmergencyCallRoute: ApiPublicTwilioEmergencyCallRoute,
   ApiPublicTwilioSmsWebhookRoute: ApiPublicTwilioSmsWebhookRoute,
   ApiPublicTwilioStatusCallbackRoute: ApiPublicTwilioStatusCallbackRoute,
   ApiPublicTwilioVoiceWebhookRoute: ApiPublicTwilioVoiceWebhookRoute,
   ApiPublicTwilioWhatsappWebhookRoute: ApiPublicTwilioWhatsappWebhookRoute,
+  ApiPublicValidateDiscountRoute: ApiPublicValidateDiscountRoute,
   ApiPublicVerifyPinRoute: ApiPublicVerifyPinRoute,
   ApiPublicZohoEmailWebhookRoute: ApiPublicZohoEmailWebhookRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
+  ApiInternalEmergencyCascadeAlertIdRoute:
+    ApiInternalEmergencyCascadeAlertIdRoute,
+  ApiPublicAckAlertTokenRoute: ApiPublicAckAlertTokenRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
   LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,

@@ -103,8 +103,8 @@ if (!password) {
       const rk = chileDateKey(r.renewal_date);
       const until = daysBetweenChile(today, rk);
       const overdue = daysBetweenChile(rk, today);
-      if (r.subscription_status === "active" && until === 7) due7++;
-      if (r.subscription_status === "active" && until === 1) due1++;
+      if (r.subscription_status === "active" && until <= 7 && until >= 2) due7++;
+      if (r.subscription_status === "active" && until <= 1 && until >= 0) due1++;
       if (r.subscription_status === "active" && overdue >= 3) overdue3++;
     }
 
