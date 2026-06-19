@@ -4,6 +4,7 @@
  */
 
 import { SENIOR_SAFE_INSTALL_GUIDE_URL } from "@/lib/app-url";
+import { SENIOR_SAFE_CHECKOUT_URL } from "@/lib/whatsapp-commercial-activation";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { normalizeTwilioPhone } from "@/lib/twilio-inbound";
 import {
@@ -20,9 +21,9 @@ export const SENIOR_SAFE_OFFICIAL_CONTEXT = `
 RESUMEN
 Senior Safe no es un dispositivo físico adicional: es un ecosistema de protección inteligente basado en una aplicación para smartphone. Usa IA, los sensores del teléfono y comunicación redundante para alertar a la familia de inmediato ante caídas o emergencias. Conecta directamente al usuario con hasta 3 guardianes familiares priorizados. No hay call-center ni intermediarios humanos en las alertas.
 
-Contratación: https://alarmaseniorsafe.cl/checkout — pago seguro con Transbank Oneclick (crédito o débito).
-Tras pagar: instalar la PWA en el teléfono y practicar el flujo en simulación segura. No hay días de prueba gratis.
-Activación WhatsApp tras contratar: responder ACTIVAR en el chat comercial de Senior Safe.
+Contratación: ${SENIOR_SAFE_CHECKOUT_URL} — pago seguro con Transbank Oneclick (crédito o débito).
+Tras pagar en checkout: la pantalla de confirmación muestra ACTIVAR para enviar por WhatsApp comercial (+56 9 7140 4580). Solo entonces se vincula la cuenta.
+No hay días de prueba gratis; sí hay simulacro de entrenamiento tras contratar.
 
 GUÍA DE INSTALACIÓN Y USO (paso a paso, fácil de entender):
 ${SENIOR_SAFE_INSTALL_GUIDE_URL}
@@ -132,12 +133,19 @@ CIERRE OBLIGATORIO: Termina SIEMPRE con una pregunta abierta que avance la conve
 
 REGLAS ESTRICTAS:
 - Solo información del CONTEXTO OFICIAL adjunto. No inventes funciones, precios ni plazos.
-- Contratación: https://alarmaseniorsafe.cl/checkout
-- Tras contratar: responder ACTIVAR en este chat y compartir guía de instalación: ${SENIOR_SAFE_INSTALL_GUIDE_URL}
+- Contratación: ${SENIOR_SAFE_CHECKOUT_URL}
+- Tras contratar y pagar: el cliente envía ACTIVAR por WhatsApp (solo funciona con pago confirmado). Guía: ${SENIOR_SAFE_INSTALL_GUIDE_URL}
 - No hay días de prueba gratis; sí hay simulacro de entrenamiento tras contratar.
 - Emergencia médica ACTIVA ahora: indicar llamar al 131; este chat no despacha alertas.
 - Reembolso/cancelación: derivar a Términos (sección Cancelación y reembolsos): ${SENIOR_SAFE_TERMS_CANCELLATION_URL}
 - Casos técnicos (cuenta, factura, falla): responder EXACTAMENTE: ${TRIGGER_TECHNICAL_EMAIL_REDIRECT}
+
+PAGO Y ACTIVACIÓN (CRÍTICO — NUNCA VIOLAR):
+- Este chat NO procesa pagos ni puede verificar si alguien pagó.
+- NUNCA digas que el plan está activado, pagado o confirmado.
+- Si quiere contratar (dice sí, ya, dale, me interesa el plan): envía SOLO ${SENIOR_SAFE_CHECKOUT_URL} e indica que debe pagar ahí primero.
+- NO pidas ACTIVAR antes del pago. ACTIVAR solo aplica después de pagar en checkout.
+- Si pregunta por ACTIVAR sin haber pagado: redirige a checkout, no confirmes activación.
 
 CONTINUIDAD (CRÍTICO):
 - Recibirás el historial reciente del chat. NO reinicies con saludos genéricos ni repitas el pitch inicial.
@@ -178,12 +186,18 @@ CIERRE OBLIGATORIO: Pregunta directa y sencilla. Ejemplos:
 
 REGLAS ESTRICTAS:
 - Solo información del CONTEXTO OFICIAL adjunto. No invente nada.
-- Contratación: https://alarmaseniorsafe.cl/checkout — "Le ayudamos en cada paso."
-- Si ya pagó: escriba ACTIVAR en este chat.
-- Guía de instalación: ${SENIOR_SAFE_INSTALL_GUIDE_URL}
+- Contratación: ${SENIOR_SAFE_CHECKOUT_URL} — "Le ayudamos en cada paso."
+- Si ya pagó en checkout: escriba ACTIVAR por WhatsApp (el sistema lo verifica). Guía: ${SENIOR_SAFE_INSTALL_GUIDE_URL}
 - Emergencia ACTIVA ahora: llame al 131. Este chat no envía alertas.
 - Reembolso/cancelación: indique revisar Términos: ${SENIOR_SAFE_TERMS_CANCELLATION_URL}
 - Problemas de cuenta o factura: responda EXACTAMENTE: ${TRIGGER_TECHNICAL_EMAIL_REDIRECT}
+
+PAGO Y ACTIVACIÓN (CRÍTICO — NUNCA VIOLAR):
+- Este chat NO cobra ni puede saber si usted ya pagó.
+- NUNCA diga que su plan está activado o pagado.
+- Si quiere contratar (dice sí, ya, dale): envíe SOLO ${SENIOR_SAFE_CHECKOUT_URL} y explique que debe pagar ahí primero.
+- NO pida ACTIVAR antes del pago. Después de pagar, la página de confirmación muestra ACTIVAR para enviar.
+- Si escribe ACTIVAR sin haber pagado: indique que complete el pago en checkout primero.
 
 CONTINUIDAD (CRÍTICO):
 - Recibirá el historial reciente del chat. NO reinicie con saludos genéricos ni repita la presentación.
@@ -396,7 +410,9 @@ function fallbackReply(userMessage: string, audience: WhatsAppCommercialAudience
     }
     return (
       base +
-      "Perfecto. El Plan Único cuesta $6.900 al mes o $69.000 al año (ahorras 2 meses). Pagas seguro con Oneclick en alarmaseniorsafe.cl/checkout 💙"
+      "Perfecto. El Plan Único cuesta $6.900 al mes o $69.000 al año (ahorras 2 meses). Pagas seguro con Oneclick en " +
+      SENIOR_SAFE_CHECKOUT_URL +
+      " 💙"
     );
   }
   if (/prueba|trial|gratis|demo/.test(q)) {
@@ -414,7 +430,9 @@ function fallbackReply(userMessage: string, audience: WhatsAppCommercialAudience
     }
     return (
       base +
-      "Senior Safe es una app en el celular que avisa a tu familia en segundos por WhatsApp, SMS y ubicación. Si nadie confirma, llama sola (~60 s). Contrata en alarmaseniorsafe.cl/checkout 💙"
+      "Senior Safe es una app en el celular que avisa a tu familia en segundos por WhatsApp, SMS y ubicación. Si nadie confirma, llama sola (~60 s). Contrata en " +
+      SENIOR_SAFE_CHECKOUT_URL +
+      " 💙"
     );
   }
   if (/instal|descarg|qr|pwa|configur|como uso|usar la app|paso a paso/.test(q)) {
@@ -424,7 +442,13 @@ function fallbackReply(userMessage: string, audience: WhatsAppCommercialAudience
     );
   }
   if (/activar|whatsapp/.test(q)) {
-    return base + "Si ya contrataste, responde ACTIVAR en este chat y te ayudamos a vincular tus alertas por WhatsApp 😊";
+    return (
+      base +
+      `Para vincular WhatsApp, primero contrata y paga en ${SENIOR_SAFE_CHECKOUT_URL}. Tras el pago verás ACTIVAR listo para enviar por WhatsApp 😊`
+    );
+  }
+  if (/contratar|quiero el plan|me interesa|lo quiero|ya quiero/.test(q)) {
+    return base + `Perfecto. Contrata y paga aquí: ${SENIOR_SAFE_CHECKOUT_URL} 💙`;
   }
   if (/reembolso|cancelar|dar de baja|baja del plan|cancelaci|devuelven plata|devoluci/.test(q)) {
     return base + `Con gusto te oriento 😊 ${CANCELLATION_TERMS_WHATSAPP_REPLY}`;

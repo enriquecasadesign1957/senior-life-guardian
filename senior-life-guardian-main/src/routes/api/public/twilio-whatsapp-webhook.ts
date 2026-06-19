@@ -16,6 +16,7 @@ import {
 } from "@/lib/twilio-inbound";
 import { isEmergencyAlertAckMessage, processWhatsAppAlertAck } from "@/lib/whatsapp-alert-ack";
 import { saveWhatsAppInboxMessage } from "@/lib/whatsapp-inbox";
+import { processWhatsAppActivation, isActivationKeyword } from "@/lib/whatsapp-commercial-activation";
 import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
@@ -68,6 +69,11 @@ async function handleCommercialInbox(
       phone,
       "Recibido. No te enviaremos más mensajes por aquí. Para consultas sobre Senior Safe, escríbenos cuando quieras.",
     );
+  }
+
+  if (isActivationKeyword(rawBody)) {
+    const activationReply = await processWhatsAppActivation(phone, rawBody);
+    if (activationReply) return replyCommercial(phone, activationReply);
   }
 
   if (rawBody.length >= 2) {
@@ -192,23 +198,10 @@ export const Route = createFileRoute("/api/public/twilio-whatsapp-webhook")({
           );
         }
 
-        // 2) Activación WhatsApp del contratante
+        // 2) Activación WhatsApp del contratante (requiere pago confirmado)
         if (isWhatsAppActivationMessage(textUpper)) {
-          if (!signup) {
-            return twimlMessage(
-              "Senior Safe 🛡️\n\nRecibimos tu mensaje pero no encontramos tu cuenta. Verifica que el número de WhatsApp coincida con el registrado al contratar en alarmaseniorsafe.cl.",
-            );
-          }
-
-          await supabaseAdmin
-            .from(CONTRACT_SIGNUPS_TABLE)
-            .update({ whatsapp_activated: true, telefono: phone || signup.telefono })
-            .eq("id", signup.id);
-
-          const first = signup.nombre?.split(" ")?.[0] ?? "usuario";
-          return twimlMessage(
-            `Senior Safe 🛡️\n\n✅ ¡Activado, ${first}!\n\nTus alertas de emergencia llegarán por WhatsApp a tus guardianes. Mantén este chat disponible.`,
-          );
+          const activationReply = await processWhatsAppActivation(phone, rawBody);
+          if (activationReply) return twimlMessage(activationReply);
         }
 
         // 4) Texto libre → enrutador Groq + ack o respuesta comercial

@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { supabaseAdmin } from '@/integrations/supabase/client.server'
-import { CONTRACT_SIGNUPS_TABLE } from '@/lib/signups-db'
+import { processWhatsAppActivation } from '@/lib/whatsapp-commercial-activation'
 
 /**
  * Webhook entrante de Twilio para SMS (número chileno +56 2 2914 7733).
@@ -104,16 +104,10 @@ export const Route = createFileRoute('/api/public/twilio-sms-webhook')({
           return twiml(`Senior Safe 🛡️\n✅ Alerta enviada, ${user.nombre.split(' ')[0]}. Tus guardianes ya fueron notificados.`)
         }
 
-        // ACTIVAR
+        // ACTIVAR (requiere pago confirmado)
         if (text.includes('ACTIVAR')) {
-          if (!user) {
-            return twiml('Senior Safe 🛡️\nNo encontramos tu cuenta. Verifica el número registrado en la app.')
-          }
-          await supabaseAdmin
-            .from(CONTRACT_SIGNUPS_TABLE)
-            .update({ whatsapp_activated: true, telefono: phone || user.telefono })
-            .eq('id', user.id)
-          return twiml(`Senior Safe 🛡️\n✅ ¡Activado, ${user.nombre.split(' ')[0]}!\nTus alertas llegarán por SMS/WhatsApp a tus guardianes.`)
+          const activationReply = await processWhatsAppActivation(phone, body)
+          if (activationReply) return twiml(activationReply)
         }
 
         return twiml(

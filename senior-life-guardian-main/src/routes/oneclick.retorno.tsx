@@ -16,6 +16,7 @@ import {
   type OneclickVoucherDisplay,
 } from "@/lib/oneclick-voucher";
 import { markRequiresPwaInstall, persistSignupHandoff } from "@/lib/post-payment";
+import { WhatsAppActivarCta } from "@/components/whatsapp-activar-cta";
 
 type SearchParams = {
   TBK_TOKEN?: string;
@@ -107,6 +108,10 @@ function OneclickSuccessView({
                   Vista de validación Transbank · datos de prueba integración
                 </p>
               )}
+            </div>
+
+            <div className="px-6 pb-2">
+              <WhatsAppActivarCta compact />
             </div>
 
             <div className="px-6 pb-8">

@@ -28,6 +28,7 @@ import {
   markRequiresPwaInstall,
   persistSignupHandoff,
 } from "@/lib/post-payment";
+import { WhatsAppActivarCta } from "@/components/whatsapp-activar-cta";
 
 const DEEP = "var(--brand-petrol-deep)";
 const PETROL = "var(--brand-petrol)";
@@ -300,6 +301,12 @@ export function PostPaymentInstallScreen({
       </header>
 
       <main className="flex-1 px-6 pb-10 max-w-lg mx-auto w-full">
+        {showPaymentSuccess && (
+          <div className="mb-6">
+            <WhatsAppActivarCta />
+          </div>
+        )}
+
         {showMobilePanel ? (
           <MobileInstallPanel
             installed={installed}
