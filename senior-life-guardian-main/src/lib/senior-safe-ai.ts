@@ -40,6 +40,12 @@ R: Cuatro canales en tiempo real: (A) WhatsApp + IA que procesa confirmaciones d
 P: ¿A quién notifica?
 R: Directamente al núcleo familiar, sin centrales externas. Hasta 3 guardianes (hijos, nietos, vecinos, cuidadores) con orden de prioridad. SMS al instante, WhatsApp a los 15 s, llamada automática a los 60 s si nadie confirma.
 
+P: Vivo solo / no tengo familiares, ¿me sirve?
+R: Sí. Puede elegir hasta 3 personas de confianza con celular: vecinos, amigos, cuidador, etc. Ellos reciben WhatsApp, SMS, ubicación y llamada. Senior Safe avisa a esas personas para que acudan; no reemplaza llamar al 131 (urgencia médica) o 133 (Carabineros) en una emergencia activa.
+
+P: ¿Puedo agregar Carabineros, policía, 133, bomberos o SAMU como guardián?
+R: NO. Senior Safe NO conecta con Carabineros, policía, bomberos, SAMU ni centrales de emergencia. Los guardianes deben ser personas reales con celular (familia, vecinos, amigos, cuidadores). Para emergencia activa ahora: llamar al 131 (salud) o 133 (Carabineros) directamente desde el teléfono. Nunca diga que el sistema notifica a las autoridades.
+
 P: ¿Cuánto tarda la alerta?
 R: Menos de 3 segundos desde el impacto detectado o el botón SOS hasta la primera notificación a la red familiar.
 
@@ -147,6 +153,12 @@ PAGO Y ACTIVACIÓN (CRÍTICO — NUNCA VIOLAR):
 - NO pidas ACTIVAR antes del pago. ACTIVAR solo aplica después de pagar en checkout.
 - Si pregunta por ACTIVAR sin haber pagado: redirige a checkout, no confirmes activación.
 
+GUARDIANES Y AUTORIDADES (CRÍTICO — NUNCA VIOLAR):
+- Los guardianes son personas reales con celular (familia, vecinos, amigos, cuidadores). Máximo 3.
+- NUNCA digas que se puede agregar Carabineros, policía, 133, 131, bomberos, SAMU ni ninguna central/autoridad como guardián.
+- NUNCA digas que el sistema notifica, llama o despacha a Carabineros o autoridades.
+- Si vive solo sin familia: sí le sirve con vecinos/amigos/cuidador; aclara que no reemplaza llamar al 131 o 133 en emergencia activa.
+
 CONTINUIDAD (CRÍTICO):
 - Recibirás el historial reciente del chat. NO reinicies con saludos genéricos ni repitas el pitch inicial.
 - Si el usuario responde "sí", "ok", "dale" o similar, responde DIRECTAMENTE lo que ofreciste en tu mensaje anterior.
@@ -199,6 +211,12 @@ PAGO Y ACTIVACIÓN (CRÍTICO — NUNCA VIOLAR):
 - NO pida ACTIVAR antes del pago. Después de pagar, la página de confirmación muestra ACTIVAR para enviar.
 - Si escribe ACTIVAR sin haber pagado: indique que complete el pago en checkout primero.
 
+GUARDIANES Y AUTORIDADES (CRÍTICO — NUNCA VIOLAR):
+- Los guardianes son personas reales con celular (vecinos, amigos, cuidador). Máximo 3.
+- NUNCA diga que puede agregar Carabineros, policía, 133, 131, bomberos ni SAMU como guardián.
+- NUNCA diga que el sistema avisa a Carabineros o autoridades.
+- Si vive solo: sí le sirve con vecinos o amigos de confianza; para emergencia activa llame al 131 o 133.
+
 CONTINUIDAD (CRÍTICO):
 - Recibirá el historial reciente del chat. NO reinicie con saludos genéricos ni repita la presentación.
 - Si el usuario responde "sí", "ok" o similar, explique DIRECTAMENTE lo que ofreció en su mensaje anterior.
@@ -216,6 +234,49 @@ function normalizeForAudienceMatch(text: string): string {
     .toLowerCase()
     .normalize("NFD")
     .replace(/\p{M}/gu, "");
+}
+
+const AUTHORITIES_GUARDIAN_SIGNAL =
+  /\b(carabineros?|polic[ií]a|133|134|132|bomberos?|pdi|samu|131|ambulancia|fuerzas? de orden|central de monitoreo|n[uú]mero de emergencia|autoridades)\b/;
+
+const GUARDIAN_INTENT_SIGNAL =
+  /\b(agregar|poner|incluir|guardian|guardi[aá]n|contacto|puedo|sirve|funciona|notificar|avisar|llama|llamar)\b/;
+
+function isAuthoritiesAsGuardianQuestion(text: string): boolean {
+  const q = normalizeForAudienceMatch(text);
+  return AUTHORITIES_GUARDIAN_SIGNAL.test(q) && GUARDIAN_INTENT_SIGNAL.test(q);
+}
+
+function replyContainsAuthorityHallucination(text: string): boolean {
+  const q = normalizeForAudienceMatch(text);
+  if (!AUTHORITIES_GUARDIAN_SIGNAL.test(q)) return false;
+  if (/\b(no puede|no es posible|no llama|no conecta|no despacha|no notifica|no agregar|no sirve para agregar)\b/.test(q)) {
+    return false;
+  }
+  return /\b(s[ií] puede|puede agregar|notificar a las autoridades|notificar a carabineros|despach|conecta con|llama a carabineros|autoridades para que)\b/.test(
+    q,
+  );
+}
+
+function authoritiesGuardianFallbackReply(audience: WhatsAppCommercialAudience): string {
+  const base = "Senior Safe 🛡️\n";
+  if (audience === "senior") {
+    return (
+      base +
+      "No, Senior Safe no llama a Carabineros ni a la policía.\n" +
+      "Avisa a hasta 3 personas de confianza que usted elija (vecino, amigo, cuidador) por WhatsApp, SMS y llamada.\n" +
+      "Si hay emergencia ahora, llame al 131 (salud) o 133 (Carabineros) desde su teléfono.\n" +
+      "¿Le gustaría saber cómo agregar un vecino o amigo como contacto?"
+    );
+  }
+  return (
+    base +
+    "No, Senior Safe no conecta con Carabineros ni despacha autoridades.\n" +
+    "• Los guardianes son personas reales con celular (vecinos, amigos, cuidadores)\n" +
+    "• Máximo 3 contactos que reciben WhatsApp, SMS, ubicación y llamada\n" +
+    "En emergencia activa: 131 (salud) o 133 (Carabineros) directo desde el teléfono.\n" +
+    "¿Te ayudo a entender cómo configurar vecinos o amigos como guardianes?"
+  );
 }
 
 const SENIOR_AUDIENCE_SIGNAL =
@@ -450,6 +511,25 @@ function fallbackReply(userMessage: string, audience: WhatsAppCommercialAudience
   if (/contratar|quiero el plan|me interesa|lo quiero|ya quiero/.test(q)) {
     return base + `Perfecto. Contrata y paga aquí: ${SENIOR_SAFE_CHECKOUT_URL} 💙`;
   }
+  if (isAuthoritiesAsGuardianQuestion(userMessage)) {
+    return authoritiesGuardianFallbackReply(audience);
+  }
+  if (/vivo solo|vivo sola|no tengo familia|sin familiares|no tengo parientes/.test(q)) {
+    if (audience === "senior") {
+      return (
+        base +
+        "Sí le sirve. Puede elegir hasta 3 personas de confianza con celular: vecinos, amigos o cuidador.\n" +
+        "Ellos reciben WhatsApp, SMS, ubicación y llamada si usted necesita ayuda.\n" +
+        "¿Le gustaría saber el valor del plan?"
+      );
+    }
+    return (
+      base +
+      "Sí, funciona perfecto. Puede configurar vecinos, amigos o cuidadores como guardianes (hasta 3).\n" +
+      "Reciben WhatsApp, SMS, ubicación y llamada automática.\n" +
+      "¿Te gustaría saber cómo contratar?"
+    );
+  }
   if (/reembolso|cancelar|dar de baja|baja del plan|cancelaci|devuelven plata|devoluci/.test(q)) {
     return base + `Con gusto te oriento 😊 ${CANCELLATION_TERMS_WHATSAPP_REPLY}`;
   }
@@ -613,6 +693,10 @@ export async function generateSeniorSafeWhatsAppReply(
     return fallback;
   }
 
+  if (isAuthoritiesAsGuardianQuestion(trimmed)) {
+    return authoritiesGuardianFallbackReply(audience);
+  }
+
   const systemPrompt = whatsAppSystemPromptForAudience(audience);
   const maxTokens = audience === "senior" ? 220 : 320;
   const temperature = audience === "senior" ? 0.35 : 0.42;
@@ -632,6 +716,9 @@ export async function generateSeniorSafeWhatsAppReply(
       },
       history,
     );
+    if (replyContainsAuthorityHallucination(reply)) {
+      return authoritiesGuardianFallbackReply(audience);
+    }
     return formatWhatsAppCommercialReply(reply, trimmed);
   } catch (e) {
     console.error("[senior-safe-ai]", e);
