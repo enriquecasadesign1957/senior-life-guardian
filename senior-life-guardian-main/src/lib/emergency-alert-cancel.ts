@@ -7,8 +7,8 @@ export const ALERT_STATUS_CANCELLED = "cancelled_by_senior";
 /** Cascada en curso. */
 export const ALERT_STATUS_DISPATCHING = "dispatching";
 
-/** Segundos en pantalla de envío antes del primer SMS (cancelación real). */
-export const EMERGENCY_ARM_GRACE_MS = 6_000;
+/** Segundos de espera antes del primer SMS/WhatsApp Twilio; cancelable con «Estoy bien». */
+export const EMERGENCY_ARM_GRACE_MS = 3_000;
 
 type AlertCancelRow = {
   status: string | null;
