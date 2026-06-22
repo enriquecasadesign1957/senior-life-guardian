@@ -1,8 +1,8 @@
 import { PRODUCTION_SITE_URL } from "@/lib/app-url";
 
-/** APK oficial — misma URL en post-pago, modal y guía. */
+/** APK oficial — GitHub Releases latest (se actualiza en cada build CI). */
 export const APK_DOWNLOAD_URL =
-  "https://github.com/enriquecasadesign1957/senior-life-guardian/releases/latest/download/SeniorSafe.apk";
+  "https://github.com/enriquecasadesign1957/senior-life-guardian/releases/latest/download/SeniorSafe.apk?v=20260622";
 
 export const NATIVE_APP_PATH = "/native";
 

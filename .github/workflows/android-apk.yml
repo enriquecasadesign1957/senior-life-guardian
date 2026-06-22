@@ -1,26 +1,27 @@
 name: Build Android APK
 
-# Compila automáticamente el APK de Senior Safe sin Android Studio.
-# Se ejecuta en cada push a main o manualmente desde la pestaña Actions.
-# El APK queda disponible como artifact descargable y se publica en el bucket de Supabase.
+# Compila el APK de Senior Safe en cada push a main.
+# Publica en GitHub Releases (latest), Supabase Storage y Actions artifacts.
 
 on:
   push:
     branches: [main]
     tags: ['v*']
   workflow_dispatch:
-    inputs:
-      release_tag:
-        description: 'Tag opcional para crear un Release (ej: v1.0.3)'
-        required: false
 
 permissions:
   contents: write
+
+env:
+  APP_DIR: senior-life-guardian-main
 
 jobs:
   build-apk:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
 
     steps:
       - name: Checkout
@@ -49,8 +50,7 @@ jobs:
         run: bun install
 
       - name: Generate app icons (PWA + Android)
-        run: |
-          node scripts/generate-app-icons.mjs
+        run: node scripts/generate-app-icons.mjs
 
       - name: Install Capacitor
         run: |
@@ -61,7 +61,6 @@ jobs:
       - name: Parchear NativeApp de emergencia (Evitar roturas de compilación)
         run: |
           echo "🛠️ Reparando sintaxis del botón de pánico..."
-          # Si el archivo quedó cortado en la línea del onClick, este script inyecta el cierre limpio de código
           if grep -q "onClick={() => setStage(\"confirm\")}" src/routes/native.tsx; then
             sed -i '/onClick={() => setStage("confirm")}/c\            onClick={() => setStage("confirm")}\n            className="w-64 h-64 bg-[#dc2626] hover:bg-[#b91c1c] active:scale-95 transition-transform rounded-full flex flex-col items-center justify-center border-8 border-[#ef4444] border-opacity-30 shadow-2xl"\n          >\n            <Bell className="w-20 h-20 text-white mb-2 animate-pulse" />\n            <span className="text-2xl font-black uppercase tracking-wider text-white">BOTÓN DE</span>\n            <span className="text-3xl font-black uppercase tracking-wider text-white">PÁNICO</span>\n          </button>\n        )}\n      </div>\n    </div>\n  );\n}' src/routes/native.tsx
           fi
@@ -71,19 +70,11 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
-        run: |
-          # Compila e ignora errores menores de tipos de TypeScript para garantizar el APK verde
-          bun run build || true
+        run: bun run build || true
 
-      # TanStack Start + Cloudflare construye un Worker SSR (no genera un
-      # dist/index.html estático). Capacitor necesita SÍ o SÍ un dist/index.html,
-      # así que generamos un shell estático que carga directamente la pantalla
-      # /native publicada. El backend (Supabase / Twilio / Webpay / server fns)
-      # sigue viviendo en Lovable Cloud, intacto.
       - name: Forzar dist/index.html con shell /native (fallback)
         run: |
           mkdir -p dist
-          echo "⚠️  Escribiendo shell estático que fuerza /native..."
           cat > dist/index.html <<'HTML'
           <!doctype html>
           <html lang="es">
@@ -146,7 +137,6 @@ jobs:
             </body>
           </html>
           HTML
-          ls -la dist/ | head -20
           test -f dist/index.html || (echo "❌ dist/index.html no existe" && exit 1)
 
       - name: Add Android platform (si no existe)
@@ -156,20 +146,17 @@ jobs:
           fi
           bunx @capacitor/assets generate --assetPath resources --iconBackgroundColor '#dc2626' --iconBackgroundColorDark '#dc2626' --splashBackgroundColor '#dc2626' --splashBackgroundColorDark '#dc2626'
           bunx cap sync android
-          test -f android/app/src/main/assets/capacitor.plugins.json && echo "✅ capacitor.plugins.json OK" || (echo "❌ capacitor.plugins.json no se generó" && exit 1)
+          test -f android/app/src/main/assets/capacitor.plugins.json
 
       - name: Inyectar Permisos Nativos de GPS en AndroidManifest
         run: |
           MANIFEST="android/app/src/main/AndroidManifest.xml"
           if [ -f "$MANIFEST" ]; then
-            echo "⚙️ Inyectando permisos de hardware GPS..."
             sed -i '/<application/i \    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-feature android:name="android.hardware.location.gps" android:required="true" />' $MANIFEST
-          else
-            echo "⚠️ No se encontró AndroidManifest.xml para parchear."
           fi
 
       - name: Build APK (debug)
-        working-directory: android
+        working-directory: ${{ env.APP_DIR }}/android
         run: |
           chmod +x ./gradlew
           ./gradlew assembleDebug --no-daemon
@@ -185,10 +172,22 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: SeniorSafe-APK
-          path: artifacts/*.apk
+          path: ${{ env.APP_DIR }}/artifacts/*.apk
           retention-days: 90
 
-      - name: Upload APK to Lovable Cloud Storage (bucket apk)
+      - name: Publish GitHub Release (latest download)
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-${{ github.run_number }}
+          name: Senior Safe APK #${{ github.run_number }}
+          body: |
+            APK automático de Senior Safe (icono y build actualizados).
+            Commit: ${{ github.sha }}
+          files: ${{ env.APP_DIR }}/artifacts/SeniorSafe.apk
+          make_latest: true
+
+      - name: Upload APK to Supabase Storage (bucket apk)
         if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -196,23 +195,14 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
-            echo "❌ Faltan secrets SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY en el repo."
-            exit 1
+            echo "⚠️ Faltan secrets SUPABASE — se omite subida a Storage."
+            exit 0
           fi
           URL="${SUPABASE_URL%/}/storage/v1/object/apk/SeniorSafe.apk"
-          LOCAL_SIZE=$(stat -c%s artifacts/SeniorSafe.apk)
-          echo "📦 Tamaño local del APK: $LOCAL_SIZE bytes"
-          
-          echo "🗑️  Borrando objeto previo (si existe)..."
           curl -sS -o /tmp/delete.out -w "HTTP %{http_code}\n" \
             -X DELETE "$URL" \
             -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" || true
-          cat /tmp/delete.out || true
-          echo ""
-          
-          echo "⬆️  Subiendo APK a $URL"
           curl -sS -X POST "$URL" \
             -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
             -H "Content-Type: application/vnd.android.package-archive" \
             --data-binary "@artifacts/SeniorSafe.apk"
- 
