@@ -15,3 +15,40 @@ export function normalizePhoneE164(raw: string | null | undefined): string | nul
   if (s.startsWith("56")) return `+${s}`;
   return `+${s}`;
 }
+
+/** Variantes comunes del mismo móvil chileno para búsquedas en BD. */
+export function phoneLookupCandidates(raw: string | null | undefined): string[] {
+  const normalized = normalizePhoneE164(raw);
+  if (!normalized) return [];
+
+  const digits = normalized.replace(/\D/g, "");
+  const out = new Set<string>([normalized, digits]);
+
+  if (digits.startsWith("56") && digits.length >= 11) {
+    out.add(`+${digits}`);
+    out.add(digits.slice(2));
+    const local = digits.slice(-9);
+    if (/^9\d{8}$/.test(local)) out.add(local);
+  }
+
+  if (/^9\d{8}$/.test(digits)) {
+    out.add(`+56${digits}`);
+    out.add(`56${digits}`);
+  }
+
+  return [...out];
+}
+
+/** Filtro PostgREST `or=(telefono.eq.X,whatsapp.eq.X,...)` para columnas de teléfono. */
+export function buildPhoneColumnOrFilter(
+  columns: string[],
+  candidates: string[],
+): string {
+  const parts: string[] = [];
+  for (const column of columns) {
+    for (const phone of candidates) {
+      parts.push(`${column}.eq.${phone}`);
+    }
+  }
+  return parts.join(",");
+}

@@ -120,7 +120,7 @@ export const deleteFamily = createServerFn({ method: "POST" })
 
 /**
  * Reenvía la invitación al Portal Familia para un guardián existente.
- * Reutiliza sendGuardianInvite (mismo canal WhatsApp + SMS). No duplica contactos.
+ * Reutiliza sendGuardianInvite (WhatsApp primero, SMS si falla). No duplica contactos.
  */
 export const resendFamilyInvite = createServerFn({ method: "POST" })
   .inputValidator((input) =>

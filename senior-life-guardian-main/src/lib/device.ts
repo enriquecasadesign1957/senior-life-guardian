@@ -1,3 +1,5 @@
+import { isAndroidApkAcknowledged } from "@/lib/install-config";
+
 /** App instalada como PWA / WAM (modo standalone). */
 export function isPwaStandalone(): boolean {
   if (typeof window === "undefined") return false;
@@ -5,6 +7,20 @@ export function isPwaStandalone(): boolean {
     window.matchMedia?.("(display-mode: standalone)").matches === true ||
     (window.navigator as Navigator & { standalone?: boolean }).standalone === true
   );
+}
+
+/** App nativa Capacitor (APK / iOS shell). */
+export function isNativeApp(): boolean {
+  if (typeof window === "undefined") return false;
+  const cap = (window as Window & { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
+  return cap?.isNativePlatform?.() === true;
+}
+
+/** PWA standalone, APK nativa, o Android con instalación APK confirmada por el usuario. */
+export function isAppInstalled(): boolean {
+  if (isPwaStandalone() || isNativeApp()) return true;
+  const { isAndroid } = detectPlatform();
+  return isAndroid && isAndroidApkAcknowledged();
 }
 
 export function detectPlatform() {

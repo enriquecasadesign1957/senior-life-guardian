@@ -2,8 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
-import { normalizePhoneE164 } from "@/lib/phone-utils";
-import { sendTwilioChannelMessage } from "@/lib/twilio";
+import { normalizePhoneE164, phoneLookupCandidates, buildPhoneColumnOrFilter } from "@/lib/phone-utils";
+import { sendTwilioWhatsAppWithSmsFallback } from "@/lib/twilio";
 import { acknowledgeAlertByToken } from "@/lib/ack-alert";
 
 const CODE_TTL_MIN = 10;
@@ -41,6 +41,151 @@ async function logAccess(
   }
 }
 
+type FamilyMemberRow = {
+  id: string;
+  contract_signup_id: string;
+  nombre: string;
+  activo: boolean;
+  telefono: string;
+};
+
+async function pickPreferredSignupId(signupIds: string[]): Promise<string | null> {
+  const unique = [...new Set(signupIds.filter(Boolean))];
+  if (unique.length === 0) return null;
+  if (unique.length === 1) return unique[0];
+
+  const { data: signups } = await supabaseAdmin
+    .from(CONTRACT_SIGNUPS_TABLE)
+    .select("id, subscription_status, payment_status, updated_at, created_at")
+    .in("id", unique)
+    .order("updated_at", { ascending: false });
+
+  if (!signups?.length) return unique[0];
+
+  const activePaid = signups.find(
+    (s) => s.subscription_status === "active" && s.payment_status === "paid",
+  );
+  return activePaid?.id ?? signups[0]?.id ?? unique[0];
+}
+
+async function findFamilyMemberByPhone(tel: string): Promise<FamilyMemberRow | null> {
+  const candidates = phoneLookupCandidates(tel);
+  if (candidates.length === 0) return null;
+
+  const { data, error } = await supabaseAdmin
+    .from("family_members")
+    .select("id, contract_signup_id, nombre, activo, telefono, created_at")
+    .in("telefono", candidates)
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  if (error) {
+    console.error("[family-portal] findFamilyMemberByPhone", error.message);
+    return null;
+  }
+
+  const rows = (data ?? []) as Array<FamilyMemberRow & { created_at?: string }>;
+  if (rows.length === 0) return null;
+  if (rows.length === 1) return rows[0];
+
+  const preferredSignupId = await pickPreferredSignupId(rows.map((r) => r.contract_signup_id));
+  return rows.find((r) => r.contract_signup_id === preferredSignupId) ?? rows[0];
+}
+
+async function findEmergencyContactByPhone(tel: string): Promise<{
+  contract_signup_id: string;
+  nombre: string;
+  parentesco: string;
+} | null> {
+  const candidates = phoneLookupCandidates(tel);
+  if (candidates.length === 0) return null;
+
+  const { data, error } = await supabaseAdmin
+    .from("emergency_contacts")
+    .select("contract_signup_id, nombre, parentesco, created_at")
+    .or(buildPhoneColumnOrFilter(["telefono", "whatsapp"], candidates))
+    .eq("activo", true)
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  if (error) {
+    console.error("[family-portal] findEmergencyContactByPhone", error.message);
+    return null;
+  }
+
+  const rows = data ?? [];
+  if (rows.length === 0) return null;
+  if (rows.length === 1) return rows[0];
+
+  const preferredSignupId = await pickPreferredSignupId(rows.map((r) => r.contract_signup_id));
+  return rows.find((r) => r.contract_signup_id === preferredSignupId) ?? rows[0];
+}
+
+async function reactivateFamilyMember(member: FamilyMemberRow, canonicalTel: string) {
+  const { error } = await supabaseAdmin
+    .from("family_members")
+    .update({ activo: true, telefono: canonicalTel, updated_at: new Date().toISOString() })
+    .eq("id", member.id);
+  if (error) throw error;
+}
+
+async function ensureFamilyMemberForLogin(tel: string): Promise<FamilyMemberRow> {
+  const existing = await findFamilyMemberByPhone(tel);
+  if (existing?.activo) return existing;
+
+  if (existing && !existing.activo) {
+    await reactivateFamilyMember(existing, tel);
+    return { ...existing, activo: true, telefono: tel };
+  }
+
+  const ec = await findEmergencyContactByPhone(tel);
+  if (!ec) {
+    await logAccess(null, null, "code_request_unknown", { telefono: tel });
+    throw new Error("Este número no está registrado como familiar.");
+  }
+
+  const { data: created, error: insertErr } = await supabaseAdmin
+    .from("family_members")
+    .insert({
+      contract_signup_id: ec.contract_signup_id,
+      nombre: ec.nombre,
+      telefono: tel,
+      parentesco: ec.parentesco,
+    })
+    .select("id, contract_signup_id, nombre, activo, telefono")
+    .single();
+
+  if (!insertErr && created) {
+    return created as FamilyMemberRow;
+  }
+
+  // Conflicto único (signup+teléfono): reutilizar fila existente en lugar de fallar.
+  if (insertErr?.code === "23505") {
+    const conflict = await findFamilyMemberByPhone(tel);
+    if (conflict) {
+      if (!conflict.activo) await reactivateFamilyMember(conflict, tel);
+      return { ...conflict, activo: true, telefono: tel };
+    }
+
+    const { data: bySignup } = await supabaseAdmin
+      .from("family_members")
+      .select("id, contract_signup_id, nombre, activo, telefono")
+      .eq("contract_signup_id", ec.contract_signup_id)
+      .in("telefono", phoneLookupCandidates(tel))
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    const row = bySignup?.[0] as FamilyMemberRow | undefined;
+    if (row) {
+      if (!row.activo) await reactivateFamilyMember(row, tel);
+      return { ...row, activo: true, telefono: tel };
+    }
+  }
+
+  console.error("[family-portal] ensureFamilyMemberForLogin", insertErr?.message ?? "unknown");
+  throw new Error("No pudimos registrar tu acceso.");
+}
+
 // ============================================================
 // 1) Solicitar código por teléfono
 // ============================================================
@@ -50,60 +195,7 @@ export const requestFamilyCode = createServerFn({ method: "POST" })
     const tel = normalizePhoneE164(data.telefono);
     if (!tel) throw new Error("Teléfono inválido.");
 
-    // ¿Existe como familiar registrado por algún senior?
-    const { data: member } = await supabaseAdmin
-      .from("family_members")
-      .select("id, contract_signup_id, nombre")
-      .eq("telefono", tel)
-      .eq("activo", true)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (!member) {
-      // ¿Existe como emergency_contact? Auto-migrar a family_members.
-      let ec: { contract_signup_id: string; nombre: string; parentesco: string } | null = null;
-      const byPhone = await supabaseAdmin
-        .from("emergency_contacts")
-        .select("contract_signup_id, nombre, parentesco")
-        .eq("telefono", tel)
-        .limit(1)
-        .maybeSingle();
-      if (!byPhone.error) {
-        ec = byPhone.data;
-      }
-
-      if (!ec) {
-        const byWhatsapp = await supabaseAdmin
-          .from("emergency_contacts")
-          .select("contract_signup_id, nombre, parentesco, whatsapp")
-          .eq("whatsapp", tel)
-          .limit(1)
-          .maybeSingle();
-        if (!byWhatsapp.error) {
-          ec = byWhatsapp.data;
-        }
-      }
-      if (!ec) {
-        await logAccess(null, null, "code_request_unknown", { telefono: tel });
-        throw new Error("Este número no está registrado como familiar.");
-      }
-      const { data: created, error: cErr } = await supabaseAdmin
-        .from("family_members")
-        .insert({
-          contract_signup_id: ec.contract_signup_id,
-          nombre: ec.nombre,
-          telefono: tel,
-          parentesco: ec.parentesco,
-        })
-        .select("id, contract_signup_id, nombre")
-        .single();
-      if (cErr || !created) throw new Error("No pudimos registrar tu acceso.");
-      Object.assign({}, member ?? {});
-      // continue with created
-      return await sendCode(created.id, tel);
-    }
-
+    const member = await ensureFamilyMemberForLogin(tel);
     return await sendCode(member.id, tel);
   });
 
@@ -135,10 +227,13 @@ async function sendCode(memberId: string, tel: string) {
   if (error) throw error;
 
   const body = `Senior Safe — tu código es ${code}. Expira en ${CODE_TTL_MIN} minutos.`;
-  const okWA = (await sendTwilioChannelMessage(tel, body, "whatsapp")).ok;
-  if (!okWA) await sendTwilioChannelMessage(tel, body, "sms");
+  const { whatsappOk, smsOk } = await sendTwilioWhatsAppWithSmsFallback(tel, body);
 
-  await logAccess(memberId, null, "code_sent", { telefono: tel });
+  await logAccess(memberId, null, "code_sent", {
+    telefono: tel,
+    whatsapp_ok: whatsappOk,
+    sms_ok: smsOk,
+  });
   return { ok: true, ttl_minutes: CODE_TTL_MIN };
 }
 
@@ -182,16 +277,8 @@ export const verifyFamilyCode = createServerFn({ method: "POST" })
       .update({ consumed_at: new Date().toISOString() })
       .eq("id", row.id);
 
-    const { data: member } = await supabaseAdmin
-      .from("family_members")
-      .select("id, contract_signup_id, nombre")
-      .eq("telefono", tel)
-      .eq("activo", true)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (!member) throw new Error("Familiar no encontrado.");
+    const member = await findFamilyMemberByPhone(tel);
+    if (!member?.activo) throw new Error("Familiar no encontrado.");
 
     // session token simple (no JWT) — válido 30 días
     const token = await sha256(`${member.id}.${Date.now()}.${crypto.randomUUID()}`);

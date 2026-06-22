@@ -121,7 +121,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:description", content: "Senior Safe envía alertas inmediatas a tu familia por WhatsApp, SMS y llamada." },
       { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/WEgAKtYLuSfQACezmGynaHiHwV53/social-images/social-1778871881128-Logo_alarma.webp" },
       { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/WEgAKtYLuSfQACezmGynaHiHwV53/social-images/social-1778871881128-Logo_alarma.webp" },
-      { name: "theme-color", content: "#0d4f5c" },
+      { name: "theme-color", content: "#dc2626" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
@@ -131,7 +131,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "manifest", href: "/manifest.json?v=2026-06-06" },
+      { rel: "manifest", href: "/manifest.json?v=2026-06-22" },
       { rel: "apple-touch-icon", href: "/senior-safe-512.webp" },
       { rel: "icon", type: "image/webp", href: "/senior-safe-512.webp" },
     ],

@@ -22,6 +22,8 @@ import {
   type FamilyPortalSession,
 } from "@/lib/family-session";
 import type { LucideIcon } from "lucide-react";
+import { LocationMap } from "@/components/location-map";
+import { locationShareUrl } from "@/lib/maps";
 
 export const Route = createFileRoute("/familia/dashboard")({
   head: () => ({
@@ -205,15 +207,13 @@ function FamilyDashboard() {
         {/* Última ubicación */}
         {device?.last_lat != null && device?.last_lng != null && (
           <section className="bg-white rounded-2xl p-4 shadow-sm">
-            <h2 className="font-bold mb-2">Última ubicación conocida</h2>
-            <a
-              href={`https://maps.google.com/?q=${device.last_lat},${device.last_lng}`}
-              target="_blank"
-              rel="noreferrer"
-              className="text-primary underline text-sm break-all"
-            >
-              Ver en Google Maps
-            </a>
+            <h2 className="font-bold mb-3">Última ubicación conocida</h2>
+            <LocationMap
+              lat={device.last_lat}
+              lng={device.last_lng}
+              label={senior?.nombre ?? "Ubicación"}
+              markerColor={status === "alert" ? "#dc2626" : "#16a34a"}
+            />
           </section>
         )}
 
@@ -241,12 +241,12 @@ function FamilyDashboard() {
                     )}
                     {a.gps_lat != null && a.gps_lng != null && (
                       <a
-                        href={`https://maps.google.com/?q=${a.gps_lat},${a.gps_lng}`}
+                        href={locationShareUrl(a.gps_lat, a.gps_lng, senior?.nombre ?? undefined)}
                         target="_blank"
                         rel="noreferrer"
                         className="text-xs text-primary underline"
                       >
-                        Ver ubicación
+                        Ver en mapa
                       </a>
                     )}
                   </div>

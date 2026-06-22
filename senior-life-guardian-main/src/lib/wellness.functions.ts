@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { locationShareUrl } from "@/lib/maps";
 import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
 import { sendTwilioChannelMessage } from "@/lib/twilio";
 
@@ -52,7 +53,7 @@ export const sendWellnessNotice = createServerFn({ method: "POST" })
 
     const timestamp = new Date().toLocaleString("es-CL", { timeZone: "America/Santiago" });
     const mapsLink = data.gps
-      ? `\nUbicación: https://maps.google.com/?q=${data.gps.lat},${data.gps.lng}`
+      ? `\nUbicación: ${locationShareUrl(data.gps.lat, data.gps.lng, user.nombre)}`
       : "";
 
     const body =

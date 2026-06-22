@@ -120,7 +120,10 @@ function NativeApp() {
     setGpsOk(false);
     if (!interactive) return;
     if (error === "denied") {
-      toast.error("Permiso de ubicación bloqueado. Activa la ubicación en Ajustes del teléfono y reintenta.");
+      toast.error(
+        "Permiso de ubicación bloqueado. Ajustes → Apps → Senior Safe → Permisos → Ubicación → Permitir.",
+        { duration: 8000 },
+      );
     } else if (error === "unavailable") {
       toast.error("GPS no disponible. Activa la ubicación del teléfono y reintenta.");
     } else if (error === "unsupported") {
@@ -286,16 +289,18 @@ function NativeApp() {
 
     try {
       setLocating(true);
-      const gpsPromise = getCurrentCoords({ highAccuracy: true, timeoutMs: 3000, maximumAgeMs: 0 });
-      const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000));
-      const gps = await Promise.race([gpsPromise, timeout]);
+      const { coords: freshGps } = await getCurrentCoordsWithError({
+        highAccuracy: true,
+        timeoutMs: 8000,
+        maximumAgeMs: 120_000,
+      });
       setLocating(false);
       if (emergencySendGenRef.current !== gen) return;
-      if (gps) {
-        setLastCoords(gps);
+      if (freshGps) {
+        setLastCoords(freshGps);
         setGpsOk(true);
       }
-      const coords = gps ?? lastCoords;
+      const coords = freshGps ?? lastCoords;
 
       const res = await sendAlert({
         data: {

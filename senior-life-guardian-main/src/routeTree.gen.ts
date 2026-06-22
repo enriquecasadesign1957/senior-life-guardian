@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
+import { Route as UbicacionRouteImport } from './routes/ubicacion'
 import { Route as TutorialRouteImport } from './routes/tutorial'
 import { Route as TerminosRouteImport } from './routes/terminos'
 import { Route as PrivacidadRouteImport } from './routes/privacidad'
@@ -83,6 +84,11 @@ import { Route as ApiInternalEmergencyCascadeAlertIdRouteImport } from './routes
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
   id: '/unsubscribe',
   path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UbicacionRoute = UbicacionRouteImport.update({
+  id: '/ubicacion',
+  path: '/ubicacion',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TutorialRoute = TutorialRouteImport.update({
@@ -468,6 +474,7 @@ export interface FileRoutesByFullPath {
   '/privacidad': typeof PrivacidadRoute
   '/terminos': typeof TerminosRoute
   '/tutorial': typeof TutorialRoute
+  '/ubicacion': typeof UbicacionRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/a/$token': typeof ATokenRouteWithChildren
   '/admin/accounts': typeof AdminAccountsRoute
@@ -538,6 +545,7 @@ export interface FileRoutesByTo {
   '/privacidad': typeof PrivacidadRoute
   '/terminos': typeof TerminosRoute
   '/tutorial': typeof TutorialRoute
+  '/ubicacion': typeof UbicacionRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/a/$token': typeof ATokenRouteWithChildren
   '/admin/accounts': typeof AdminAccountsRoute
@@ -611,6 +619,7 @@ export interface FileRoutesById {
   '/privacidad': typeof PrivacidadRoute
   '/terminos': typeof TerminosRoute
   '/tutorial': typeof TutorialRoute
+  '/ubicacion': typeof UbicacionRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/a/$token': typeof ATokenRouteWithChildren
   '/admin/accounts': typeof AdminAccountsRoute
@@ -685,6 +694,7 @@ export interface FileRouteTypes {
     | '/privacidad'
     | '/terminos'
     | '/tutorial'
+    | '/ubicacion'
     | '/unsubscribe'
     | '/a/$token'
     | '/admin/accounts'
@@ -755,6 +765,7 @@ export interface FileRouteTypes {
     | '/privacidad'
     | '/terminos'
     | '/tutorial'
+    | '/ubicacion'
     | '/unsubscribe'
     | '/a/$token'
     | '/admin/accounts'
@@ -827,6 +838,7 @@ export interface FileRouteTypes {
     | '/privacidad'
     | '/terminos'
     | '/tutorial'
+    | '/ubicacion'
     | '/unsubscribe'
     | '/a/$token'
     | '/admin/accounts'
@@ -900,6 +912,7 @@ export interface RootRouteChildren {
   PrivacidadRoute: typeof PrivacidadRoute
   TerminosRoute: typeof TerminosRoute
   TutorialRoute: typeof TutorialRoute
+  UbicacionRoute: typeof UbicacionRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   ATokenRoute: typeof ATokenRouteWithChildren
   CTokenRoute: typeof CTokenRoute
@@ -940,6 +953,13 @@ declare module '@tanstack/react-router' {
       path: '/unsubscribe'
       fullPath: '/unsubscribe'
       preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ubicacion': {
+      id: '/ubicacion'
+      path: '/ubicacion'
+      fullPath: '/ubicacion'
+      preLoaderRoute: typeof UbicacionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tutorial': {
@@ -1522,6 +1542,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacidadRoute: PrivacidadRoute,
   TerminosRoute: TerminosRoute,
   TutorialRoute: TutorialRoute,
+  UbicacionRoute: UbicacionRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   ATokenRoute: ATokenRouteWithChildren,
   CTokenRoute: CTokenRoute,

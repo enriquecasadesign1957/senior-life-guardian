@@ -26,6 +26,7 @@ import {
   readStoredSignupId,
   requiresPwaInstall,
 } from "@/lib/post-payment";
+import { isAppInstalled } from "@/lib/device";
 import { PostPaymentInstallScreen } from "@/components/post-payment-install-screen";
 import { WhatsAppActivationButton } from "@/components/whatsapp-activation-button";
 import { InstallAppModal } from "@/components/install-app-modal";
@@ -39,7 +40,9 @@ import {
   updateFamilyWithFallback,
 } from "@/lib/family-actions";
 import { savePinErrorMessage, saveUserPinWithFallback, verifyPinWithFallback } from "@/lib/pin-actions";
-import { FallDetectionOverlay, useFallDetection } from "@/hooks/useFallDetection";
+import { ensureGeoPermission, getCurrentCoordsWithError } from "@/lib/geo";
+import { requestAppNotifications } from "@/lib/native-notifications";
+import { isNativeApp } from "@/lib/device";
 import {
   EMERGENCY_CATEGORIES,
   emergencyCategoryLabel,
@@ -151,11 +154,7 @@ function AppHome() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const check = () =>
-      setIsInstalled(
-        window.matchMedia?.("(display-mode: standalone)").matches ||
-          (window.navigator as any).standalone === true,
-      );
+    const check = () => setIsInstalled(isAppInstalled());
     check();
     const onInstalled = () => setIsInstalled(true);
     window.addEventListener("appinstalled", onInstalled);
@@ -249,25 +248,12 @@ function AppHome() {
   const cancelAlert = useServerFn(cancelEmergencyAlert);
 
   const fetchFallGps = useCallback(async () => {
-    if (!("geolocation" in navigator)) return null;
-    return new Promise<{ lat: number; lng: number; accuracy?: number } | null>((resolve) => {
-      const to = setTimeout(() => resolve(null), 6000);
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          clearTimeout(to);
-          resolve({
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-            accuracy: pos.coords.accuracy,
-          });
-        },
-        () => {
-          clearTimeout(to);
-          resolve(null);
-        },
-        { enableHighAccuracy: true, timeout: 5000, maximumAge: 30000 },
-      );
+    const { coords } = await getCurrentCoordsWithError({
+      highAccuracy: true,
+      timeoutMs: 6000,
+      maximumAgeMs: 120_000,
     });
+    return coords;
   }, []);
 
   const dispatchFallEmergency = useCallback(
@@ -390,15 +376,10 @@ function AppHome() {
         return;
       }
 
-      // 1) Obtener GPS real (con timeout corto, no bloquea el envío)
-      const gps = await new Promise<{ lat: number; lng: number; accuracy?: number } | null>((resolve) => {
-        if (!("geolocation" in navigator)) return resolve(null);
-        const to = setTimeout(() => resolve(null), 6000);
-        navigator.geolocation.getCurrentPosition(
-          (pos) => { clearTimeout(to); resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy }); },
-          () => { clearTimeout(to); resolve(null); },
-          { enableHighAccuracy: true, timeout: 5000, maximumAge: 30000 },
-        );
+      const { coords: gps } = await getCurrentCoordsWithError({
+        highAccuracy: true,
+        timeoutMs: 8000,
+        maximumAgeMs: 120_000,
       });
 
       if (emergencySendGenRef.current !== gen) return;
@@ -501,21 +482,47 @@ function AppHome() {
     }
   };
 
-  const requestGps = () => {
-    if (!("geolocation" in navigator)) { toast.error("GPS no disponible en este teléfono."); return; }
-    navigator.geolocation.getCurrentPosition(
-      () => { setGpsAllowed(true); toast.success("GPS activado."); },
-      () => toast.error("Activa el GPS desde permisos del teléfono."),
-      { enableHighAccuracy: true, timeout: 10000 },
-    );
+  const requestGps = async () => {
+    const ok = await ensureGeoPermission();
+    if (ok) {
+      setGpsAllowed(true);
+      toast.success("GPS activado.");
+      return;
+    }
+    if (isNativeApp()) {
+      toast.error(
+        "Permiso de ubicación bloqueado. Ve a Ajustes → Apps → Senior Safe → Permisos → Ubicación → Permitir.",
+        { duration: 8000 },
+      );
+    } else {
+      toast.error("Activa el GPS y el permiso de ubicación para este sitio en Ajustes del teléfono.");
+    }
   };
 
   const requestNotifications = async () => {
-    if (!("Notification" in window)) { toast.error("Notificaciones no disponibles."); return; }
-    const permission = await Notification.requestPermission();
-    setNotificationsAllowed(permission === "granted");
-    if (permission === "granted") toast.success("Notificaciones activadas.");
-    else toast.error("Activa las notificaciones desde permisos del teléfono.");
+    const { granted, mode } = await requestAppNotifications();
+    if (granted) {
+      setNotificationsAllowed(true);
+      toast.success("Notificaciones activadas.");
+      return;
+    }
+    if (mode === "unsupported" && isNativeApp()) {
+      toast.message(
+        "Las alertas de emergencia llegan por SMS/WhatsApp a tu familia. Las notificaciones push son opcionales.",
+        { duration: 7000 },
+      );
+      setNotificationsAllowed(true);
+      return;
+    }
+    if (isNativeApp()) {
+      toast.error(
+        "Activa notificaciones en Ajustes → Apps → Senior Safe → Notificaciones.",
+        { duration: 8000 },
+      );
+    } else {
+      toast.error("Notificaciones no disponibles en este navegador. Las alertas igual llegan a tu familia.");
+      setNotificationsAllowed(true);
+    }
   };
 
   const markBatteryReady = () => {

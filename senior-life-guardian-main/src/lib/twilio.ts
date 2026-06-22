@@ -156,3 +156,16 @@ export async function sendTwilioChannelMessage(
   const To = channel === "whatsapp" ? `whatsapp:${to}` : to;
   return sendTwilioMessage({ to: To, from, body });
 }
+
+/** WhatsApp primero; SMS solo si WA falla en Twilio (menor costo, mismo flujo UX). */
+export async function sendTwilioWhatsAppWithSmsFallback(
+  smsPhoneE164: string,
+  body: string,
+  whatsappPhoneE164?: string,
+): Promise<{ whatsappOk: boolean; smsOk: boolean }> {
+  const waPhone = whatsappPhoneE164 ?? smsPhoneE164;
+  const wa = await sendTwilioChannelMessage(waPhone, body, "whatsapp");
+  if (wa.ok) return { whatsappOk: true, smsOk: false };
+  const sms = await sendTwilioChannelMessage(smsPhoneE164, body, "sms");
+  return { whatsappOk: false, smsOk: sms.ok };
+}

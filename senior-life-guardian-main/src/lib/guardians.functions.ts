@@ -9,7 +9,7 @@ import {
   updateFamilyContact,
 } from "@/lib/contacts-storage";
 import { normalizePhoneE164 } from "@/lib/phone-utils";
-import { sendTwilioChannelMessage } from "@/lib/twilio";
+import { sendTwilioWhatsAppWithSmsFallback } from "@/lib/twilio";
 
 const idSchema = z.string().uuid();
 
@@ -30,8 +30,11 @@ export async function sendGuardianInvite(opts: {
     `${PORTAL_FAMILIA_URL} — Ingresa con este número de teléfono para recibir tu código de acceso.`;
 
   const waNumber = opts.guardianWa || opts.guardianTel;
-  const okWA = (await sendTwilioChannelMessage(waNumber, body, "whatsapp")).ok;
-  const okSMS = (await sendTwilioChannelMessage(opts.guardianTel, body, "sms")).ok;
+  const { whatsappOk: okWA, smsOk: okSMS } = await sendTwilioWhatsAppWithSmsFallback(
+    opts.guardianTel,
+    body,
+    waNumber,
+  );
 
   try {
     await supabaseAdmin.from("family_access_log").insert({

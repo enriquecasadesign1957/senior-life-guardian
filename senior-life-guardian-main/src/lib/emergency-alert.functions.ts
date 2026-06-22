@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
+import { locationShareUrl } from "@/lib/maps";
 import {
   isTwilioConfigured,
   twilioPost,
@@ -368,7 +369,7 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
     const topContacts = recipients.slice(0, MAX_GUARDIANS);
     const callEscalationContacts = topContacts.filter((r) => r.recibe_llamada);
     const mapsLink = resolvedGps
-      ? `https://maps.google.com/?q=${resolvedGps.lat},${resolvedGps.lng}`
+      ? locationShareUrl(resolvedGps.lat, resolvedGps.lng, user.nombre)
       : null;
 
     // Acknowledgement token (link de un solo uso, expira en 24h)
@@ -376,7 +377,7 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
     const ackExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
     const locationBlock = mapsLink
-      ? `📍 Ubicación (GPS preciso):\n${mapsLink}`
+      ? `📍 Ubicación en mapa Senior Safe:\n${mapsLink}`
       : `📍 Ubicación: el usuario activó la alerta, pero el GPS del celular no se pudo sincronizar a tiempo. Por favor contáctalo de inmediato.`;
 
     const categoryBlock = data.emergencyCategory

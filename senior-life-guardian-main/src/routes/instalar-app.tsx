@@ -2,7 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { z } from "zod";
 import { PostPaymentInstallScreen } from "@/components/post-payment-install-screen";
-import { isPwaStandalone } from "@/lib/device";
+import { isAppInstalled, isNativeApp } from "@/lib/device";
+import { buildNativeHandoffUrl } from "@/lib/install-config";
 import { buildAppHandoffSearch, clearRequiresPwaInstall } from "@/lib/post-payment";
 
 const searchSchema = z.object({
@@ -37,8 +38,12 @@ function InstalarAppPage() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (isPwaStandalone()) {
+    if (isAppInstalled()) {
       clearRequiresPwaInstall();
+      if (isNativeApp()) {
+        window.location.href = buildNativeHandoffUrl(search.ss ?? null, "install-skip");
+        return;
+      }
       navigate({ to: "/app", search: buildAppHandoffSearch(search.ss ?? null) });
     }
   }, [navigate, search.ss]);

@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { APK_DOWNLOAD_URL, buildNativeHandoffUrl } from "@/lib/install-config";
+import { isAppInstalled } from "@/lib/device";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
@@ -37,28 +39,7 @@ const DEEP = "var(--brand-petrol-deep)";
 const PETROL = "var(--brand-petrol)";
 const GREEN = "#16a34a";
 
-/**
- * URL directa al APK en GitHub Releases (permanente, sin CDN ni proxy).
- */
-const APK_DOWNLOAD_URL = "https://github.com/enriquecasadesign1957/senior-life-guardian/releases/latest/download/SeniorSafe.apk";
-
-/** Pantalla nativa publicada. Se usa solo como fallback web (no-Android). */
-const APP_BASE_URL = "https://alarmaseniorsafe.cl/native";
-
-function buildAppUrl(signupId: string | null) {
-  let resolvedSignupId = signupId;
-  if (!resolvedSignupId && typeof window !== "undefined") {
-    try {
-      const raw = sessionStorage.getItem("seniorsafe_user") || localStorage.getItem("seniorsafe_user_backup");
-      resolvedSignupId = raw ? JSON.parse(raw)?.id ?? null : null;
-    } catch {}
-  }
-  if (!resolvedSignupId) return APP_BASE_URL;
-  const u = new URL(APP_BASE_URL);
-  u.searchParams.set("ss", resolvedSignupId);
-  u.searchParams.set("source", "onboarding");
-  return u.toString();
-}
+import { APK_DOWNLOAD_URL, buildNativeHandoffUrl } from "@/lib/install-config";
 
 function detectPlatform() {
   if (typeof navigator === "undefined") return { isIOS: false, isAndroid: false, isSafari: false };
@@ -100,9 +81,7 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
     };
     window.addEventListener("beforeinstallprompt", onBIP);
     window.addEventListener("appinstalled", onInstalled);
-    const isStandalone =
-      window.matchMedia?.("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone === true;
+    const isStandalone = isAppInstalled();
     if (isStandalone) setInstalled(true);
     return () => {
       window.removeEventListener("beforeinstallprompt", onBIP);
@@ -111,7 +90,7 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
   }, [signupId]);
 
   const openInstalledApp = () => {
-    window.location.href = buildAppUrl(signupId);
+    window.location.href = buildNativeHandoffUrl(signupId, "onboarding");
   };
 
   const handleBigInstall = async () => {
