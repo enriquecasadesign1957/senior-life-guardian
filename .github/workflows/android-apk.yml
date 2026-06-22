@@ -17,7 +17,7 @@ env:
 
 jobs:
   build-apk:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 30
     defaults:
       run:
@@ -44,11 +44,9 @@ jobs:
           java-version: '21'
 
       - name: Setup Android SDK
-        run: |
-          echo "ANDROID_HOME=${ANDROID_HOME}"
-          yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "platforms;android-35" "build-tools;35.0.0" "platform-tools"
-          sdkmanager --list_installed | head -40
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platforms;android-35 build-tools;35.0.0 platform-tools
 
       - name: Install dependencies
         run: bun install
