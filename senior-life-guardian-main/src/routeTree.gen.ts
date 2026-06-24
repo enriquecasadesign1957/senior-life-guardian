@@ -70,8 +70,11 @@ import { Route as ApiPublicTwilioEmergencyCallRouteImport } from './routes/api/p
 import { Route as ApiPublicSendWelcomeWhatsappRouteImport } from './routes/api/public/send-welcome-whatsapp'
 import { Route as ApiPublicSendWelcomeTrialRouteImport } from './routes/api/public/send-welcome-trial'
 import { Route as ApiPublicSavePinRouteImport } from './routes/api/public/save-pin'
+import { Route as ApiPublicPinResetVerifyRouteImport } from './routes/api/public/pin-reset-verify'
+import { Route as ApiPublicPinResetRequestRouteImport } from './routes/api/public/pin-reset-request'
 import { Route as ApiPublicLookupAccountRouteImport } from './routes/api/public/lookup-account'
 import { Route as ApiPublicFamilyRouteImport } from './routes/api/public/family'
+import { Route as ApiCronResendInstallInstructionsRouteImport } from './routes/api/cron/resend-install-instructions'
 import { Route as ApiCronProcessSubscriptionRenewalsRouteImport } from './routes/api/cron/process-subscription-renewals'
 import { Route as ATokenCRouteImport } from './routes/a.$token.c'
 import { Route as AAlertIdAckTokenRouteImport } from './routes/a.$alertId.$ackToken'
@@ -398,6 +401,17 @@ const ApiPublicSavePinRoute = ApiPublicSavePinRouteImport.update({
   path: '/api/public/save-pin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPinResetVerifyRoute = ApiPublicPinResetVerifyRouteImport.update({
+  id: '/api/public/pin-reset-verify',
+  path: '/api/public/pin-reset-verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPinResetRequestRoute =
+  ApiPublicPinResetRequestRouteImport.update({
+    id: '/api/public/pin-reset-request',
+    path: '/api/public/pin-reset-request',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicLookupAccountRoute = ApiPublicLookupAccountRouteImport.update({
   id: '/api/public/lookup-account',
   path: '/api/public/lookup-account',
@@ -408,6 +422,12 @@ const ApiPublicFamilyRoute = ApiPublicFamilyRouteImport.update({
   path: '/api/public/family',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCronResendInstallInstructionsRoute =
+  ApiCronResendInstallInstructionsRouteImport.update({
+    id: '/api/cron/resend-install-instructions',
+    path: '/api/cron/resend-install-instructions',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiCronProcessSubscriptionRenewalsRoute =
   ApiCronProcessSubscriptionRenewalsRouteImport.update({
     id: '/api/cron/process-subscription-renewals',
@@ -506,8 +526,11 @@ export interface FileRoutesByFullPath {
   '/a/$alertId/$ackToken': typeof AAlertIdAckTokenRoute
   '/a/$token/c': typeof ATokenCRoute
   '/api/cron/process-subscription-renewals': typeof ApiCronProcessSubscriptionRenewalsRoute
+  '/api/cron/resend-install-instructions': typeof ApiCronResendInstallInstructionsRoute
   '/api/public/family': typeof ApiPublicFamilyRoute
   '/api/public/lookup-account': typeof ApiPublicLookupAccountRoute
+  '/api/public/pin-reset-request': typeof ApiPublicPinResetRequestRoute
+  '/api/public/pin-reset-verify': typeof ApiPublicPinResetVerifyRoute
   '/api/public/save-pin': typeof ApiPublicSavePinRoute
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
   '/api/public/send-welcome-whatsapp': typeof ApiPublicSendWelcomeWhatsappRoute
@@ -577,8 +600,11 @@ export interface FileRoutesByTo {
   '/a/$alertId/$ackToken': typeof AAlertIdAckTokenRoute
   '/a/$token/c': typeof ATokenCRoute
   '/api/cron/process-subscription-renewals': typeof ApiCronProcessSubscriptionRenewalsRoute
+  '/api/cron/resend-install-instructions': typeof ApiCronResendInstallInstructionsRoute
   '/api/public/family': typeof ApiPublicFamilyRoute
   '/api/public/lookup-account': typeof ApiPublicLookupAccountRoute
+  '/api/public/pin-reset-request': typeof ApiPublicPinResetRequestRoute
+  '/api/public/pin-reset-verify': typeof ApiPublicPinResetVerifyRoute
   '/api/public/save-pin': typeof ApiPublicSavePinRoute
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
   '/api/public/send-welcome-whatsapp': typeof ApiPublicSendWelcomeWhatsappRoute
@@ -651,8 +677,11 @@ export interface FileRoutesById {
   '/a/$alertId/$ackToken': typeof AAlertIdAckTokenRoute
   '/a/$token/c': typeof ATokenCRoute
   '/api/cron/process-subscription-renewals': typeof ApiCronProcessSubscriptionRenewalsRoute
+  '/api/cron/resend-install-instructions': typeof ApiCronResendInstallInstructionsRoute
   '/api/public/family': typeof ApiPublicFamilyRoute
   '/api/public/lookup-account': typeof ApiPublicLookupAccountRoute
+  '/api/public/pin-reset-request': typeof ApiPublicPinResetRequestRoute
+  '/api/public/pin-reset-verify': typeof ApiPublicPinResetVerifyRoute
   '/api/public/save-pin': typeof ApiPublicSavePinRoute
   '/api/public/send-welcome-trial': typeof ApiPublicSendWelcomeTrialRoute
   '/api/public/send-welcome-whatsapp': typeof ApiPublicSendWelcomeWhatsappRoute
@@ -726,8 +755,11 @@ export interface FileRouteTypes {
     | '/a/$alertId/$ackToken'
     | '/a/$token/c'
     | '/api/cron/process-subscription-renewals'
+    | '/api/cron/resend-install-instructions'
     | '/api/public/family'
     | '/api/public/lookup-account'
+    | '/api/public/pin-reset-request'
+    | '/api/public/pin-reset-verify'
     | '/api/public/save-pin'
     | '/api/public/send-welcome-trial'
     | '/api/public/send-welcome-whatsapp'
@@ -797,8 +829,11 @@ export interface FileRouteTypes {
     | '/a/$alertId/$ackToken'
     | '/a/$token/c'
     | '/api/cron/process-subscription-renewals'
+    | '/api/cron/resend-install-instructions'
     | '/api/public/family'
     | '/api/public/lookup-account'
+    | '/api/public/pin-reset-request'
+    | '/api/public/pin-reset-verify'
     | '/api/public/save-pin'
     | '/api/public/send-welcome-trial'
     | '/api/public/send-welcome-whatsapp'
@@ -870,8 +905,11 @@ export interface FileRouteTypes {
     | '/a/$alertId/$ackToken'
     | '/a/$token/c'
     | '/api/cron/process-subscription-renewals'
+    | '/api/cron/resend-install-instructions'
     | '/api/public/family'
     | '/api/public/lookup-account'
+    | '/api/public/pin-reset-request'
+    | '/api/public/pin-reset-verify'
     | '/api/public/save-pin'
     | '/api/public/send-welcome-trial'
     | '/api/public/send-welcome-whatsapp'
@@ -925,8 +963,11 @@ export interface RootRouteChildren {
   WebpayRetornoRoute: typeof WebpayRetornoRoute
   AAlertIdAckTokenRoute: typeof AAlertIdAckTokenRoute
   ApiCronProcessSubscriptionRenewalsRoute: typeof ApiCronProcessSubscriptionRenewalsRoute
+  ApiCronResendInstallInstructionsRoute: typeof ApiCronResendInstallInstructionsRoute
   ApiPublicFamilyRoute: typeof ApiPublicFamilyRoute
   ApiPublicLookupAccountRoute: typeof ApiPublicLookupAccountRoute
+  ApiPublicPinResetRequestRoute: typeof ApiPublicPinResetRequestRoute
+  ApiPublicPinResetVerifyRoute: typeof ApiPublicPinResetVerifyRoute
   ApiPublicSavePinRoute: typeof ApiPublicSavePinRoute
   ApiPublicSendWelcomeTrialRoute: typeof ApiPublicSendWelcomeTrialRoute
   ApiPublicSendWelcomeWhatsappRoute: typeof ApiPublicSendWelcomeWhatsappRoute
@@ -1375,6 +1416,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSavePinRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/pin-reset-verify': {
+      id: '/api/public/pin-reset-verify'
+      path: '/api/public/pin-reset-verify'
+      fullPath: '/api/public/pin-reset-verify'
+      preLoaderRoute: typeof ApiPublicPinResetVerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pin-reset-request': {
+      id: '/api/public/pin-reset-request'
+      path: '/api/public/pin-reset-request'
+      fullPath: '/api/public/pin-reset-request'
+      preLoaderRoute: typeof ApiPublicPinResetRequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/lookup-account': {
       id: '/api/public/lookup-account'
       path: '/api/public/lookup-account'
@@ -1387,6 +1442,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/family'
       fullPath: '/api/public/family'
       preLoaderRoute: typeof ApiPublicFamilyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron/resend-install-instructions': {
+      id: '/api/cron/resend-install-instructions'
+      path: '/api/cron/resend-install-instructions'
+      fullPath: '/api/cron/resend-install-instructions'
+      preLoaderRoute: typeof ApiCronResendInstallInstructionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/cron/process-subscription-renewals': {
@@ -1556,8 +1618,11 @@ const rootRouteChildren: RootRouteChildren = {
   AAlertIdAckTokenRoute: AAlertIdAckTokenRoute,
   ApiCronProcessSubscriptionRenewalsRoute:
     ApiCronProcessSubscriptionRenewalsRoute,
+  ApiCronResendInstallInstructionsRoute: ApiCronResendInstallInstructionsRoute,
   ApiPublicFamilyRoute: ApiPublicFamilyRoute,
   ApiPublicLookupAccountRoute: ApiPublicLookupAccountRoute,
+  ApiPublicPinResetRequestRoute: ApiPublicPinResetRequestRoute,
+  ApiPublicPinResetVerifyRoute: ApiPublicPinResetVerifyRoute,
   ApiPublicSavePinRoute: ApiPublicSavePinRoute,
   ApiPublicSendWelcomeTrialRoute: ApiPublicSendWelcomeTrialRoute,
   ApiPublicSendWelcomeWhatsappRoute: ApiPublicSendWelcomeWhatsappRoute,

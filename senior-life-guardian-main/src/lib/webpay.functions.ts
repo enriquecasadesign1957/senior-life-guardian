@@ -15,6 +15,7 @@ import {
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { Json } from "@/integrations/supabase/types";
 import { clearRenewalNoticeFlags } from "@/lib/subscription-renewal-flags";
+import { sendPostPaymentInstallNotifications } from "@/lib/post-payment-install-notify";
 import { deleteOneclickMallInscription } from "@/lib/transbank-oneclick-mall";
 
 /** Serializa la respuesta cruda de Transbank al tipo Json de Supabase. */
@@ -168,6 +169,8 @@ export const confirmWebpayTransaction = createServerFn({ method: "POST" })
       })
       .eq("token", data.token);
 
+    let installNotify: Awaited<ReturnType<typeof sendPostPaymentInstallNotifications>> | undefined;
+
     if (tx?.contract_signup_id) {
       if (result.ok) {
         const { data: signup } = await supabaseAdmin
@@ -199,6 +202,18 @@ export const confirmWebpayTransaction = createServerFn({ method: "POST" })
           })
           .eq("id", tx.contract_signup_id);
         await clearRenewalNoticeFlags(tx.contract_signup_id);
+        installNotify = await sendPostPaymentInstallNotifications(tx.contract_signup_id).catch(
+          (e) => {
+            console.error("[webpay] install notify:", e);
+            return {
+              sent: false,
+              emailSent: false,
+              whatsappSent: false,
+              smsSent: false,
+              skippedReason: "error",
+            };
+          },
+        );
       } else {
         await supabaseAdmin
           .from(CONTRACT_SIGNUPS_TABLE)
@@ -220,6 +235,7 @@ export const confirmWebpayTransaction = createServerFn({ method: "POST" })
       buyOrder: result.buyOrder ?? tx?.buy_order ?? null,
       cardLast4: result.cardLast4,
       signupId: tx?.contract_signup_id ?? null,
+      installNotify,
     };
   });
 
@@ -321,6 +337,16 @@ export const mockApproveWebpay = createServerFn({ method: "POST" })
       })
       .eq("id", signupId);
     await clearRenewalNoticeFlags(signupId);
+    const installNotify = await sendPostPaymentInstallNotifications(signupId).catch((e) => {
+      console.error("[webpay/mock] install notify:", e);
+      return {
+        sent: false,
+        emailSent: false,
+        whatsappSent: false,
+        smsSent: false,
+        skippedReason: "error",
+      };
+    });
 
     return {
       ok: true,
@@ -329,6 +355,7 @@ export const mockApproveWebpay = createServerFn({ method: "POST" })
       authorizationCode: authCode,
       buyOrder,
       signupId,
+      installNotify,
     };
   });
 

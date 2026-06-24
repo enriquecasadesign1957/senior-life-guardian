@@ -5,6 +5,7 @@ import { recordDiscountRedemption, resolveDiscountForCheckout } from "@/lib/disc
 import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
 import { normalizePlanKey, planKeySchema, periodoSchema } from "@/lib/plans";
 import { clearRenewalNoticeFlags } from "@/lib/subscription-renewal-flags";
+import { sendPostPaymentInstallNotifications } from "@/lib/post-payment-install-notify";
 import { attemptOneclickRecurringCharge } from "@/lib/oneclick-renewal-charge";
 import {
   authorizeOneclickMallTransaction,
@@ -333,6 +334,8 @@ export const finishOneclickCheckout = createServerFn({ method: "POST" })
       })
       .eq("mall_buy_order", mallBuyOrder);
 
+    let installNotify: Awaited<ReturnType<typeof sendPostPaymentInstallNotifications>> | undefined;
+
     if (auth.ok && signup.id) {
       await recordDiscountRedemption({
         discount_code_id: signup.discount_code_id ?? null,
@@ -356,6 +359,16 @@ export const finishOneclickCheckout = createServerFn({ method: "POST" })
         })
         .eq("id", signup.id);
       await clearRenewalNoticeFlags(signup.id);
+      installNotify = await sendPostPaymentInstallNotifications(signup.id).catch((e) => {
+        console.error("[oneclick] install notify:", e);
+        return {
+          sent: false,
+          emailSent: false,
+          whatsappSent: false,
+          smsSent: false,
+          skippedReason: "error",
+        };
+      });
     } else if (signup.id) {
       await supabaseAdmin
         .from(CONTRACT_SIGNUPS_TABLE)
@@ -377,6 +390,7 @@ export const finishOneclickCheckout = createServerFn({ method: "POST" })
       storeBuyOrder,
       cardLast4: auth.cardLast4 ?? finish.cardLast4,
       signupId: signup.id,
+      installNotify,
     };
   });
 

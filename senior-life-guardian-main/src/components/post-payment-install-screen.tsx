@@ -34,6 +34,8 @@ import {
   persistSignupHandoff,
 } from "@/lib/post-payment";
 import { WhatsAppActivarCta } from "@/components/whatsapp-activar-cta";
+import { InstallNotifyBanner } from "@/components/install-notify-banner";
+import type { PostPaymentInstallNotifyResult } from "@/lib/post-payment-install-notify";
 
 const DEEP = "var(--brand-petrol-deep)";
 const PETROL = "var(--brand-petrol)";
@@ -52,6 +54,7 @@ type Props = {
   signupId?: string | null;
   /** Si false, no muestra el bloque de pago aprobado (p. ej. acceso directo desde QR). */
   showPaymentSuccess?: boolean;
+  installNotify?: PostPaymentInstallNotifyResult | null;
 };
 
 /** Modo prueba local: fuerza flujo iOS (?simular_ios=true). Deshabilitado en producción. */
@@ -124,6 +127,7 @@ export function PostPaymentInstallScreen({
   paymentSummary,
   signupId: signupIdProp,
   showPaymentSuccess = true,
+  installNotify,
 }: Props) {
   const navigate = useNavigate();
   const displaySummary = paymentSummary ?? {};
@@ -265,7 +269,8 @@ export function PostPaymentInstallScreen({
               ¡Pago confirmado!
             </h1>
             <p className="mt-2 text-muted-foreground text-base leading-relaxed">
-              Tu suscripción Senior Safe está activa. Instala la app en tu teléfono y crea tu PIN de 4 dígitos para agregar familiares.
+              Tu suscripción Senior Safe está activa. Instala la app en el celular del titular de la
+              cuenta (también enviamos el enlace por correo y WhatsApp).
             </p>
             {displaySummary &&
               (displaySummary.amount != null ||
@@ -327,7 +332,8 @@ export function PostPaymentInstallScreen({
 
       <main className="flex-1 px-6 pb-10 max-w-lg mx-auto w-full">
         {showPaymentSuccess && (
-          <div className="mb-6">
+          <div className="mb-6 space-y-4">
+            <InstallNotifyBanner notify={installNotify} />
             <WhatsAppActivarCta />
           </div>
         )}

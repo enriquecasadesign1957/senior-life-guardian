@@ -344,7 +344,10 @@ function CheckoutPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-bold text-foreground mb-3 block">3. Tus datos</label>
+                  <label className="text-sm font-bold text-foreground mb-1 block">3. Datos del adulto mayor</label>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Quien usará la app en su celular. Si pagas por otra persona, ingresa su correo y WhatsApp — ahí enviaremos el enlace de instalación.
+                  </p>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <Field label="Nombre completo" name="name" value={form.name} onChange={(v) => setForm({ ...form, name: v })} error={errors.name} placeholder="María González" />
                     <Field label="Email" name="email" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} error={errors.email} placeholder="maria@email.cl" />
@@ -354,10 +357,7 @@ function CheckoutPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-bold text-foreground mb-3 block">4. Código de convenio municipal (opcional)</label>
-                  <p className="text-xs text-muted-foreground mb-3">
-                    Si tienes Tarjeta Vecino u otro convenio municipal, ingresa tu código y pulsa Aplicar.
-                  </p>
+                  <label className="text-sm font-bold text-foreground mb-3 block">4. Código Institucional? Ingrésalo</label>
                   <div className="flex flex-col sm:flex-row gap-3">
                     <input
                       type="text"

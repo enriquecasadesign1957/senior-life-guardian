@@ -17,6 +17,8 @@ import {
 } from "@/lib/oneclick-voucher";
 import { markRequiresPwaInstall, persistSignupHandoff } from "@/lib/post-payment";
 import { WhatsAppActivarCta } from "@/components/whatsapp-activar-cta";
+import { InstallNotifyBanner } from "@/components/install-notify-banner";
+import type { PostPaymentInstallNotifyResult } from "@/lib/post-payment-install-notify";
 
 type SearchParams = {
   TBK_TOKEN?: string;
@@ -59,10 +61,12 @@ function OneclickSuccessView({
   voucher,
   signupId,
   isValidationPreview,
+  installNotify,
 }: {
   voucher: OneclickVoucherDisplay;
   signupId: string | null;
   isValidationPreview: boolean;
+  installNotify?: PostPaymentInstallNotifyResult | null;
 }) {
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground antialiased">
@@ -84,9 +88,13 @@ function OneclickSuccessView({
                 ¡Pago confirmado!
               </h1>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                Tu suscripción Senior Safe está activa. Inscripción Oneclick Mall y primer cobro
-                registrados correctamente.
+                Tu suscripción Senior Safe está activa. Instala la app en el celular del titular de
+                la cuenta (también enviamos el enlace por correo y WhatsApp).
               </p>
+            </div>
+
+            <div className="px-6 pt-2">
+              <InstallNotifyBanner notify={installNotify} />
             </div>
 
             <div className="px-6 py-6">
@@ -152,6 +160,7 @@ function OneclickReturnPage() {
   const [signupId, setSignupId] = useState<string | null>(() =>
     isValidationPreview ? readSignupIdFromSession() : null,
   );
+  const [installNotify, setInstallNotify] = useState<PostPaymentInstallNotifyResult | null>(null);
 
   useEffect(() => {
     if (isValidationPreview) return;
@@ -190,6 +199,7 @@ function OneclickReturnPage() {
           }
 
           setSignupId(resolvedSignupId);
+          setInstallNotify(result.installNotify ?? null);
           markRequiresPwaInstall();
           setPageState("success");
           return;
@@ -222,6 +232,7 @@ function OneclickReturnPage() {
         voucher={resolvedVoucher}
         signupId={signupId}
         isValidationPreview={isValidationPreview}
+        installNotify={installNotify}
       />
     );
   }

@@ -5,6 +5,7 @@ import tls from "node:tls";
 import { SENIOR_SAFE_SUPPORT_EMAIL } from "@/lib/senior-safe-ai";
 
 export const ZOHO_SUPPORT_AUDIT_BCC = "enriquecasadesign@gmail.com";
+export const SENIOR_SAFE_ADMIN_EMAIL = "administrador@alarmaseniorsafe.cl";
 
 export type SendSupportEmailInput = {
   to: string;
@@ -14,6 +15,8 @@ export type SendSupportEmailInput = {
   /** Message-ID del correo entrante (para threading). */
   inReplyTo?: string | null;
   references?: string | null;
+  /** BCC adicional (p. ej. copia al administrador). */
+  bcc?: string | string[];
   /** Cabeceras extra (p. ej. correos transaccionales de facturación). */
   extraHeaders?: Record<string, string>;
 };
@@ -55,15 +58,25 @@ function escapeHeaderValue(v: string): string {
   return v.replace(/[\r\n]/g, " ").trim();
 }
 
+function collectBccRecipients(cfg: ZohoSmtpConfig, extra?: string | string[]): string[] {
+  const list = [cfg.bcc];
+  if (extra) {
+    const extras = Array.isArray(extra) ? extra : [extra];
+    list.push(...extras.map((s) => s.trim()).filter(Boolean));
+  }
+  return [...new Set(list)];
+}
+
 function buildMimeMessage(input: SendSupportEmailInput, cfg: ZohoSmtpConfig): string {
   const boundary = `ss_${Date.now()}_${Math.random().toString(36).slice(2)}`;
   const date = new Date().toUTCString();
   const messageId = `<${Date.now()}.${Math.random().toString(36).slice(2)}@alarmaseniorsafe.cl>`;
+  const bccList = collectBccRecipients(cfg, input.bcc);
 
   const headers = [
     `From: ${cfg.from}`,
     `To: ${escapeHeaderValue(input.to)}`,
-    `Bcc: ${cfg.bcc}`,
+    `Bcc: ${bccList.map(escapeHeaderValue).join(", ")}`,
     `Reply-To: ${SENIOR_SAFE_SUPPORT_EMAIL}`,
     `Subject: =?UTF-8?B?${b64(input.subject)}?=`,
     `Date: ${date}`,
@@ -153,7 +166,7 @@ class SmtpSession {
     return this.readResponse(expected);
   }
 
-  async run(cfg: ZohoSmtpConfig, mime: string, to: string) {
+  async run(cfg: ZohoSmtpConfig, mime: string, to: string, bccList: string[]) {
     await this.readResponse([220]);
     await this.send(`EHLO alarmaseniorsafe.cl`, [250]);
     await this.send("AUTH LOGIN", [334]);
@@ -162,7 +175,9 @@ class SmtpSession {
     const fromEmail = cfg.user;
     await this.send(`MAIL FROM:<${fromEmail}>`, [250]);
     await this.send(`RCPT TO:<${to}>`, [250, 251]);
-    await this.send(`RCPT TO:<${cfg.bcc}>`, [250, 251]);
+    for (const bcc of bccList) {
+      await this.send(`RCPT TO:<${bcc}>`, [250, 251]);
+    }
     await this.send("DATA", [354]);
     this.socket.write(`${mime.replace(/\r\n\./g, "\r\n..")}\r\n.\r\n`);
     await this.readResponse([250]);
@@ -197,6 +212,7 @@ export async function sendSupportEmailViaZoho(input: SendSupportEmailInput): Pro
   }
 
   const mime = buildMimeMessage(input, cfg);
+  const bccList = collectBccRecipients(cfg, input.bcc);
 
   await new Promise<void>((resolve, reject) => {
     const socket = cfg.secure
@@ -212,7 +228,7 @@ export async function sendSupportEmailViaZoho(input: SendSupportEmailInput): Pro
     socket.once("secureConnect", async () => {
       const session = new SmtpSession(socket);
       try {
-        await session.run(cfg, mime, input.to);
+        await session.run(cfg, mime, input.to, bccList);
         resolve();
       } catch (e) {
         reject(e);

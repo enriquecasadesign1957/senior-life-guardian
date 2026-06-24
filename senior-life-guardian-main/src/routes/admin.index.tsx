@@ -10,7 +10,7 @@ const SECTIONS = [
   {
     to: "/admin/accounts",
     label: "Gratuidad / cortesía",
-    desc: "Activar Senior Safe sin cobro para una cuenta (convenios, becas, soporte).",
+    desc: "Activar Senior Safe sin cobro; envía enlace de instalación por correo y WhatsApp/SMS.",
     icon: Gift,
   },
   {

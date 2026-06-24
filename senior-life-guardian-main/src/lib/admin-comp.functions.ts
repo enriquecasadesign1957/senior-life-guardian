@@ -4,6 +4,7 @@ import { assertAdminPin } from "@/lib/admin-auth";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
 import { clearRenewalNoticeFlags } from "@/lib/subscription-renewal-flags";
+import { sendPostPaymentInstallNotifications } from "@/lib/post-payment-install-notify";
 
 const pinSchema = z.object({ pin: z.string().min(1).max(64) });
 
@@ -106,13 +107,40 @@ export const adminGrantFreeService = createServerFn({ method: "POST" })
 
     await clearRenewalNoticeFlags(row.id);
 
+    const installNotify = await sendPostPaymentInstallNotifications(row.id, { force: true }).catch(
+      (e) => {
+        console.error("[admin/comp] install notify:", e);
+        return {
+          sent: false,
+          emailSent: false,
+          whatsappSent: false,
+          smsSent: false,
+          skippedReason: "error",
+        };
+      },
+    );
+
+    const baseMessage = renewalDate
+      ? `Servicio activado en gratuidad hasta ${new Date(renewalDate).toLocaleDateString("es-CL")}.`
+      : "Servicio activado en gratuidad (sin fecha de término automática).";
+
+    let notifyNote = "";
+    if (installNotify.sent) {
+      const parts: string[] = [];
+      if (installNotify.emailSent) parts.push("correo");
+      if (installNotify.whatsappSent) parts.push("WhatsApp");
+      if (installNotify.smsSent) parts.push("SMS");
+      notifyNote = ` Instrucciones de instalación enviadas (${parts.join(" y ")}).`;
+    } else {
+      notifyNote = " No se pudieron enviar las instrucciones de instalación; reintenta o avisa a soporte.";
+    }
+
     return {
       ok: true as const,
       signupId: row.id,
       email: row.email,
-      message: renewalDate
-        ? `Servicio activado en gratuidad hasta ${new Date(renewalDate).toLocaleDateString("es-CL")}.`
-        : "Servicio activado en gratuidad (sin fecha de término automática).",
+      message: baseMessage + notifyNote,
+      installNotify,
     };
   });
 

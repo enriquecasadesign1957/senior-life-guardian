@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
-  getAppConfiguration, listFamily, addFamily, updateFamily, deleteFamily, verifyPin, setUserPin,
+  getAppConfiguration, listFamily, addFamily, updateFamily, deleteFamily,
 } from "@/lib/family.functions";
 import { sendEmergencyAlert, cancelEmergencyAlert } from "@/lib/emergency-alert.functions";
 import {
@@ -39,7 +39,7 @@ import {
   listFamilyWithFallback,
   updateFamilyWithFallback,
 } from "@/lib/family-actions";
-import { savePinErrorMessage, saveUserPinWithFallback, verifyPinWithFallback } from "@/lib/pin-actions";
+import { PinGateDialog } from "@/components/pin-gate-dialog";
 import { ensureGeoPermission, getCurrentCoordsWithError } from "@/lib/geo";
 import { requestAppNotifications } from "@/lib/native-notifications";
 import { isNativeApp } from "@/lib/device";
@@ -49,6 +49,7 @@ import {
   type EmergencyCategory,
 } from "@/lib/emergency-category";
 import { MAX_GUARDIANS } from "@/lib/guardian-limits";
+import { FallDetectionOverlay, useFallDetection } from "@/hooks/useFallDetection";
 
 const appSearchSchema = z.object({
   entrenamiento: z.enum(["1"]).optional(),
@@ -103,12 +104,6 @@ const CATEGORY_ICONS = {
 const PALETTE = ["#0ea5e9", "#a855f7", "#f59e0b", "#16a34a", "#dc2626"];
 const colorFor = (i: number) => PALETTE[i % PALETTE.length];
 const initialOf = (n: string) => (n.trim()[0] ?? "?").toUpperCase();
-
-async function hashPin(pin: string, salt: string) {
-  const data = new TextEncoder().encode(`${salt}:${pin}`);
-  const buf = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
-}
 
 function AppHome() {
   const routeSearch = Route.useSearch();
@@ -1160,189 +1155,6 @@ function PermissionButton({ icon: Icon, label, done, onClick }: { icon: any; lab
       </span>
       {!done && <span className="text-sm font-bold text-muted-foreground">Tocar</span>}
     </button>
-  );
-}
-
-/* ---------- PIN Gate (crear o verificar) ---------- */
-function PinGateDialog({
-  open, onClose, signupId, pinConfigured, onPinConfigured, onSuccess,
-}: {
-  open: boolean;
-  onClose: () => void;
-  signupId: string | null;
-  pinConfigured: boolean;
-  onPinConfigured: () => void;
-  onSuccess: () => void;
-}) {
-  const [pin, setPin] = useState("");
-  const [confirmPin, setConfirmPin] = useState("");
-  const [phase, setPhase] = useState<"verify" | "create" | "confirm">("verify");
-  const [busy, setBusy] = useState(false);
-  const [inlineError, setInlineError] = useState<string | null>(null);
-  const confirmStartedRef = useRef(false);
-  const verify = useServerFn(verifyPin);
-  const savePin = useServerFn(setUserPin);
-
-  const activeSignupId = signupId || readStoredSignupId();
-
-  useEffect(() => {
-    if (!open) return;
-    setPin("");
-    setConfirmPin("");
-    setInlineError(null);
-    confirmStartedRef.current = false;
-    setPhase(pinConfigured ? "verify" : "create");
-  }, [open, pinConfigured]);
-
-  useEffect(() => {
-    if (!open || phase !== "create" || pin.length !== 4) return;
-    const t = setTimeout(() => setPhase("confirm"), 250);
-    return () => clearTimeout(t);
-  }, [open, phase, pin]);
-
-  const submitVerify = async () => {
-    if (!activeSignupId) {
-      setInlineError("No encontramos tu cuenta. Inicia sesión con tu correo.");
-      toast.error("Sesión no encontrada.");
-      return;
-    }
-    if (pin.length !== 4) { setInlineError("Ingresa los 4 dígitos."); return; }
-    setInlineError(null);
-    setBusy(true);
-    try {
-      const pinHash = await hashPin(pin, activeSignupId);
-      const res = await verifyPinWithFallback(verify, activeSignupId, pinHash);
-      if (!res.configured) {
-        setPhase("create");
-        setPin("");
-        return;
-      }
-      if (!res.ok) {
-        setInlineError("PIN incorrecto.");
-        setPin("");
-        return;
-      }
-      toast.success("PIN correcto.");
-      onSuccess();
-    } catch (e) {
-      console.error(e);
-      setInlineError("No pudimos verificar el PIN. Revisa tu conexión.");
-      toast.error("No pudimos verificar el PIN.");
-    } finally { setBusy(false); }
-  };
-
-  const submitCreate = () => {
-    if (!activeSignupId) {
-      setInlineError("No encontramos tu cuenta. Inicia sesión con tu correo.");
-      return;
-    }
-    if (pin.length !== 4) { setInlineError("Elige 4 dígitos."); return; }
-    setInlineError(null);
-    setPhase("confirm");
-    setConfirmPin("");
-  };
-
-  const submitConfirm = async () => {
-    if (!activeSignupId) {
-      setInlineError("No encontramos tu cuenta. Inicia sesión con tu correo.");
-      toast.error("Sesión no encontrada.");
-      return;
-    }
-    if (confirmPin !== pin) {
-      setInlineError("Los PIN no coinciden. Intenta de nuevo.");
-      setConfirmPin("");
-      setPin("");
-      setPhase("create");
-      confirmStartedRef.current = false;
-      return;
-    }
-    setInlineError(null);
-    setBusy(true);
-    try {
-      const pinHash = await hashPin(pin, activeSignupId);
-      const saved = await saveUserPinWithFallback(savePin, activeSignupId, pinHash);
-      if (!saved.ok) {
-        setInlineError(savePinErrorMessage(saved.error));
-        toast.error(savePinErrorMessage(saved.error));
-        confirmStartedRef.current = false;
-        return;
-      }
-      onPinConfigured();
-      toast.success("PIN creado. Ya puedes administrar familiares.");
-      onSuccess();
-    } catch (e) {
-      console.error(e);
-      setInlineError(savePinErrorMessage());
-      toast.error("No pudimos guardar tu PIN.");
-      confirmStartedRef.current = false;
-    } finally { setBusy(false); }
-  };
-
-  useEffect(() => {
-    if (!open || phase !== "confirm" || confirmPin.length !== 4 || busy || confirmStartedRef.current) return;
-    confirmStartedRef.current = true;
-    void submitConfirm();
-  }, [open, phase, confirmPin, busy]);
-
-  const title =
-    phase === "verify" ? "Ingresa tu PIN" : phase === "create" ? "Crea tu PIN" : "Confirma tu PIN";
-  const description =
-    phase === "verify"
-      ? "El PIN protege la edición de tu red familiar. La emergencia nunca pide PIN."
-      : phase === "create"
-        ? "Elige 4 dígitos fáciles de recordar. Los usarás para agregar familiares."
-        : "Vuelve a ingresar el mismo PIN para confirmar.";
-
-  const value = phase === "confirm" ? confirmPin : pin;
-  const setValue = (v: string) => (phase === "confirm" ? setConfirmPin(v) : setPin(v));
-
-  const onSubmit = () => {
-    if (phase === "verify") return submitVerify();
-    if (phase === "create") return submitCreate();
-    return submitConfirm();
-  };
-
-  const primaryLabel =
-    phase === "verify" ? "Desbloquear" : phase === "create" ? "Continuar" : "Guardar PIN";
-
-  return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-sm z-[100]">
-        <DialogHeader>
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-2" style={{ background: DEEP }}>
-            <KeyRound className="w-7 h-7" />
-          </div>
-          <DialogTitle className="text-2xl">{title}</DialogTitle>
-          <DialogDescription className="text-base">{description}</DialogDescription>
-        </DialogHeader>
-        <div className="py-2">
-          <Input
-            inputMode="numeric"
-            autoFocus
-            maxLength={4}
-            value={value}
-            onChange={(e) => {
-              setInlineError(null);
-              setValue(e.target.value.replace(/\D/g, "").slice(0, 4));
-            }}
-            placeholder="••••"
-            className="text-center text-3xl tracking-[0.6em] h-16"
-            onKeyDown={(e) => { if (e.key === "Enter") onSubmit(); }}
-          />
-          {inlineError && (
-            <p className="mt-2 text-sm font-medium text-destructive text-center" role="alert">
-              {inlineError}
-            </p>
-          )}
-        </div>
-        <DialogFooter className="gap-2 sm:gap-2">
-          <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button type="button" onClick={onSubmit} disabled={busy || value.length !== 4} style={{ background: DEEP }}>
-            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : primaryLabel}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }
 

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Bell, Shield, MapPin, Users, CheckCircle2, Loader2, X, Heart, KeyRound, Activity, AlertTriangle } from "lucide-react";
@@ -16,6 +16,7 @@ import { upsertHeartbeat } from "@/lib/heartbeat.functions";
 import { checkLastAlertAck } from "@/lib/family-portal.functions";
 import { getCurrentCoordsWithError, getCurrentCoords, ensureGeoPermission } from "@/lib/geo";
 import { FallDetectionOverlay, useFallDetection } from "@/hooks/useFallDetection";
+import { PinGateDialog } from "@/components/pin-gate-dialog";
 import {
   EMERGENCY_CATEGORIES,
   type EmergencyCategory,
@@ -46,6 +47,7 @@ type Stage = "idle" | "confirm" | "sending" | "sent";
 type Contact = { id: string; nombre: string; parentesco: string; telefono: string };
 
 function NativeApp() {
+  const router = useRouter();
   const loadConfig = useServerFn(getAppConfiguration);
   const list = useServerFn(listFamily);
   const sendAlert = useServerFn(sendEmergencyAlert);
@@ -70,6 +72,9 @@ function NativeApp() {
   const [loginBusy, setLoginBusy] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
+  const [pinConfigured, setPinConfigured] = useState(false);
+  const [pinGateOpen, setPinGateOpen] = useState(false);
+
   // emergency state
   const [stage, setStage] = useState<Stage>("idle");
   const [summary, setSummary] = useState<{ delivered: number; total: number; status: string } | null>(null);
@@ -90,6 +95,7 @@ function NativeApp() {
           setUserId(res.user.id);
           setUserName(String(res.user.nombre ?? "").split(" ")[0]);
           setContacts(res.contacts as Contact[]);
+          setPinConfigured(Boolean(res.pinConfigured));
           persistSignupHandoff(res.user.id);
           localStorage.setItem("seniorsafe_native_user", JSON.stringify(res.user));
         }
@@ -379,6 +385,7 @@ function NativeApp() {
       setUserId(res.user.id);
       setUserName(String(res.user.nombre ?? "").split(" ")[0]);
       setContacts(res.contacts as Contact[]);
+      setPinConfigured(Boolean(res.pinConfigured));
       persistSignupHandoff(res.user.id);
       localStorage.setItem("seniorsafe_native_user", JSON.stringify(res.user));
       try { sessionStorage.setItem("seniorsafe_user", JSON.stringify(res.user)); } catch {}
@@ -390,6 +397,14 @@ function NativeApp() {
     } finally {
       setLoginBusy(false);
     }
+  };
+
+  const openPinAndFamily = () => {
+    setPinGateOpen(true);
+  };
+
+  const goToFamilyAdmin = () => {
+    router.navigate({ to: "/app", search: { ss: userId ?? undefined } });
   };
 
   // ====================== UI ======================
@@ -596,14 +611,19 @@ function NativeApp() {
           </div>
         )}
 
-        <Link
-          to="/app"
-          search={{ entrenamiento: "1", ss: userId ?? undefined }}
+        <button
+          type="button"
+          onClick={openPinAndFamily}
           className="mt-3 w-full h-12 rounded-2xl text-white text-sm font-semibold flex items-center justify-center gap-2 shadow-md"
           style={{ background: DEEP }}
         >
-          <KeyRound className="w-4 h-4" /> Crear PIN y agregar familiares
-        </Link>
+          <KeyRound className="w-4 h-4" /> {pinConfigured ? "PIN y familiares" : "Crear PIN y agregar familiares"}
+        </button>
+        {pinConfigured && (
+          <p className="mt-2 text-xs text-muted-foreground text-center">
+            Si olvidaste tu PIN, elige «Olvidé mi PIN» dentro del diálogo para recibir un código por correo.
+          </p>
+        )}
 
         {/* Acceso a Mis Guardianes (discreto, no compite con SOS) */}
         <Link
@@ -701,6 +721,18 @@ function NativeApp() {
         countdownSeconds={fallCountdown}
         isDispatching={fallStatus === "dispatching"}
         onCancel={cancelarAlerta}
+      />
+
+      <PinGateDialog
+        open={pinGateOpen}
+        signupId={userId}
+        pinConfigured={pinConfigured}
+        onClose={() => setPinGateOpen(false)}
+        onPinConfigured={() => setPinConfigured(true)}
+        onSuccess={() => {
+          setPinGateOpen(false);
+          goToFamilyAdmin();
+        }}
       />
     </div>
   );

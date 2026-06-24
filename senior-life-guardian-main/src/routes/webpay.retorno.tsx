@@ -6,6 +6,7 @@ import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { confirmWebpayTransaction, mockApproveWebpay } from "@/lib/webpay.functions";
 import { markRequiresPwaInstall, persistSignupHandoff } from "@/lib/post-payment";
 import { PostPaymentInstallScreen } from "@/components/post-payment-install-screen";
+import type { PostPaymentInstallNotifyResult } from "@/lib/post-payment-install-notify";
 
 type SearchParams = {
   token_ws?: string;
@@ -71,6 +72,7 @@ function WebpayReturnPage() {
   }>({});
   const [mockBusy, setMockBusy] = useState(false);
   const [signupId, setSignupId] = useState<string | null>(null);
+  const [installNotify, setInstallNotify] = useState<PostPaymentInstallNotifyResult | null>(null);
   const mockApprove = useServerFn(mockApproveWebpay);
 
   const readSignupId = (): string | null => {
@@ -101,6 +103,7 @@ function WebpayReturnPage() {
         }
       } catch { /* ignore */ }
       setSignupId(readSignupId());
+      setInstallNotify(r.installNotify ?? null);
       markRequiresPwaInstall();
       setState("success");
     } catch (e) {
@@ -154,6 +157,7 @@ function WebpayReturnPage() {
             } catch { /* ignore */ }
           }
           setSignupId(resolvedId);
+          setInstallNotify(r.installNotify ?? null);
           markRequiresPwaInstall();
           setState("success");
         } else {
@@ -173,6 +177,7 @@ function WebpayReturnPage() {
         paymentSummary={info}
         signupId={signupId}
         showPaymentSuccess
+        installNotify={installNotify}
       />
     );
   }

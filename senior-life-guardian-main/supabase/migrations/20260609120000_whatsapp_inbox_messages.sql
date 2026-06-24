@@ -14,3 +14,12 @@ create index if not exists whatsapp_inbox_messages_inbox_created_idx
 
 create index if not exists whatsapp_inbox_messages_peer_idx
   on public.whatsapp_inbox_messages (peer_phone, created_at desc);
+
+ALTER TABLE public.whatsapp_inbox_messages ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Service role manages whatsapp_inbox_messages" ON public.whatsapp_inbox_messages;
+CREATE POLICY "Service role manages whatsapp_inbox_messages"
+  ON public.whatsapp_inbox_messages
+  FOR ALL
+  USING (auth.role() = 'service_role')
+  WITH CHECK (auth.role() = 'service_role');

@@ -107,3 +107,93 @@ export function savePinErrorMessage(error?: string): string {
       return "No pudimos guardar tu PIN. Inténtalo de nuevo.";
   }
 }
+
+type PinResetRequestFn = (args: { data: { signupId: string } }) => Promise<{
+  ok: boolean;
+  emailHint?: string;
+  ttl_minutes?: number;
+  error?: string;
+}>;
+
+type PinResetVerifyFn = (args: {
+  data: { signupId: string; code: string };
+}) => Promise<{ ok: boolean; verified?: boolean; error?: string }>;
+
+/** Solicita código de recuperación PIN por correo. */
+export async function requestPinResetWithFallback(
+  requestFn: PinResetRequestFn,
+  signupId: string,
+): Promise<{ ok: boolean; emailHint?: string; ttl_minutes?: number; error?: string }> {
+  try {
+    const res = await withTimeout(
+      fetch("/api/public/pin-reset-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ signupId }),
+      }),
+      SAVE_TIMEOUT_MS,
+    );
+    const json = (await res.json()) as {
+      ok?: boolean;
+      emailHint?: string;
+      ttl_minutes?: number;
+      error?: string;
+    };
+    if (typeof json.ok === "boolean") {
+      return {
+        ok: json.ok,
+        emailHint: json.emailHint,
+        ttl_minutes: json.ttl_minutes,
+        error: json.error,
+      };
+    }
+  } catch (e) {
+    console.warn("[requestPinResetWithFallback] API failed, trying serverFn", e);
+  }
+
+  try {
+    return await withTimeout(requestFn({ data: { signupId } }), SAVE_TIMEOUT_MS);
+  } catch (e) {
+    console.error("[requestPinResetWithFallback] serverFn failed", e);
+    return { ok: false, error: "network_error" };
+  }
+}
+
+/** Verifica código de recuperación PIN. */
+export async function verifyPinResetWithFallback(
+  verifyFn: PinResetVerifyFn,
+  signupId: string,
+  code: string,
+): Promise<{ ok: boolean; verified?: boolean; error?: string }> {
+  try {
+    const res = await withTimeout(
+      fetch("/api/public/pin-reset-verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ signupId, code }),
+      }),
+      SAVE_TIMEOUT_MS,
+    );
+    const json = (await res.json()) as { ok?: boolean; verified?: boolean; error?: string };
+    if (typeof json.ok === "boolean") {
+      return { ok: json.ok, verified: json.verified, error: json.error };
+    }
+  } catch (e) {
+    console.warn("[verifyPinResetWithFallback] API failed, trying serverFn", e);
+  }
+
+  try {
+    return await withTimeout(verifyFn({ data: { signupId, code } }), SAVE_TIMEOUT_MS);
+  } catch (e) {
+    console.error("[verifyPinResetWithFallback] serverFn failed", e);
+    return { ok: false, error: "network_error" };
+  }
+}
+
+export async function hashPin(pin: string, salt: string): Promise<string> {
+  const data = new TextEncoder().encode(`${salt}:${pin}`);
+  const buf = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}

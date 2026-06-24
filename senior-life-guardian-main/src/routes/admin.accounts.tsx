@@ -36,7 +36,7 @@ function AdminAccountsPage() {
   return (
     <AdminPinGate
       title="Gratuidad / cortesía"
-      description="Activa Senior Safe sin cobro. La cuenta queda con payment_status comp y no entra en renovación automática."
+      description="Activa Senior Safe sin cobro. Se envían automáticamente correo y WhatsApp/SMS con el enlace de instalación."
       onUnlockFailed={(m) => toast.error(m)}
     >
       {(pin) => <AdminAccountsInner pin={pin} />}
@@ -91,7 +91,7 @@ function AdminAccountsInner({ pin }: { pin: string }) {
           durationMonths: unlimited ? null : Number(durationMonths) || 12,
         },
       });
-      toast.success(res.message);
+      toast.success(res.message, { duration: 8000 });
       await search();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "No se pudo otorgar");
