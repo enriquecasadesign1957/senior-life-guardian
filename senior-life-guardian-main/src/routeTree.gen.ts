@@ -13,6 +13,7 @@ import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as UbicacionRouteImport } from './routes/ubicacion'
 import { Route as TutorialRouteImport } from './routes/tutorial'
 import { Route as TerminosRouteImport } from './routes/terminos'
+import { Route as SimuladorRouteImport } from './routes/simulador'
 import { Route as PrivacidadRouteImport } from './routes/privacidad'
 import { Route as PlanesRouteImport } from './routes/planes'
 import { Route as NativeRouteImport } from './routes/native'
@@ -102,6 +103,11 @@ const TutorialRoute = TutorialRouteImport.update({
 const TerminosRoute = TerminosRouteImport.update({
   id: '/terminos',
   path: '/terminos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SimuladorRoute = SimuladorRouteImport.update({
+  id: '/simulador',
+  path: '/simulador',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacidadRoute = PrivacidadRouteImport.update({
@@ -492,6 +498,7 @@ export interface FileRoutesByFullPath {
   '/native': typeof NativeRoute
   '/planes': typeof PlanesRoute
   '/privacidad': typeof PrivacidadRoute
+  '/simulador': typeof SimuladorRoute
   '/terminos': typeof TerminosRoute
   '/tutorial': typeof TutorialRoute
   '/ubicacion': typeof UbicacionRoute
@@ -566,6 +573,7 @@ export interface FileRoutesByTo {
   '/native': typeof NativeRoute
   '/planes': typeof PlanesRoute
   '/privacidad': typeof PrivacidadRoute
+  '/simulador': typeof SimuladorRoute
   '/terminos': typeof TerminosRoute
   '/tutorial': typeof TutorialRoute
   '/ubicacion': typeof UbicacionRoute
@@ -643,6 +651,7 @@ export interface FileRoutesById {
   '/native': typeof NativeRoute
   '/planes': typeof PlanesRoute
   '/privacidad': typeof PrivacidadRoute
+  '/simulador': typeof SimuladorRoute
   '/terminos': typeof TerminosRoute
   '/tutorial': typeof TutorialRoute
   '/ubicacion': typeof UbicacionRoute
@@ -721,6 +730,7 @@ export interface FileRouteTypes {
     | '/native'
     | '/planes'
     | '/privacidad'
+    | '/simulador'
     | '/terminos'
     | '/tutorial'
     | '/ubicacion'
@@ -795,6 +805,7 @@ export interface FileRouteTypes {
     | '/native'
     | '/planes'
     | '/privacidad'
+    | '/simulador'
     | '/terminos'
     | '/tutorial'
     | '/ubicacion'
@@ -871,6 +882,7 @@ export interface FileRouteTypes {
     | '/native'
     | '/planes'
     | '/privacidad'
+    | '/simulador'
     | '/terminos'
     | '/tutorial'
     | '/ubicacion'
@@ -948,6 +960,7 @@ export interface RootRouteChildren {
   NativeRoute: typeof NativeRoute
   PlanesRoute: typeof PlanesRoute
   PrivacidadRoute: typeof PrivacidadRoute
+  SimuladorRoute: typeof SimuladorRoute
   TerminosRoute: typeof TerminosRoute
   TutorialRoute: typeof TutorialRoute
   UbicacionRoute: typeof UbicacionRoute
@@ -1015,6 +1028,13 @@ declare module '@tanstack/react-router' {
       path: '/terminos'
       fullPath: '/terminos'
       preLoaderRoute: typeof TerminosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/simulador': {
+      id: '/simulador'
+      path: '/simulador'
+      fullPath: '/simulador'
+      preLoaderRoute: typeof SimuladorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacidad': {
@@ -1602,6 +1622,7 @@ const rootRouteChildren: RootRouteChildren = {
   NativeRoute: NativeRoute,
   PlanesRoute: PlanesRoute,
   PrivacidadRoute: PrivacidadRoute,
+  SimuladorRoute: SimuladorRoute,
   TerminosRoute: TerminosRoute,
   TutorialRoute: TutorialRoute,
   UbicacionRoute: UbicacionRoute,

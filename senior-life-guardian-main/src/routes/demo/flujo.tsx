@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { SosFlowScreensPage } from "@/components/demo/sos-flow-screens-page";
+import { EmergencySimulator } from "@/components/sales-demo/emergency-simulator";
 
 export const Route = createFileRoute("/demo/flujo")({
   component: DemoFlujoPage,
 });
 
 function DemoFlujoPage() {
-  return <SosFlowScreensPage />;
+  return <EmergencySimulator embedded showIntro />;
 }

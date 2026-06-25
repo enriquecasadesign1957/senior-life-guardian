@@ -270,7 +270,7 @@ export const DEMO_RESPONSE_TIME_TREND = [
 ];
 
 export const DEMO_NAV_SECTIONS = [
-  { to: "/demo/flujo", label: "Flujo SOS (pantallas)", desc: "Botón, tipo de ayuda, mensaje guardián y mapa" },
+  { to: "/demo/flujo", label: "Flujo SOS (simulador)", desc: "Botón S.O.S, tipo de ayuda y panel de envíos en vivo" },
   { to: "/demo/ejecutivo", label: "Dashboard Ejecutivo", desc: "KPIs institucionales" },
   { to: "/demo/monitoreo", label: "Supervisión del programa", desc: "Vista conceptual de gestión municipal (no operativa)" },
   { to: "/demo/mapa", label: "Mapa de Emergencias", desc: "GPS y geocercas demo" },

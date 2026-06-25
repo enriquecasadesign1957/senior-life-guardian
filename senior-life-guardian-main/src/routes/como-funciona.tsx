@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { WhatsAppFloat } from "@/components/whatsapp-float";
-import { SosFlowScreensPage } from "@/components/demo/sos-flow-screens-page";
+import { EmergencySimulator } from "@/components/sales-demo/emergency-simulator";
 
 export const Route = createFileRoute("/como-funciona")({
   head: () => ({
@@ -11,7 +11,7 @@ export const Route = createFileRoute("/como-funciona")({
       {
         name: "description",
         content:
-          "Recorrido interactivo: botón SOS, tipo de emergencia, mensaje al guardián y mapa GPS. Misma demo que presentaciones institucionales.",
+          "Simulador interactivo: botón SOS, tipo de emergencia (Salud, Accidente, Delincuencia) y panel de envíos a familiares en tiempo real.",
       },
     ],
   }),
@@ -30,7 +30,7 @@ function ComoFuncionaPage() {
           <ArrowLeft className="w-4 h-4" />
           Volver al inicio
         </Link>
-        <SosFlowScreensPage />
+        <EmergencySimulator embedded showIntro />
       </main>
       <SiteFooter />
       <WhatsAppFloat />

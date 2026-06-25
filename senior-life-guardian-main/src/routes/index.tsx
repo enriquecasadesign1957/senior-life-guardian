@@ -223,8 +223,8 @@ function QueEs() {
           </p>
           <div className="mt-8 flex flex-col items-center text-center gap-4">
             <p className="text-base md:text-lg text-foreground/90 font-medium max-w-2xl leading-relaxed">
-              Te invitamos a entrar y recorrer el flujo SOS paso a paso: botón de emergencia, aviso a la familia y
-              mapa con ubicación — como en la app real, sin instalar nada.
+              Te invitamos a probar el simulador S.O.S: botón de emergencia, tipo de ayuda y panel de envíos a
+              la familia en tiempo real — sin instalar nada.
             </p>
             <Link
               to="/como-funciona"
