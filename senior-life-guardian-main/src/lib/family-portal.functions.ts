@@ -5,6 +5,14 @@ import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
 import { normalizePhoneE164, phoneLookupCandidates, buildPhoneColumnOrFilter } from "@/lib/phone-utils";
 import { sendTwilioWhatsAppWithSmsFallback } from "@/lib/twilio";
 import { acknowledgeAlertByToken } from "@/lib/ack-alert";
+import { syncDeviceStatus } from "@/lib/device-status-sync";
+import { buildFamilyDeviceView } from "@/lib/family-device-status";
+import {
+  assertFamilySession,
+  assertSeniorAccess,
+  issueFamilySessionToken,
+  seniorAccessTokenSchema,
+} from "@/lib/senior-access-auth";
 
 const CODE_TTL_MIN = 10;
 const MAX_ATTEMPTS = 3;
@@ -54,18 +62,68 @@ async function pickPreferredSignupId(signupIds: string[]): Promise<string | null
   if (unique.length === 0) return null;
   if (unique.length === 1) return unique[0];
 
-  const { data: signups } = await supabaseAdmin
-    .from(CONTRACT_SIGNUPS_TABLE)
-    .select("id, subscription_status, payment_status, updated_at, created_at")
-    .in("id", unique)
-    .order("updated_at", { ascending: false });
+  const [{ data: signups }, { data: devices }] = await Promise.all([
+    supabaseAdmin
+      .from(CONTRACT_SIGNUPS_TABLE)
+      .select("id, subscription_status, payment_status, updated_at, created_at")
+      .in("id", unique)
+      .order("updated_at", { ascending: false }),
+    supabaseAdmin
+      .from("device_status")
+      .select("contract_signup_id, last_seen_at, updated_at")
+      .in("contract_signup_id", unique)
+      .order("last_seen_at", { ascending: false }),
+  ]);
 
-  if (!signups?.length) return unique[0];
+  const existing = signups ?? [];
+  if (existing.length === 0) return null;
 
-  const activePaid = signups.find(
+  const existingIds = new Set(existing.map((s) => s.id));
+  const liveDevice = (devices ?? []).find(
+    (d) =>
+      d.contract_signup_id &&
+      existingIds.has(d.contract_signup_id) &&
+      d.last_seen_at &&
+      Date.now() - new Date(d.last_seen_at).getTime() <= 48 * 60 * 60 * 1000,
+  );
+  if (liveDevice?.contract_signup_id) return liveDevice.contract_signup_id;
+
+  const { data: recentAlerts } = await supabaseAdmin
+    .from("alert_logs")
+    .select("contract_signup_id, created_at")
+    .in("contract_signup_id", [...existingIds])
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (
+    recentAlerts?.contract_signup_id &&
+    existingIds.has(recentAlerts.contract_signup_id) &&
+    Date.now() - new Date(recentAlerts.created_at).getTime() <= 7 * 24 * 60 * 60 * 1000
+  ) {
+    return recentAlerts.contract_signup_id;
+  }
+
+  const activePaid = existing.find(
     (s) => s.subscription_status === "active" && s.payment_status === "paid",
   );
-  return activePaid?.id ?? signups[0]?.id ?? unique[0];
+  return activePaid?.id ?? existing[0]?.id ?? unique.find((id) => existingIds.has(id)) ?? null;
+}
+
+async function findAllEmergencyContactSignupIds(tel: string): Promise<string[]> {
+  const candidates = phoneLookupCandidates(tel);
+  if (candidates.length === 0) return [];
+
+  const { data, error } = await supabaseAdmin
+    .from("emergency_contacts")
+    .select("contract_signup_id")
+    .or(buildPhoneColumnOrFilter(["telefono", "whatsapp"], candidates))
+    .eq("activo", true);
+
+  if (error) {
+    console.error("[family-portal] findAllEmergencyContactSignupIds", error.message);
+    return [];
+  }
+  return [...new Set((data ?? []).map((r) => r.contract_signup_id).filter(Boolean))];
 }
 
 async function findFamilyMemberByPhone(tel: string): Promise<FamilyMemberRow | null> {
@@ -86,10 +144,20 @@ async function findFamilyMemberByPhone(tel: string): Promise<FamilyMemberRow | n
 
   const rows = (data ?? []) as Array<FamilyMemberRow & { created_at?: string }>;
   if (rows.length === 0) return null;
-  if (rows.length === 1) return rows[0];
 
-  const preferredSignupId = await pickPreferredSignupId(rows.map((r) => r.contract_signup_id));
-  return rows.find((r) => r.contract_signup_id === preferredSignupId) ?? rows[0];
+  const { data: existingSignups } = await supabaseAdmin
+    .from(CONTRACT_SIGNUPS_TABLE)
+    .select("id")
+    .in("id", rows.map((r) => r.contract_signup_id));
+  const validSignupIds = new Set((existingSignups ?? []).map((s) => s.id));
+  const activeRows = rows.filter((r) => validSignupIds.has(r.contract_signup_id));
+  const pool = activeRows.length > 0 ? activeRows : rows;
+
+  if (pool.length === 1) return reconcileFamilyMemberSignup(pool[0]);
+
+  const preferredSignupId = await pickPreferredSignupId(pool.map((r) => r.contract_signup_id));
+  const picked = pool.find((r) => r.contract_signup_id === preferredSignupId) ?? pool[0];
+  return reconcileFamilyMemberSignup(picked);
 }
 
 async function findEmergencyContactByPhone(tel: string): Promise<{
@@ -129,9 +197,47 @@ async function reactivateFamilyMember(member: FamilyMemberRow, canonicalTel: str
   if (error) throw error;
 }
 
+async function reconcileFamilyMemberSignup(member: FamilyMemberRow): Promise<FamilyMemberRow> {
+  const ecIds = await findAllEmergencyContactSignupIds(member.telefono);
+  const candidateIds = [member.contract_signup_id, ...ecIds];
+
+  const { data: currentSignup } = await supabaseAdmin
+    .from(CONTRACT_SIGNUPS_TABLE)
+    .select("id")
+    .eq("id", member.contract_signup_id)
+    .maybeSingle();
+
+  const idsForPick =
+    currentSignup || ecIds.length === 0 ? candidateIds : ecIds;
+  const preferred = await pickPreferredSignupId(idsForPick);
+  if (!preferred || preferred === member.contract_signup_id) return member;
+
+  const { data: signup } = await supabaseAdmin
+    .from(CONTRACT_SIGNUPS_TABLE)
+    .select("id")
+    .eq("id", preferred)
+    .maybeSingle();
+  if (!signup) return member;
+
+  const { error } = await supabaseAdmin
+    .from("family_members")
+    .update({ contract_signup_id: preferred, updated_at: new Date().toISOString() })
+    .eq("id", member.id);
+  if (error) {
+    console.error("[family-portal] reconcile signup", error.message);
+    return member;
+  }
+
+  await logAccess(member.id, preferred, "signup_reconciled", {
+    from: member.contract_signup_id,
+    telefono: member.telefono,
+  });
+  return { ...member, contract_signup_id: preferred };
+}
+
 async function ensureFamilyMemberForLogin(tel: string): Promise<FamilyMemberRow> {
   const existing = await findFamilyMemberByPhone(tel);
-  if (existing?.activo) return existing;
+  if (existing?.activo) return reconcileFamilyMemberSignup(existing);
 
   if (existing && !existing.activo) {
     await reactivateFamilyMember(existing, tel);
@@ -156,7 +262,7 @@ async function ensureFamilyMemberForLogin(tel: string): Promise<FamilyMemberRow>
     .single();
 
   if (!insertErr && created) {
-    return created as FamilyMemberRow;
+    return reconcileFamilyMemberSignup(created as FamilyMemberRow);
   }
 
   // Conflicto único (signup+teléfono): reutilizar fila existente en lugar de fallar.
@@ -164,7 +270,7 @@ async function ensureFamilyMemberForLogin(tel: string): Promise<FamilyMemberRow>
     const conflict = await findFamilyMemberByPhone(tel);
     if (conflict) {
       if (!conflict.activo) await reactivateFamilyMember(conflict, tel);
-      return { ...conflict, activo: true, telefono: tel };
+      return reconcileFamilyMemberSignup({ ...conflict, activo: true, telefono: tel });
     }
 
     const { data: bySignup } = await supabaseAdmin
@@ -178,7 +284,7 @@ async function ensureFamilyMemberForLogin(tel: string): Promise<FamilyMemberRow>
     const row = bySignup?.[0] as FamilyMemberRow | undefined;
     if (row) {
       if (!row.activo) await reactivateFamilyMember(row, tel);
-      return { ...row, activo: true, telefono: tel };
+      return reconcileFamilyMemberSignup({ ...row, activo: true, telefono: tel });
     }
   }
 
@@ -277,15 +383,8 @@ export const verifyFamilyCode = createServerFn({ method: "POST" })
       .update({ consumed_at: new Date().toISOString() })
       .eq("id", row.id);
 
-    const member = await findFamilyMemberByPhone(tel);
-    if (!member?.activo) throw new Error("Familiar no encontrado.");
-
-    // session token simple (no JWT) — válido 30 días
-    const token = await sha256(`${member.id}.${Date.now()}.${crypto.randomUUID()}`);
-    // Reutilizamos family_login_codes con un marcador: NO — mejor metemos en metadata. Para mantener simple,
-    // guardamos en family_access_log el token activo. Pero necesitamos validarlo barato.
-    // Plan B: usar memoria de sesión solo en cliente y revalidar familyId en cada server fn.
-    // Mejor: el cliente guarda { telefono, family_member_id } y revalidamos contra DB en cada call.
+    const member = await ensureFamilyMemberForLogin(tel);
+    const token = await issueFamilySessionToken(member.id, member.contract_signup_id);
 
     await logAccess(member.id, member.contract_signup_id, "login_success", { telefono: tel });
 
@@ -295,7 +394,7 @@ export const verifyFamilyCode = createServerFn({ method: "POST" })
         family_member_id: member.id,
         contract_signup_id: member.contract_signup_id,
         nombre: member.nombre,
-        token, // opaco, no usado para auth — futuro
+        token,
       },
     };
   });
@@ -303,18 +402,24 @@ export const verifyFamilyCode = createServerFn({ method: "POST" })
 const sessionSchema = z.object({
   family_member_id: z.string().uuid(),
   contract_signup_id: z.string().uuid(),
+  session_token: seniorAccessTokenSchema,
 });
 
-async function assertSession(familyMemberId: string, signupId: string) {
+async function assertSession(
+  familyMemberId: string,
+  signupId: string,
+  sessionToken: string,
+): Promise<FamilyMemberRow> {
+  await assertFamilySession(familyMemberId, signupId, sessionToken);
   const { data } = await supabaseAdmin
     .from("family_members")
-    .select("id, contract_signup_id, activo")
+    .select("id, contract_signup_id, nombre, activo, telefono")
     .eq("id", familyMemberId)
     .maybeSingle();
-  if (!data || !data.activo || data.contract_signup_id !== signupId) {
+  if (!data || !data.activo) {
     throw new Error("Sesión inválida.");
   }
-  return data;
+  return reconcileFamilyMemberSignup(data as FamilyMemberRow);
 }
 
 // ============================================================
@@ -323,53 +428,89 @@ async function assertSession(familyMemberId: string, signupId: string) {
 export const getFamilyDashboard = createServerFn({ method: "POST" })
   .inputValidator((input) => sessionSchema.parse(input))
   .handler(async ({ data }) => {
-    await assertSession(data.family_member_id, data.contract_signup_id);
+    const member = await assertSession(
+      data.family_member_id,
+      data.contract_signup_id,
+      data.session_token,
+    );
+    const signupId = member.contract_signup_id;
 
-    const [{ data: senior }, { data: device }, { data: alerts }] = await Promise.all([
+    const [{ data: senior }, { data: deviceRowInitial }, { data: alerts }] = await Promise.all([
       supabaseAdmin
         .from(CONTRACT_SIGNUPS_TABLE)
         .select("id, nombre, telefono")
-        .eq("id", data.contract_signup_id)
+        .eq("id", signupId)
         .maybeSingle(),
       supabaseAdmin
         .from("device_status")
         .select(
-          "last_seen_at, battery_level, gps_enabled, internet_connected, app_version, last_lat, last_lng",
+          "last_seen_at, battery_level, gps_enabled, internet_connected, app_version, last_lat, last_lng, updated_at",
         )
-        .eq("contract_signup_id", data.contract_signup_id)
+        .eq("contract_signup_id", signupId)
         .maybeSingle(),
       supabaseAdmin
         .from("alert_logs")
         .select(
           "id, created_at, event_type, status, gps_lat, gps_lng, acknowledged_at, acknowledgement_by_name, metadata",
         )
-        .eq("contract_signup_id", data.contract_signup_id)
+        .eq("contract_signup_id", signupId)
         .order("created_at", { ascending: false })
         .limit(20),
     ]);
 
-    // Estado visual
     const lastAlert = alerts?.[0];
-    const isActiveAlert =
+    let deviceRow = deviceRowInitial;
+    const isActiveAlert = Boolean(
       lastAlert &&
-      ["pending", "partial", "delivered", "failed"].includes(lastAlert.status) &&
-      !lastAlert.acknowledged_at &&
-      Date.now() - new Date(lastAlert.created_at).getTime() < 30 * 60 * 1000;
+        ["pending", "partial", "delivered", "failed"].includes(lastAlert.status) &&
+        !lastAlert.acknowledged_at &&
+        Date.now() - new Date(lastAlert.created_at).getTime() < 30 * 60 * 1000,
+    );
 
-    const lastSeenMs = device?.last_seen_at
-      ? Date.now() - new Date(device.last_seen_at).getTime()
-      : Infinity;
-    const isDisconnected = lastSeenMs > 10 * 60 * 1000;
+    // Persistir fila si solo existía actividad por alertas (backfill legacy).
+    if (!deviceRow?.last_seen_at && lastAlert) {
+      try {
+        await syncDeviceStatus({
+          contractSignupId: signupId,
+          last_seen_at: lastAlert.created_at,
+          gps_enabled: lastAlert.gps_lat != null && lastAlert.gps_lng != null,
+          last_lat: lastAlert.gps_lat ?? null,
+          last_lng: lastAlert.gps_lng ?? null,
+          internet_connected: true,
+        });
+        const { data: refreshed } = await supabaseAdmin
+          .from("device_status")
+          .select(
+            "last_seen_at, battery_level, gps_enabled, internet_connected, app_version, last_lat, last_lng, updated_at",
+          )
+          .eq("contract_signup_id", signupId)
+          .maybeSingle();
+        if (refreshed) deviceRow = refreshed;
+      } catch (e) {
+        console.error("[family-dashboard] device_status backfill failed:", e);
+      }
+    }
 
-    let visualStatus: "alert" | "disconnected" | "no_gps" | "ok";
-    if (isActiveAlert) visualStatus = "alert";
-    else if (isDisconnected) visualStatus = "disconnected";
-    else if (device && device.gps_enabled === false) visualStatus = "no_gps";
-    else visualStatus = "ok";
+    const deviceView = buildFamilyDeviceView(deviceRow, lastAlert ?? null, isActiveAlert);
 
-    await logAccess(data.family_member_id, data.contract_signup_id, "dashboard_view");
+    await logAccess(data.family_member_id, signupId, "dashboard_view");
 
-    return { senior, device, alerts: alerts ?? [], visualStatus };
+    const sessionRefresh =
+      signupId !== data.contract_signup_id
+        ? { token: await issueFamilySessionToken(member.id, signupId) }
+        : undefined;
+
+    return {
+      contract_signup_id: signupId,
+      session: sessionRefresh,
+      senior,
+      device: deviceView.device,
+      alerts: alerts ?? [],
+      visualStatus: deviceView.visualStatus,
+      isLiveConnected: deviceView.isLiveConnected,
+      lastActivityAt: deviceView.lastActivityAt,
+      lastActivitySource: deviceView.lastActivitySource,
+    };
   });
 
 // ============================================================
@@ -387,8 +528,16 @@ export const ackAlertByToken = createServerFn({ method: "POST" })
 // 5) ¿Hay acknowledge? (consultado puntualmente desde /native)
 // ============================================================
 export const checkLastAlertAck = createServerFn({ method: "POST" })
-  .inputValidator((input) => z.object({ signupId: z.string().uuid() }).parse(input))
+  .inputValidator((input) =>
+    z
+      .object({
+        signupId: z.string().uuid(),
+        accessToken: seniorAccessTokenSchema,
+      })
+      .parse(input),
+  )
   .handler(async ({ data }) => {
+    await assertSeniorAccess(data.signupId, data.accessToken);
     const { data: row } = await supabaseAdmin
       .from("alert_logs")
       .select("id, created_at, acknowledged_at, acknowledgement_by_name")

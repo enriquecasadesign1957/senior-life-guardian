@@ -1,11 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { assertAdminPin } from "@/lib/admin-auth";
 import { chargeAmountFromSignup } from "@/lib/discount-codes";
 import { recordDiscountRedemption, resolveDiscountForCheckout } from "@/lib/discount.functions";
-import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
+import { CONTRACT_SIGNUPS_TABLE, isSignupPaidAndActive } from "@/lib/signups-db";
 import { normalizePlanKey, planKeySchema, periodoSchema } from "@/lib/plans";
 import { clearRenewalNoticeFlags } from "@/lib/subscription-renewal-flags";
 import { sendPostPaymentInstallNotifications } from "@/lib/post-payment-install-notify";
+import { ensureFirstGuardianAfterPayment } from "@/lib/first-guardian-checkout";
 import { attemptOneclickRecurringCharge } from "@/lib/oneclick-renewal-charge";
 import {
   authorizeOneclickMallTransaction,
@@ -58,7 +60,7 @@ async function loadValidationOneclickSignup(email: string) {
   if (error) throw error;
   if (!signup?.oneclick_tbk_user || !signup.oneclick_username) {
     throw new Error(
-      `No hay inscripción Oneclick activa para ${email}. Completa primero una inscripción aprobada en /checkout.`,
+      `No hay inscripci?n Oneclick activa para ${email}. Completa primero una inscripci?n aprobada en /checkout.`,
     );
   }
   return signup;
@@ -142,7 +144,7 @@ function computeRenewalDate(periodo: "mensual" | "anual", from = new Date()): Da
   return renewal;
 }
 
-/** Monto fijo de prueba producción (Transbank pide ~$50). Quitar env tras validar. */
+/** Monto fijo de prueba producci?n (Transbank pide ~$50). Quitar env tras validar. */
 function resolveProdTestCheckoutAmount(): number | null {
   if (getOneclickMallConfig().environment !== "production") return null;
   const raw = process.env.TRANSBANK_PROD_TEST_AMOUNT?.trim();
@@ -152,7 +154,7 @@ function resolveProdTestCheckoutAmount(): number | null {
   return amount;
 }
 
-/** Inicia inscripción Oneclick Mall + registra orden de primer cobro. */
+/** Inicia inscripci?n Oneclick Mall + registra orden de primer cobro. */
 export const initOneclickCheckout = createServerFn({ method: "POST" })
   .inputValidator((input) =>
     z
@@ -165,7 +167,7 @@ export const initOneclickCheckout = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     if (!isOneclickMallPaymentEnabled()) {
-      throw new Error("Oneclick Mall no está habilitado. Configura TRANSBANK_PAYMENT_MODE=oneclick_mall.");
+      throw new Error("Oneclick Mall no est? habilitado. Configura TRANSBANK_PAYMENT_MODE=oneclick_mall.");
     }
 
     const cfg = getOneclickMallConfig();
@@ -180,7 +182,7 @@ export const initOneclickCheckout = createServerFn({ method: "POST" })
 
     if (signupErr) throw signupErr;
     if (!signup) {
-      throw new Error("No encontramos tu registro de contratación. Vuelve a completar el checkout.");
+      throw new Error("No encontramos tu registro de contrataci?n. Vuelve a completar el checkout.");
     }
     const periodo = (signup.periodo as "mensual" | "anual") || data.periodo;
     const plan = normalizePlanKey(signup.plan || data.plan);
@@ -229,7 +231,7 @@ export const initOneclickCheckout = createServerFn({ method: "POST" })
       .eq("id", data.signupId);
 
     if (signupUpdErr) {
-      throw new Error(`No se pudo actualizar la contratación: ${signupUpdErr.message}`);
+      throw new Error(`No se pudo actualizar la contrataci?n: ${signupUpdErr.message}`);
     }
 
     await supabaseAdmin
@@ -253,7 +255,7 @@ export const initOneclickCheckout = createServerFn({ method: "POST" })
     };
   });
 
-/** Finaliza inscripción y autoriza el primer cobro (checkout). */
+/** Finaliza inscripci?n y autoriza el primer cobro (checkout). */
 export const finishOneclickCheckout = createServerFn({ method: "POST" })
   .inputValidator((input) =>
     z.object({ token: z.string().min(8).max(128) }).parse(input),
@@ -264,10 +266,30 @@ export const finishOneclickCheckout = createServerFn({ method: "POST" })
     const { data: signup } = await supabaseAdmin
       .from(CONTRACT_SIGNUPS_TABLE)
       .select(
-        "id,periodo,payment_status,discount_code_id,oneclick_username,oneclick_mall_buy_order,oneclick_store_buy_order,webpay_amount",
+        "id,periodo,payment_status,subscription_status,discount_code_id,oneclick_username,oneclick_mall_buy_order,oneclick_store_buy_order,webpay_amount,webpay_authorization_code,webpay_response_code",
       )
       .eq("oneclick_inscription_token", data.token)
       .maybeSingle();
+
+    const alreadyActive = signup ? isSignupPaidAndActive(signup) : false;
+
+    if (alreadyActive) {
+      await ensureFirstGuardianAfterPayment(signup!.id).catch((e) => {
+        console.error("[oneclick] first guardian (alreadyActive):", e);
+      });
+      return {
+        ok: true,
+        status: "AUTHORIZED",
+        responseCode: signup?.webpay_response_code ?? 0,
+        authorizationCode: signup?.webpay_authorization_code ?? null,
+        amount: signup?.webpay_amount ?? 0,
+        mallBuyOrder: signup?.oneclick_mall_buy_order ?? null,
+        storeBuyOrder: signup?.oneclick_store_buy_order ?? null,
+        cardLast4: null,
+        signupId: signup?.id ?? null,
+        alreadyConfirmed: true,
+      };
+    }
 
     const finish = await finishOneclickMallInscription(data.token);
 
@@ -359,6 +381,9 @@ export const finishOneclickCheckout = createServerFn({ method: "POST" })
         })
         .eq("id", signup.id);
       await clearRenewalNoticeFlags(signup.id);
+      await ensureFirstGuardianAfterPayment(signup.id).catch((e) => {
+        console.error("[oneclick] first guardian:", e);
+      });
       installNotify = await sendPostPaymentInstallNotifications(signup.id).catch((e) => {
         console.error("[oneclick] install notify:", e);
         return {
@@ -394,14 +419,15 @@ export const finishOneclickCheckout = createServerFn({ method: "POST" })
     };
   });
 
-/** Prueba validación Transbank: authorize crédito aprobado ($6.900, 1 cuota). */
+/** Prueba validaci?n Transbank: authorize cr?dito aprobado ($6.900, 1 cuota). */
 export const authorizeOneclickApprovedValidation = createServerFn({ method: "POST" })
   .inputValidator((input) =>
-    z.object({ email: z.string().email().optional() }).parse(input),
+    z.object({ email: z.string().email().optional(), pin: z.string().min(1).max(64) }).parse(input),
   )
   .handler(async ({ data }) => {
+    assertAdminPin(data.pin);
     if (getOneclickMallConfig().environment === "production" && !isTransbankLocalValidation()) {
-      throw new Error("Esta prueba solo está disponible en integración local (npm run dev:demo).");
+      throw new Error("Esta prueba solo est? disponible en integraci?n local (npm run dev:demo).");
     }
 
     const email = (data.email ?? VALIDATION_TEST_EMAIL).toLowerCase();
@@ -430,14 +456,15 @@ export const authorizeOneclickApprovedValidation = createServerFn({ method: "POS
     };
   });
 
-/** Prueba validación Transbank: authorize $10.000.000 → rechazo sandbox (-98). */
+/** Prueba validaci?n Transbank: authorize $10.000.000 ? rechazo sandbox (-98). */
 export const authorizeOneclickTenMillionRejectValidation = createServerFn({ method: "POST" })
   .inputValidator((input) =>
-    z.object({ email: z.string().email().optional() }).parse(input),
+    z.object({ email: z.string().email().optional(), pin: z.string().min(1).max(64) }).parse(input),
   )
   .handler(async ({ data }) => {
+    assertAdminPin(data.pin);
     if (getOneclickMallConfig().environment === "production" && !isTransbankLocalValidation()) {
-      throw new Error("Esta prueba solo está disponible en integración local (npm run dev:demo).");
+      throw new Error("Esta prueba solo est? disponible en integraci?n local (npm run dev:demo).");
     }
 
     const email = (data.email ?? VALIDATION_TEST_EMAIL).toLowerCase();
@@ -463,13 +490,14 @@ export const authorizeOneclickTenMillionRejectValidation = createServerFn({ meth
     };
   });
 
-/** Cobro recurrente con tbk_user (validación + renovaciones futuras). */
+/** Cobro recurrente con tbk_user (validaci?n + renovaciones futuras). */
 
 export const authorizeOneclickRenewal = createServerFn({ method: "POST" })
   .inputValidator((input) =>
-    z.object({ signupId: z.string().uuid() }).parse(input),
+    z.object({ signupId: z.string().uuid(), pin: z.string().min(1).max(64) }).parse(input),
   )
   .handler(async ({ data }) => {
+    assertAdminPin(data.pin);
     const charge = await attemptOneclickRecurringCharge(data.signupId);
     if (charge.skipped) {
       throw new Error(charge.reason ?? "No se pudo intentar el cobro recurrente.");
@@ -487,9 +515,10 @@ export const authorizeOneclickRenewal = createServerFn({ method: "POST" })
 
 export const statusOneclickPayment = createServerFn({ method: "POST" })
   .inputValidator((input) =>
-    z.object({ mallBuyOrder: z.string().min(4).max(26) }).parse(input),
+    z.object({ mallBuyOrder: z.string().min(4).max(26), pin: z.string().min(1).max(64) }).parse(input),
   )
   .handler(async ({ data }) => {
+    assertAdminPin(data.pin);
     const status = await statusOneclickMallTransaction(data.mallBuyOrder);
     return {
       ok: true,
@@ -507,10 +536,12 @@ export const refundOneclickPayment = createServerFn({ method: "POST" })
         mallBuyOrder: z.string().min(4).max(26),
         storeBuyOrder: z.string().min(4).max(26),
         amount: z.number().int().positive(),
+        pin: z.string().min(1).max(64),
       })
       .parse(input),
   )
   .handler(async ({ data }) => {
+    assertAdminPin(data.pin);
     const cfg = getOneclickMallConfig();
     const refund = await refundOneclickMallTransaction({
       mallBuyOrder: data.mallBuyOrder,
@@ -535,9 +566,10 @@ export const refundOneclickPayment = createServerFn({ method: "POST" })
 
 export const removeOneclickInscription = createServerFn({ method: "POST" })
   .inputValidator((input) =>
-    z.object({ signupId: z.string().uuid() }).parse(input),
+    z.object({ signupId: z.string().uuid(), pin: z.string().min(1).max(64) }).parse(input),
   )
   .handler(async ({ data }) => {
+    assertAdminPin(data.pin);
     const { data: signup, error } = await supabaseAdmin
       .from(CONTRACT_SIGNUPS_TABLE)
       .select("id,oneclick_username,oneclick_tbk_user")
@@ -546,7 +578,7 @@ export const removeOneclickInscription = createServerFn({ method: "POST" })
 
     if (error) throw error;
     if (!signup?.oneclick_username || !signup.oneclick_tbk_user) {
-      throw new Error("No hay inscripción Oneclick activa para esta cuenta.");
+      throw new Error("No hay inscripci?n Oneclick activa para esta cuenta.");
     }
 
     await deleteOneclickMallInscription(signup.oneclick_tbk_user, signup.oneclick_username);
@@ -562,42 +594,43 @@ export const removeOneclickInscription = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const getOneclickValidationInfo = createServerFn({ method: "GET" }).handler(async () => {
-  const cfg = getOneclickMallConfig();
-  return {
-    enabled: isOneclickMallPaymentEnabled(),
-    environment: cfg.environment,
-    mallCommerceCode: cfg.mallCommerceCode,
-    storeCommerceCode: cfg.storeCommerceCode,
-    returnUrl: buildOneclickReturnUrl(),
-    testCards: {
-      approvedVisa: "4051885600446623",
-      approvedAmex: "370000000002032",
-      rejectedCreditMastercard: "5186059559590568",
-      rejectedRedcompra: "5186008541233829",
-      approvedRedcompra: "4051884239937763",
-      rejectedPrepaidMastercard: "5186174110629480",
-      rut: "11.111.111-1",
-      password: "123",
-      cvv: "123",
-      amexCvv: "1234",
-    },
-    integrationCredentials: {
-      oneclickMallCode: "597055555541",
-      oneclickStoreCode: "597055555542",
-      apiKeySecret: "579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C",
-    },
-    validationCases: [
-      "Inscripción aprobada (tarjeta de prueba aprobada)",
-      "Inscripción rechazada (tarjeta de prueba rechazada)",
-      "Cobro autorizado (primer pago tras inscripción)",
-      "Consulta estado de transacción (GET status)",
-      "Anulación / reverso (refund)",
-      "Eliminar inscripción (DELETE inscription)",
-    ],
-    formUrl: "https://www.transbankdevelopers.cl/documentacion/como_empezar",
-  };
-});
+export const getOneclickValidationInfo = createServerFn({ method: "POST" })
+  .inputValidator((input) => z.object({ pin: z.string().min(1).max(64) }).parse(input))
+  .handler(async ({ data }) => {
+    assertAdminPin(data.pin);
+    const cfg = getOneclickMallConfig();
+    const isSandbox = cfg.environment !== "production";
+    return {
+      enabled: isOneclickMallPaymentEnabled(),
+      environment: cfg.environment,
+      mallCommerceCode: cfg.mallCommerceCode,
+      storeCommerceCode: cfg.storeCommerceCode,
+      returnUrl: buildOneclickReturnUrl(),
+      testCards: isSandbox
+        ? {
+            approvedVisa: "4051885600446623",
+            approvedAmex: "370000000002032",
+            rejectedCreditMastercard: "5186059559590568",
+            rejectedRedcompra: "5186008541233829",
+            approvedRedcompra: "4051884239937763",
+            rejectedPrepaidMastercard: "5186174110629480",
+            rut: "11.111.111-1",
+            password: "123",
+            cvv: "123",
+            amexCvv: "1234",
+          }
+        : null,
+      validationCases: [
+        "Inscripci?n aprobada (tarjeta de prueba aprobada)",
+        "Inscripci?n rechazada (tarjeta de prueba rechazada)",
+        "Cobro autorizado (primer pago tras inscripci?n)",
+        "Consulta estado de transacci?n (GET status)",
+        "Anulaci?n / reverso (refund)",
+        "Eliminar inscripci?n (DELETE inscription)",
+      ],
+      formUrl: "https://www.transbankdevelopers.cl/documentacion/como_empezar",
+    };
+  });
 
 export const lookupOneclickSignup = createServerFn({ method: "POST" })
   .inputValidator((input) =>
@@ -605,11 +638,13 @@ export const lookupOneclickSignup = createServerFn({ method: "POST" })
       .object({
         email: z.string().email().optional(),
         signupId: z.string().uuid().optional(),
+        pin: z.string().min(1).max(64),
       })
       .refine((v) => v.email || v.signupId, "Indica email o signupId")
       .parse(input),
   )
   .handler(async ({ data }) => {
+    assertAdminPin(data.pin);
     let query = supabaseAdmin
       .from(CONTRACT_SIGNUPS_TABLE)
       .select(

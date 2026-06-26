@@ -1,12 +1,20 @@
+import { readSeniorAccessToken } from "@/lib/senior-access-auth";
+
 type SavePinFn = (args: {
-  data: { signupId: string; pinHash: string };
+  data: { signupId: string; accessToken: string; pinHash: string };
 }) => Promise<{ ok: boolean }>;
 
 type VerifyPinFn = (args: {
-  data: { signupId: string; pinHash: string };
+  data: { signupId: string; accessToken: string; pinHash: string };
 }) => Promise<{ ok: boolean; configured: boolean }>;
 
 const SAVE_TIMEOUT_MS = 12_000;
+
+function pinAuthPayload(signupId: string): { signupId: string; accessToken: string } | null {
+  const accessToken = readSeniorAccessToken(signupId);
+  if (!accessToken) return null;
+  return { signupId, accessToken };
+}
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return Promise.race([
@@ -23,12 +31,15 @@ export async function saveUserPinWithFallback(
   signupId: string,
   pinHash: string,
 ): Promise<{ ok: boolean; error?: string }> {
+  const auth = pinAuthPayload(signupId);
+  if (!auth) return { ok: false, error: "auth_required" };
+
   try {
     const res = await withTimeout(
       fetch("/api/public/save-pin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ signupId, pinHash }),
+        body: JSON.stringify({ ...auth, pinHash }),
       }),
       SAVE_TIMEOUT_MS,
     );
@@ -43,7 +54,7 @@ export async function saveUserPinWithFallback(
 
   try {
     const res = await withTimeout(
-      savePinFn({ data: { signupId, pinHash } }),
+      savePinFn({ data: { ...auth, pinHash } }),
       SAVE_TIMEOUT_MS,
     );
     if (res?.ok) return { ok: true };
@@ -60,12 +71,15 @@ export async function verifyPinWithFallback(
   signupId: string,
   pinHash: string,
 ): Promise<{ ok: boolean; configured: boolean; error?: string }> {
+  const auth = pinAuthPayload(signupId);
+  if (!auth) return { ok: false, configured: false, error: "auth_required" };
+
   try {
     const res = await withTimeout(
       fetch("/api/public/verify-pin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ signupId, pinHash }),
+        body: JSON.stringify({ ...auth, pinHash }),
       }),
       SAVE_TIMEOUT_MS,
     );
@@ -83,7 +97,7 @@ export async function verifyPinWithFallback(
 
   try {
     const res = await withTimeout(
-      verifyPinFn({ data: { signupId, pinHash } }),
+      verifyPinFn({ data: { ...auth, pinHash } }),
       SAVE_TIMEOUT_MS,
     );
     return {

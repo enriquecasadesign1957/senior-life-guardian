@@ -4,6 +4,11 @@ export const EMERGENCY_CATEGORY_IDS = ["salud", "accidente", "delincuencia"] as 
 
 export type EmergencyCategory = (typeof EMERGENCY_CATEGORY_IDS)[number];
 
+/** Si el adulto mayor no elige categoría en el modal SOS, se envía con esta categoría. */
+export const EMERGENCY_CATEGORY_AUTO_DEFAULT: EmergencyCategory = "salud";
+
+export const EMERGENCY_CATEGORY_AUTO_SEND_MS = 10_000;
+
 export const emergencyCategorySchema = z.enum(EMERGENCY_CATEGORY_IDS);
 
 export const EMERGENCY_CATEGORIES: ReadonlyArray<{

@@ -1,28 +1,46 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Bell, Shield, MapPin, Users, CheckCircle2, Loader2, X, Heart, KeyRound, Activity, AlertTriangle } from "lucide-react";
+import { Bell, Shield, MapPin, Users, CheckCircle2, Loader2, X, Heart, KeyRound, Activity, AlertTriangle, Battery } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getAppConfiguration, listFamily } from "@/lib/family.functions";
-import { persistSignupHandoff } from "@/lib/post-payment";
+import { persistSignupHandoff, isTrainingDone, markTrainingDone } from "@/lib/post-payment";
 import { loginAccountByEmail, loginErrorMessage } from "@/lib/account-login";
+import { persistSeniorAccessToken, requireSeniorAccessToken } from "@/lib/senior-access-auth";
 import { listFamilyWithFallback } from "@/lib/family-actions";
 import { sendEmergencyAlert, cancelEmergencyAlert } from "@/lib/emergency-alert.functions";
+import { activateWhatsAppFromApp } from "@/lib/whatsapp-activation.functions";
+import { markWhatsAppActivatedLocally } from "@/lib/whatsapp-activation-local";
 import { sendWellnessNotice } from "@/lib/wellness.functions";
-import { upsertHeartbeat } from "@/lib/heartbeat.functions";
 import { checkLastAlertAck } from "@/lib/family-portal.functions";
 import { getCurrentCoordsWithError, getCurrentCoords, ensureGeoPermission } from "@/lib/geo";
 import { FallDetectionOverlay, useFallDetection } from "@/hooks/useFallDetection";
+import { useDeviceHeartbeat } from "@/hooks/use-device-heartbeat";
+import { useLiveBatteryLevel } from "@/hooks/use-live-battery-level";
 import { PinGateDialog } from "@/components/pin-gate-dialog";
 import {
   EMERGENCY_CATEGORIES,
+  EMERGENCY_CATEGORY_AUTO_DEFAULT,
+  emergencyCategoryLabel,
   type EmergencyCategory,
 } from "@/lib/emergency-category";
+import { useEmergencyCategoryAutoSend } from "@/hooks/use-emergency-category-auto-send";
+import { useSosGpsPriming } from "@/hooks/use-sos-gps-priming";
+import { SosGpsPrimingUi } from "@/components/sos-gps-priming-ui";
+import {
+  isSubscriptionServiceAllowed,
+  subscriptionBlockedMessage,
+} from "@/lib/subscription-access";
 
 export const Route = createFileRoute("/native")({
+  validateSearch: (raw: Record<string, unknown>) => ({
+    entrenamiento: raw.entrenamiento === "1" ? ("1" as const) : undefined,
+    ss: typeof raw.ss === "string" ? raw.ss : undefined,
+    source: typeof raw.source === "string" ? raw.source : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Senior Safe" },
@@ -48,17 +66,20 @@ type Contact = { id: string; nombre: string; parentesco: string; telefono: strin
 
 function NativeApp() {
   const router = useRouter();
+  const routeSearch = Route.useSearch();
   const loadConfig = useServerFn(getAppConfiguration);
   const list = useServerFn(listFamily);
   const sendAlert = useServerFn(sendEmergencyAlert);
   const cancelAlert = useServerFn(cancelEmergencyAlert);
   const sendWellness = useServerFn(sendWellnessNotice);
-  const heartbeat = useServerFn(upsertHeartbeat);
   const checkAck = useServerFn(checkLastAlertAck);
+  const activateWhatsApp = useServerFn(activateWhatsAppFromApp);
   const [wellnessBusy, setWellnessBusy] = useState(false);
   const [ackInfo, setAckInfo] = useState<{ at: string; name: string | null } | null>(null);
 
   const [bootLoading, setBootLoading] = useState(true);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const subscriptionActive = isSubscriptionServiceAllowed(subscriptionStatus);
   const [userId, setUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState("");
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -74,6 +95,20 @@ function NativeApp() {
 
   const [pinConfigured, setPinConfigured] = useState(false);
   const [pinGateOpen, setPinGateOpen] = useState(false);
+  const [trainingPending, setTrainingPending] = useState(false);
+  const [trainingDone, setTrainingDone] = useState(false);
+  const isTrainingRunRef = useRef(false);
+  const [trainingRunActive, setTrainingRunActive] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const entrenamiento =
+      routeSearch.entrenamiento === "1" || params.get("entrenamiento") === "1";
+    setTrainingPending(entrenamiento);
+    setTrainingDone(isTrainingDone());
+    if (routeSearch.ss) persistSignupHandoff(routeSearch.ss);
+  }, [routeSearch.entrenamiento, routeSearch.ss]);
 
   // emergency state
   const [stage, setStage] = useState<Stage>("idle");
@@ -96,7 +131,10 @@ function NativeApp() {
           setUserName(String(res.user.nombre ?? "").split(" ")[0]);
           setContacts(res.contacts as Contact[]);
           setPinConfigured(Boolean(res.pinConfigured));
+          setSubscriptionStatus((res.user as { subscription_status?: string }).subscription_status ?? null);
           persistSignupHandoff(res.user.id);
+          if (res.accessToken) persistSeniorAccessToken(res.accessToken, res.user.id);
+          if (res.whatsappActivated) markWhatsAppActivatedLocally();
           localStorage.setItem("seniorsafe_native_user", JSON.stringify(res.user));
         }
       } catch (e) {
@@ -156,34 +194,15 @@ function NativeApp() {
     return () => clearInterval(id);
   }, [userId]);
 
+  useDeviceHeartbeat({
+    signupId: userId,
+    gpsEnabled: gpsOk,
+    lastCoords,
+    appVersion: "native-apk-2",
+    enabled: !!userId,
+  });
 
-  // 2b) Heartbeat cada 60s — solo si pestaña visible + online + sesión
-  useEffect(() => {
-    if (!userId) return;
-    let alive = true;
-    const ping = async () => {
-      if (!alive) return;
-      if (typeof document !== "undefined" && document.hidden) return;
-      if (typeof navigator !== "undefined" && navigator.onLine === false) return;
-      try {
-        const bat: any = await (navigator as any).getBattery?.().catch(() => null);
-        await heartbeat({
-          data: {
-            signupId: userId,
-            battery_level: bat ? Math.round(bat.level * 100) : null,
-            gps_enabled: gpsOk,
-            internet_connected: typeof navigator !== "undefined" ? navigator.onLine : null,
-            app_version: "native-1.0",
-            last_lat: lastCoords?.lat ?? null,
-            last_lng: lastCoords?.lng ?? null,
-          },
-        });
-      } catch { /* silencioso */ }
-    };
-    ping();
-    const id = setInterval(ping, 60_000);
-    return () => { alive = false; clearInterval(id); };
-  }, [userId, gpsOk, lastCoords, heartbeat]);
+  const liveBatteryLevel = useLiveBatteryLevel(!!userId);
 
   // 2c) Tras enviar alerta, verificar ack durante 60s (sin polling permanente)
   useEffect(() => {
@@ -194,7 +213,7 @@ function NativeApp() {
       if (!alive || attempts >= 6) return;
       attempts++;
       try {
-        const r = await checkAck({ data: { signupId: userId } });
+        const r = await checkAck({ data: { signupId: userId, accessToken: requireSeniorAccessToken(userId) } });
         if (r.alert?.acknowledged_at) {
           setAckInfo({ at: r.alert.acknowledged_at, name: r.alert.acknowledgement_by_name });
           return;
@@ -222,6 +241,7 @@ function NativeApp() {
   // 4) Envío: disparado al elegir tipo de emergencia.
   const sendingRef = useRef(false);
   const emergencySendGenRef = useRef(0);
+  const triggerAlertRef = useRef<(category: EmergencyCategory) => Promise<void>>(async () => {});
 
   const fetchFallGps = useCallback(async () => {
     const gps = await getCurrentCoords({ highAccuracy: true, timeoutMs: 5000, maximumAgeMs: 30000 });
@@ -235,13 +255,27 @@ function NativeApp() {
   const dispatchFallEmergency = useCallback(
     async (gps: { lat: number; lng: number; accuracy?: number } | null) => {
       if (!userId) return;
+      const trainingMode = trainingPending && !trainingDone;
       const res = await sendAlert({
         data: {
           signupId: userId,
+          accessToken: requireSeniorAccessToken(userId),
           gps: gps ? { lat: gps.lat, lng: gps.lng, accuracy: gps.accuracy } : null,
           emergencyCategory: "accidente",
+          trainingMode,
+          graceBeforeSend: !trainingMode,
         },
       });
+      if ((res as { status?: string })?.status === "cancelled_by_senior") {
+        toast.message("Alerta por caída cancelada.");
+        return;
+      }
+      if (trainingMode) {
+        markTrainingDone();
+        setTrainingDone(true);
+        toast.success("Simulación de caída completada. Sin mensajes reales.");
+        return;
+      }
       const results = (res as { results?: Array<{ status: string }> })?.results ?? [];
       const delivered = results.filter((r) => r.status === "sent").length;
       if (delivered > 0) {
@@ -250,7 +284,7 @@ function NativeApp() {
         toast.error("No se pudo enviar la alerta automática por caída.");
       }
     },
-    [sendAlert, userId],
+    [sendAlert, userId, trainingPending, trainingDone],
   );
 
   const {
@@ -283,11 +317,57 @@ function NativeApp() {
     toast.error("Permiso de movimiento denegado. En iPhone: Ajustes → Safari → Sensores de movimiento.");
   };
 
+  const autoActivateWhatsApp = useCallback(async () => {
+    if (!userId) return;
+    try {
+      const res = await activateWhatsApp({ data: { signupId: userId } });
+      if (res?.ok) markWhatsAppActivatedLocally();
+    } catch (e) {
+      console.error("[autoActivateWhatsApp]", e);
+    }
+  }, [userId, activateWhatsApp]);
+
+  const {
+    primed: sosGpsPrimed,
+    uiStage: sosPrimingUiStage,
+    lastGpsOk: sosPrimingGpsOk,
+    lastFallOk: sosPrimingFallOk,
+    fallSupported: sosPrimingFallSupported,
+    dismissIntro: dismissSosPrimingIntro,
+    closeSuccess: closeSosPrimingSuccess,
+    runPrimingPress,
+  } = useSosGpsPriming({
+    signupId: userId,
+    enabled: !!userId && !bootLoading && stage === "idle",
+    onGpsPrimed: (ok) => {
+      if (ok) setGpsOk(true);
+    },
+    onFallSensorPrimed: requestFallPermission,
+    onWhatsAppAutoActivate: autoActivateWhatsApp,
+  });
+
+  const handleEmergencyPress = () => {
+    if (!sosGpsPrimed) {
+      void runPrimingPress();
+      return;
+    }
+    const isTraining = trainingPending && !trainingDone;
+    if (userId && !subscriptionActive && !isTraining) {
+      toast.error(subscriptionBlockedMessage(subscriptionStatus));
+      return;
+    }
+    isTrainingRunRef.current = isTraining;
+    setTrainingRunActive(isTraining);
+    if ("vibrate" in navigator) navigator.vibrate?.(120);
+    setStage("confirm");
+  };
+
   const triggerAlert = async (category: EmergencyCategory) => {
     if (sendingRef.current) return;
     if (!userId) return;
     sendingRef.current = true;
     const gen = emergencySendGenRef.current;
+    const trainingMode = isTrainingRunRef.current;
 
     setStage("sending");
     setSummary(null);
@@ -311,9 +391,11 @@ function NativeApp() {
       const res = await sendAlert({
         data: {
           signupId: userId,
+          accessToken: requireSeniorAccessToken(userId),
           gps: coords ? { lat: coords.lat, lng: coords.lng, accuracy: coords.accuracy } : null,
           emergencyCategory: category,
-          graceBeforeSend: true,
+          trainingMode,
+          graceBeforeSend: !trainingMode,
         },
       });
       if (emergencySendGenRef.current !== gen) return;
@@ -328,7 +410,13 @@ function NativeApp() {
       const guardianTotal = Math.max(1, contacts.filter((c) => c.recibe_sms !== false).length || contacts.length);
       const status = (res as any)?.status ?? (smsSent > 0 ? "partial" : "failed");
       setSummary({ delivered: smsSent, total: guardianTotal, status });
-      if (smsSent > 0) {
+      if (trainingMode) {
+        markTrainingDone();
+        setTrainingDone(true);
+        isTrainingRunRef.current = false;
+        setTrainingRunActive(false);
+        toast.success("Entrenamiento completado. Sin llamadas ni mensajes reales.");
+      } else if (smsSent > 0) {
         const callNote = callSent > 0 ? " Llamada iniciada." : " WhatsApp y llamada enviados si nadie confirmó.";
         toast.success(`Alerta enviada (${smsSent} SMS).${callNote}`);
       } else if (contacts.length === 0) {
@@ -351,11 +439,27 @@ function NativeApp() {
       sendingRef.current = false;
     }
   };
+  triggerAlertRef.current = triggerAlert;
+
+  const handleAutoSendCategory = useCallback((category: EmergencyCategory) => {
+    toast.message(`Enviando alerta de ${emergencyCategoryLabel(category)}…`);
+    void triggerAlertRef.current(category);
+  }, []);
+
+  const { secondsLeft: categoryAutoSendSecondsLeft } = useEmergencyCategoryAutoSend(
+    stage === "confirm" && !trainingRunActive,
+    handleAutoSendCategory,
+  );
+
+  const handleFallCancel = useCallback(() => {
+    cancelarAlerta();
+    if (userId) void cancelAlert({ data: { signupId: userId, accessToken: requireSeniorAccessToken(userId) } });
+  }, [cancelarAlerta, userId, cancelAlert]);
 
   const cancelEmergencySending = () => {
     emergencySendGenRef.current += 1;
     sendingRef.current = false;
-    if (userId) void cancelAlert({ data: { signupId: userId } });
+    if (userId) void cancelAlert({ data: { signupId: userId, accessToken: requireSeniorAccessToken(userId) } });
     setLocating(false);
     setSummary(null);
     setStage("confirm");
@@ -387,6 +491,7 @@ function NativeApp() {
       setContacts(res.contacts as Contact[]);
       setPinConfigured(Boolean(res.pinConfigured));
       persistSignupHandoff(res.user.id);
+      if (res.accessToken) persistSeniorAccessToken(res.accessToken, res.user.id);
       localStorage.setItem("seniorsafe_native_user", JSON.stringify(res.user));
       try { sessionStorage.setItem("seniorsafe_user", JSON.stringify(res.user)); } catch {}
       try { localStorage.setItem("seniorsafe_user_backup", JSON.stringify(res.user)); } catch {}
@@ -479,6 +584,12 @@ function NativeApp() {
             <div className="text-sm text-muted-foreground">Hola{userName ? `, ${userName}` : ""}</div>
           </div>
         </div>
+        <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+          <span className="inline-flex items-center gap-1">
+            <Battery className="w-4 h-4" aria-hidden="true" />
+            {liveBatteryLevel != null ? `${liveBatteryLevel}%` : "Batería —"}
+          </span>
+        </div>
       </header>
 
       <main className="flex-1 flex flex-col px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] max-w-md mx-auto w-full">
@@ -540,9 +651,15 @@ function NativeApp() {
 
         {/* BOTÓN EMERGENCIA */}
         <div className="flex-1 flex flex-col items-center justify-center py-2">
+          {!sosGpsPrimed && (
+            <p className="mb-3 text-center text-sm font-semibold text-red-700 max-w-[20rem]">
+              Primera pulsación: activa ubicación
+              {fallMotionSupported ? " y caídas" : ""} y WhatsApp (sin avisar a nadie).
+            </p>
+          )}
           <button
             type="button"
-            onClick={() => { if ("vibrate" in navigator) navigator.vibrate?.(120); setStage("confirm"); }}
+            onClick={handleEmergencyPress}
             aria-label="Botón de emergencia"
             className="relative group focus:outline-none focus-visible:ring-4 focus-visible:ring-red-300 rounded-full"
           >
@@ -576,7 +693,9 @@ function NativeApp() {
             // GPS opcional, sin bloquear si falla o no se otorga.
             try {
               const gps = await getCurrentCoords({ highAccuracy: false, timeoutMs: 4000, maximumAgeMs: 60_000 });
-              const res = await sendWellness({ data: { signupId: userId, gps } });
+              const res = await sendWellness({
+                data: { signupId: userId, accessToken: requireSeniorAccessToken(userId), gps },
+              });
               if (res.recipients === 0) {
                 toast.success("Marcado como: Estoy bien 💚", { description: "No hay guardianes configurados." });
               } else {
@@ -644,7 +763,17 @@ function NativeApp() {
               <Bell className="w-10 h-10" />
             </div>
             <h2 className="text-2xl font-bold mb-2">¿Qué tipo de ayuda necesitas?</h2>
-            <p className="text-muted-foreground mb-4 text-sm">Toca una opción y avisaremos a tu familia al instante.</p>
+            <p
+              className={`text-muted-foreground text-sm ${categoryAutoSendSecondsLeft > 0 ? "mb-2" : "mb-4"}`}
+            >
+              Toca una opción y avisaremos a tu familia al instante.
+            </p>
+            {categoryAutoSendSecondsLeft > 0 && (
+              <p className="text-sm font-medium text-red-600 mb-4" aria-live="polite">
+                Si no eliges, enviaremos alerta de{" "}
+                {emergencyCategoryLabel(EMERGENCY_CATEGORY_AUTO_DEFAULT)} en {categoryAutoSendSecondsLeft}s…
+              </p>
+            )}
             <div className="grid grid-cols-1 gap-3 mb-4">
               {EMERGENCY_CATEGORIES.map((category) => {
                 const Icon = CATEGORY_ICONS[category.id];
@@ -720,7 +849,16 @@ function NativeApp() {
         isActive={fallCountdownActive}
         countdownSeconds={fallCountdown}
         isDispatching={fallStatus === "dispatching"}
-        onCancel={cancelarAlerta}
+        onCancel={handleFallCancel}
+      />
+
+      <SosGpsPrimingUi
+        uiStage={sosPrimingUiStage}
+        gpsOk={sosPrimingGpsOk}
+        fallOk={sosPrimingFallOk}
+        fallSupported={sosPrimingFallSupported}
+        onIntroDismiss={dismissSosPrimingIntro}
+        onSuccessClose={closeSosPrimingSuccess}
       />
 
       <PinGateDialog

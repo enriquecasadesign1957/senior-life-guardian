@@ -98,7 +98,9 @@ export const Route = createFileRoute('/api/public/twilio-voice-webhook')({
         // Disparar alerta SOS por voz (sin GPS — viene de llamada telefónica)
         try {
           const { sendEmergencyAlert } = await import('@/lib/emergency-alert.functions')
-          await sendEmergencyAlert({ data: { signupId: user.id, gps: null } })
+          const { issueSeniorAccessToken } = await import('@/lib/senior-access-auth')
+          const accessToken = await issueSeniorAccessToken(user.id)
+          await sendEmergencyAlert({ data: { signupId: user.id, gps: null, accessToken } })
         } catch (e) {
           try {
             await supabaseAdmin.from('alert_logs').insert({

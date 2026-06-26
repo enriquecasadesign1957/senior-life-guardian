@@ -175,8 +175,8 @@ function FlujoPage() {
                   Contratar con Webpay
                   <ArrowRight className="w-4 h-4" />
                 </Link>
-                <Link to="/dashboard" className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full border-2 border-white/40 text-white font-bold hover:bg-white/10 transition">
-                  Ver dashboard familiar
+                <Link to="/familia" className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full border-2 border-white/40 text-white font-bold hover:bg-white/10 transition">
+                  Ver portal familia
                 </Link>
               </div>
             </div>

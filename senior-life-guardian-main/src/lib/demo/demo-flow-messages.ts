@@ -1,3 +1,4 @@
+import { CASCADE_ACK_HINT } from "@/lib/emergency-cascade-timing";
 import {
   emergencyCategoryMessageLine,
   type EmergencyCategory,
@@ -23,7 +24,7 @@ export function buildDemoGuardianAlertMessage(category: EmergencyCategory = "sal
   const locationBlock = `📍 Ubicación (GPS preciso):\n${mapsLink}`;
   const confirmBlock =
     `✅ CONFIRMA QUE RECIBISTE ESTA ALERTA\n` +
-    `Toca este enlace (evita la llamada a los 30 s):\n` +
+    `Toca este enlace (${CASCADE_ACK_HINT}):\n` +
     ackUrl;
 
   const details = [categoryBlock, locationBlock, `⏰ Hora:\n${timestamp}`].join("\n\n");

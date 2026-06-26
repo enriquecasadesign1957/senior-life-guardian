@@ -4,6 +4,8 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { locationShareUrl } from "@/lib/maps";
 import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
 import { sendTwilioChannelMessage } from "@/lib/twilio";
+import { syncDeviceStatus } from "@/lib/device-status-sync";
+import { assertSeniorAccess, seniorAccessTokenSchema } from "@/lib/senior-access-auth";
 
 /**
  * Flujo INDEPENDIENTE del botón "Estoy bien".
@@ -17,6 +19,7 @@ import { sendTwilioChannelMessage } from "@/lib/twilio";
 
 const Schema = z.object({
   signupId: z.string().uuid(),
+  accessToken: seniorAccessTokenSchema,
   gps: z
     .object({ lat: z.number(), lng: z.number(), accuracy: z.number().optional() })
     .nullable()
@@ -34,6 +37,7 @@ function normalizePhone(raw: string): string | null {
 export const sendWellnessNotice = createServerFn({ method: "POST" })
   .inputValidator((input) => Schema.parse(input))
   .handler(async ({ data }) => {
+    await assertSeniorAccess(data.signupId, data.accessToken);
     const { data: user } = await supabaseAdmin
       .from(CONTRACT_SIGNUPS_TABLE)
       .select("id, nombre")
@@ -90,6 +94,19 @@ export const sendWellnessNotice = createServerFn({ method: "POST" })
       } as never);
     } catch {
       /* best-effort */
+    }
+
+    try {
+      await syncDeviceStatus({
+        contractSignupId: user.id,
+        gps_enabled: data.gps != null,
+        last_lat: data.gps?.lat ?? null,
+        last_lng: data.gps?.lng ?? null,
+        internet_connected: true,
+        app_version: "native-wellness",
+      });
+    } catch (e) {
+      console.error("[wellness] device_status sync failed:", e);
     }
 
     return { ok: true, recipients: recipients.length, results };

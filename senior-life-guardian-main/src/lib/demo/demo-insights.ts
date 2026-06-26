@@ -2,6 +2,7 @@
  * Senior Safe Insights — respuestas basadas en datos demo (sin LLM externo en demo).
  */
 
+import { CASCADE_ACK_HINT } from "@/lib/emergency-cascade-timing";
 import {
   DEMO_ALERTS,
   DEMO_ALERTS_BY_COMUNA,
@@ -18,7 +19,7 @@ function responseTimeInsightAnswer(): string {
     `**Qué mide:** cuánto tarda un familiar en confirmar recepción (SMS, WhatsApp o enlace \`/a/…\`) desde que se activa la alerta. **No mide** llegada de ambulancia ni tiempo de entrega del primer mensaje.\n\n` +
     `**Por qué no es «falla del sistema»:** la cascada SOS notifica en **menos de 30 s** (SMS → WhatsApp → llamada). Los ${tiempo_respuesta_promedio_min} min son **tiempo humano**: leer el aviso, abrir el mapa, decidir si es urgente real y acusar recibo — a menudo con el teléfono en silencio, en trabajo o con varios guardianes en cadena.\n\n` +
     `**Por qué conviven ${tasa_ack_pct}% de acuse y ${tiempo_respuesta_promedio_min} min:** casi todas las alertas **sí** reciben confirmación; el promedio refleja **qué tan rápido** lo hace la familia, no si lo hace. Unos casos de 8–10 min suben la media aunque la mayoría responda en 1–3 min.\n\n` +
-    `**Mejora práctica:** más guardianes con WhatsApp activo, capacitar en acuse rápido (evita la llamada a los 30 s) y revisar el ${100 - tasa_ack_pct}% sin acuse.`
+    `**Mejora práctica:** más guardianes con WhatsApp activo, capacitar en acuse rápido (${CASCADE_ACK_HINT}) y revisar el ${100 - tasa_ack_pct}% sin acuse.`
   );
 }
 
@@ -48,7 +49,7 @@ const FAQ: { match: RegExp; answer: string }[] = [
   {
     match: /c[oó]mo funciona|flujo|sos|cascada/i,
     answer:
-      "El flujo SOS sigue la cascada **SMS (0 s) → WhatsApp (15 s) → llamada (30 s)** si no hay confirmación. Los familiares pueden acusar recibo por SMS, WhatsApp o enlace web `/a/…`.",
+      "El flujo SOS sigue la cascada **SMS (0 s) → WhatsApp (15 s) → llamada (60 s)** si no hay confirmación. Los familiares pueden acusar recibo por SMS, WhatsApp o enlace web `/a/…`.",
   },
   {
     match: /geocerca|gps|ubicaci[oó]n/i,

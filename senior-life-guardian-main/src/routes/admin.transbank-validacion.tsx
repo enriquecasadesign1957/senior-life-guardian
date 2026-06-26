@@ -11,6 +11,7 @@ import {
   removeOneclickInscription,
   statusOneclickPayment,
 } from "@/lib/oneclick.functions";
+import { AdminPinGate } from "@/components/admin-pin-gate";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -41,6 +42,18 @@ type SignupRow = {
 };
 
 function TransbankValidationPage() {
+  return (
+    <AdminPinGate
+      title="Validación Transbank"
+      description="Panel interno Oneclick Mall. Requiere PIN de administración."
+      onUnlockFailed={(m) => toast.error(m)}
+    >
+      {(pin) => <TransbankValidationInner pin={pin} />}
+    </AdminPinGate>
+  );
+}
+
+function TransbankValidationInner({ pin }: { pin: string }) {
   const loadInfo = useServerFn(getOneclickValidationInfo);
   const lookup = useServerFn(lookupOneclickSignup);
   const authorize = useServerFn(authorizeOneclickRenewal);
@@ -64,8 +77,8 @@ function TransbankValidationPage() {
   const [approveMeta, setApproveMeta] = useState<string>("");
 
   useEffect(() => {
-    loadInfo().then(setInfo).catch(() => {});
-  }, [loadInfo]);
+    loadInfo({ data: { pin } }).then(setInfo).catch(() => {});
+  }, [loadInfo, pin]);
 
   const handleLookup = async () => {
     setLoading(true);
@@ -74,6 +87,7 @@ function TransbankValidationPage() {
         data: {
           email: email.trim() || undefined,
           signupId: signupId.trim() || undefined,
+          pin,
         },
       });
       setRows((res.rows ?? []) as SignupRow[]);
@@ -164,7 +178,7 @@ function TransbankValidationPage() {
           disabled={actionBusy !== null}
           onClick={() =>
             runAction("approve-auth", async () => {
-              const res = await approveAuthFn({ data: {} });
+              const res = await approveAuthFn({ data: { pin } });
               setApproveBuyOrder(res.mallBuyOrder);
               setApproveMeta(
                 `auth: ${res.authorizationCode ?? "—"} · response_code: ${res.responseCode ?? "—"} · status: ${res.status ?? "—"} · store: ${res.storeBuyOrder}`,
@@ -209,7 +223,7 @@ function TransbankValidationPage() {
           disabled={actionBusy !== null}
           onClick={() =>
             runAction("reject-10m", async () => {
-              const res = await rejectTenMFn({ data: {} });
+              const res = await rejectTenMFn({ data: { pin } });
               setRejectBuyOrder(res.mallBuyOrder);
               setRejectMeta(
                 `response_code: ${res.responseCode ?? "—"} · status: ${res.status ?? "—"} · store: ${res.storeBuyOrder}`,
@@ -325,7 +339,7 @@ function TransbankValidationPage() {
               variant="outline"
               disabled={!selected.oneclick_tbk_user || actionBusy !== null}
               onClick={() =>
-                runAction("authorize", () => authorize({ data: { signupId: selected.id } }))
+                runAction("authorize", () => authorize({ data: { signupId: selected.id, pin } }))
               }
             >
               {actionBusy === "authorize" ? "…" : "Cobrar (authorize)"}
@@ -335,7 +349,7 @@ function TransbankValidationPage() {
               disabled={!selected.oneclick_mall_buy_order || actionBusy !== null}
               onClick={() =>
                 runAction("status", () =>
-                  statusFn({ data: { mallBuyOrder: selected.oneclick_mall_buy_order! } }),
+                  statusFn({ data: { mallBuyOrder: selected.oneclick_mall_buy_order!, pin } }),
                 )
               }
             >
@@ -356,6 +370,7 @@ function TransbankValidationPage() {
                       mallBuyOrder: selected.oneclick_mall_buy_order!,
                       storeBuyOrder: selected.oneclick_store_buy_order!,
                       amount: selected.webpay_amount!,
+                      pin,
                     },
                   }),
                 )
@@ -367,7 +382,7 @@ function TransbankValidationPage() {
               variant="destructive"
               disabled={!selected.oneclick_tbk_user || actionBusy !== null}
               onClick={() =>
-                runAction("remove", () => removeFn({ data: { signupId: selected.id } }))
+                runAction("remove", () => removeFn({ data: { signupId: selected.id, pin } }))
               }
             >
               {actionBusy === "remove" ? "…" : "Eliminar inscripción"}

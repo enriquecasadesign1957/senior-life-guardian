@@ -67,12 +67,43 @@ const GREEN = "#16a34a";
 
 const CHECKOUT_FEATURE_ICONS = [Bell, MessageCircle, MapPin, Users, Heart, Clock, Shield] as const;
 
-const schema = z.object({
-  name: z.string().trim().min(2, "Ingresa tu nombre completo").max(100),
-  email: z.string().trim().email("Correo inválido").max(255),
-  phone: z.string().trim().min(8, "Ingresa un teléfono válido").max(20).regex(/^[0-9+\s-]+$/, "Solo números"),
-  address: z.string().trim().max(200).optional().or(z.literal("")),
-});
+const GUARDIAN_RELATIONS = [
+  "Hijo/a",
+  "Nieto/a",
+  "Hermano/a",
+  "Vecino/a",
+  "Cuidador/a",
+  "Otro familiar",
+] as const;
+
+const phoneField = z
+  .string()
+  .trim()
+  .min(8, "Ingresa un teléfono válido")
+  .max(20)
+  .regex(/^[0-9+\s-]+$/, "Solo números");
+
+const schema = z
+  .object({
+    name: z.string().trim().min(2, "Ingresa tu nombre completo").max(100),
+    email: z.string().trim().email("Correo inválido").max(255),
+    phone: phoneField,
+    address: z.string().trim().max(200).optional().or(z.literal("")),
+    guardianName: z.string().trim().min(2, "Ingresa el nombre del guardián").max(100),
+    guardianPhone: phoneField,
+    guardianRelation: z.string().trim().min(2, "Elige parentesco").max(40),
+  })
+  .superRefine((data, ctx) => {
+    const senior = data.phone.replace(/\D/g, "").slice(-9);
+    const guardian = data.guardianPhone.replace(/\D/g, "").slice(-9);
+    if (senior.length >= 8 && senior === guardian) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "El guardián debe ser otra persona (teléfono distinto al del adulto mayor).",
+        path: ["guardianPhone"],
+      });
+    }
+  });
 
 const fmt = formatPlanPrice;
 
@@ -85,7 +116,15 @@ function CheckoutPage() {
   const mockApprove = useServerFn(mockApproveWebpay);
 
   const [yearly, setYearly] = useState(search.periodo === "anual");
-  const [form, setForm] = useState({ name: "", email: "", phone: "", address: "" });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    guardianName: "",
+    guardianPhone: "",
+    guardianRelation: GUARDIAN_RELATIONS[0],
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -167,6 +206,11 @@ function CheckoutPage() {
         periodo,
         discountCode: appliedDiscount?.code ?? "",
         recurringBillingConsent: recurringConsent,
+        firstGuardian: {
+          nombre: r.data.guardianName,
+          telefono: r.data.guardianPhone,
+          parentesco: r.data.guardianRelation,
+        },
       } });
 
       const mock = await mockApprove({ data: { signupId: signup.id } });
@@ -217,10 +261,15 @@ function CheckoutPage() {
       periodo,
       discountCode: appliedDiscount?.code ?? "",
       recurringBillingConsent: recurringConsent,
+      firstGuardian: {
+        nombre: r.data.guardianName,
+        telefono: r.data.guardianPhone,
+        parentesco: r.data.guardianRelation,
+      },
     };
 
     try {
-      const { signup } = await createPurchase({ data: baseData });
+      const { signup, alreadyPaid } = await createPurchase({ data: baseData });
       try {
         const userPayload = {
           id: signup.id, nombre: signup.nombre, email: signup.email, telefono: signup.telefono,
@@ -230,6 +279,18 @@ function CheckoutPage() {
         sessionStorage.setItem("seniorsafe_user", JSON.stringify(userPayload));
         localStorage.setItem("seniorsafe_user_backup", JSON.stringify(userPayload));
       } catch { /* ignore */ }
+
+      if (alreadyPaid) {
+        setLoading(false);
+        toast.message("Ya tienes una suscripción activa.", {
+          description: "Te llevamos a instalar o abrir la app.",
+        });
+        navigate({
+          to: POST_PAYMENT_INSTALL_PATH,
+          search: { entrenamiento: "1", ss: signup.id },
+        });
+        return;
+      }
 
       let useOneclick = false;
       try {
@@ -357,7 +418,60 @@ function CheckoutPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-bold text-foreground mb-3 block">4. Código Institucional? Ingrésalo</label>
+                  <label className="text-sm font-bold text-foreground mb-1 block">
+                    4. Inscribe al primer guardián
+                  </label>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Persona que recibirá las alertas de emergencia (hijo/a, familiar o cuidador).
+                    Después podrás agregar más en{" "}
+                    <strong className="text-foreground">Mis guardianes</strong> (hasta 3).
+                  </p>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <Field
+                      label="Nombre del guardián"
+                      name="guardianName"
+                      value={form.guardianName}
+                      onChange={(v) => setForm({ ...form, guardianName: v })}
+                      error={errors.guardianName}
+                      placeholder="Carlos González"
+                    />
+                    <Field
+                      label="Teléfono / WhatsApp del guardián"
+                      name="guardianPhone"
+                      value={form.guardianPhone}
+                      onChange={(v) => setForm({ ...form, guardianPhone: v })}
+                      error={errors.guardianPhone}
+                      placeholder="+56 9 ..."
+                    />
+                    <div className="sm:col-span-2">
+                      <label
+                        htmlFor="guardianRelation"
+                        className="text-xs font-semibold text-muted-foreground mb-1.5 block"
+                      >
+                        Parentesco
+                      </label>
+                      <select
+                        id="guardianRelation"
+                        name="guardianRelation"
+                        value={form.guardianRelation}
+                        onChange={(e) => setForm({ ...form, guardianRelation: e.target.value })}
+                        className={`w-full px-4 py-3 rounded-xl border bg-background text-foreground text-base outline-none transition focus:border-foreground/40 ${errors.guardianRelation ? "border-destructive" : "border-border"}`}
+                      >
+                        {GUARDIAN_RELATIONS.map((rel) => (
+                          <option key={rel} value={rel}>
+                            {rel}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.guardianRelation && (
+                        <p className="mt-1 text-xs text-destructive">{errors.guardianRelation}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-bold text-foreground mb-3 block">5. Código Institucional? Ingrésalo</label>
                   <div className="flex flex-col sm:flex-row gap-3">
                     <input
                       type="text"

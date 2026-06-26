@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { SENIOR_SAFE_SOS_SIMULATOR_URL } from "@/lib/app-url";
 import {
   classifyWhatsAppInboundMessage,
   generateSeniorSafeWhatsAppReply,
@@ -16,7 +17,13 @@ import {
 } from "@/lib/twilio-inbound";
 import { isEmergencyAlertAckMessage, processWhatsAppAlertAck } from "@/lib/whatsapp-alert-ack";
 import { saveWhatsAppInboxMessage } from "@/lib/whatsapp-inbox";
-import { processWhatsAppActivation, isActivationKeyword } from "@/lib/whatsapp-commercial-activation";
+import {
+  processWhatsAppActivation,
+  tryAutoActivatePaidSignup,
+  isActivationKeyword,
+  findSignupForActivation,
+  markSignupWhatsAppActivated,
+} from "@/lib/whatsapp-commercial-activation";
 import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
@@ -71,6 +78,15 @@ async function handleCommercialInbox(
     );
   }
 
+  const signupForAuto = await findSignupForActivation(phone);
+  if (
+    signupForAuto &&
+    isSignupPaymentComplete(signupForAuto.payment_status) &&
+    !signupForAuto.whatsapp_activated
+  ) {
+    await markSignupWhatsAppActivated(signupForAuto.id);
+  }
+
   if (isActivationKeyword(rawBody)) {
     const activationReply = await processWhatsAppActivation(phone, rawBody);
     if (activationReply) return replyCommercial(phone, activationReply);
@@ -88,7 +104,9 @@ async function handleCommercialInbox(
 
   return replyCommercial(
     phone,
-    "Senior Safe 🛡️\n\n¡Hola! Pregúntanos por el Plan Único ($6.900/mes), instalación o cómo funciona el ecosistema familiar. También puedes escribir a hola@alarmaseniorsafe.cl",
+    "Senior Safe 🛡️\n\n¡Hola! Pregúntanos por el Plan Único ($6.900/mes), instalación o cómo funciona.\n" +
+      `Prueba el simulador S.O.S: ${SENIOR_SAFE_SOS_SIMULATOR_URL}\n` +
+      "También puedes escribir a hola@alarmaseniorsafe.cl",
   );
 }
 
@@ -147,8 +165,13 @@ export const Route = createFileRoute("/api/public/twilio-whatsapp-webhook")({
 
         if (isOptOutMessage(textUpper)) {
           return twimlMessage(
-            "Recibido. No te enviaremos más mensajes por aquí. Para reactivar alertas, responde ACTIVAR.",
+            "Recibido. No te enviaremos más mensajes por aquí. Para reactivar alertas, escribe cualquier mensaje.",
           );
+        }
+
+        // Día 1: cualquier mensaje del titular pagado activa WhatsApp (no solo ACTIVAR)
+        if (rawBody.length >= 1) {
+          await tryAutoActivatePaidSignup(phone);
         }
 
         // 1) Confirmación de alerta de emergencia (guardianes)
@@ -175,7 +198,9 @@ export const Route = createFileRoute("/api/public/twilio-whatsapp-webhook")({
           }
           try {
             const { sendEmergencyAlert } = await import("@/lib/emergency-alert.functions");
-            await sendEmergencyAlert({ data: { signupId: signup.id, gps: null } });
+            const { issueSeniorAccessToken } = await import("@/lib/senior-access-auth");
+            const accessToken = await issueSeniorAccessToken(signup.id);
+            await sendEmergencyAlert({ data: { signupId: signup.id, gps: null, accessToken } });
           } catch (e) {
             console.error("[whatsapp-webhook] sos", e);
             try {
@@ -229,7 +254,7 @@ export const Route = createFileRoute("/api/public/twilio-whatsapp-webhook")({
         }
 
         return twimlMessage(
-          "Senior Safe 🛡️\n\nResponde:\n• ACTIVAR — vincular alertas WhatsApp (tras contratar)\n• SOS — emergencia real\n• O escribe tu pregunta sobre el servicio",
+          "Senior Safe 🛡️\n\nResponde:\n• Cualquier mensaje — vincular alertas WhatsApp (tras contratar)\n• SOS — emergencia real\n• O escribe tu pregunta sobre el servicio",
         );
       },
     },

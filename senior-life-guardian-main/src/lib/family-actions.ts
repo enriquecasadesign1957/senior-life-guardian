@@ -1,7 +1,14 @@
 import type { FamilyContact, FamilyContactInput } from "@/lib/contacts-storage";
 import { MAX_GUARDIANS } from "@/lib/guardian-limits";
+import { readSeniorAccessToken } from "@/lib/senior-access-auth";
 
 const FAMILY_TIMEOUT_MS = 12_000;
+
+function seniorAuthPayload(signupId: string): { signupId: string; accessToken: string } | null {
+  const accessToken = readSeniorAccessToken(signupId);
+  if (!accessToken) return null;
+  return { signupId, accessToken };
+}
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return Promise.race([
@@ -12,15 +19,17 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   ]);
 }
 
-type ListFamilyFn = (args: { data: { signupId: string } }) => Promise<{ contacts: FamilyContact[] }>;
+type ListFamilyFn = (args: {
+  data: { signupId: string; accessToken: string };
+}) => Promise<{ contacts: FamilyContact[] }>;
 type AddFamilyFn = (args: {
-  data: { signupId: string; contact: FamilyContactInput };
+  data: { signupId: string; accessToken: string; contact: FamilyContactInput };
 }) => Promise<{ contact: FamilyContact }>;
 type UpdateFamilyFn = (args: {
-  data: { signupId: string; id: string; contact: FamilyContactInput };
+  data: { signupId: string; accessToken: string; id: string; contact: FamilyContactInput };
 }) => Promise<{ contact: FamilyContact }>;
 type DeleteFamilyFn = (args: {
-  data: { signupId: string; id: string };
+  data: { signupId: string; accessToken: string; id: string };
 }) => Promise<{ ok: boolean }>;
 
 type FamilyApiResponse<T> = T & { ok?: boolean; error?: string };
@@ -50,14 +59,17 @@ export async function listFamilyWithFallback(
   listFn: ListFamilyFn,
   signupId: string,
 ): Promise<{ contacts: FamilyContact[]; error?: string }> {
+  const auth = seniorAuthPayload(signupId);
+  if (!auth) return { contacts: [], error: "auth_required" };
+
   const api = await familyApi<{ ok: true; contacts: FamilyContact[] }>({
     action: "list",
-    signupId,
+    ...auth,
   });
   if (api?.contacts) return { contacts: api.contacts };
 
   try {
-    const res = await withTimeout(listFn({ data: { signupId } }), FAMILY_TIMEOUT_MS);
+    const res = await withTimeout(listFn({ data: auth }), FAMILY_TIMEOUT_MS);
     return { contacts: res.contacts ?? [] };
   } catch (e) {
     console.error("[listFamilyWithFallback] serverFn failed", e);
@@ -70,16 +82,19 @@ export async function addFamilyWithFallback(
   signupId: string,
   contact: FamilyContactInput,
 ): Promise<{ contact?: FamilyContact; error?: string }> {
+  const auth = seniorAuthPayload(signupId);
+  if (!auth) return { error: "auth_required" };
+
   const api = await familyApi<{ ok: true; contact: FamilyContact }>({
     action: "add",
-    signupId,
+    ...auth,
     contact,
   });
   if (api?.contact) return { contact: api.contact };
   if (api?.error) return { error: api.error };
 
   try {
-    const res = await withTimeout(addFn({ data: { signupId, contact } }), FAMILY_TIMEOUT_MS);
+    const res = await withTimeout(addFn({ data: { ...auth, contact } }), FAMILY_TIMEOUT_MS);
     return { contact: res.contact };
   } catch (e: unknown) {
     console.error("[addFamilyWithFallback] serverFn failed", e);
@@ -94,9 +109,12 @@ export async function updateFamilyWithFallback(
   id: string,
   contact: FamilyContactInput,
 ): Promise<{ contact?: FamilyContact; error?: string }> {
+  const auth = seniorAuthPayload(signupId);
+  if (!auth) return { error: "auth_required" };
+
   const api = await familyApi<{ ok: true; contact: FamilyContact }>({
     action: "update",
-    signupId,
+    ...auth,
     id,
     contact,
   });
@@ -104,7 +122,7 @@ export async function updateFamilyWithFallback(
   if (api?.error) return { error: api.error };
 
   try {
-    const res = await withTimeout(updateFn({ data: { signupId, id, contact } }), FAMILY_TIMEOUT_MS);
+    const res = await withTimeout(updateFn({ data: { ...auth, id, contact } }), FAMILY_TIMEOUT_MS);
     return { contact: res.contact };
   } catch (e: unknown) {
     console.error("[updateFamilyWithFallback] serverFn failed", e);
@@ -118,12 +136,15 @@ export async function deleteFamilyWithFallback(
   signupId: string,
   id: string,
 ): Promise<{ ok: boolean; error?: string }> {
-  const api = await familyApi<{ ok: true }>({ action: "delete", signupId, id });
+  const auth = seniorAuthPayload(signupId);
+  if (!auth) return { ok: false, error: "auth_required" };
+
+  const api = await familyApi<{ ok: true }>({ action: "delete", ...auth, id });
   if (api?.ok) return { ok: true };
   if (api?.error) return { ok: false, error: api.error };
 
   try {
-    await withTimeout(deleteFn({ data: { signupId, id } }), FAMILY_TIMEOUT_MS);
+    await withTimeout(deleteFn({ data: { ...auth, id } }), FAMILY_TIMEOUT_MS);
     return { ok: true };
   } catch (e) {
     console.error("[deleteFamilyWithFallback] serverFn failed", e);

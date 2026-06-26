@@ -1,6 +1,8 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { listFamilyContacts } from "@/lib/contacts-storage";
 import { readStoredPinHash } from "@/lib/pin-storage";
+import { issueSeniorAccessToken } from "@/lib/senior-access-auth";
+import { phoneLookupCandidates } from "@/lib/phone-utils";
 import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
 
 export type AccountUser = {
@@ -28,11 +30,14 @@ export type AppConfigResult = {
   user: AccountUser | null;
   contacts: AccountContact[];
   pinConfigured: boolean;
+  whatsappActivated?: boolean;
+  /** Token HMAC para operaciones autenticadas del dispositivo. */
+  accessToken?: string;
   error?: string;
 };
 
 const SIGNUP_SELECT =
-  "id,nombre,email,telefono,plan,periodo,purchase_mode,subscription_status,payment_status";
+  "id,nombre,email,telefono,plan,periodo,purchase_mode,subscription_status,payment_status,whatsapp_activated";
 
 /** Busca cuenta por id, email o teléfono sin lanzar excepciones (seguro para login). */
 export async function fetchAppConfiguration(input: {
@@ -59,7 +64,9 @@ export async function fetchAppConfiguration(input: {
     } else if (input.email) {
       query = query.eq("email", input.email.trim().toLowerCase());
     } else if (input.telefono) {
-      query = query.eq("telefono", input.telefono.trim());
+      const candidates = phoneLookupCandidates(input.telefono);
+      if (candidates.length === 0) return { ...empty, error: "missing_lookup" };
+      query = query.in("telefono", candidates);
     } else {
       return { ...empty, error: "missing_lookup" };
     }
@@ -70,7 +77,7 @@ export async function fetchAppConfiguration(input: {
       return { ...empty, error: "lookup_failed" };
     }
 
-    const user = (rows?.[0] ?? null) as AccountUser | null;
+    const user = (rows?.[0] ?? null) as (AccountUser & { whatsapp_activated?: boolean }) | null;
     if (!user) return empty;
 
     const contacts = (await listFamilyContacts(user.id)) as AccountContact[];
@@ -79,7 +86,16 @@ export async function fetchAppConfiguration(input: {
     const storedPin = await readStoredPinHash(user.id);
     pinConfigured = Boolean(storedPin);
 
-    return { configured: true, user, contacts, pinConfigured };
+    const accessToken = await issueSeniorAccessToken(user.id);
+
+    return {
+      configured: true,
+      user,
+      contacts,
+      pinConfigured,
+      whatsappActivated: user.whatsapp_activated === true,
+      accessToken,
+    };
   } catch (e) {
     console.error("[fetchAppConfiguration] unexpected:", e);
     return { ...empty, error: "server_error" };

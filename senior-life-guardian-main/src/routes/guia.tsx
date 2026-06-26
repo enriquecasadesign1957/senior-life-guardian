@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { CASCADE_MARKETING_SUMMARY } from "@/lib/emergency-cascade-timing";
 import {
   ArrowRight,
   CheckCircle2,
@@ -61,7 +62,7 @@ const STEPS = [
     n: 4,
     title: "Configura la protección (5 minutos)",
     desc: "Dentro de la app: crea un PIN de 4 dígitos, agrega a tus familiares guardianes, activa el GPS y el sensor de caídas, y haz una prueba segura sin alerta real.",
-    tip: "Hasta 3 guardianes. Alertas: SMS al instante, WhatsApp a los 15 s, llamada a los 30 s si nadie confirma.",
+    tip: `Hasta 3 guardianes. Alertas: ${CASCADE_MARKETING_SUMMARY}`,
   },
   {
     n: 5,

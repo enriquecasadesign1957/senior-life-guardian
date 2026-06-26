@@ -1,4 +1,5 @@
 import { PRODUCTION_SITE_URL, resolveProductionSiteOrigin } from "@/lib/app-url";
+import { clearSeniorAccessToken } from "@/lib/senior-access-auth";
 
 /** Tras pago Webpay, el usuario configura la app (primer uso guiado). */
 export const APP_ENTRENAMIENTO_SEARCH = { entrenamiento: "1" } as const;
@@ -42,6 +43,8 @@ export function persistSignupHandoff(
       sessionStorage.getItem("seniorsafe_user") ||
       localStorage.getItem("seniorsafe_user_backup");
     const existing = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+    const prevId = typeof existing.id === "string" ? existing.id : null;
+    if (prevId && prevId !== signupId) clearSeniorAccessToken();
     const payload = { ...existing, id: signupId, ...extra };
     sessionStorage.setItem("seniorsafe_user", JSON.stringify(payload));
     localStorage.setItem("seniorsafe_user_backup", JSON.stringify(payload));

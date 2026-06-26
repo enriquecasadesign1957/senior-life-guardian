@@ -8,6 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { readFamilyPortalSession } from "@/lib/family-session";
+import { getAppConfiguration } from "@/lib/family.functions";
+import {
+  clearSeniorAccessToken,
+  persistSeniorAccessToken,
+  readSeniorAccessToken,
+} from "@/lib/senior-access-auth";
+import { readStoredSignupId } from "@/lib/post-payment";
 import {
   listGuardians,
   addGuardian,
@@ -42,11 +49,36 @@ type Guardian = {
 };
 
 function errorMessage(error: unknown, fallback: string) {
-  return error instanceof Error ? error.message : fallback;
+  if (error instanceof Error) {
+    const msg = error.message;
+    if (/invalid_type|expected string/i.test(msg)) {
+      return "Sesión expirada. Cierra y vuelve a abrir Senior Safe desde el ícono de tu teléfono.";
+    }
+    if (/Token inválido/i.test(msg)) {
+      return "Sesión desactualizada. Cierra y vuelve a abrir Senior Safe desde el ícono de tu teléfono.";
+    }
+    return msg;
+  }
+  return fallback;
+}
+
+function readSeniorSignupId(): string | null {
+  try {
+    const fam = readFamilyPortalSession();
+    if (fam?.contract_signup_id) return fam.contract_signup_id;
+    const stored = readStoredSignupId();
+    if (stored) return stored;
+    const sn = localStorage.getItem("seniorsafe_native_user");
+    if (sn) return JSON.parse(sn)?.id ?? null;
+  } catch {
+    /* ignore */
+  }
+  return null;
 }
 
 function GuardiansPage() {
   const navigate = useNavigate();
+  const loadConfig = useServerFn(getAppConfiguration);
   const list = useServerFn(listGuardians);
   const add = useServerFn(addGuardian);
   const update = useServerFn(updateGuardian);
@@ -54,6 +86,7 @@ function GuardiansPage() {
   const toggle = useServerFn(toggleGuardianActive);
 
   const [signupId, setSignupId] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [guardians, setGuardians] = useState<Guardian[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -72,29 +105,61 @@ function GuardiansPage() {
   });
 
   useEffect(() => {
-    try {
-      const fam = readFamilyPortalSession();
-      if (fam) {
-        setSignupId(fam.contract_signup_id);
-        return;
-      }
-      const sn = localStorage.getItem("seniorsafe_native_user");
-      if (sn) {
-        setSignupId(JSON.parse(sn).id);
-        return;
-      }
-      navigate({ to: "/familia", search: { redirect: "/familia/guardianes" }, replace: true });
-    } catch {
-      navigate({ to: "/familia", search: { redirect: "/familia/guardianes" }, replace: true });
+    const id = readSeniorSignupId();
+    if (id) {
+      setSignupId(id);
+      return;
     }
+    navigate({ to: "/familia", search: { redirect: "/familia/guardianes" }, replace: true });
   }, [navigate]);
 
-  const reload = async (id: string) => {
+  const resolveAccessToken = async (id: string, forceRefresh = false): Promise<string | null> => {
+    if (!forceRefresh) {
+      const cached = readSeniorAccessToken(id);
+      if (cached) {
+        setAccessToken(cached);
+        return cached;
+      }
+    } else {
+      clearSeniorAccessToken();
+    }
     try {
-      const res = await list({ data: { signupId: id } });
+      const res = await loadConfig({ data: { signupId: id } });
+      if (res.accessToken) {
+        persistSeniorAccessToken(res.accessToken, id);
+        setAccessToken(res.accessToken);
+        return res.accessToken;
+      }
+    } catch (e) {
+      console.error("[guardianes] loadConfig", e);
+    }
+    return null;
+  };
+
+  const seniorAuth = (id: string, token: string | null) => {
+    if (!token) return null;
+    return { signupId: id, accessToken: token };
+  };
+
+  const reload = async (id: string, token?: string | null, retried = false) => {
+    const authToken = token ?? accessToken ?? (await resolveAccessToken(id, !retried));
+    const auth = seniorAuth(id, authToken);
+    if (!auth) {
+      const message = "No pudimos verificar tu sesión. Vuelve a abrir Senior Safe desde el ícono de tu teléfono.";
+      setLoadError(message);
+      setGuardians([]);
+      return;
+    }
+    try {
+      const res = await list({ data: auth });
       setGuardians(res.guardians as Guardian[]);
       setLoadError(null);
     } catch (e: unknown) {
+      const raw = e instanceof Error ? e.message : "";
+      if (!retried && /Token inválido/i.test(raw)) {
+        const fresh = await resolveAccessToken(id, true);
+        if (fresh) return reload(id, fresh, true);
+      }
       const message = errorMessage(e, "No pudimos cargar tus guardianes.");
       setLoadError(message);
       setGuardians([]);
@@ -126,8 +191,12 @@ function GuardiansPage() {
     if (!signupId || !form.nombre || !form.telefono || !form.parentesco) {
       return toast.error("Completa nombre, teléfono y parentesco.");
     }
+    const auth = seniorAuth(signupId, accessToken ?? (await resolveAccessToken(signupId)));
+    if (!auth) {
+      return toast.error("Sesión expirada. Vuelve a abrir Senior Safe.");
+    }
     try {
-      await add({ data: { signupId, guardian: form } });
+      await add({ data: { ...auth, guardian: form } });
       toast.success("Guardián agregado");
       setShowAdd(false);
       resetForm();
@@ -139,8 +208,12 @@ function GuardiansPage() {
 
   const handleSave = async (id: string) => {
     if (!signupId) return;
+    const auth = seniorAuth(signupId, accessToken ?? (await resolveAccessToken(signupId)));
+    if (!auth) {
+      return toast.error("Sesión expirada. Vuelve a abrir Senior Safe.");
+    }
     try {
-      await update({ data: { signupId, id, guardian: form } });
+      await update({ data: { ...auth, id, guardian: form } });
       toast.success("Actualizado");
       setEditing(null);
       resetForm();
@@ -153,8 +226,12 @@ function GuardiansPage() {
   const handleDelete = async (id: string) => {
     if (!signupId) return;
     if (!confirm("¿Eliminar este guardián?")) return;
+    const auth = seniorAuth(signupId, accessToken ?? (await resolveAccessToken(signupId)));
+    if (!auth) {
+      return toast.error("Sesión expirada. Vuelve a abrir Senior Safe.");
+    }
     try {
-      await del({ data: { signupId, id } });
+      await del({ data: { ...auth, id } });
       reload(signupId);
     } catch (e: unknown) {
       toast.error(errorMessage(e, "Error."));
@@ -163,8 +240,10 @@ function GuardiansPage() {
 
   const handleToggle = async (id: string, activo: boolean) => {
     if (!signupId) return;
-    await toggle({ data: { signupId, id, activo } });
-    reload(signupId);
+    const auth = seniorAuth(signupId, accessToken ?? (await resolveAccessToken(signupId)));
+    if (!auth) return;
+    await toggle({ data: { ...auth, id, activo } });
+    reload(signupId, auth.accessToken);
   };
 
   if (loading) {

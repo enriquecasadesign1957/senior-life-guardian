@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   Shield, MapPin, Users, Battery, Wifi, Bell, CheckCircle2,
   X, Home, Settings, Heart, MessageCircle, Navigation, Clock,
-  Plus, Pencil, Trash2, KeyRound, Loader2, GraduationCap, Activity,
+  Plus, Pencil, Trash2, KeyRound, Loader2, Activity,
   AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -19,6 +19,8 @@ import {
   getAppConfiguration, listFamily, addFamily, updateFamily, deleteFamily,
 } from "@/lib/family.functions";
 import { sendEmergencyAlert, cancelEmergencyAlert } from "@/lib/emergency-alert.functions";
+import { activateWhatsAppFromApp } from "@/lib/whatsapp-activation.functions";
+import { markWhatsAppActivatedLocally } from "@/lib/whatsapp-activation-local";
 import {
   isTrainingDone,
   markTrainingDone,
@@ -32,6 +34,7 @@ import { WhatsAppActivationButton } from "@/components/whatsapp-activation-butto
 import { InstallAppModal } from "@/components/install-app-modal";
 import { Download } from "lucide-react";
 import { loginAccountByEmail, loginErrorMessage } from "@/lib/account-login";
+import { persistSeniorAccessToken, requireSeniorAccessToken } from "@/lib/senior-access-auth";
 import {
   addFamilyWithFallback,
   deleteFamilyWithFallback,
@@ -45,11 +48,22 @@ import { requestAppNotifications } from "@/lib/native-notifications";
 import { isNativeApp } from "@/lib/device";
 import {
   EMERGENCY_CATEGORIES,
+  EMERGENCY_CATEGORY_AUTO_DEFAULT,
   emergencyCategoryLabel,
   type EmergencyCategory,
 } from "@/lib/emergency-category";
 import { MAX_GUARDIANS } from "@/lib/guardian-limits";
+import { CASCADE_MARKETING_SUMMARY } from "@/lib/emergency-cascade-timing";
 import { FallDetectionOverlay, useFallDetection } from "@/hooks/useFallDetection";
+import { useEmergencyCategoryAutoSend } from "@/hooks/use-emergency-category-auto-send";
+import { useSosGpsPriming } from "@/hooks/use-sos-gps-priming";
+import { SosGpsPrimingUi } from "@/components/sos-gps-priming-ui";
+import { useDeviceHeartbeat } from "@/hooks/use-device-heartbeat";
+import { useLiveBatteryLevel } from "@/hooks/use-live-battery-level";
+import {
+  isSubscriptionServiceAllowed,
+  subscriptionBlockedMessage,
+} from "@/lib/subscription-access";
 
 const appSearchSchema = z.object({
   entrenamiento: z.enum(["1"]).optional(),
@@ -116,8 +130,13 @@ function AppHome() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loadingContacts, setLoadingContacts] = useState(true);
   const [configReady, setConfigReady] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const subscriptionActive = isSubscriptionServiceAllowed(subscriptionStatus);
   const [accountConfigured, setAccountConfigured] = useState(false);
   const [gpsAllowed, setGpsAllowed] = useState(false);
+  const [lastCoords, setLastCoords] = useState<{ lat: number; lng: number; accuracy?: number } | null>(
+    null,
+  );
   const [notificationsAllowed, setNotificationsAllowed] = useState(false);
   const [batteryChecked, setBatteryChecked] = useState(false);
 
@@ -132,6 +151,7 @@ function AppHome() {
   const isTrainingRunRef = useRef(false);
   const [trainingRunActive, setTrainingRunActive] = useState(false);
   const emergencySendGenRef = useRef(0);
+  const categoryPickRef = useRef(false);
   const [clientReady, setClientReady] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
   const [loginBusy, setLoginBusy] = useState(false);
@@ -158,6 +178,7 @@ function AppHome() {
 
   const list = useServerFn(listFamily);
   const loadConfig = useServerFn(getAppConfiguration);
+  const activateWhatsApp = useServerFn(activateWhatsAppFromApp);
 
   // Hidrata cuenta desde ?ss=, sessionStorage o email guardado (handoff post-pago / QR).
   useEffect(() => {
@@ -192,6 +213,9 @@ function AppHome() {
           setContacts(res.contacts as Contact[]);
           setPinConfigured(Boolean(res.pinConfigured));
           setAccountConfigured(true);
+          setSubscriptionStatus(user.subscription_status ?? null);
+          if (res.whatsappActivated) markWhatsAppActivatedLocally();
+          if (res.accessToken) persistSeniorAccessToken(res.accessToken, res.user.id);
           try { sessionStorage.setItem("seniorsafe_user", JSON.stringify(user)); } catch {}
           try { localStorage.setItem("seniorsafe_user_backup", JSON.stringify(user)); } catch {}
           try { localStorage.setItem("seniorsafe_account_configured", "1"); } catch {}
@@ -235,6 +259,30 @@ function AppHome() {
     return () => { alive = false; };
   }, [configReady, userId, contacts.length, list]);
 
+  // Refrescar ubicación para Portal Familia (heartbeat + mapa)
+  useEffect(() => {
+    if (!userId) return;
+    let alive = true;
+    const refreshGps = async () => {
+      const { coords } = await getCurrentCoordsWithError({
+        highAccuracy: false,
+        timeoutMs: 10000,
+        maximumAgeMs: 120_000,
+      });
+      if (!alive) return;
+      if (coords) {
+        setLastCoords(coords);
+        setGpsAllowed(true);
+      }
+    };
+    void refreshGps();
+    const id = setInterval(refreshGps, 120_000);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, [userId]);
+
   const familyCount = contacts.length;
   const alertContacts = useMemo(() => contacts.slice(0, MAX_GUARDIANS), [contacts]);
   const alertFamilyCount = alertContacts.length;
@@ -254,15 +302,33 @@ function AppHome() {
   const dispatchFallEmergency = useCallback(
     async (gps: { lat: number; lng: number; accuracy?: number } | null) => {
       if (!userId) return;
+      const trainingMode = trainingPending && !trainingDone;
       const res: any = await sendAlert({
-        data: { signupId: userId, gps, emergencyCategory: "accidente" },
+        data: {
+          signupId: userId,
+          accessToken: requireSeniorAccessToken(userId),
+          gps,
+          emergencyCategory: "accidente",
+          trainingMode,
+          graceBeforeSend: !trainingMode,
+        },
       });
+      if (res?.status === "cancelled_by_senior") {
+        toast.message("Alerta por caída cancelada.");
+        return;
+      }
+      if (trainingMode) {
+        markTrainingDone();
+        setTrainingDone(true);
+        toast.success("Simulación de caída completada. Sin mensajes reales.");
+        return;
+      }
       const sent = (res?.results ?? []).filter((r: any) => r.status === "sent").length;
       if (sent > 0) toast.success("Alerta por caída enviada a tu familia.");
       else if (res?.status === "no_recipients") toast.error("No hay familiares configurados.");
       else toast.error("No pudimos enviar la alerta automática por caída.");
     },
-    [sendAlert, userId],
+    [sendAlert, userId, trainingPending, trainingDone],
   );
 
   const {
@@ -281,6 +347,11 @@ function AppHome() {
     getGps: fetchFallGps,
     dispatchEmergency: dispatchFallEmergency,
   });
+
+  const handleFallCancel = useCallback(() => {
+    cancelarAlerta();
+    if (userId) void cancelAlert({ data: { signupId: userId, accessToken: requireSeniorAccessToken(userId) } });
+  }, [cancelarAlerta, userId, cancelAlert]);
 
   const handleFallPermission = useCallback(async () => {
     const ok = await requestFallPermission();
@@ -302,46 +373,107 @@ function AppHome() {
     training?: boolean;
   } | null>(null);
 
-  const startEmergencyFlow = (training: boolean) => {
-    if (training) {
-      isTrainingRunRef.current = true;
-      setTrainingRunActive(true);
-      if ("vibrate" in navigator) navigator.vibrate?.(60);
-      setEmergencyCategory(null);
-      setStage("confirm");
-      return;
-    }
-    if (trainingPending && !trainingDone) {
-      toast.error("Primero completa el mock de entrenamiento (botón naranja).");
-      return;
-    }
-    isTrainingRunRef.current = false;
-    setTrainingRunActive(false);
+  const startEmergencyFlow = () => {
+    const isTraining = trainingPending && !trainingDone;
+    isTrainingRunRef.current = isTraining;
+    setTrainingRunActive(isTraining);
     if ("vibrate" in navigator) navigator.vibrate?.(120);
     setEmergencyCategory(null);
+    categoryPickRef.current = false;
     setStage("confirm");
   };
 
-  const chooseEmergencyCategory = (category: EmergencyCategory) => {
+  const autoActivateWhatsApp = useCallback(async () => {
+    if (!userId) return;
+    try {
+      const res = await activateWhatsApp({ data: { signupId: userId } });
+      if (res?.ok) markWhatsAppActivatedLocally();
+    } catch (e) {
+      console.error("[autoActivateWhatsApp]", e);
+    }
+  }, [userId, activateWhatsApp]);
+
+  const sosPrimingEnabled = clientReady && isInstalled && !!userId && stage === "idle";
+  const {
+    primed: sosGpsPrimed,
+    uiStage: sosPrimingUiStage,
+    lastGpsOk: sosPrimingGpsOk,
+    lastFallOk: sosPrimingFallOk,
+    fallSupported: sosPrimingFallSupported,
+    dismissIntro: dismissSosPrimingIntro,
+    closeSuccess: closeSosPrimingSuccess,
+    runPrimingPress,
+  } = useSosGpsPriming({
+    signupId: userId,
+    enabled: sosPrimingEnabled,
+    onGpsPrimed: (ok) => {
+      if (ok) setGpsAllowed(true);
+    },
+    onFallSensorPrimed: requestFallPermission,
+    onWhatsAppAutoActivate: autoActivateWhatsApp,
+  });
+
+  useDeviceHeartbeat({
+    signupId: userId,
+    gpsEnabled: gpsAllowed || sosPrimingGpsOk,
+    lastCoords,
+    appVersion: "pwa-1.0",
+    enabled: !!userId,
+  });
+
+  const liveBatteryLevel = useLiveBatteryLevel(!!userId);
+
+  const handleEmergencyPress = () => {
+    if (!sosGpsPrimed) {
+      void runPrimingPress();
+      return;
+    }
+    const isTraining = trainingPending && !trainingDone;
+    if (configReady && userId && !subscriptionActive && !isTraining) {
+      toast.error(subscriptionBlockedMessage(subscriptionStatus));
+      return;
+    }
+    startEmergencyFlow();
+  };
+
+  const chooseEmergencyCategory = useCallback((category: EmergencyCategory) => {
+    if (categoryPickRef.current) return;
+    categoryPickRef.current = true;
     if ("vibrate" in navigator) navigator.vibrate?.(80);
     setEmergencyCategory(category);
     setStage("sending");
-  };
+  }, []);
+
+  const handleAutoSendCategory = useCallback(
+    (category: EmergencyCategory) => {
+      if (categoryPickRef.current) return;
+      toast.message(`Enviando alerta de ${emergencyCategoryLabel(category)}…`);
+      chooseEmergencyCategory(category);
+    },
+    [chooseEmergencyCategory],
+  );
+
+  const { secondsLeft: categoryAutoSendSecondsLeft } = useEmergencyCategoryAutoSend(
+    stage === "confirm" && !trainingRunActive,
+    handleAutoSendCategory,
+  );
 
   const cancelEmergencySending = () => {
     emergencySendGenRef.current += 1;
-    if (userId) void cancelAlert({ data: { signupId: userId } });
+    if (userId) void cancelAlert({ data: { signupId: userId, accessToken: requireSeniorAccessToken(userId) } });
     setDeliveredTo(0);
     setAlertSummary(null);
     setEmergencyCategory(null);
+    categoryPickRef.current = false;
     setStage("confirm");
     toast.message("Alerta cancelada. No se avisará a tu familia.");
   };
 
   const cancelEmergencyFlow = () => {
     emergencySendGenRef.current += 1;
-    if (userId) void cancelAlert({ data: { signupId: userId } });
+    if (userId) void cancelAlert({ data: { signupId: userId, accessToken: requireSeniorAccessToken(userId) } });
     setEmergencyCategory(null);
+    categoryPickRef.current = false;
     setStage("idle");
   };
 
@@ -367,7 +499,10 @@ function AppHome() {
       if (emergencySendGenRef.current !== gen) return;
       if (!userId) {
         toast.error("Sesión no encontrada. No pudimos enviar la alerta.");
-        if (!cancelled && emergencySendGenRef.current === gen) setStage("sent");
+        if (!cancelled && emergencySendGenRef.current === gen) {
+          categoryPickRef.current = false;
+          setStage("confirm");
+        }
         return;
       }
 
@@ -379,11 +514,13 @@ function AppHome() {
 
       if (emergencySendGenRef.current !== gen) return;
 
+      let sendSucceeded = false;
       try {
         const trainingMode = isTrainingRunRef.current;
         const res: any = await sendAlert({
           data: {
             signupId: userId,
+            accessToken: requireSeniorAccessToken(userId),
             gps,
             trainingMode,
             emergencyCategory,
@@ -393,7 +530,10 @@ function AppHome() {
         if (cancelled || emergencySendGenRef.current !== gen) return;
         if (res?.status === "cancelled_by_senior") {
           toast.message("Alerta cancelada. No se envió a tu familia.");
-          if (emergencySendGenRef.current === gen) setStage("confirm");
+          if (emergencySendGenRef.current === gen) {
+            categoryPickRef.current = false;
+            setStage("confirm");
+          }
           return;
         }
         const sent = (res?.results ?? []).filter((r: any) => r.status === "sent").length;
@@ -417,13 +557,16 @@ function AppHome() {
           toast.success("Alerta enviada a tu familia.");
         } else if (res?.status === "partial") toast.warning("Alerta enviada parcialmente.");
         else if (res?.status === "no_recipients") toast.error("No hay guardianes configurados. Agrega uno en Administrar familiares.");
-        else if ((res?.results?.length ?? 0) === 0) toast.error("No se pudo contactar a ningún guardián. Revisa que tengan teléfono válido.");
+        else if (res?.error === "subscription_inactive") {
+          toast.error(res?.message ?? "Tu suscripción no está activa.");
+        } else if ((res?.results?.length ?? 0) === 0) toast.error("No se pudo contactar a ningún guardián. Revisa que tengan teléfono válido.");
         else toast.error("No pudimos enviar la alerta. Llama directamente.");
+        sendSucceeded = true;
       } catch (e) {
         console.error(e);
         if (!cancelled && emergencySendGenRef.current === gen) toast.error("Error enviando la alerta.");
       } finally {
-        if (!cancelled && emergencySendGenRef.current === gen) {
+        if (!cancelled && emergencySendGenRef.current === gen && sendSucceeded) {
           setDeliveredTo(total);
           setStage("sent");
         }
@@ -466,6 +609,7 @@ function AppHome() {
       setPinConfigured(Boolean(res.pinConfigured));
       setAccountConfigured(true);
       persistSignupHandoff(user.id);
+      if (res.accessToken) persistSeniorAccessToken(res.accessToken, user.id);
       try { sessionStorage.setItem("seniorsafe_user", JSON.stringify(user)); } catch {}
       try { localStorage.setItem("seniorsafe_user_backup", JSON.stringify(user)); } catch {}
       toast.success(`Hola ${String(user.nombre ?? "").split(" ")[0]}`);
@@ -480,6 +624,12 @@ function AppHome() {
   const requestGps = async () => {
     const ok = await ensureGeoPermission();
     if (ok) {
+      const { coords } = await getCurrentCoordsWithError({
+        highAccuracy: true,
+        timeoutMs: 15000,
+        maximumAgeMs: 30000,
+      });
+      if (coords) setLastCoords(coords);
       setGpsAllowed(true);
       toast.success("GPS activado.");
       return;
@@ -592,7 +742,10 @@ function AppHome() {
           </div>
         </div>
         <div className="flex items-center gap-3 text-foreground" aria-label="Estado del dispositivo">
-          <span className="inline-flex items-center gap-1 text-sm font-bold"><Battery className="w-4 h-4" aria-hidden="true" /> 82%</span>
+          <span className="inline-flex items-center gap-1 text-sm font-bold">
+            <Battery className="w-4 h-4" aria-hidden="true" />
+            {liveBatteryLevel != null ? `${liveBatteryLevel}%` : "—"}
+          </span>
           <span className="inline-flex items-center gap-1 text-sm font-bold" aria-label="Conectado a Wi-Fi"><Wifi className="w-4 h-4" aria-hidden="true" /></span>
         </div>
       </header>
@@ -678,21 +831,33 @@ function AppHome() {
           </section>
         )}
 
-        {accountConfigured && (!gpsAllowed || !notificationsAllowed || !batteryChecked || fallNeedsPermission || !fallMotionSupported) && (
+        {accountConfigured &&
+          ((sosGpsPrimed && !gpsAllowed) ||
+            !notificationsAllowed ||
+            !batteryChecked ||
+            (sosGpsPrimed && fallNeedsPermission) ||
+            (sosGpsPrimed && !fallMotionSupported)) && (
           <section aria-label="Permisos del teléfono" className="bg-card border border-border rounded-3xl p-4 mb-5 shadow-sm">
             <h2 className="font-bold text-foreground text-lg mb-1">Solo faltan permisos del teléfono</h2>
-            <p className="text-sm text-muted-foreground mb-3">Son necesarios para protegerte en emergencias.</p>
+            <p className="text-sm text-muted-foreground mb-3">
+              {sosGpsPrimed
+                ? "Son necesarios para protegerte en emergencias."
+                : "La ubicación y el sensor de caídas se activan con la primera pulsación del botón rojo."}
+            </p>
             <div className="space-y-2">
-              <PermissionButton icon={MapPin} label="Activar GPS" done={gpsAllowed} onClick={requestGps} />
+              {sosGpsPrimed && !gpsAllowed && (
+                <PermissionButton icon={MapPin} label="Activar GPS" done={gpsAllowed} onClick={requestGps} />
+              )}
               <PermissionButton icon={Bell} label="Activar notificaciones" done={notificationsAllowed} onClick={requestNotifications} />
-              {fallMotionSupported ? (
+              {sosGpsPrimed && fallMotionSupported && fallNeedsPermission && (
                 <PermissionButton
                   icon={Activity}
                   label="Activar sensor de caídas"
                   done={fallMonitoring}
                   onClick={handleFallPermission}
                 />
-              ) : (
+              )}
+              {sosGpsPrimed && !fallMotionSupported && (
                 <p className="text-sm text-amber-700 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
                   Este dispositivo no permite detección automática de caídas en el navegador. Usa el botón de emergencia.
                 </p>
@@ -711,55 +876,24 @@ function AppHome() {
           </section>
         )}
 
-        {trainingPending && !trainingDone && (
-          <section
-            aria-label="Mock de entrenamiento"
-            className="mb-5 rounded-3xl border-2 p-5 shadow-md"
-            style={{
-              borderColor: "#f59e0b",
-              background: "color-mix(in oklab, #f59e0b 10%, white)",
-            }}
-          >
-            <div className="flex items-start gap-3">
-              <div
-                className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shrink-0"
-                style={{ background: "#f59e0b" }}
-              >
-                <GraduationCap className="w-6 h-6" />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-foreground">Mock de entrenamiento</h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Practica el botón de pánico sin enviar WhatsApp, SMS ni llamadas reales (sin costo Twilio).
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => startEmergencyFlow(true)}
-              className="mt-4 w-full py-4 rounded-2xl text-white font-bold text-lg shadow-lg active:scale-[0.98] transition"
-              style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}
-            >
-              Iniciar práctica (simulación)
-            </button>
-          </section>
-        )}
-
-        {/* Botón de emergencia real — habilitado tras entrenamiento o si no aplica onboarding */}
+        {/* Botón de emergencia */}
         <div className="flex-1 flex flex-col items-center justify-center py-4">
-          {trainingPending && !trainingDone && (
-            <p className="mb-3 text-center text-xs font-semibold text-amber-700 max-w-[18rem]">
-              El botón rojo se activa cuando completes el entrenamiento arriba.
+          {!sosGpsPrimed && (
+            <p className="mb-3 text-center text-sm font-semibold text-red-700 max-w-[20rem]">
+              Primera pulsación: activa ubicación
+              {fallMotionSupported ? " y caídas" : ""} y WhatsApp (sin avisar a nadie).
+            </p>
+          )}
+          {sosGpsPrimed && trainingPending && !trainingDone && (
+            <p className="mb-3 text-center text-sm font-semibold text-amber-700 max-w-[22rem]">
+              Siguiente pulsación: simulación (sin avisar a nadie). Luego el botón será real.
             </p>
           )}
           <button
             type="button"
-            onClick={() => startEmergencyFlow(false)}
-            disabled={trainingPending && !trainingDone}
+            onClick={handleEmergencyPress}
             aria-label="Botón de emergencia. Pulsa para pedir ayuda a tu familia"
-            className={`relative group focus:outline-none focus-visible:ring-4 focus-visible:ring-red-300 rounded-full ${
-              trainingPending && !trainingDone ? "opacity-40 pointer-events-none" : ""
-            }`}
+            className="relative group focus:outline-none focus-visible:ring-4 focus-visible:ring-red-300 rounded-full"
           >
             <span className="absolute inset-0 rounded-full animate-ping" style={{ background: "rgba(220,38,38,0.25)" }} aria-hidden="true" />
             <span className="absolute -inset-3 rounded-full" style={{ background: "rgba(220,38,38,0.10)" }} aria-hidden="true" />
@@ -952,6 +1086,13 @@ function AppHome() {
                     ? "Simulación: elige un tipo. No se contactará a nadie."
                     : "Toca una opción y avisaremos a tu familia al instante."}
                 </p>
+                {!trainingRunActive && categoryAutoSendSecondsLeft > 0 && (
+                  <p className="mt-2 text-sm font-medium text-red-600" aria-live="polite">
+                    Si no eliges, enviaremos alerta de{" "}
+                    {emergencyCategoryLabel(EMERGENCY_CATEGORY_AUTO_DEFAULT)} en{" "}
+                    {categoryAutoSendSecondsLeft}s…
+                  </p>
+                )}
 
                 <div className="mt-6 grid grid-cols-1 gap-3">
                   {EMERGENCY_CATEGORIES.map((category) => {
@@ -1080,7 +1221,7 @@ function AppHome() {
                 </h2>
                 <p className="mt-3 text-lg text-muted-foreground">
                   {alertSummary?.training
-                    ? "Simulaste el flujo completo. En una emergencia real: SMS al instante, WhatsApp a los 15 s y llamada a los 30 s si nadie confirma."
+                    ? `Simulaste el flujo completo. En una emergencia real: ${CASCADE_MARKETING_SUMMARY}`
                     : alertSummary?.status === "no_recipients" || (alertSummary && alertSummary.total === 0)
                       ? "No encontramos guardianes para avisar. Ve a Administrar familiares y agrega al menos uno con teléfono +56 9…"
                       : alertSummary && alertSummary.delivered > 0
@@ -1116,10 +1257,19 @@ function AppHome() {
         isActive={fallCountdownActive}
         countdownSeconds={fallCountdown}
         isDispatching={fallStatus === "dispatching"}
-        onCancel={cancelarAlerta}
+        onCancel={handleFallCancel}
       />
 
       <InstallAppModal open={installOpen} onClose={() => setInstallOpen(false)} signupId={userId} />
+
+      <SosGpsPrimingUi
+        uiStage={sosPrimingUiStage}
+        gpsOk={sosPrimingGpsOk}
+        fallOk={sosPrimingFallOk}
+        fallSupported={sosPrimingFallSupported}
+        onIntroDismiss={dismissSosPrimingIntro}
+        onSuccessClose={closeSosPrimingSuccess}
+      />
     </div>
   );
 }
@@ -1239,7 +1389,7 @@ function ManageFamilyDialog({
           </div>
           <DialogTitle className="text-2xl">Administrar familiares</DialogTitle>
           <DialogDescription className="text-base">
-            Edita, agrega o elimina hasta 5 personas que reciben tus alertas.
+            Edita, agrega o elimina hasta {MAX_GUARDIANS} personas que reciben tus alertas.
           </DialogDescription>
         </DialogHeader>
 

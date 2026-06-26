@@ -96,56 +96,70 @@ async function readContactsFromDb(signupId: string): Promise<FamilyContact[]> {
   return (rows ?? []) as FamilyContact[];
 }
 
-/** Carga contactos (storage → SQL). */
+/** Carga contactos (SQL primario; migra legacy desde storage si hace falta). */
 export async function listFamilyContacts(signupId: string): Promise<FamilyContact[]> {
+  const fromDb = await readContactsFromDb(signupId);
+  if (fromDb.length > 0) return fromDb;
+
   const fromStorage = await readContactsFromStorage(signupId);
-  if (fromStorage !== null) return fromStorage;
-  return readContactsFromDb(signupId);
+  if (fromStorage !== null && fromStorage.length > 0) {
+    await syncContactsToEmergencyDb(signupId, fromStorage);
+    return fromStorage;
+  }
+
+  return fromDb;
 }
 
 async function loadMutableContacts(signupId: string): Promise<FamilyContact[]> {
-  const fromStorage = await readContactsFromStorage(signupId);
-  if (fromStorage !== null) return fromStorage;
-  return readContactsFromDb(signupId);
+  return listFamilyContacts(signupId);
 }
 
 async function persistContacts(
   signupId: string,
   contacts: FamilyContact[],
 ): Promise<{ ok: boolean; error?: string; method?: string }> {
-  const storageResult = await writeContactsToStorage(signupId, contacts);
-  if (storageResult.ok) {
-    await syncContactsToEmergencyDb(signupId, contacts);
-    return { ok: true, method: "storage" };
-  }
-
   if (contacts.length === 0) {
     const { error } = await supabaseAdmin
       .from("emergency_contacts")
       .delete()
       .eq("contract_signup_id", signupId);
-    if (!error) return { ok: true, method: "emergency_contacts" };
-    return { ok: false, error: error?.message ?? storageResult.error };
+    if (error && !isMissingTableError(error.message ?? "")) {
+      return { ok: false, error: error.message };
+    }
+  } else {
+    const rows = contacts.map((c, index) => ({
+      id: c.id,
+      contract_signup_id: signupId,
+      nombre: c.nombre,
+      telefono: c.telefono,
+      parentesco: c.parentesco,
+      created_at: c.created_at,
+      whatsapp: null,
+      prioridad: index + 1,
+      activo: true,
+      tipo_contacto: "familiar",
+      recibe_sms: true,
+      recibe_whatsapp: true,
+      recibe_llamada: true,
+    }));
+
+    const { error } = await supabaseAdmin
+      .from("emergency_contacts")
+      .upsert(rows, { onConflict: "id" });
+
+    if (error && !isMissingTableError(error.message ?? "")) {
+      return { ok: false, error: error.message };
+    }
   }
 
-  const rows = contacts.map((c) => ({
-    id: c.id,
-    contract_signup_id: signupId,
-    nombre: c.nombre,
-    telefono: c.telefono,
-    parentesco: c.parentesco,
-    created_at: c.created_at,
-  }));
+  const storageResult = await writeContactsToStorage(signupId, contacts);
+  if (storageResult.ok) return { ok: true, method: "emergency_contacts" };
 
-  const { error } = await supabaseAdmin
-    .from("emergency_contacts")
-    .upsert(rows, { onConflict: "id" });
-
-  if (!error) return { ok: true, method: "emergency_contacts" };
-  if (isMissingTableError(error.message ?? "")) {
-    return { ok: false, error: storageResult.error ?? error.message };
+  if (contacts.length === 0) {
+    return { ok: true, method: "emergency_contacts" };
   }
-  return { ok: false, error: error.message };
+
+  return { ok: false, error: storageResult.error ?? "save_failed" };
 }
 
 function normalizeContactInput(input: FamilyContactInput): FamilyContactInput {

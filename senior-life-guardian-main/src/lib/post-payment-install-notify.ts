@@ -3,7 +3,6 @@ import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { buildBillingEmailHtml } from "@/lib/transactional-email-html";
 import { SENIOR_SAFE_SUPPORT_EMAIL } from "@/lib/senior-safe-ai";
-import { WHATSAPP_ACTIVATION_KEYWORD } from "@/lib/whatsapp-commercial-activation";
 import { sendTwilioWhatsAppWithSmsFallback, SENIOR_SAFE_WHATSAPP_COMMERCIAL_E164 } from "@/lib/twilio";
 import { normalizeTwilioPhone } from "@/lib/twilio-inbound";
 import { sendBillingEmailViaZoho, SENIOR_SAFE_ADMIN_EMAIL } from "@/lib/zoho-smtp";
@@ -63,7 +62,7 @@ function buildInstallEmailBodies(input: {
     `1) Descarga o instala Senior Safe desde el enlace.\n` +
     `2) Inicia sesión con este correo: ${input.email}\n` +
     `3) Crea tu PIN y agrega familiares guardianes.\n` +
-    `4) Escribe ${WHATSAPP_ACTIVATION_KEYWORD} por WhatsApp al ${wa}.\n\n` +
+    `4) Responde por WhatsApp al ${wa} (Sí, Hola, OK o cualquier mensaje).\n\n` +
     `Si un familiar pagó por ti, puede reenviarte este correo.\n\n` +
     `Ayuda: ${SENIOR_SAFE_SUPPORT_EMAIL}\n` +
     `Equipo Senior Safe`;
@@ -75,7 +74,7 @@ function buildInstallEmailBodies(input: {
     lines: [
       "Tu suscripción ya está activa. Abre el botón de abajo en el teléfono del adulto mayor (no en computador).",
       "Luego inicia sesión con el correo registrado, crea tu PIN de 4 dígitos y agrega familiares guardianes.",
-      `Por último, escribe ${WHATSAPP_ACTIVATION_KEYWORD} por WhatsApp al ${wa} para vincular alertas.`,
+      `Por último, responde por WhatsApp al ${wa} (Sí, Hola, OK o cualquier mensaje) para vincular alertas.`,
       "Si un familiar realizó el pago, puede reenviarte este correo para que instales cuando tengas tu celular.",
     ],
     ctaLabel: "Instalar Senior Safe",
@@ -94,7 +93,7 @@ function buildInstallSmsBody(input: { nombre: string; email: string; installUrl:
     `Senior Safe: pago confirmado, ${name}. ` +
     `Instala la app: ${input.installUrl} ` +
     `Entra con ${input.email}. ` +
-    `Luego escribe ${WHATSAPP_ACTIVATION_KEYWORD} al ${wa}. ` +
+    `Luego responde por WhatsApp al ${wa} (Sí, Hola, OK, etc.). ` +
     `Ayuda: ${SENIOR_SAFE_SUPPORT_EMAIL}`
   );
 }

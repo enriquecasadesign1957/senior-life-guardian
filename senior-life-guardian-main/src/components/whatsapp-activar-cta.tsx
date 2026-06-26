@@ -1,10 +1,7 @@
 import { Copy, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import {
-  WHATSAPP_ACTIVATION_KEYWORD,
-  whatsAppActivarUrl,
-} from "@/lib/whatsapp-commercial-activation";
+import { whatsAppAnyReplyUrl } from "@/lib/whatsapp-commercial-activation";
 import { SENIOR_SAFE_WHATSAPP_COMMERCIAL_E164 } from "@/lib/twilio";
 
 type Props = {
@@ -14,21 +11,21 @@ type Props = {
 };
 
 /**
- * CTA post-pago: abre WhatsApp con ACTIVAR prellenado al número comercial.
+ * CTA post-pago: abre WhatsApp; cualquier respuesta del titular pagado activa alertas.
  */
 export function WhatsAppActivarCta({ className = "", compact = false }: Props) {
-  const waUrl = whatsAppActivarUrl();
+  const waUrl = whatsAppAnyReplyUrl();
   const digits = SENIOR_SAFE_WHATSAPP_COMMERCIAL_E164.replace(/\D/g, "");
   const displayNumber = digits.startsWith("569")
     ? `+56 9 ${digits.slice(3, 7)} ${digits.slice(7)}`
     : `+${digits}`;
 
-  const copyKeyword = async () => {
+  const copyHint = async () => {
     try {
-      await navigator.clipboard.writeText(WHATSAPP_ACTIVATION_KEYWORD);
-      toast.success(`Copiado: ${WHATSAPP_ACTIVATION_KEYWORD}`);
+      await navigator.clipboard.writeText("Hola");
+      toast.success("Copiado: Hola");
     } catch {
-      toast.error(`Escríbalo manualmente: ${WHATSAPP_ACTIVATION_KEYWORD}`);
+      toast.error("Escribe Hola, Sí u OK en WhatsApp");
     }
   };
 
@@ -53,18 +50,18 @@ export function WhatsAppActivarCta({ className = "", compact = false }: Props) {
             {compact ? "Vincular WhatsApp" : "Paso 2: Vincular WhatsApp"}
           </h2>
           <p className="text-sm text-muted-foreground">
-            Toque el botón, envíe el mensaje y listo.
+            Responde con Sí, Hola, OK o cualquier mensaje.
           </p>
         </div>
       </div>
 
       <div className="rounded-2xl bg-white border-2 border-border px-4 py-3 flex items-center justify-between gap-3">
-        <span className="text-2xl md:text-3xl font-extrabold tracking-wider text-foreground">
-          {WHATSAPP_ACTIVATION_KEYWORD}
+        <span className="text-base md:text-lg font-semibold text-foreground leading-snug">
+          Cualquier respuesta activa tu cuenta
         </span>
-        <Button variant="outline" size="sm" onClick={copyKeyword} className="shrink-0">
+        <Button variant="outline" size="sm" onClick={copyHint} className="shrink-0">
           <Copy className="w-4 h-4 mr-1" />
-          Copiar
+          Ejemplo
         </Button>
       </div>
 
@@ -76,12 +73,12 @@ export function WhatsAppActivarCta({ className = "", compact = false }: Props) {
         style={{ background: "#25D366", minHeight: 56 }}
       >
         <MessageCircle className="w-6 h-6" fill="white" />
-        Enviar ACTIVAR por WhatsApp
+        Abrir WhatsApp
       </a>
 
       {!compact && (
         <p className="text-xs text-center text-muted-foreground">
-          Se abrirá WhatsApp con el mensaje listo al {displayNumber}. Solo presione enviar.
+          Se abrirá WhatsApp al {displayNumber}. Envía el mensaje y listo — no hace falta escribir ACTIVAR.
         </p>
       )}
     </section>

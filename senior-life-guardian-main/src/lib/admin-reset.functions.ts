@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { assertAdminPin } from "@/lib/admin-auth";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
 
@@ -14,9 +15,11 @@ export const resetTestData = createServerFn({ method: "POST" })
   .inputValidator((input) =>
     z.object({
       confirm: z.literal("RESET"),
+      pin: z.string().min(1).max(64),
     }).parse(input),
   )
-  .handler(async () => {
+  .handler(async ({ data }) => {
+    assertAdminPin(data.pin);
     // Selecciona ids de signups de prueba (trial, sin pago real)
     const { data: testSignups, error: selErr } = await supabaseAdmin
       .from(CONTRACT_SIGNUPS_TABLE)
@@ -67,9 +70,11 @@ export const resetMyAccountData = createServerFn({ method: "POST" })
     z.object({
       confirm: z.literal("RESET"),
       email: z.string().email().max(255),
+      pin: z.string().min(1).max(64),
     }).parse(input),
   )
   .handler(async ({ data }) => {
+    assertAdminPin(data.pin);
     const email = data.email.trim().toLowerCase();
 
     const { data: signup, error: selErr } = await supabaseAdmin

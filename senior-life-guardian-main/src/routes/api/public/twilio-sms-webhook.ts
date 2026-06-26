@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { supabaseAdmin } from '@/integrations/supabase/client.server'
-import { processWhatsAppActivation } from '@/lib/whatsapp-commercial-activation'
+import { processWhatsAppActivation, tryAutoActivatePaidSignup } from '@/lib/whatsapp-commercial-activation'
 
 /**
  * Webhook entrante de Twilio para SMS (número chileno +56 2 2914 7733).
@@ -78,7 +78,12 @@ export const Route = createFileRoute('/api/public/twilio-sms-webhook')({
 
         // STOP / opt-out
         if (/^(STOP|BAJA|CANCELAR|SALIR)$/.test(text)) {
-          return twiml('Recibido. No te enviaremos más mensajes. Para reactivar, responde ACTIVAR.')
+          return twiml('Recibido. No te enviaremos más mensajes. Para reactivar, escribe cualquier mensaje.')
+        }
+
+        // Día 1: cualquier mensaje del titular pagado activa WhatsApp (no solo ACTIVAR)
+        if (body.trim().length >= 1) {
+          await tryAutoActivatePaidSignup(phone)
         }
 
         const user = await findUserByPhone(phone)
@@ -90,7 +95,9 @@ export const Route = createFileRoute('/api/public/twilio-sms-webhook')({
           }
           try {
             const { sendEmergencyAlert } = await import('@/lib/emergency-alert.functions')
-            await sendEmergencyAlert({ data: { signupId: user.id, gps: null } })
+            const { issueSeniorAccessToken } = await import('@/lib/senior-access-auth')
+            const accessToken = await issueSeniorAccessToken(user.id)
+            await sendEmergencyAlert({ data: { signupId: user.id, gps: null, accessToken } })
           } catch (e) {
             try {
               await supabaseAdmin.from('alert_logs').insert({
@@ -111,7 +118,7 @@ export const Route = createFileRoute('/api/public/twilio-sms-webhook')({
         }
 
         return twiml(
-          'Senior Safe 🛡️\nResponde:\n• ACTIVAR — para activar alertas\n• SOS — para enviar emergencia\n• BAJA — para detener mensajes',
+          'Senior Safe 🛡️\nResponde:\n• Cualquier mensaje — vincular alertas (tras contratar)\n• SOS — para enviar emergencia\n• BAJA — para detener mensajes',
         )
       },
     },

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { normalizePlanKey, planKeySchema, periodoSchema } from "@/lib/plans";
 import { chargeAmountFromSignup } from "@/lib/discount-codes";
 import { recordDiscountRedemption, resolveDiscountForCheckout } from "@/lib/discount.functions";
-import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
+import { CONTRACT_SIGNUPS_TABLE, isSignupPaidAndActive } from "@/lib/signups-db";
 import {
   buildWebpayReturnUrl,
   confirmWebpayPlusTransaction,
@@ -16,6 +16,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { Json } from "@/integrations/supabase/types";
 import { clearRenewalNoticeFlags } from "@/lib/subscription-renewal-flags";
 import { sendPostPaymentInstallNotifications } from "@/lib/post-payment-install-notify";
+import { ensureFirstGuardianAfterPayment } from "@/lib/first-guardian-checkout";
 import { deleteOneclickMallInscription } from "@/lib/transbank-oneclick-mall";
 
 /** Serializa la respuesta cruda de Transbank al tipo Json de Supabase. */
@@ -172,13 +173,32 @@ export const confirmWebpayTransaction = createServerFn({ method: "POST" })
     let installNotify: Awaited<ReturnType<typeof sendPostPaymentInstallNotifications>> | undefined;
 
     if (tx?.contract_signup_id) {
-      if (result.ok) {
-        const { data: signup } = await supabaseAdmin
-          .from(CONTRACT_SIGNUPS_TABLE)
-          .select("periodo,payment_status,discount_code_id")
-          .eq("id", tx.contract_signup_id)
-          .maybeSingle();
+      const { data: signup } = await supabaseAdmin
+        .from(CONTRACT_SIGNUPS_TABLE)
+        .select("periodo,payment_status,subscription_status,discount_code_id,webpay_authorization_code")
+        .eq("id", tx.contract_signup_id)
+        .maybeSingle();
 
+      const alreadyActive = signup ? isSignupPaidAndActive(signup) : false;
+
+      if (alreadyActive) {
+        await ensureFirstGuardianAfterPayment(tx.contract_signup_id).catch((e) => {
+          console.error("[webpay] first guardian (alreadyActive):", e);
+        });
+        return {
+          ok: true,
+          status: result.status || "AUTHORIZED",
+          responseCode: result.responseCode ?? signup?.webpay_response_code ?? 0,
+          authorizationCode: result.authorizationCode ?? signup?.webpay_authorization_code ?? null,
+          amount: result.amount,
+          buyOrder: result.buyOrder ?? tx?.buy_order ?? null,
+          cardLast4: result.cardLast4,
+          signupId: tx.contract_signup_id,
+          alreadyConfirmed: true,
+        };
+      }
+
+      if (result.ok) {
         await recordDiscountRedemption({
           discount_code_id: signup?.discount_code_id ?? null,
           payment_status: signup?.payment_status ?? null,
@@ -202,6 +222,9 @@ export const confirmWebpayTransaction = createServerFn({ method: "POST" })
           })
           .eq("id", tx.contract_signup_id);
         await clearRenewalNoticeFlags(tx.contract_signup_id);
+        await ensureFirstGuardianAfterPayment(tx.contract_signup_id).catch((e) => {
+          console.error("[webpay] first guardian:", e);
+        });
         installNotify = await sendPostPaymentInstallNotifications(tx.contract_signup_id).catch(
           (e) => {
             console.error("[webpay] install notify:", e);
@@ -337,6 +360,9 @@ export const mockApproveWebpay = createServerFn({ method: "POST" })
       })
       .eq("id", signupId);
     await clearRenewalNoticeFlags(signupId);
+    await ensureFirstGuardianAfterPayment(signupId).catch((e) => {
+      console.error("[webpay/mock] first guardian:", e);
+    });
     const installNotify = await sendPostPaymentInstallNotifications(signupId).catch((e) => {
       console.error("[webpay/mock] install notify:", e);
       return {

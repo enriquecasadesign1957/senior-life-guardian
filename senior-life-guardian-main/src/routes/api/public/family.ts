@@ -6,6 +6,7 @@ import {
   listFamilyContacts,
   updateFamilyContact,
 } from "@/lib/contacts-storage";
+import { assertSeniorAccess, seniorAccessTokenSchema } from "@/lib/senior-access-auth";
 
 const idSchema = z.string().uuid();
 const contactInput = z.object({
@@ -14,16 +15,21 @@ const contactInput = z.object({
   parentesco: z.string().min(1).max(60),
 });
 
+const authFields = {
+  signupId: idSchema,
+  accessToken: seniorAccessTokenSchema,
+};
+
 const bodySchema = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("list"), signupId: idSchema }),
-  z.object({ action: z.literal("add"), signupId: idSchema, contact: contactInput }),
+  z.object({ action: z.literal("list"), ...authFields }),
+  z.object({ action: z.literal("add"), ...authFields, contact: contactInput }),
   z.object({
     action: z.literal("update"),
-    signupId: idSchema,
+    ...authFields,
     id: idSchema,
     contact: contactInput,
   }),
-  z.object({ action: z.literal("delete"), signupId: idSchema, id: idSchema }),
+  z.object({ action: z.literal("delete"), ...authFields, id: idSchema }),
 ]);
 
 export const Route = createFileRoute("/api/public/family")({
@@ -43,6 +49,13 @@ export const Route = createFileRoute("/api/public/family")({
         }
 
         const data = parsed.data;
+
+        try {
+          await assertSeniorAccess(data.signupId, data.accessToken);
+        } catch (e) {
+          const message = e instanceof Error ? e.message : "unauthorized";
+          return Response.json({ ok: false, error: message }, { status: 401 });
+        }
 
         if (data.action === "list") {
           const contacts = await listFamilyContacts(data.signupId);

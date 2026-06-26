@@ -58,7 +58,7 @@ jobs:
         run: |
           bun add @capacitor/core @capacitor/cli @capacitor/android \
                   @capacitor/splash-screen @capacitor/local-notifications \
-                  @capacitor/geolocation
+                  @capacitor/geolocation @capacitor/device
 
       - name: Parchear NativeApp de emergencia (Evitar roturas de compilación)
         run: |

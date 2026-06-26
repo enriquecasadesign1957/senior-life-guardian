@@ -143,7 +143,8 @@ function createSirenController() {
   };
 }
 
-async function requestMotionPermission(): Promise<boolean> {
+/** Solicita permiso de acelerómetro. Debe llamarse dentro de un gesto del usuario (p. ej. toque S.O.S). */
+export async function requestFallMotionPermission(): Promise<boolean> {
   if (typeof window === "undefined") return false;
   if (!isMotionApiAvailable()) return false;
 
@@ -174,6 +175,7 @@ export function useFallDetection(opts: UseFallDetectionOptions): UseFallDetectio
   const vibrateTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sirenRef = useRef(createSirenController());
   const dispatchingRef = useRef(false);
+  const dispatchGenRef = useRef(0);
   const testRunRef = useRef(false);
 
   const setStatusSafe = useCallback((next: FallDetectionStatus) => {
@@ -203,6 +205,7 @@ export function useFallDetection(opts: UseFallDetectionOptions): UseFallDetectio
   }, []);
 
   const cancelarAlerta = useCallback(() => {
+    dispatchGenRef.current += 1;
     clearCountdownTimer();
     stopVibration();
     stopSiren();
@@ -271,19 +274,26 @@ export function useFallDetection(opts: UseFallDetectionOptions): UseFallDetectio
         if (dispatchingRef.current || !signupId) return;
         dispatchingRef.current = true;
         setStatusSafe("dispatching");
+        const dispatchGen = dispatchGenRef.current + 1;
+        dispatchGenRef.current = dispatchGen;
 
         void (async () => {
           try {
             const gps = getGps ? await getGps() : null;
+            if (dispatchGenRef.current !== dispatchGen) return;
             await dispatchEmergency(gps);
           } catch (e) {
             console.error("[useFallDetection] dispatchEmergency", e);
           } finally {
-            dispatchingRef.current = false;
+            if (dispatchGenRef.current === dispatchGen) {
+              dispatchingRef.current = false;
+            }
             immobilityStartRef.current = null;
             impactAtRef.current = null;
             setCountdownSeconds(COUNTDOWN_SECONDS);
-            setStatusSafe(permissionGranted && enabled && signupId ? "monitoring" : "inactive");
+            if (dispatchGenRef.current === dispatchGen) {
+              setStatusSafe(permissionGranted && enabled && signupId ? "monitoring" : "inactive");
+            }
           }
         })();
       }
@@ -358,7 +368,7 @@ export function useFallDetection(opts: UseFallDetectionOptions): UseFallDetectio
       return false;
     }
 
-    const ok = await requestMotionPermission();
+    const ok = await requestFallMotionPermission();
     setPermissionGranted(ok);
     if (ok && enabled && signupId) {
       setStatusSafe("monitoring");
@@ -390,7 +400,7 @@ export function useFallDetection(opts: UseFallDetectionOptions): UseFallDetectio
 
     let alive = true;
     void (async () => {
-      const ok = await requestMotionPermission();
+      const ok = await requestFallMotionPermission();
       if (!alive) return;
       setPermissionGranted(ok);
       if (!ok) {
@@ -474,11 +484,11 @@ export function FallDetectionOverlay({
           </span>
         </div>
         <h2 id="fall-alert-title" className="text-3xl font-extrabold mb-2">
-          {isDispatching ? "Enviando alerta de emergencia…" : "¿Posible caída detectada?"}
+          {isDispatching ? "Enviando alerta…" : "¿Posible caída detectada?"}
         </h2>
         <p className="text-white/90 text-lg mb-6">
           {isDispatching
-            ? "Avisando a tu familia. No cierres la app."
+            ? "Tienes unos segundos para cancelar si fue un error."
             : showSiren
               ? "Sirena activa. Pulsa el botón si estás bien."
               : "Vibración de alerta. Pulsa el botón si estás bien."}
@@ -491,8 +501,7 @@ export function FallDetectionOverlay({
         <button
           type="button"
           onClick={onCancel}
-          disabled={isDispatching}
-          className="w-full min-h-[4.5rem] rounded-3xl text-2xl font-extrabold shadow-2xl active:scale-[0.98] transition disabled:opacity-70"
+          className="w-full min-h-[4.5rem] rounded-3xl text-2xl font-extrabold shadow-2xl active:scale-[0.98] transition"
           style={{ background: "#16a34a", color: "#fff" }}
         >
           Estoy bien

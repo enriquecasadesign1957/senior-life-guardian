@@ -3,7 +3,7 @@
  * Solo responde con el contexto oficial de Senior Safe.
  */
 
-import { SENIOR_SAFE_INSTALL_GUIDE_URL } from "@/lib/app-url";
+import { SENIOR_SAFE_INSTALL_GUIDE_URL, SENIOR_SAFE_SOS_SIMULATOR_URL } from "@/lib/app-url";
 import { SENIOR_SAFE_CHECKOUT_URL } from "@/lib/whatsapp-commercial-activation";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { normalizeTwilioPhone } from "@/lib/twilio-inbound";
@@ -101,6 +101,10 @@ R: Guía paso a paso en ${SENIOR_SAFE_INSTALL_GUIDE_URL} — contratar, abrir en
 P: ¿Cómo se usa la app día a día?
 R: Ver sección "Uso diario" en ${SENIOR_SAFE_INSTALL_GUIDE_URL}: botón SOS rojo para emergencias; sensor de caídas con sirena 30 s para cancelar si está bien.
 
+P: ¿Puedo ver cómo funciona antes de contratar? / ¿Hay demo o simulador?
+R: Sí. Simulador interactivo (sin instalar nada): ${SENIOR_SAFE_SOS_SIMULATOR_URL}
+El usuario pulsa S.O.S, elige tipo de emergencia (Salud, Accidente o Delincuencia) y ve en tiempo real el panel de envíos a familiares (WhatsApp, SMS, llamada). Datos ficticios; mismo flujo que la app.
+
 Para gestión de cuenta, facturación o fallas técnicas de un caso concreto: derivar a ${SENIOR_SAFE_SUPPORT_EMAIL}. Para reembolsos y cancelación: ${SENIOR_SAFE_TERMS_CANCELLATION_URL}.
 `.trim();
 
@@ -139,6 +143,7 @@ CIERRE OBLIGATORIO: Termina SIEMPRE con una pregunta abierta que avance la conve
 
 REGLAS ESTRICTAS:
 - Solo información del CONTEXTO OFICIAL adjunto. No inventes funciones, precios ni plazos.
+- Si pregunta cómo funciona, quiere ver el flujo, probar el botón SOS, demo o simulador: comparte ${SENIOR_SAFE_SOS_SIMULATOR_URL} y explica que puede pulsar S.O.S, elegir Salud/Accidente/Delincuencia y ver el panel de envíos en vivo (sin instalar).
 - Contratación: ${SENIOR_SAFE_CHECKOUT_URL}
 - Tras contratar y pagar: el cliente envía ACTIVAR por WhatsApp (solo funciona con pago confirmado). Guía: ${SENIOR_SAFE_INSTALL_GUIDE_URL}
 - No hay días de prueba gratis; sí hay simulacro de entrenamiento tras contratar.
@@ -198,6 +203,7 @@ CIERRE OBLIGATORIO: Pregunta directa y sencilla. Ejemplos:
 
 REGLAS ESTRICTAS:
 - Solo información del CONTEXTO OFICIAL adjunto. No invente nada.
+- Si pregunta cómo funciona, quiere ver el flujo, probar el botón de emergencia, demo o simulador: comparta ${SENIOR_SAFE_SOS_SIMULATOR_URL} y explique en pocas palabras: toque el botón rojo, elija el tipo de ayuda y vea cómo avisa a su familia (sin instalar nada).
 - Contratación: ${SENIOR_SAFE_CHECKOUT_URL} — "Le ayudamos en cada paso."
 - Si ya pagó en checkout: escriba ACTIVAR por WhatsApp (el sistema lo verifica). Guía: ${SENIOR_SAFE_INSTALL_GUIDE_URL}
 - Emergencia ACTIVA ahora: llame al 131. Este chat no envía alertas.
@@ -277,6 +283,49 @@ function authoritiesGuardianFallbackReply(audience: WhatsAppCommercialAudience):
     "En emergencia activa: 131 (salud) o 133 (Carabineros) directo desde el teléfono.\n" +
     "¿Te ayudo a entender cómo configurar vecinos o amigos como guardianes?"
   );
+}
+
+const SOS_SIMULATOR_SIGNAL =
+  /\b(demo|simulador|simular|simulaci[oó]n|probar|prueba|muestrame|mu[eé]strame|mostrar|ver como|ver c[oó]mo|flujo sos|bot[oó]n sos|bot[oó]n de p[aá]nico|bot[oó]n de emergencia|en vivo|interactivo|antes de contratar|sin instalar|c[oó]mo se ve|c[oó]mo funciona el bot[oó]n)\b/;
+
+function wantsSosSimulator(text: string): boolean {
+  return SOS_SIMULATOR_SIGNAL.test(normalizeForAudienceMatch(text));
+}
+
+function replyIncludesSimulator(text: string): boolean {
+  return /simulador-senior-safe|\/simulador\b/i.test(text);
+}
+
+function simulatorFallbackReply(audience: WhatsAppCommercialAudience): string {
+  const base = "Senior Safe 🛡️\n";
+  if (audience === "senior") {
+    return (
+      base +
+      `Puede probar cómo funciona sin instalar nada:\n${SENIOR_SAFE_SOS_SIMULATOR_URL}\n` +
+      "Toque el botón rojo, elija el tipo de ayuda y vea cómo avisa a su familia 🙂\n" +
+      "¿Le gustaría también saber el valor del plan?"
+    );
+  }
+  return (
+    base +
+    `¡Perfecto! Prueba el simulador interactivo aquí (sin instalar):\n${SENIOR_SAFE_SOS_SIMULATOR_URL}\n` +
+    "• Pulsa S.O.S → elige Salud, Accidente o Delincuencia\n" +
+    "• Mira el panel de envíos a familiares en tiempo real\n" +
+    "¿Te gustaría que te explique cómo contratar después de probarlo? 💙"
+  );
+}
+
+function appendSimulatorLinkIfNeeded(
+  userMessage: string,
+  reply: string,
+  audience: WhatsAppCommercialAudience,
+): string {
+  if (!wantsSosSimulator(userMessage) || replyIncludesSimulator(reply)) return reply;
+  const hint =
+    audience === "senior"
+      ? `\n\nPruebe el simulador sin instalar: ${SENIOR_SAFE_SOS_SIMULATOR_URL}`
+      : `\n\nPrueba el simulador interactivo: ${SENIOR_SAFE_SOS_SIMULATOR_URL}`;
+  return `${reply}${hint}`.slice(0, 980);
 }
 
 const SENIOR_AUDIENCE_SIGNAL =
@@ -476,22 +525,23 @@ function fallbackReply(userMessage: string, audience: WhatsAppCommercialAudience
       " 💙"
     );
   }
-  if (/prueba|trial|gratis|demo/.test(q)) {
-    return (
-      base +
-      "Por ahora no tenemos días de prueba gratis, pero tras contratar puedes hacer un simulacro de entrenamiento sin costo extra. ¿Te ayudo con algo más?"
-    );
+  if (/prueba|trial|gratis|demo|simulador|simular/.test(q)) {
+    return simulatorFallbackReply(audience);
   }
-  if (/como funciona|que es|servicio|app/.test(q)) {
+  if (/como funciona|que es|servicio|app|flujo sos|boton sos|bot[oó]n de p[aá]nico/.test(q)) {
     if (audience === "senior") {
       return (
         base +
-        "Es una aplicación sencilla en su celular con un botón grande de emergencia.\nSi lo presiona, avisamos a su familia por WhatsApp 👍\n¿Le gustaría saber el valor del plan?"
+        `Es una aplicación sencilla en su celular con un botón grande de emergencia.\n` +
+        `Puede probarlo aquí sin instalar: ${SENIOR_SAFE_SOS_SIMULATOR_URL}\n` +
+        "¿Le gustaría saber el valor del plan?"
       );
     }
     return (
       base +
-      "Senior Safe es una app en el celular que avisa a tu familia en segundos por WhatsApp, SMS y ubicación. Si nadie confirma, llama sola (~60 s). Contrata en " +
+      "Senior Safe avisa a tu familia en segundos por WhatsApp, SMS y ubicación.\n" +
+      `Prueba el simulador interactivo: ${SENIOR_SAFE_SOS_SIMULATOR_URL}\n` +
+      "Contrata cuando quieras en " +
       SENIOR_SAFE_CHECKOUT_URL +
       " 💙"
     );
@@ -513,6 +563,9 @@ function fallbackReply(userMessage: string, audience: WhatsAppCommercialAudience
   }
   if (isAuthoritiesAsGuardianQuestion(userMessage)) {
     return authoritiesGuardianFallbackReply(audience);
+  }
+  if (wantsSosSimulator(userMessage)) {
+    return simulatorFallbackReply(audience);
   }
   if (/vivo solo|vivo sola|no tengo familia|sin familiares|no tengo parientes/.test(q)) {
     if (audience === "senior") {
@@ -697,6 +750,10 @@ export async function generateSeniorSafeWhatsAppReply(
     return authoritiesGuardianFallbackReply(audience);
   }
 
+  if (wantsSosSimulator(trimmed)) {
+    return simulatorFallbackReply(audience);
+  }
+
   const systemPrompt = whatsAppSystemPromptForAudience(audience);
   const maxTokens = audience === "senior" ? 220 : 320;
   const temperature = audience === "senior" ? 0.35 : 0.42;
@@ -719,14 +776,14 @@ export async function generateSeniorSafeWhatsAppReply(
     if (replyContainsAuthorityHallucination(reply)) {
       return authoritiesGuardianFallbackReply(audience);
     }
-    return formatWhatsAppCommercialReply(reply, trimmed);
+    return appendSimulatorLinkIfNeeded(trimmed, formatWhatsAppCommercialReply(reply, trimmed), audience);
   } catch (e) {
     console.error("[senior-safe-ai]", e);
     const fallback = fallbackReply(trimmed, audience);
     if (fallback.includes(TRIGGER_TECHNICAL_EMAIL_REDIRECT)) {
       return formatWhatsAppCommercialReply(fallback, trimmed);
     }
-    return fallback;
+    return appendSimulatorLinkIfNeeded(trimmed, fallback, audience);
   }
 }
 

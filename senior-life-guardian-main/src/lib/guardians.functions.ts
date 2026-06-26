@@ -10,8 +10,13 @@ import {
 } from "@/lib/contacts-storage";
 import { normalizePhoneE164 } from "@/lib/phone-utils";
 import { sendTwilioWhatsAppWithSmsFallback } from "@/lib/twilio";
+import { assertSeniorAccess, seniorAccessTokenSchema } from "@/lib/senior-access-auth";
 
 const idSchema = z.string().uuid();
+const seniorAuthFields = {
+  signupId: idSchema,
+  accessToken: seniorAccessTokenSchema,
+};
 
 const PORTAL_FAMILIA_URL = "https://alarmaseniorsafe.cl/familia";
 
@@ -160,8 +165,9 @@ const guardianInput = z.object({
 
 /** Lista guardianes con todos los campos extendidos (fallback a columnas básicas). */
 export const listGuardians = createServerFn({ method: "POST" })
-  .inputValidator((input) => z.object({ signupId: idSchema }).parse(input))
+  .inputValidator((input) => z.object(seniorAuthFields).parse(input))
   .handler(async ({ data }) => {
+    await assertSeniorAccess(data.signupId, data.accessToken);
     const guardians = await fetchGuardiansForSignup(data.signupId);
     return { guardians };
   });
@@ -181,9 +187,10 @@ async function guardianCount(signupId: string): Promise<number> {
 
 export const addGuardian = createServerFn({ method: "POST" })
   .inputValidator((input) =>
-    z.object({ signupId: idSchema, guardian: guardianInput }).parse(input),
+    z.object({ ...seniorAuthFields, guardian: guardianInput }).parse(input),
   )
   .handler(async ({ data }) => {
+    await assertSeniorAccess(data.signupId, data.accessToken);
     if ((await guardianCount(data.signupId)) >= MAX_GUARDIANS) {
       throw new Error(`Máximo ${MAX_GUARDIANS} guardianes.`);
     }
@@ -291,9 +298,10 @@ export const addGuardian = createServerFn({ method: "POST" })
 
 export const updateGuardian = createServerFn({ method: "POST" })
   .inputValidator((input) =>
-    z.object({ signupId: idSchema, id: idSchema, guardian: guardianInput.partial() }).parse(input),
+    z.object({ ...seniorAuthFields, id: idSchema, guardian: guardianInput.partial() }).parse(input),
   )
   .handler(async ({ data }) => {
+    await assertSeniorAccess(data.signupId, data.accessToken);
     const patch: Record<string, unknown> = { ...data.guardian };
     if (typeof patch.telefono === "string") {
       const t = normalizePhoneE164(patch.telefono);
@@ -326,8 +334,9 @@ export const updateGuardian = createServerFn({ method: "POST" })
   });
 
 export const deleteGuardian = createServerFn({ method: "POST" })
-  .inputValidator((input) => z.object({ signupId: idSchema, id: idSchema }).parse(input))
+  .inputValidator((input) => z.object({ ...seniorAuthFields, id: idSchema }).parse(input))
   .handler(async ({ data }) => {
+    await assertSeniorAccess(data.signupId, data.accessToken);
     const { error } = await supabaseAdmin
       .from("emergency_contacts")
       .delete()
@@ -346,9 +355,10 @@ export const deleteGuardian = createServerFn({ method: "POST" })
 
 export const toggleGuardianActive = createServerFn({ method: "POST" })
   .inputValidator((input) =>
-    z.object({ signupId: idSchema, id: idSchema, activo: z.boolean() }).parse(input),
+    z.object({ ...seniorAuthFields, id: idSchema, activo: z.boolean() }).parse(input),
   )
   .handler(async ({ data }) => {
+    await assertSeniorAccess(data.signupId, data.accessToken);
     const { error } = await supabaseAdmin
       .from("emergency_contacts")
       .update({ activo: data.activo })

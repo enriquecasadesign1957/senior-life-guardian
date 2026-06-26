@@ -10,9 +10,14 @@ import {
 } from "@/lib/contacts-storage";
 import { persistUserPin, readStoredPinHash } from "@/lib/pin-storage";
 import { sendGuardianInvite } from "@/lib/guardians.functions";
+import { assertSeniorAccess, seniorAccessTokenSchema } from "@/lib/senior-access-auth";
 import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
 
 const idSchema = z.string().uuid();
+const seniorAuthFields = {
+  signupId: idSchema,
+  accessToken: seniorAccessTokenSchema,
+};
 const contactInput = z.object({
   nombre: z.string().min(1).max(160),
   telefono: z.string().min(4).max(40),
@@ -59,17 +64,19 @@ export const getAppConfiguration = createServerFn({ method: "POST" })
 
 /** Lista familiares del usuario (por contract_signup_id). */
 export const listFamily = createServerFn({ method: "POST" })
-  .inputValidator((input) => z.object({ signupId: idSchema }).parse(input))
+  .inputValidator((input) => z.object(seniorAuthFields).parse(input))
   .handler(async ({ data }) => {
+    await assertSeniorAccess(data.signupId, data.accessToken);
     const contacts = await listFamilyContacts(data.signupId);
     return { contacts };
   });
 
 export const addFamily = createServerFn({ method: "POST" })
   .inputValidator((input) =>
-    z.object({ signupId: idSchema, contact: contactInput }).parse(input),
+    z.object({ ...seniorAuthFields, contact: contactInput }).parse(input),
   )
   .handler(async ({ data }) => {
+    await assertSeniorAccess(data.signupId, data.accessToken);
     const result = await addFamilyContact(data.signupId, data.contact);
     if (!result.ok) throw new Error(result.error);
 
@@ -100,9 +107,10 @@ export const addFamily = createServerFn({ method: "POST" })
 
 export const updateFamily = createServerFn({ method: "POST" })
   .inputValidator((input) =>
-    z.object({ signupId: idSchema, id: idSchema, contact: contactInput }).parse(input),
+    z.object({ ...seniorAuthFields, id: idSchema, contact: contactInput }).parse(input),
   )
   .handler(async ({ data }) => {
+    await assertSeniorAccess(data.signupId, data.accessToken);
     const result = await updateFamilyContact(data.signupId, data.id, data.contact);
     if (!result.ok) throw new Error(result.error);
     return { contact: result.contact! };
@@ -110,9 +118,10 @@ export const updateFamily = createServerFn({ method: "POST" })
 
 export const deleteFamily = createServerFn({ method: "POST" })
   .inputValidator((input) =>
-    z.object({ signupId: idSchema, id: idSchema }).parse(input),
+    z.object({ ...seniorAuthFields, id: idSchema }).parse(input),
   )
   .handler(async ({ data }) => {
+    await assertSeniorAccess(data.signupId, data.accessToken);
     const result = await deleteFamilyContact(data.signupId, data.id);
     if (!result.ok) throw new Error(result.error);
     return { ok: true };
@@ -124,9 +133,10 @@ export const deleteFamily = createServerFn({ method: "POST" })
  */
 export const resendFamilyInvite = createServerFn({ method: "POST" })
   .inputValidator((input) =>
-    z.object({ signupId: idSchema, contactId: idSchema }).parse(input),
+    z.object({ ...seniorAuthFields, contactId: idSchema }).parse(input),
   )
   .handler(async ({ data }) => {
+    await assertSeniorAccess(data.signupId, data.accessToken);
     const contacts = await listFamilyContacts(data.signupId);
     const contact = contacts.find((c) => c.id === data.contactId);
     if (!contact) throw new Error("Guardián no encontrado.");
@@ -138,9 +148,10 @@ export const resendFamilyInvite = createServerFn({ method: "POST" })
 /** Crea/actualiza el PIN del usuario (hash ya calculado en cliente). */
 export const setUserPin = createServerFn({ method: "POST" })
   .inputValidator((input) =>
-    z.object({ signupId: idSchema, pinHash: z.string().min(16).max(256) }).parse(input),
+    z.object({ ...seniorAuthFields, pinHash: z.string().min(16).max(256) }).parse(input),
   )
   .handler(async ({ data }) => {
+    await assertSeniorAccess(data.signupId, data.accessToken);
     const result = await persistUserPin(data.signupId, data.pinHash);
     if (!result.ok) throw new Error(result.error ?? "pin_save_failed");
     return { ok: true };
@@ -149,9 +160,10 @@ export const setUserPin = createServerFn({ method: "POST" })
 /** Verifica PIN (solo para configuraciones sensibles). */
 export const verifyPin = createServerFn({ method: "POST" })
   .inputValidator((input) =>
-    z.object({ signupId: idSchema, pinHash: z.string().min(16).max(256) }).parse(input),
+    z.object({ ...seniorAuthFields, pinHash: z.string().min(16).max(256) }).parse(input),
   )
   .handler(async ({ data }) => {
+    await assertSeniorAccess(data.signupId, data.accessToken);
     const stored = await readStoredPinHash(data.signupId);
     if (!stored) return { ok: false, configured: false };
     return { ok: stored === data.pinHash, configured: true };

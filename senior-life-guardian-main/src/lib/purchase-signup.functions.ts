@@ -8,9 +8,14 @@ import {
 } from "@/lib/discount-codes";
 import { resolveDiscountForCheckout } from "@/lib/discount.functions";
 import {
+  savePendingFirstGuardian,
+  type PendingFirstGuardian,
+} from "@/lib/first-guardian-checkout";
+import {
   CONTRACT_SIGNUP_SELECT,
   CONTRACT_SIGNUPS_TABLE,
   contractSignupPendingPayload,
+  isSignupPaidAndActive,
 } from "@/lib/signups-db";
 import { RECURRING_BILLING_CONSENT_VERSION } from "@/lib/recurring-billing-consent";
 
@@ -28,6 +33,11 @@ export const createPurchaseSignup = createServerFn({ method: "POST" })
       periodo: periodoSchema,
       discountCode: z.string().trim().max(64).optional().or(z.literal("")),
       recurringBillingConsent: z.boolean().optional().default(false),
+      firstGuardian: z.object({
+        nombre: z.string().trim().min(2).max(100),
+        telefono: z.string().trim().min(8).max(40),
+        parentesco: z.string().trim().min(2).max(40),
+      }),
     }).parse(input),
   )
   .handler(async ({ data }) => {
@@ -70,14 +80,34 @@ export const createPurchaseSignup = createServerFn({ method: "POST" })
     if (existingError) throw existingError;
 
     if (existing) {
+      const alreadyPaid = isSignupPaidAndActive(existing);
+      const updatePayload = alreadyPaid
+        ? {
+            nombre: basePayload.nombre,
+            telefono: basePayload.telefono,
+            direccion: basePayload.direccion,
+            plan: basePayload.plan,
+            periodo: basePayload.periodo,
+            ...discountFields,
+            ...(data.recurringBillingConsent
+              ? {
+                  recurring_billing_consented_at: new Date().toISOString(),
+                  recurring_billing_consent_version: RECURRING_BILLING_CONSENT_VERSION,
+                }
+              : {}),
+          }
+        : payload;
+
       const { data: updated, error: updErr } = await supabaseAdmin
         .from(CONTRACT_SIGNUPS_TABLE)
-        .update(payload)
+        .update(updatePayload)
         .eq("id", existing.id)
         .select(CONTRACT_SIGNUP_SELECT)
         .maybeSingle();
       if (updErr) throw updErr;
-      return { signup: updated ?? existing, created: false };
+      const signup = updated ?? existing;
+      await savePendingFirstGuardian(signup.id, data.firstGuardian as PendingFirstGuardian);
+      return { signup, created: false, alreadyPaid };
     }
 
     const { data: inserted, error: insertError } = await supabaseAdmin
@@ -88,5 +118,9 @@ export const createPurchaseSignup = createServerFn({ method: "POST" })
 
     if (insertError) throw insertError;
     if (!inserted) throw new Error("No pudimos crear la orden de compra.");
+
+    const signupId = inserted.id;
+    await savePendingFirstGuardian(signupId, data.firstGuardian as PendingFirstGuardian);
+
     return { signup: inserted, created: true };
   });

@@ -4,6 +4,9 @@ export const PRODUCTION_SITE_URL = "https://alarmaseniorsafe.cl";
 /** Guía pública de descarga, instalación y uso diario. */
 export const SENIOR_SAFE_INSTALL_GUIDE_URL = `${PRODUCTION_SITE_URL}/guia`;
 
+/** Simulador S.O.S interactivo (HTML autónomo, ideal para WhatsApp y correos). */
+export const SENIOR_SAFE_SOS_SIMULATOR_URL = `${PRODUCTION_SITE_URL}/simulador-senior-safe.html`;
+
 const NON_PRODUCTION_HOST_RE =
   /localhost|127\.0\.0\.1|0\.0\.0\.0|lovable\.dev|lovable\.app|lovableproject\.com|id-preview--|\.workers\.dev$/i;
 

@@ -40,6 +40,14 @@ import { buildEmergencyVoiceMessage, buildEmergencyVoiceTwiml } from "@/lib/emer
 import {
   loadEmergencyContactRows,
 } from "@/lib/emergency-recipients";
+import { syncDeviceStatus } from "@/lib/device-status-sync";
+import { assertSeniorAccess, seniorAccessTokenSchema } from "@/lib/senior-access-auth";
+import {
+  CASCADE_ALGORITHM_ID,
+  CASCADE_VOICE_AFTER_SMS_MS,
+  CASCADE_VOICE_AFTER_WHATSAPP_MS,
+  CASCADE_WHATSAPP_AFTER_SMS_MS,
+} from "@/lib/emergency-cascade-timing";
 
 // Acepta el formato { lat, lng } y también el formato nativo de
 // @capacitor/geolocation: { latitude, longitude, accuracy } o
@@ -92,11 +100,13 @@ const GpsInput = z
 
 const CancelSchema = z.object({
   signupId: z.string().uuid(),
+  accessToken: seniorAccessTokenSchema,
   alertId: z.string().uuid().optional(),
 });
 
 const Schema = z.object({
   signupId: z.string().uuid(),
+  accessToken: seniorAccessTokenSchema,
   gps: GpsInput,
   /** Coordenadas GPS planas (alternativa a `gps`). */
   gpsLat: z.number().finite().optional(),
@@ -113,13 +123,10 @@ const Schema = z.object({
   alertId: z.string().uuid().optional(),
 });
 
-/** Espera tras SMS antes de WhatsApp. */
-const WHATSAPP_DELAY_AFTER_SMS_MS = 15_000;
-/** Llamada automática 60 s después del primer SMS (si nadie confirmó). */
-const VOICE_AT_MS = 60_000;
-const VOICE_DELAY_AFTER_WHATSAPP_MS = VOICE_AT_MS - WHATSAPP_DELAY_AFTER_SMS_MS;
-
-const ALGORITHM_ID = "ecosystem_v4_cascade_15_60";
+const WHATSAPP_DELAY_AFTER_SMS_MS = CASCADE_WHATSAPP_AFTER_SMS_MS;
+const VOICE_AT_MS = CASCADE_VOICE_AFTER_SMS_MS;
+const VOICE_DELAY_AFTER_WHATSAPP_MS = CASCADE_VOICE_AFTER_WHATSAPP_MS;
+const ALGORITHM_ID = CASCADE_ALGORITHM_ID;
 
 async function appendActiveCallSid(alertId: string, callSid: string): Promise<void> {
   const { data: row } = await supabaseAdmin
@@ -332,6 +339,7 @@ function buildEmergencyAlertMessage(opts: {
 export const sendEmergencyAlert = createServerFn({ method: "POST" })
   .inputValidator((input) => Schema.parse(input))
   .handler(async ({ data }) => {
+    await assertSeniorAccess(data.signupId, data.accessToken);
     const waFrom = twilioWhatsappEmergencyFrom();
     const smsFrom = twilioSmsFrom();
     const voiceFrom = twilioVoiceFrom();
@@ -368,6 +376,18 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
     const resolvedGps = resolveGpsFromInput(data);
     const topContacts = recipients.slice(0, MAX_GUARDIANS);
     const callEscalationContacts = topContacts.filter((r) => r.recibe_llamada);
+
+    try {
+      await syncDeviceStatus({
+        contractSignupId: user.id,
+        gps_enabled: resolvedGps != null,
+        last_lat: resolvedGps?.lat ?? null,
+        last_lng: resolvedGps?.lng ?? null,
+        internet_connected: true,
+      });
+    } catch (e) {
+      console.error("[emergency] device_status sync failed:", e);
+    }
     const mapsLink = resolvedGps
       ? locationShareUrl(resolvedGps.lat, resolvedGps.lng, user.nombre)
       : null;
@@ -596,7 +616,7 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
               timestamp,
               training: true,
               results,
-              message: "Entrenamiento: cascada SMS (0s) → WhatsApp (15s) → llamada (30s) sin Twilio",
+              message: "Entrenamiento: cascada SMS (0s) → WhatsApp (15s) → llamada (60s) sin Twilio",
               algorithm: ALGORITHM_ID,
             },
             error_message: null,
@@ -927,6 +947,7 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
 export const cancelEmergencyAlert = createServerFn({ method: "POST" })
   .inputValidator((input) => CancelSchema.parse(input))
   .handler(async ({ data }) => {
+    await assertSeniorAccess(data.signupId, data.accessToken);
     const result = await cancelEmergencyAlertForSignup(data.signupId, data.alertId);
     if (!result.ok) return { ok: false as const, error: result.error };
     return { ok: true as const, already: result.already, alertId: result.alertId };

@@ -575,7 +575,7 @@ const FLOW_STEPS = [
     icon: Send,
     color: GREEN,
     title: "Cascada SMS → WhatsApp → voz",
-    desc: "SMS al instante, WhatsApp a los 15 s y enlace Google Maps a los tres guardianes prioritarios. Llamada a los 30 s solo si nadie confirma recepción.",
+    desc: "SMS al instante, WhatsApp a los 15 s y enlace Google Maps a los tres guardianes prioritarios. Llamada a los 60 s solo si nadie confirma recepción.",
     detail: "Multicanal automático",
   },
 ] as const;

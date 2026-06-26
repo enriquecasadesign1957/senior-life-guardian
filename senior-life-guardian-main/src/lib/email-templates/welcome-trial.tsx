@@ -5,7 +5,7 @@ import type { TemplateEntry } from './registry'
 
 const SITE_NAME = 'Senior Safe'
 const SUPPORT_PHONE = '+56 9 7140 4580'
-const ACTIVACION_URL = 'https://alarmaseniorsafe.cl/activacion'
+const APP_URL = 'https://alarmaseniorsafe.cl/app'
 const TUTORIAL_URL = 'https://alarmaseniorsafe.cl/tutorial'
 
 interface WelcomeTrialProps {
@@ -52,7 +52,7 @@ const WelcomeTrialEmail = ({ nombre, plan, trialDays = 7 }: WelcomeTrialProps) =
             </Text>
 
             <Section style={ctaWrap}>
-              <Button href={ACTIVACION_URL} style={cta}>
+              <Button href={APP_URL} style={cta}>
                 Activar mi cuenta
               </Button>
             </Section>

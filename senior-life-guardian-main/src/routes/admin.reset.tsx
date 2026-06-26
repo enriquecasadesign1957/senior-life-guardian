@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { resetTestData, resetMyAccountData } from "@/lib/admin-reset.functions";
+import { AdminPinGate } from "@/components/admin-pin-gate";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,18 @@ export const Route = createFileRoute("/admin/reset")({
 });
 
 function AdminResetPage() {
+  return (
+    <AdminPinGate
+      title="Reset de datos"
+      description="Operaciones destructivas de prueba. Requiere PIN de administración."
+      onUnlockFailed={(m) => toast.error(m)}
+    >
+      {(pin) => <AdminResetInner pin={pin} />}
+    </AdminPinGate>
+  );
+}
+
+function AdminResetInner({ pin }: { pin: string }) {
   const reset = useServerFn(resetTestData);
   const resetMine = useServerFn(resetMyAccountData);
   const [confirm, setConfirm] = useState("");
@@ -28,7 +41,7 @@ function AdminResetPage() {
     if (!myEmail.trim()) return toast.error("Ingresa tu email");
     setMyLoading(true);
     try {
-      const res = await resetMine({ data: { confirm: "RESET", email: myEmail.trim() } });
+      const res = await resetMine({ data: { confirm: "RESET", email: myEmail.trim(), pin } });
       setMyResult(res);
       if (res.ok) {
         // limpiar sesión local del mismo navegador
@@ -58,7 +71,7 @@ function AdminResetPage() {
     }
     setLoading(true);
     try {
-      const res = await reset({ data: { confirm: "RESET" } });
+      const res = await reset({ data: { confirm: "RESET", pin } });
       setResult(res);
       toast.success(res.message);
     } catch (e: any) {

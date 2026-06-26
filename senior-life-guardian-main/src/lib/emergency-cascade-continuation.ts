@@ -25,9 +25,16 @@ import {
   buildEmergencyVoiceTwiml,
 } from "@/lib/emergency-voice-twiml";
 
-const CASCADE_WHATSAPP_AT_MS = 15_000;
-const CASCADE_VOICE_AT_MS = 60_000;
-const ALGORITHM_ID = "ecosystem_v4_cascade_15_60";
+import {
+  CASCADE_ALGORITHM_ID,
+  CASCADE_VOICE_AFTER_SMS_MS,
+  CASCADE_VOICE_AFTER_WHATSAPP_MS,
+  CASCADE_WHATSAPP_AFTER_SMS_MS,
+} from "@/lib/emergency-cascade-timing";
+
+const CASCADE_WHATSAPP_AT_MS = CASCADE_WHATSAPP_AFTER_SMS_MS;
+const CASCADE_VOICE_AT_MS = CASCADE_VOICE_AFTER_SMS_MS;
+const ALGORITHM_ID = CASCADE_ALGORITHM_ID;
 
 type ChannelResult = {
   channel: "whatsapp" | "sms" | "call";
@@ -123,7 +130,7 @@ async function dispatchCascadeHttp(alertId: string): Promise<void> {
   }
 }
 
-/** Dispara WhatsApp (15s) + llamada (30s) en background. */
+/** Dispara WhatsApp (15s) + llamada (60s) en background. */
 export function triggerCascadeContinuation(alertId: string): void {
   const task = (async () => {
     try {

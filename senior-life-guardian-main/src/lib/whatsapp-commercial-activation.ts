@@ -53,6 +53,55 @@ export function whatsAppActivarUrl(): string {
   return seniorSafeWhatsAppMeUrl(WHATSAPP_ACTIVATION_KEYWORD);
 }
 
+/** Abre WhatsApp con un saludo; cualquier respuesta del titular pagado activa alertas. */
+export function whatsAppAnyReplyUrl(): string {
+  return seniorSafeWhatsAppMeUrl("Hola");
+}
+
+/** Marca whatsapp_activated en Supabase (pago confirmado). Idempotente. */
+export async function markSignupWhatsAppActivated(
+  signupId: string,
+): Promise<{ ok: boolean; already?: boolean; error?: string }> {
+  const { data: signup, error } = await supabaseAdmin
+    .from(CONTRACT_SIGNUPS_TABLE)
+    .select("id, payment_status, whatsapp_activated")
+    .eq("id", signupId)
+    .maybeSingle();
+
+  if (error || !signup) {
+    return { ok: false, error: "signup_not_found" };
+  }
+
+  if (!isSignupPaymentComplete(signup.payment_status)) {
+    return { ok: false, error: "payment_incomplete" };
+  }
+
+  if (signup.whatsapp_activated) {
+    return { ok: true, already: true };
+  }
+
+  const { error: updateErr } = await supabaseAdmin
+    .from(CONTRACT_SIGNUPS_TABLE)
+    .update({ whatsapp_activated: true })
+    .eq("id", signupId);
+
+  if (updateErr) {
+    return { ok: false, error: "update_failed" };
+  }
+
+  return { ok: true };
+}
+
+/** Día 1: cualquier mensaje del titular pagado activa WhatsApp (no solo ACTIVAR). */
+export async function tryAutoActivatePaidSignup(phone: string): Promise<boolean> {
+  const signup = await findSignupForActivation(phone);
+  if (!signup || !isSignupPaymentComplete(signup.payment_status) || signup.whatsapp_activated) {
+    return false;
+  }
+  const result = await markSignupWhatsAppActivated(signup.id);
+  return result.ok;
+}
+
 /**
  * Vincula WhatsApp solo si hay cuenta con pago confirmado.
  * Devuelve null si el mensaje no es ACTIVAR (u otra keyword de activación).
@@ -93,13 +142,17 @@ export async function processWhatsAppActivation(
   }
 
   const normalizedPhone = normalizeTwilioPhone(phone);
-  await supabaseAdmin
-    .from(CONTRACT_SIGNUPS_TABLE)
-    .update({
-      whatsapp_activated: true,
-      telefono: normalizedPhone || signup.telefono,
-    })
-    .eq("id", signup.id);
+  const result = await markSignupWhatsAppActivated(signup.id);
+  if (!result.ok && !result.already) {
+    return "Senior Safe 🛡️\nNo pudimos vincular WhatsApp. Intenta de nuevo o escribe a hola@alarmaseniorsafe.cl";
+  }
+
+  if (normalizedPhone && normalizedPhone !== signup.telefono) {
+    await supabaseAdmin
+      .from(CONTRACT_SIGNUPS_TABLE)
+      .update({ telefono: normalizedPhone })
+      .eq("id", signup.id);
+  }
 
   const first = firstName(signup.nombre);
   return (

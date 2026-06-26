@@ -59,3 +59,13 @@ export function contractSignupPendingPayload(data: {
     subscription_status: "pending_payment",
   };
 }
+
+/** Cuenta ya pagada — no resetear a pending en re-checkout. */
+export function isSignupPaidAndActive(row: {
+  payment_status?: string | null;
+  subscription_status?: string | null;
+}): boolean {
+  if (row.payment_status === "paid") return true;
+  const sub = row.subscription_status ?? "";
+  return sub === "active" || sub === "comp";
+}
