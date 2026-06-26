@@ -1,5 +1,6 @@
 import { PRODUCTION_SITE_URL } from "@/lib/app-url";
 import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
+import { markInstallLinkSent } from "@/lib/install-step-sync";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { buildBillingEmailHtml } from "@/lib/transactional-email-html";
 import { SENIOR_SAFE_SUPPORT_EMAIL } from "@/lib/senior-safe-ai";
@@ -214,6 +215,9 @@ export async function sendPostPaymentInstallNotifications(
         .from(CONTRACT_SIGNUPS_TABLE)
         .update({ install_instructions_sent_at: new Date().toISOString() })
         .eq("id", signupId);
+      await markInstallLinkSent(signupId).catch((e) => {
+        console.warn("[install-notify] install_step", e);
+      });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       if (!isMissingColumnError(msg)) {

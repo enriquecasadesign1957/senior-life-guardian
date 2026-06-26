@@ -6,7 +6,7 @@ export const CONTRACT_SIGNUPS_TABLE = "contract_signups";
 
 /** Columnas usadas en checkout / Webpay / app. */
 export const CONTRACT_SIGNUP_SELECT =
-  "id,nombre,email,telefono,plan,periodo,purchase_mode,payment_status,subscription_status,direccion,webpay_buy_order,webpay_session_id,webpay_token,webpay_amount,webpay_environment,renewal_date,last_payment_at,webpay_authorization_code,webpay_response_code,onboarding_completed,whatsapp_activated,discount_code_id,discount_code,discount_partner,discount_percent,list_price,recurring_billing_consented_at,recurring_billing_consent_version,created_at";
+  "id,nombre,email,telefono,plan,periodo,purchase_mode,payment_status,subscription_status,direccion,webpay_buy_order,webpay_session_id,webpay_token,webpay_amount,webpay_environment,renewal_date,last_payment_at,webpay_authorization_code,webpay_response_code,onboarding_completed,whatsapp_activated,install_step,app_opened_at,sos_primed_at,fall_sensor_prompted_at,discount_code_id,discount_code,discount_partner,discount_percent,list_price,recurring_billing_consented_at,recurring_billing_consent_version,created_at";
 
 export type ContractSignupRow = {
   id: string;
@@ -30,6 +30,10 @@ export type ContractSignupRow = {
   webpay_response_code?: number | null;
   onboarding_completed?: boolean;
   whatsapp_activated?: boolean;
+  install_step?: string | null;
+  app_opened_at?: string | null;
+  sos_primed_at?: string | null;
+  fall_sensor_prompted_at?: string | null;
   discount_code_id?: string | null;
   discount_code?: string | null;
   discount_partner?: string | null;

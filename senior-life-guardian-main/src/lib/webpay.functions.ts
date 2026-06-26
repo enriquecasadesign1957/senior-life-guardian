@@ -17,6 +17,7 @@ import type { Json } from "@/integrations/supabase/types";
 import { clearRenewalNoticeFlags } from "@/lib/subscription-renewal-flags";
 import { sendPostPaymentInstallNotifications } from "@/lib/post-payment-install-notify";
 import { ensureFirstGuardianAfterPayment } from "@/lib/first-guardian-checkout";
+import { markInstallPaid } from "@/lib/install-step-sync";
 import { deleteOneclickMallInscription } from "@/lib/transbank-oneclick-mall";
 
 /** Serializa la respuesta cruda de Transbank al tipo Json de Supabase. */
@@ -221,6 +222,9 @@ export const confirmWebpayTransaction = createServerFn({ method: "POST" })
             webpay_response_code: result.responseCode,
           })
           .eq("id", tx.contract_signup_id);
+        await markInstallPaid(tx.contract_signup_id).catch((e) => {
+          console.warn("[webpay] install_step paid", e);
+        });
         await clearRenewalNoticeFlags(tx.contract_signup_id);
         await ensureFirstGuardianAfterPayment(tx.contract_signup_id).catch((e) => {
           console.error("[webpay] first guardian:", e);

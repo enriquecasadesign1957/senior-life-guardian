@@ -23,7 +23,10 @@ import {
   isActivationKeyword,
   findSignupForActivation,
   markSignupWhatsAppActivated,
+  isSignupPaymentComplete,
 } from "@/lib/whatsapp-commercial-activation";
+import { readInstallProgress } from "@/lib/install-step-sync";
+import { whatsAppGuideForStep } from "@/lib/install-step-guide";
 import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
@@ -84,7 +87,17 @@ async function handleCommercialInbox(
     isSignupPaymentComplete(signupForAuto.payment_status) &&
     !signupForAuto.whatsapp_activated
   ) {
-    await markSignupWhatsAppActivated(signupForAuto.id);
+    const activated = await markSignupWhatsAppActivated(signupForAuto.id);
+    if (activated.ok) {
+      const progress = await readInstallProgress(signupForAuto.id);
+      const first = signupForAuto.nombre?.split(/\s+/)?.[0] ?? "usuario";
+      const guide = whatsAppGuideForStep(
+        progress?.installStep ?? "whatsapp_linked",
+        signupForAuto.id,
+        first,
+      );
+      if (guide) return replyCommercial(phone, guide);
+    }
   }
 
   if (isActivationKeyword(rawBody)) {

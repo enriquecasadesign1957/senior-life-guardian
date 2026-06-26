@@ -1,7 +1,9 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { listFamilyContacts } from "@/lib/contacts-storage";
+import { markInstallAppOpened, readInstallProgress } from "@/lib/install-step-sync";
 import { readStoredPinHash } from "@/lib/pin-storage";
 import { issueSeniorAccessToken } from "@/lib/senior-access-auth";
+import type { InstallStep } from "@/lib/install-step";
 import { phoneLookupCandidates } from "@/lib/phone-utils";
 import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
 
@@ -31,6 +33,10 @@ export type AppConfigResult = {
   contacts: AccountContact[];
   pinConfigured: boolean;
   whatsappActivated?: boolean;
+  installStep?: InstallStep;
+  onboardingCompleted?: boolean;
+  sosPrimedAt?: string | null;
+  fallSensorPromptedAt?: string | null;
   /** Token HMAC para operaciones autenticadas del dispositivo. */
   accessToken?: string;
   error?: string;
@@ -87,6 +93,10 @@ export async function fetchAppConfiguration(input: {
     pinConfigured = Boolean(storedPin);
 
     const accessToken = await issueSeniorAccessToken(user.id);
+    await markInstallAppOpened(user.id).catch((e) => {
+      console.warn("[fetchAppConfiguration] app_opened", e);
+    });
+    const progress = await readInstallProgress(user.id);
 
     return {
       configured: true,
@@ -94,6 +104,10 @@ export async function fetchAppConfiguration(input: {
       contacts,
       pinConfigured,
       whatsappActivated: user.whatsapp_activated === true,
+      installStep: progress?.installStep ?? "pending",
+      onboardingCompleted: progress?.onboardingCompleted ?? false,
+      sosPrimedAt: progress?.sosPrimedAt ?? null,
+      fallSensorPromptedAt: progress?.fallSensorPromptedAt ?? null,
       accessToken,
     };
   } catch (e) {

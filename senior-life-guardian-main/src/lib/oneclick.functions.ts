@@ -7,6 +7,7 @@ import { CONTRACT_SIGNUPS_TABLE, isSignupPaidAndActive } from "@/lib/signups-db"
 import { normalizePlanKey, planKeySchema, periodoSchema } from "@/lib/plans";
 import { clearRenewalNoticeFlags } from "@/lib/subscription-renewal-flags";
 import { sendPostPaymentInstallNotifications } from "@/lib/post-payment-install-notify";
+import { markInstallPaid } from "@/lib/install-step-sync";
 import { ensureFirstGuardianAfterPayment } from "@/lib/first-guardian-checkout";
 import { attemptOneclickRecurringCharge } from "@/lib/oneclick-renewal-charge";
 import {
@@ -380,6 +381,9 @@ export const finishOneclickCheckout = createServerFn({ method: "POST" })
           oneclick_card_last4: auth.cardLast4 ?? finish.cardLast4,
         })
         .eq("id", signup.id);
+      await markInstallPaid(signup.id).catch((e) => {
+        console.warn("[oneclick] install_step paid", e);
+      });
       await clearRenewalNoticeFlags(signup.id);
       await ensureFirstGuardianAfterPayment(signup.id).catch((e) => {
         console.error("[oneclick] first guardian:", e);

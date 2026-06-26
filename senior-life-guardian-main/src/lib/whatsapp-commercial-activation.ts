@@ -1,5 +1,6 @@
 import { PRODUCTION_SITE_URL, SENIOR_SAFE_INSTALL_GUIDE_URL } from "@/lib/app-url";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { markInstallWhatsAppLinked } from "@/lib/install-step-sync";
 import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
 import { seniorSafeWhatsAppMeUrl } from "@/lib/twilio";
 import { isWhatsAppActivationMessage, normalizeTwilioPhone } from "@/lib/twilio-inbound";
@@ -88,6 +89,10 @@ export async function markSignupWhatsAppActivated(
   if (updateErr) {
     return { ok: false, error: "update_failed" };
   }
+
+  await markInstallWhatsAppLinked(signupId).catch((e) => {
+    console.warn("[whatsapp] install_step whatsapp_linked", e);
+  });
 
   return { ok: true };
 }

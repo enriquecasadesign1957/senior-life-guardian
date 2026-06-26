@@ -20,6 +20,12 @@ import {
 } from "@/lib/family.functions";
 import { sendEmergencyAlert, cancelEmergencyAlert } from "@/lib/emergency-alert.functions";
 import { activateWhatsAppFromApp } from "@/lib/whatsapp-activation.functions";
+import { reportSosPrimed } from "@/lib/install-step.functions";
+import type { InstallStep } from "@/lib/install-step";
+import { isSosGpsPrimed } from "@/lib/sos-gps-priming";
+import { InstallStepGuideBanner } from "@/components/install-step-guide-banner";
+import { FallSensorDeferredPrompt } from "@/components/fall-sensor-deferred-prompt";
+import { useFallSensorDeferred } from "@/hooks/use-fall-sensor-deferred";
 import { markWhatsAppActivatedLocally } from "@/lib/whatsapp-activation-local";
 import {
   isTrainingDone,
@@ -156,6 +162,11 @@ function AppHome() {
   const [loginEmail, setLoginEmail] = useState("");
   const [loginBusy, setLoginBusy] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [installStep, setInstallStep] = useState<InstallStep>("pending");
+  const [sosPrimedAt, setSosPrimedAt] = useState<string | null>(null);
+  const [fallSensorPromptedAt, setFallSensorPromptedAt] = useState<string | null>(null);
+  const [guideDismissed, setGuideDismissed] = useState(false);
+  const [fallPromptBusy, setFallPromptBusy] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -179,6 +190,7 @@ function AppHome() {
   const list = useServerFn(listFamily);
   const loadConfig = useServerFn(getAppConfiguration);
   const activateWhatsApp = useServerFn(activateWhatsAppFromApp);
+  const reportSosPrimedFn = useServerFn(reportSosPrimed);
 
   // Hidrata cuenta desde ?ss=, sessionStorage o email guardado (handoff post-pago / QR).
   useEffect(() => {
@@ -215,6 +227,9 @@ function AppHome() {
           setAccountConfigured(true);
           setSubscriptionStatus(user.subscription_status ?? null);
           if (res.whatsappActivated) markWhatsAppActivatedLocally();
+          if (res.installStep) setInstallStep(res.installStep);
+          setSosPrimedAt(res.sosPrimedAt ?? null);
+          setFallSensorPromptedAt(res.fallSensorPromptedAt ?? null);
           if (res.accessToken) persistSeniorAccessToken(res.accessToken, res.user.id);
           try { sessionStorage.setItem("seniorsafe_user", JSON.stringify(user)); } catch {}
           try { localStorage.setItem("seniorsafe_user_backup", JSON.stringify(user)); } catch {}
@@ -239,6 +254,27 @@ function AppHome() {
     })();
     return () => { alive = false; };
   }, [loadConfig, routeSearch.ss]);
+
+  useEffect(() => {
+    if (!userId || installStep === "ready") return;
+    if (!isSosGpsPrimed(userId)) return;
+    let alive = true;
+    (async () => {
+      try {
+        const progress = await reportSosPrimedFn({
+          data: { signupId: userId, accessToken: requireSeniorAccessToken(userId) },
+        });
+        if (!alive || !progress) return;
+        if (progress.installStep) setInstallStep(progress.installStep);
+        setSosPrimedAt(progress.sosPrimedAt ?? null);
+      } catch (e) {
+        console.warn("[app] sync sos_primed", e);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [userId, installStep, reportSosPrimedFn]);
 
   // Load contacts when userId is ready
   useEffect(() => {
@@ -343,10 +379,29 @@ function AppHome() {
     probarCuentaRegresiva,
   } = useFallDetection({
     signupId: userId,
-    enabled: !!userId && stage === "idle",
+    enabled: !!userId && stage === "idle" && fallMonitoring,
     getGps: fetchFallGps,
     dispatchEmergency: dispatchFallEmergency,
   });
+
+  const { showFallPrompt, dismissFallPrompt } = useFallSensorDeferred({
+    signupId: userId,
+    installStep,
+    sosPrimedAt,
+    fallSensorPromptedAt,
+    fallMonitoring,
+    enabled: !!userId,
+  });
+
+  const handleDeferredFallActivate = async () => {
+    setFallPromptBusy(true);
+    try {
+      await handleFallPermission();
+      await dismissFallPrompt();
+    } finally {
+      setFallPromptBusy(false);
+    }
+  };
 
   const handleFallCancel = useCallback(() => {
     cancelarAlerta();
@@ -398,8 +453,6 @@ function AppHome() {
     primed: sosGpsPrimed,
     uiStage: sosPrimingUiStage,
     lastGpsOk: sosPrimingGpsOk,
-    lastFallOk: sosPrimingFallOk,
-    fallSupported: sosPrimingFallSupported,
     dismissIntro: dismissSosPrimingIntro,
     closeSuccess: closeSosPrimingSuccess,
     runPrimingPress,
@@ -409,8 +462,15 @@ function AppHome() {
     onGpsPrimed: (ok) => {
       if (ok) setGpsAllowed(true);
     },
-    onFallSensorPrimed: requestFallPermission,
     onWhatsAppAutoActivate: autoActivateWhatsApp,
+    onSosPrimedComplete: async () => {
+      if (!userId) return;
+      const progress = await reportSosPrimedFn({
+        data: { signupId: userId, accessToken: requireSeniorAccessToken(userId) },
+      });
+      if (progress?.installStep) setInstallStep(progress.installStep);
+      setSosPrimedAt(progress?.sosPrimedAt ?? new Date().toISOString());
+    },
   });
 
   useDeviceHeartbeat({
@@ -749,6 +809,14 @@ function AppHome() {
           <span className="inline-flex items-center gap-1 text-sm font-bold" aria-label="Conectado a Wi-Fi"><Wifi className="w-4 h-4" aria-hidden="true" /></span>
         </div>
       </header>
+
+      {!guideDismissed && installStep !== "ready" && (
+        <InstallStepGuideBanner
+          step={installStep}
+          signupId={userId}
+          onDismiss={() => setGuideDismissed(true)}
+        />
+      )}
 
       <main className="flex-1 flex flex-col px-5 pb-6 max-w-md mx-auto w-full">
         {/* Status banner */}
@@ -1265,11 +1333,17 @@ function AppHome() {
       <SosGpsPrimingUi
         uiStage={sosPrimingUiStage}
         gpsOk={sosPrimingGpsOk}
-        fallOk={sosPrimingFallOk}
-        fallSupported={sosPrimingFallSupported}
         onIntroDismiss={dismissSosPrimingIntro}
         onSuccessClose={closeSosPrimingSuccess}
       />
+
+      {showFallPrompt && (
+        <FallSensorDeferredPrompt
+          busy={fallPromptBusy}
+          onActivate={() => void handleDeferredFallActivate()}
+          onDismiss={() => void dismissFallPrompt()}
+        />
+      )}
     </div>
   );
 }

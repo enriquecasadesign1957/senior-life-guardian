@@ -13,6 +13,12 @@ import { persistSeniorAccessToken, requireSeniorAccessToken } from "@/lib/senior
 import { listFamilyWithFallback } from "@/lib/family-actions";
 import { sendEmergencyAlert, cancelEmergencyAlert } from "@/lib/emergency-alert.functions";
 import { activateWhatsAppFromApp } from "@/lib/whatsapp-activation.functions";
+import { reportSosPrimed } from "@/lib/install-step.functions";
+import type { InstallStep } from "@/lib/install-step";
+import { isSosGpsPrimed } from "@/lib/sos-gps-priming";
+import { InstallStepGuideBanner } from "@/components/install-step-guide-banner";
+import { FallSensorDeferredPrompt } from "@/components/fall-sensor-deferred-prompt";
+import { useFallSensorDeferred } from "@/hooks/use-fall-sensor-deferred";
 import { markWhatsAppActivatedLocally } from "@/lib/whatsapp-activation-local";
 import { sendWellnessNotice } from "@/lib/wellness.functions";
 import { checkLastAlertAck } from "@/lib/family-portal.functions";
@@ -74,6 +80,12 @@ function NativeApp() {
   const sendWellness = useServerFn(sendWellnessNotice);
   const checkAck = useServerFn(checkLastAlertAck);
   const activateWhatsApp = useServerFn(activateWhatsAppFromApp);
+  const reportSosPrimedFn = useServerFn(reportSosPrimed);
+  const [installStep, setInstallStep] = useState<InstallStep>("pending");
+  const [sosPrimedAt, setSosPrimedAt] = useState<string | null>(null);
+  const [fallSensorPromptedAt, setFallSensorPromptedAt] = useState<string | null>(null);
+  const [guideDismissed, setGuideDismissed] = useState(false);
+  const [fallPromptBusy, setFallPromptBusy] = useState(false);
   const [wellnessBusy, setWellnessBusy] = useState(false);
   const [ackInfo, setAckInfo] = useState<{ at: string; name: string | null } | null>(null);
 
@@ -135,6 +147,9 @@ function NativeApp() {
           persistSignupHandoff(res.user.id);
           if (res.accessToken) persistSeniorAccessToken(res.accessToken, res.user.id);
           if (res.whatsappActivated) markWhatsAppActivatedLocally();
+          if (res.installStep) setInstallStep(res.installStep);
+          setSosPrimedAt(res.sosPrimedAt ?? null);
+          setFallSensorPromptedAt(res.fallSensorPromptedAt ?? null);
           localStorage.setItem("seniorsafe_native_user", JSON.stringify(res.user));
         }
       } catch (e) {
@@ -145,6 +160,27 @@ function NativeApp() {
     })();
     return () => { alive = false; };
   }, [loadConfig]);
+
+  useEffect(() => {
+    if (!userId || installStep === "ready") return;
+    if (!isSosGpsPrimed(userId)) return;
+    let alive = true;
+    (async () => {
+      try {
+        const progress = await reportSosPrimedFn({
+          data: { signupId: userId, accessToken: requireSeniorAccessToken(userId) },
+        });
+        if (!alive || !progress) return;
+        if (progress.installStep) setInstallStep(progress.installStep);
+        setSosPrimedAt(progress.sosPrimedAt ?? null);
+      } catch (e) {
+        console.warn("[native] sync sos_primed", e);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [userId, installStep, reportSosPrimedFn]);
 
   // 2) Pedir GPS apenas haya sesión + refrescar coordenadas periódicamente
   const requestGps = async (interactive = false) => {
@@ -299,9 +335,18 @@ function NativeApp() {
     probarCuentaRegresiva,
   } = useFallDetection({
     signupId: userId,
-    enabled: !!userId && stage === "idle",
+    enabled: !!userId && stage === "idle" && fallMonitoring,
     getGps: fetchFallGps,
     dispatchEmergency: dispatchFallEmergency,
+  });
+
+  const { showFallPrompt, dismissFallPrompt } = useFallSensorDeferred({
+    signupId: userId,
+    installStep,
+    sosPrimedAt,
+    fallSensorPromptedAt,
+    fallMonitoring,
+    enabled: !!userId,
   });
 
   const handleFallPermission = async () => {
@@ -331,8 +376,6 @@ function NativeApp() {
     primed: sosGpsPrimed,
     uiStage: sosPrimingUiStage,
     lastGpsOk: sosPrimingGpsOk,
-    lastFallOk: sosPrimingFallOk,
-    fallSupported: sosPrimingFallSupported,
     dismissIntro: dismissSosPrimingIntro,
     closeSuccess: closeSosPrimingSuccess,
     runPrimingPress,
@@ -342,8 +385,15 @@ function NativeApp() {
     onGpsPrimed: (ok) => {
       if (ok) setGpsOk(true);
     },
-    onFallSensorPrimed: requestFallPermission,
     onWhatsAppAutoActivate: autoActivateWhatsApp,
+    onSosPrimedComplete: async () => {
+      if (!userId) return;
+      const progress = await reportSosPrimedFn({
+        data: { signupId: userId, accessToken: requireSeniorAccessToken(userId) },
+      });
+      if (progress?.installStep) setInstallStep(progress.installStep);
+      setSosPrimedAt(progress?.sosPrimedAt ?? new Date().toISOString());
+    },
   });
 
   const handleEmergencyPress = () => {
@@ -591,6 +641,14 @@ function NativeApp() {
           </span>
         </div>
       </header>
+
+      {!guideDismissed && installStep !== "ready" && (
+        <InstallStepGuideBanner
+          step={installStep}
+          signupId={userId}
+          onDismiss={() => setGuideDismissed(true)}
+        />
+      )}
 
       <main className="flex-1 flex flex-col px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] max-w-md mx-auto w-full">
         {/* Estado */}
@@ -855,11 +913,25 @@ function NativeApp() {
       <SosGpsPrimingUi
         uiStage={sosPrimingUiStage}
         gpsOk={sosPrimingGpsOk}
-        fallOk={sosPrimingFallOk}
-        fallSupported={sosPrimingFallSupported}
         onIntroDismiss={dismissSosPrimingIntro}
         onSuccessClose={closeSosPrimingSuccess}
       />
+
+      {showFallPrompt && (
+        <FallSensorDeferredPrompt
+          busy={fallPromptBusy}
+          onActivate={async () => {
+            setFallPromptBusy(true);
+            try {
+              await handleFallPermission();
+              await dismissFallPrompt();
+            } finally {
+              setFallPromptBusy(false);
+            }
+          }}
+          onDismiss={() => void dismissFallPrompt()}
+        />
+      )}
 
       <PinGateDialog
         open={pinGateOpen}

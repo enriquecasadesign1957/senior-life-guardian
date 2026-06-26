@@ -2,33 +2,30 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getCurrentCoordsWithError } from "@/lib/geo";
 import { isSosGpsPrimed, markSosGpsPrimed } from "@/lib/sos-gps-priming";
 import type { SosGpsPrimingUiStage } from "@/components/sos-gps-priming-ui";
-import { isMotionApiAvailable } from "@/hooks/useFallDetection";
 
 type Options = {
   signupId: string | null;
   /** Mostrar flujo de primera pulsación (app instalada y panel principal visible). */
   enabled: boolean;
   onGpsPrimed?: (gpsOk: boolean) => void;
-  /** Pide permiso de caídas dentro del gesto del botón rojo. */
-  onFallSensorPrimed?: () => Promise<boolean> | boolean;
   /** Vincula WhatsApp en servidor (1.ª pulsación o cuenta ya preparada). */
   onWhatsAppAutoActivate?: () => Promise<void>;
+  /** Persiste install_step=ready en servidor tras priming. */
+  onSosPrimedComplete?: () => Promise<void>;
 };
 
-/** Primera pulsación del botón rojo: GPS + sensor de caídas + WhatsApp (sin alerta real). */
+/** Primera pulsación del botón rojo: GPS + WhatsApp (sin alerta real). Caídas: día 2–3 aparte. */
 export function useSosGpsPriming({
   signupId,
   enabled,
   onGpsPrimed,
-  onFallSensorPrimed,
   onWhatsAppAutoActivate,
+  onSosPrimedComplete,
 }: Options) {
-  const fallSupported = useMemo(() => isMotionApiAvailable(), []);
   const [primed, setPrimed] = useState(() => isSosGpsPrimed(signupId));
   const [introDismissed, setIntroDismissed] = useState(false);
   const [uiStage, setUiStage] = useState<SosGpsPrimingUiStage>(null);
   const [lastGpsOk, setLastGpsOk] = useState(false);
-  const [lastFallOk, setLastFallOk] = useState(false);
   const whatsAppActivateStartedRef = useRef(false);
 
   useEffect(() => {
@@ -60,7 +57,7 @@ export function useSosGpsPriming({
     setUiStage(null);
   }, []);
 
-  /** Primera pulsación: GPS + caídas + WhatsApp. Devuelve true si consumió el toque. */
+  /** Primera pulsación: GPS + WhatsApp. Devuelve true si consumió el toque. */
   const runPrimingPress = useCallback(async (): Promise<boolean> => {
     if (primed) return false;
 
@@ -78,30 +75,18 @@ export function useSosGpsPriming({
     setLastGpsOk(gpsOk);
     onGpsPrimed?.(gpsOk);
 
-    let fallOk = false;
-    if (fallSupported && onFallSensorPrimed) {
-      try {
-        const result = await onFallSensorPrimed();
-        fallOk = result === true;
-      } catch {
-        fallOk = false;
-      }
-    }
-    setLastFallOk(fallOk);
-
     markSosGpsPrimed(signupId ?? undefined);
     setPrimed(true);
     await onWhatsAppAutoActivate?.();
+    await onSosPrimedComplete?.();
     setUiStage("success");
     return true;
-  }, [primed, signupId, fallSupported, onGpsPrimed, onFallSensorPrimed, onWhatsAppAutoActivate]);
+  }, [primed, signupId, onGpsPrimed, onWhatsAppAutoActivate, onSosPrimedComplete]);
 
   return {
     primed,
     uiStage,
     lastGpsOk,
-    lastFallOk,
-    fallSupported,
     dismissIntro,
     closeSuccess,
     runPrimingPress,
