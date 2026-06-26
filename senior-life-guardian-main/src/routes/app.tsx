@@ -40,7 +40,7 @@ import { WhatsAppActivationButton } from "@/components/whatsapp-activation-butto
 import { InstallAppModal } from "@/components/install-app-modal";
 import { Download } from "lucide-react";
 import { loginAccountByEmail, loginErrorMessage } from "@/lib/account-login";
-import { persistSeniorAccessToken, requireSeniorAccessToken } from "@/lib/senior-access-auth";
+import { persistSeniorAccessToken, readSeniorAccessToken, requireSeniorAccessToken } from "@/lib/senior-access-auth";
 import {
   addFamilyWithFallback,
   deleteFamilyWithFallback,
@@ -212,6 +212,7 @@ function AppHome() {
           signupId: signupIdFromUrl || stored?.id || undefined,
           email: stored?.email || undefined,
           telefono: stored?.telefono || undefined,
+          accessToken: readSeniorAccessToken(signupIdFromUrl || stored?.id) || undefined,
         };
         if (!lookup.signupId && !lookup.email && !lookup.telefono) return;
 
@@ -441,7 +442,8 @@ function AppHome() {
   const autoActivateWhatsApp = useCallback(async () => {
     if (!userId) return;
     try {
-      const res = await activateWhatsApp({ data: { signupId: userId } });
+      const accessToken = requireSeniorAccessToken(userId);
+      const res = await activateWhatsApp({ data: { signupId: userId, accessToken } });
       if (res?.ok) markWhatsAppActivatedLocally();
     } catch (e) {
       console.error("[autoActivateWhatsApp]", e);

@@ -4,6 +4,7 @@ import { assertAdminPin } from "@/lib/admin-auth";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
 import { clearRenewalNoticeFlags } from "@/lib/subscription-renewal-flags";
+import { ensureFirstGuardianAfterPayment } from "@/lib/first-guardian-checkout";
 import { sendPostPaymentInstallNotifications } from "@/lib/post-payment-install-notify";
 
 const pinSchema = z.object({ pin: z.string().min(1).max(64) });
@@ -106,6 +107,10 @@ export const adminGrantFreeService = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     await clearRenewalNoticeFlags(row.id);
+
+    await ensureFirstGuardianAfterPayment(row.id).catch((e) => {
+      console.error("[admin/comp] first guardian:", e);
+    });
 
     const installNotify = await sendPostPaymentInstallNotifications(row.id, { force: true }).catch(
       (e) => {

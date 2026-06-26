@@ -29,7 +29,8 @@ export const Route = createFileRoute("/api/public/lookup-account")({
         }
 
         const result = await fetchAppConfiguration({ email: parsed.data.email });
-        return Response.json(result, { status: result.configured ? 200 : 404 });
+        const { accessToken: _token, ...safe } = result;
+        return Response.json(safe, { status: result.configured ? 200 : 404 });
       },
     },
   },

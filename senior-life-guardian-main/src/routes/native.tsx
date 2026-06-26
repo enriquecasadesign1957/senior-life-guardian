@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { getAppConfiguration, listFamily } from "@/lib/family.functions";
 import { persistSignupHandoff, isTrainingDone, markTrainingDone } from "@/lib/post-payment";
 import { loginAccountByEmail, loginErrorMessage } from "@/lib/account-login";
-import { persistSeniorAccessToken, requireSeniorAccessToken } from "@/lib/senior-access-auth";
+import { persistSeniorAccessToken, readSeniorAccessToken, requireSeniorAccessToken } from "@/lib/senior-access-auth";
 import { listFamilyWithFallback } from "@/lib/family-actions";
 import { sendEmergencyAlert, cancelEmergencyAlert } from "@/lib/emergency-alert.functions";
 import { activateWhatsAppFromApp } from "@/lib/whatsapp-activation.functions";
@@ -135,7 +135,12 @@ function NativeApp() {
         if (!raw) return;
         const stored = JSON.parse(raw) as { id?: string; email?: string; telefono?: string; nombre?: string };
         const res = await loadConfig({
-          data: { signupId: stored.id, email: stored.email, telefono: stored.telefono },
+          data: {
+            signupId: stored.id,
+            email: stored.email,
+            telefono: stored.telefono,
+            accessToken: readSeniorAccessToken(stored.id) || undefined,
+          },
         });
         if (!alive) return;
         if (res.configured && res.user) {
@@ -365,7 +370,8 @@ function NativeApp() {
   const autoActivateWhatsApp = useCallback(async () => {
     if (!userId) return;
     try {
-      const res = await activateWhatsApp({ data: { signupId: userId } });
+      const accessToken = requireSeniorAccessToken(userId);
+      const res = await activateWhatsApp({ data: { signupId: userId, accessToken } });
       if (res?.ok) markWhatsAppActivatedLocally();
     } catch (e) {
       console.error("[autoActivateWhatsApp]", e);

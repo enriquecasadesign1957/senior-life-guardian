@@ -24,13 +24,16 @@ const contactInput = z.object({
   parentesco: z.string().min(1).max(60),
 });
 
-const appConfigInput = z.object({
-  signupId: idSchema.optional(),
-  email: z.string().email().max(255).optional(),
-  telefono: z.string().min(4).max(40).optional(),
-}).refine((data) => Boolean(data.signupId || data.email || data.telefono), {
-  message: "Se requiere una cuenta para cargar la configuración.",
-});
+const appConfigInput = z
+  .object({
+    signupId: idSchema.optional(),
+    email: z.string().email().max(255).optional(),
+    telefono: z.string().min(4).max(40).optional(),
+    accessToken: seniorAccessTokenSchema.optional(),
+  })
+  .refine((data) => Boolean(data.signupId || data.email || data.telefono), {
+    message: "Se requiere una cuenta para cargar la configuración.",
+  });
 
 async function sendInviteBestEffort(
   signupId: string,

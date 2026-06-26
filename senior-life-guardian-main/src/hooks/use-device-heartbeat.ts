@@ -61,7 +61,10 @@ export function useDeviceHeartbeat({
         clearSeniorAccessToken();
       }
       try {
-        const res = await loadConfigRef.current({ data: { signupId } });
+        const cached = readSeniorAccessToken(signupId);
+        const res = await loadConfigRef.current({
+          data: { signupId, accessToken: cached || undefined },
+        });
         if (res.accessToken) {
           persistSeniorAccessToken(res.accessToken, signupId);
           return res.accessToken;

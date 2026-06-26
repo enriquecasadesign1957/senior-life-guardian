@@ -3,6 +3,7 @@ import { listFamilyContacts } from "@/lib/contacts-storage";
 import { markInstallAppOpened, readInstallProgress } from "@/lib/install-step-sync";
 import { readStoredPinHash } from "@/lib/pin-storage";
 import { issueSeniorAccessToken } from "@/lib/senior-access-auth";
+import { verifySignedSession } from "@/lib/signed-session";
 import type { InstallStep } from "@/lib/install-step";
 import { phoneLookupCandidates } from "@/lib/phone-utils";
 import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
@@ -50,6 +51,8 @@ export async function fetchAppConfiguration(input: {
   signupId?: string;
   email?: string;
   telefono?: string;
+  /** Token senior vigente para renovación; no emite token nuevo por email/teléfono solos. */
+  accessToken?: string;
 }): Promise<AppConfigResult> {
   const empty: AppConfigResult = {
     configured: false,
@@ -92,7 +95,20 @@ export async function fetchAppConfiguration(input: {
     const storedPin = await readStoredPinHash(user.id);
     pinConfigured = Boolean(storedPin);
 
-    const accessToken = await issueSeniorAccessToken(user.id);
+    let accessToken: string | undefined;
+    const tokenHint = input.accessToken?.trim();
+    if (tokenHint) {
+      try {
+        await verifySignedSession(tokenHint, { typ: "senior", sub: user.id });
+        accessToken = await issueSeniorAccessToken(user.id);
+      } catch {
+        /* token inválido o de otra cuenta */
+      }
+    }
+    if (!accessToken && input.signupId === user.id) {
+      accessToken = await issueSeniorAccessToken(user.id);
+    }
+
     await markInstallAppOpened(user.id).catch((e) => {
       console.warn("[fetchAppConfiguration] app_opened", e);
     });

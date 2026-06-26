@@ -1,6 +1,8 @@
 import type { AppConfigResult } from "@/lib/account-lookup";
 
-type LoadConfigFn = (args: { data: { email: string } }) => Promise<AppConfigResult>;
+type LoadConfigFn = (args: {
+  data: { email?: string; signupId?: string; accessToken?: string };
+}) => Promise<AppConfigResult>;
 
 /** Login por email: server function con respaldo vía API JSON pública. */
 export async function loginAccountByEmail(
@@ -10,7 +12,11 @@ export async function loginAccountByEmail(
   const normalized = email.trim().toLowerCase();
 
   try {
-    return await loadConfig({ data: { email: normalized } });
+    const lookedUp = await loadConfig({ data: { email: normalized } });
+    if (lookedUp.configured && lookedUp.user?.id && !lookedUp.accessToken) {
+      return loadConfig({ data: { signupId: lookedUp.user.id } });
+    }
+    return lookedUp;
   } catch (serverFnError) {
     console.warn("[loginAccountByEmail] serverFn failed, trying API fallback", serverFnError);
   }
@@ -30,6 +36,9 @@ export async function loginAccountByEmail(
         pinConfigured: false,
         error: json.error ?? "api_failed",
       };
+    }
+    if (json.configured && json.user?.id) {
+      return loadConfig({ data: { signupId: json.user.id } });
     }
     return json;
   } catch (apiError) {

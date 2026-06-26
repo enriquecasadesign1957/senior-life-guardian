@@ -10,13 +10,36 @@ import {
 } from "@/lib/contacts-storage";
 import { normalizePhoneE164 } from "@/lib/phone-utils";
 import { sendTwilioWhatsAppWithSmsFallback } from "@/lib/twilio";
-import { assertSeniorAccess, seniorAccessTokenSchema } from "@/lib/senior-access-auth";
+import { assertSeniorAccess, assertFamilySession, seniorAccessTokenSchema } from "@/lib/senior-access-auth";
 
 const idSchema = z.string().uuid();
 const seniorAuthFields = {
   signupId: idSchema,
   accessToken: seniorAccessTokenSchema,
 };
+
+const familySessionFields = {
+  family_member_id: idSchema,
+  contract_signup_id: idSchema,
+  session_token: seniorAccessTokenSchema,
+};
+
+async function assertActiveFamilyGuardianAccess(data: {
+  family_member_id: string;
+  contract_signup_id: string;
+  session_token: string;
+}): Promise<string> {
+  await assertFamilySession(data.family_member_id, data.contract_signup_id, data.session_token);
+  const { data: member } = await supabaseAdmin
+    .from("family_members")
+    .select("activo")
+    .eq("id", data.family_member_id)
+    .maybeSingle();
+  if (!member?.activo) {
+    throw new Error("Sesión inválida. Ingresa de nuevo al Portal Familia.");
+  }
+  return data.contract_signup_id;
+}
 
 const PORTAL_FAMILIA_URL = "https://alarmaseniorsafe.cl/familia";
 
@@ -185,115 +208,192 @@ async function guardianCount(signupId: string): Promise<number> {
   throw error;
 }
 
+async function performAddGuardian(
+  signupId: string,
+  guardian: z.infer<typeof guardianInput>,
+): Promise<{ id: string }> {
+  if ((await guardianCount(signupId)) >= MAX_GUARDIANS) {
+    throw new Error(`Máximo ${MAX_GUARDIANS} guardianes.`);
+  }
+
+  const tel = normalizePhoneE164(guardian.telefono);
+  if (!tel) throw new Error("Teléfono inválido.");
+  const wa = guardian.whatsapp ? normalizePhoneE164(guardian.whatsapp) : null;
+
+  const fullRow = {
+    contract_signup_id: signupId,
+    nombre: guardian.nombre,
+    telefono: tel,
+    whatsapp: wa,
+    parentesco: guardian.parentesco,
+    prioridad: guardian.prioridad,
+    activo: guardian.activo,
+    tipo_contacto: guardian.tipo_contacto,
+    recibe_sms: guardian.recibe_sms,
+    recibe_whatsapp: guardian.recibe_whatsapp,
+    recibe_llamada: guardian.recibe_llamada,
+  };
+
+  let row: { id: string } | null = null;
+
+  let insertResult = await supabaseAdmin
+    .from("emergency_contacts")
+    .insert(fullRow)
+    .select("id")
+    .single();
+
+  if (insertResult.error) {
+    const insertErr = insertResult.error.message ?? "";
+    if (isMissingTableError(insertErr)) {
+      const saved = await addFamilyContact(signupId, {
+        nombre: guardian.nombre,
+        telefono: tel,
+        parentesco: guardian.parentesco,
+      });
+      if (!saved.ok || !saved.contact) throw new Error(saved.error ?? "save_failed");
+      row = { id: saved.contact.id };
+    } else if (isMissingColumnError(insertErr)) {
+      insertResult = await supabaseAdmin
+        .from("emergency_contacts")
+        .insert({
+          contract_signup_id: signupId,
+          nombre: guardian.nombre,
+          telefono: tel,
+          parentesco: guardian.parentesco,
+        })
+        .select("id")
+        .single();
+      if (insertResult.error) throw insertResult.error;
+      row = insertResult.data;
+    } else {
+      throw insertResult.error;
+    }
+  } else {
+    row = insertResult.data;
+  }
+
+  if (!row) throw new Error("save_failed");
+
+  try {
+    const { data: existing } = await supabaseAdmin
+      .from("family_members")
+      .select("id")
+      .eq("contract_signup_id", signupId)
+      .eq("telefono", tel)
+      .maybeSingle();
+    if (!existing) {
+      await supabaseAdmin.from("family_members").insert({
+        contract_signup_id: signupId,
+        nombre: guardian.nombre,
+        telefono: tel,
+        parentesco: guardian.parentesco,
+      });
+    }
+  } catch {
+    /* no bloquear si falla */
+  }
+
+  try {
+    const { data: senior } = await supabaseAdmin
+      .from("contract_signups")
+      .select("nombre")
+      .eq("id", signupId)
+      .maybeSingle();
+    await sendGuardianInvite({
+      guardianTel: tel,
+      guardianWa: wa,
+      guardianName: guardian.nombre,
+      seniorName: senior?.nombre ?? "Tu familiar",
+      parentesco: guardian.parentesco,
+      signupId,
+      guardianId: row.id,
+    });
+  } catch {
+    /* la invitación es best-effort */
+  }
+
+  return { id: row.id };
+}
+
+async function performUpdateGuardian(
+  signupId: string,
+  id: string,
+  guardian: Partial<z.infer<typeof guardianInput>>,
+): Promise<{ ok: true }> {
+  const patch: Record<string, unknown> = { ...guardian };
+  if (typeof patch.telefono === "string") {
+    const t = normalizePhoneE164(patch.telefono);
+    if (!t) throw new Error("Teléfono inválido.");
+    patch.telefono = t;
+  }
+  if (typeof patch.whatsapp === "string") {
+    patch.whatsapp = normalizePhoneE164(patch.whatsapp);
+  }
+  const { error } = await supabaseAdmin
+    .from("emergency_contacts")
+    .update(patch as never)
+    .eq("id", id)
+    .eq("contract_signup_id", signupId);
+  if (error) {
+    if (isMissingTableError(error.message ?? "")) {
+      const existing = (await listFamilyContacts(signupId)).find((c) => c.id === id);
+      if (!existing) throw new Error("Guardián no encontrado.");
+      const saved = await updateFamilyContact(signupId, id, {
+        nombre: String(patch.nombre ?? existing.nombre),
+        telefono: String(patch.telefono ?? existing.telefono),
+        parentesco: String(patch.parentesco ?? existing.parentesco),
+      });
+      if (!saved.ok) throw new Error(saved.error ?? "update_failed");
+      return { ok: true };
+    }
+    throw error;
+  }
+  return { ok: true };
+}
+
+async function performDeleteGuardian(signupId: string, id: string): Promise<{ ok: true }> {
+  const { error } = await supabaseAdmin
+    .from("emergency_contacts")
+    .delete()
+    .eq("id", id)
+    .eq("contract_signup_id", signupId);
+  if (error) {
+    if (isMissingTableError(error.message ?? "")) {
+      const saved = await deleteFamilyContact(signupId, id);
+      if (!saved.ok) throw new Error(saved.error ?? "delete_failed");
+      return { ok: true };
+    }
+    throw error;
+  }
+  return { ok: true };
+}
+
+async function performToggleGuardianActive(
+  signupId: string,
+  id: string,
+  activo: boolean,
+): Promise<{ ok: true }> {
+  const { error } = await supabaseAdmin
+    .from("emergency_contacts")
+    .update({ activo })
+    .eq("id", id)
+    .eq("contract_signup_id", signupId);
+  if (error) {
+    if (isMissingTableError(error.message ?? "")) {
+      return { ok: true };
+    }
+    throw error;
+  }
+  return { ok: true };
+}
+
 export const addGuardian = createServerFn({ method: "POST" })
   .inputValidator((input) =>
     z.object({ ...seniorAuthFields, guardian: guardianInput }).parse(input),
   )
   .handler(async ({ data }) => {
     await assertSeniorAccess(data.signupId, data.accessToken);
-    if ((await guardianCount(data.signupId)) >= MAX_GUARDIANS) {
-      throw new Error(`Máximo ${MAX_GUARDIANS} guardianes.`);
-    }
-
-    const tel = normalizePhoneE164(data.guardian.telefono);
-    if (!tel) throw new Error("Teléfono inválido.");
-    const wa = data.guardian.whatsapp ? normalizePhoneE164(data.guardian.whatsapp) : null;
-
-    const fullRow = {
-      contract_signup_id: data.signupId,
-      nombre: data.guardian.nombre,
-      telefono: tel,
-      whatsapp: wa,
-      parentesco: data.guardian.parentesco,
-      prioridad: data.guardian.prioridad,
-      activo: data.guardian.activo,
-      tipo_contacto: data.guardian.tipo_contacto,
-      recibe_sms: data.guardian.recibe_sms,
-      recibe_whatsapp: data.guardian.recibe_whatsapp,
-      recibe_llamada: data.guardian.recibe_llamada,
-    };
-
-    let row: { id: string } | null = null;
-
-    let insertResult = await supabaseAdmin
-      .from("emergency_contacts")
-      .insert(fullRow)
-      .select("id")
-      .single();
-
-    if (insertResult.error) {
-      const insertErr = insertResult.error.message ?? "";
-      if (isMissingTableError(insertErr)) {
-        const saved = await addFamilyContact(data.signupId, {
-          nombre: data.guardian.nombre,
-          telefono: tel,
-          parentesco: data.guardian.parentesco,
-        });
-        if (!saved.ok || !saved.contact) throw new Error(saved.error ?? "save_failed");
-        row = { id: saved.contact.id };
-      } else if (isMissingColumnError(insertErr)) {
-        insertResult = await supabaseAdmin
-          .from("emergency_contacts")
-          .insert({
-            contract_signup_id: data.signupId,
-            nombre: data.guardian.nombre,
-            telefono: tel,
-            parentesco: data.guardian.parentesco,
-          })
-          .select("id")
-          .single();
-        if (insertResult.error) throw insertResult.error;
-        row = insertResult.data;
-      } else {
-        throw insertResult.error;
-      }
-    } else {
-      row = insertResult.data;
-    }
-
-    if (!row) throw new Error("save_failed");
-
-    // Pre-registrar como family_member para que pueda hacer OTP login en el Portal Familia.
-    try {
-      const { data: existing } = await supabaseAdmin
-        .from("family_members")
-        .select("id")
-        .eq("contract_signup_id", data.signupId)
-        .eq("telefono", tel)
-        .maybeSingle();
-      if (!existing) {
-        await supabaseAdmin.from("family_members").insert({
-          contract_signup_id: data.signupId,
-          nombre: data.guardian.nombre,
-          telefono: tel,
-          parentesco: data.guardian.parentesco,
-        });
-      }
-    } catch {
-      /* no bloquear si falla */
-    }
-
-    // Enviar invitación con link al Portal Familia (no bloqueante para la respuesta UI).
-    try {
-      const { data: senior } = await supabaseAdmin
-        .from("contract_signups")
-        .select("nombre")
-        .eq("id", data.signupId)
-        .maybeSingle();
-      await sendGuardianInvite({
-        guardianTel: tel,
-        guardianWa: wa,
-        guardianName: data.guardian.nombre,
-        seniorName: senior?.nombre ?? "Tu familiar",
-        parentesco: data.guardian.parentesco,
-        signupId: data.signupId,
-        guardianId: row.id,
-      });
-    } catch {
-      /* la invitación es best-effort */
-    }
-
-    return { id: row.id };
+    return performAddGuardian(data.signupId, data.guardian);
   });
 
 export const updateGuardian = createServerFn({ method: "POST" })
@@ -302,55 +402,14 @@ export const updateGuardian = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     await assertSeniorAccess(data.signupId, data.accessToken);
-    const patch: Record<string, unknown> = { ...data.guardian };
-    if (typeof patch.telefono === "string") {
-      const t = normalizePhoneE164(patch.telefono);
-      if (!t) throw new Error("Teléfono inválido.");
-      patch.telefono = t;
-    }
-    if (typeof patch.whatsapp === "string") {
-      patch.whatsapp = normalizePhoneE164(patch.whatsapp);
-    }
-    const { error } = await supabaseAdmin
-      .from("emergency_contacts")
-      .update(patch as never)
-      .eq("id", data.id)
-      .eq("contract_signup_id", data.signupId);
-    if (error) {
-      if (isMissingTableError(error.message ?? "")) {
-        const existing = (await listFamilyContacts(data.signupId)).find((c) => c.id === data.id);
-        if (!existing) throw new Error("Guardián no encontrado.");
-        const saved = await updateFamilyContact(data.signupId, data.id, {
-          nombre: String(patch.nombre ?? existing.nombre),
-          telefono: String(patch.telefono ?? existing.telefono),
-          parentesco: String(patch.parentesco ?? existing.parentesco),
-        });
-        if (!saved.ok) throw new Error(saved.error ?? "update_failed");
-        return { ok: true };
-      }
-      throw error;
-    }
-    return { ok: true };
+    return performUpdateGuardian(data.signupId, data.id, data.guardian);
   });
 
 export const deleteGuardian = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ ...seniorAuthFields, id: idSchema }).parse(input))
   .handler(async ({ data }) => {
     await assertSeniorAccess(data.signupId, data.accessToken);
-    const { error } = await supabaseAdmin
-      .from("emergency_contacts")
-      .delete()
-      .eq("id", data.id)
-      .eq("contract_signup_id", data.signupId);
-    if (error) {
-      if (isMissingTableError(error.message ?? "")) {
-        const saved = await deleteFamilyContact(data.signupId, data.id);
-        if (!saved.ok) throw new Error(saved.error ?? "delete_failed");
-        return { ok: true };
-      }
-      throw error;
-    }
-    return { ok: true };
+    return performDeleteGuardian(data.signupId, data.id);
   });
 
 export const toggleGuardianActive = createServerFn({ method: "POST" })
@@ -359,16 +418,50 @@ export const toggleGuardianActive = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     await assertSeniorAccess(data.signupId, data.accessToken);
-    const { error } = await supabaseAdmin
-      .from("emergency_contacts")
-      .update({ activo: data.activo })
-      .eq("id", data.id)
-      .eq("contract_signup_id", data.signupId);
-    if (error) {
-      if (isMissingTableError(error.message ?? "")) {
-        return { ok: true };
-      }
-      throw error;
-    }
-    return { ok: true };
+    return performToggleGuardianActive(data.signupId, data.id, data.activo);
+  });
+
+/** Portal Familia — lista guardianes con sesión familiar (sin token senior). */
+export const listGuardiansForFamily = createServerFn({ method: "POST" })
+  .inputValidator((input) => z.object(familySessionFields).parse(input))
+  .handler(async ({ data }) => {
+    const signupId = await assertActiveFamilyGuardianAccess(data);
+    const guardians = await fetchGuardiansForSignup(signupId);
+    return { guardians };
+  });
+
+export const addGuardianForFamily = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z.object({ ...familySessionFields, guardian: guardianInput }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const signupId = await assertActiveFamilyGuardianAccess(data);
+    return performAddGuardian(signupId, data.guardian);
+  });
+
+export const updateGuardianForFamily = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z
+      .object({ ...familySessionFields, id: idSchema, guardian: guardianInput.partial() })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const signupId = await assertActiveFamilyGuardianAccess(data);
+    return performUpdateGuardian(signupId, data.id, data.guardian);
+  });
+
+export const deleteGuardianForFamily = createServerFn({ method: "POST" })
+  .inputValidator((input) => z.object({ ...familySessionFields, id: idSchema }).parse(input))
+  .handler(async ({ data }) => {
+    const signupId = await assertActiveFamilyGuardianAccess(data);
+    return performDeleteGuardian(signupId, data.id);
+  });
+
+export const toggleGuardianActiveForFamily = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z.object({ ...familySessionFields, id: idSchema, activo: z.boolean() }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const signupId = await assertActiveFamilyGuardianAccess(data);
+    return performToggleGuardianActive(signupId, data.id, data.activo);
   });
