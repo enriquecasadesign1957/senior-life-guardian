@@ -221,6 +221,15 @@ function AppHome() {
 
         if (res.configured && res.user) {
           const user = res.user as TrialUser;
+          let accessToken = res.accessToken;
+          if (!accessToken && user.id) {
+            try {
+              const tokenRes = await loadConfig({ data: { signupId: user.id } });
+              accessToken = tokenRes.accessToken;
+            } catch {
+              /* token en segundo intento */
+            }
+          }
           setUserId(user.id);
           setUserName(String(user.nombre ?? "").split(" ")[0]);
           setContacts(res.contacts as Contact[]);
@@ -231,7 +240,7 @@ function AppHome() {
           if (res.installStep) setInstallStep(res.installStep);
           setSosPrimedAt(res.sosPrimedAt ?? null);
           setFallSensorPromptedAt(res.fallSensorPromptedAt ?? null);
-          if (res.accessToken) persistSeniorAccessToken(res.accessToken, res.user.id);
+          if (accessToken) persistSeniorAccessToken(accessToken, res.user.id);
           try { sessionStorage.setItem("seniorsafe_user", JSON.stringify(user)); } catch {}
           try { localStorage.setItem("seniorsafe_user_backup", JSON.stringify(user)); } catch {}
           try { localStorage.setItem("seniorsafe_account_configured", "1"); } catch {}

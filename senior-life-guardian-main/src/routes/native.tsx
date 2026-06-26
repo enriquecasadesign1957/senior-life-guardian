@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Bell, Shield, MapPin, Users, CheckCircle2, Loader2, X, Heart, KeyRound, Activity, AlertTriangle, Battery } from "lucide-react";
@@ -150,7 +150,16 @@ function NativeApp() {
           setPinConfigured(Boolean(res.pinConfigured));
           setSubscriptionStatus((res.user as { subscription_status?: string }).subscription_status ?? null);
           persistSignupHandoff(res.user.id);
-          if (res.accessToken) persistSeniorAccessToken(res.accessToken, res.user.id);
+          let accessToken = res.accessToken;
+          if (!accessToken) {
+            try {
+              const tokenRes = await loadConfig({ data: { signupId: res.user.id } });
+              accessToken = tokenRes.accessToken;
+            } catch {
+              /* token en segundo intento */
+            }
+          }
+          if (accessToken) persistSeniorAccessToken(accessToken, res.user.id);
           if (res.whatsappActivated) markWhatsAppActivatedLocally();
           if (res.installStep) setInstallStep(res.installStep);
           setSosPrimedAt(res.sosPrimedAt ?? null);
@@ -808,14 +817,14 @@ function NativeApp() {
           </p>
         )}
 
-        {/* Acceso a Mis Guardianes (discreto, no compite con SOS) */}
-        <Link
-          to="/familia/guardianes"
-          search={{ redirect: undefined }}
+        {/* Guardianes: gestión en /app con token senior (no portal familia OTP) */}
+        <button
+          type="button"
+          onClick={goToFamilyAdmin}
           className="mt-2 w-full h-12 rounded-2xl border text-foreground text-sm font-semibold flex items-center justify-center gap-2 bg-white/70"
         >
           <Users className="w-4 h-4" /> Mis Guardianes
-        </Link>
+        </button>
       </main>
 
 
