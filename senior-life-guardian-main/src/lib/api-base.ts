@@ -39,10 +39,14 @@ export function installApiBaseFetch() {
     return;
   }
 
-  // Solo reescribir si estamos en entorno nativo real
+  // Siempre reescribir fetch en Capacitor aunque el WebView cargue alarmaseniorsafe.cl remoto.
   const cap = (window as any).Capacitor;
   const proto = window.location.protocol;
-  const isNative = cap?.isNativePlatform?.() || proto === "capacitor:" || proto === "file:";
+  const isNative =
+    cap?.isNativePlatform?.() ||
+    proto === "capacitor:" ||
+    proto === "file:" ||
+    new URLSearchParams(window.location.search).get("source") === "apk";
 
   if (!isNative) {
     console.log("[api-base] skipped — not native:", host, proto);

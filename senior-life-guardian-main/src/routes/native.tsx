@@ -349,7 +349,7 @@ function NativeApp() {
     probarCuentaRegresiva,
   } = useFallDetection({
     signupId: userId,
-    enabled: !!userId && stage === "idle" && fallMonitoring,
+    enabled: !!userId && stage === "idle",
     getGps: fetchFallGps,
     dispatchEmergency: dispatchFallEmergency,
   });
