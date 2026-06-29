@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
+  ArrowRight,
   Bell,
   CheckCircle2,
   Heart,
@@ -10,9 +12,11 @@ import {
   RotateCcw,
   Shield,
   MessageCircle,
+  Sparkles,
 } from "lucide-react";
 import { DemoPhoneFrame } from "@/components/demo/demo-phone-frame";
 import { Button } from "@/components/ui/button";
+import { checkoutUrl, formatPlanPrice, PLAN } from "@/lib/plans";
 import {
   Dialog,
   DialogContent,
@@ -58,9 +62,15 @@ type EmergencySimulatorProps = {
   embedded?: boolean;
   /** Título «Experiencia de usuario» encima del simulador. */
   showIntro?: boolean;
+  /** Banner + CTA de cierre cuando termina la simulación (p. ej. /como-funciona). */
+  showConversionTrigger?: boolean;
 };
 
-export function EmergencySimulator({ embedded = false, showIntro }: EmergencySimulatorProps) {
+export function EmergencySimulator({
+  embedded = false,
+  showIntro,
+  showConversionTrigger = false,
+}: EmergencySimulatorProps) {
   const showPageIntro = showIntro ?? !embedded;
   const [phase, setPhase] = useState<Phase>("idle");
   const [selectedCategory, setSelectedCategory] = useState<EmergencyCategory | null>(null);
@@ -68,6 +78,20 @@ export function EmergencySimulator({ embedded = false, showIntro }: EmergencySim
   const [logs, setLogs] = useState<SimulatorLogEntry[]>([]);
   const [whatsappOpen, setWhatsappOpen] = useState(false);
   const timersRef = useRef<number[]>([]);
+  const conversionRef = useRef<HTMLDivElement>(null);
+  const monthlyPrice = `$${formatPlanPrice(PLAN.monthly)}/mes`;
+
+  const simulationComplete =
+    phase === "done" &&
+    logs.some((entry) => entry.message.includes(SIMULATOR_GPS.label));
+
+  useEffect(() => {
+    if (!showConversionTrigger || !simulationComplete || !conversionRef.current) return;
+    const timer = window.setTimeout(() => {
+      conversionRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [showConversionTrigger, simulationComplete]);
 
   const clearTimers = useCallback(() => {
     for (const id of timersRef.current) window.clearTimeout(id);
@@ -370,7 +394,7 @@ export function EmergencySimulator({ embedded = false, showIntro }: EmergencySim
               </div>
             )}
 
-            {phase === "done" && (
+            {phase === "done" && !showConversionTrigger && (
               <p className="mt-4 text-xs text-slate-400 flex items-center gap-2" style={{ color: PETROL }}>
                 <Shield className="w-3.5 h-3.5" />
                 Simulación completa — en producción la central IA y los familiares reciben estos eventos de verdad.
@@ -378,6 +402,36 @@ export function EmergencySimulator({ embedded = false, showIntro }: EmergencySim
             )}
           </section>
         </div>
+
+        {showConversionTrigger && simulationComplete && (
+          <div
+            ref={conversionRef}
+            role="alert"
+            className="mt-6 md:mt-8 rounded-2xl border-2 border-[#00845a]/60 bg-gradient-to-br from-[#00845a]/20 via-emerald-950/40 to-slate-900 p-5 sm:p-6 md:p-7 shadow-[0_0_40px_-8px_rgba(0,132,90,0.55)] animate-in fade-in slide-in-from-bottom-4 duration-500"
+          >
+            <div className="flex items-start gap-3 sm:gap-4">
+              <span className="flex shrink-0 items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#00845a] text-white shadow-lg">
+                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden />
+              </span>
+              <div className="min-w-0 flex-1 space-y-4">
+                <p className="text-sm sm:text-base md:text-lg font-bold text-white leading-snug">
+                  ¡Alerta simulada con éxito! 🚀 Así de rápido recibirás la notificación en tu WhatsApp real.
+                  Protege a tu familia hoy mismo por solo {monthlyPrice}.
+                </p>
+                <Link
+                  to={checkoutUrl()}
+                  className="flex w-full sm:w-auto sm:inline-flex items-center justify-center gap-2 min-h-[52px] px-6 py-3.5 rounded-full text-white text-base font-bold shadow-xl bg-[#00845a] hover:bg-[#006b48] ring-2 ring-white/20 hover:ring-white/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white animate-pulse hover:animate-none"
+                >
+                  Proteger a mi familia ahora
+                  <ArrowRight className="w-5 h-5 shrink-0" aria-hidden />
+                </Link>
+                <p className="text-[11px] sm:text-xs text-slate-400 leading-snug">
+                  Pago seguro con Transbank · Sin permanencia · Cancela cuando quieras
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
       <p className="text-center text-[11px] text-slate-600 mt-8">
         Coordenadas demo: {SIMULATOR_GPS.lat.toFixed(4)}, {SIMULATOR_GPS.lng.toFixed(4)} ·{" "}

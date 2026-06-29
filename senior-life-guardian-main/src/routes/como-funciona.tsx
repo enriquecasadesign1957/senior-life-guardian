@@ -192,7 +192,7 @@ function ComoFuncionaPage() {
               Pulsa el botón SOS, elige el tipo de ayuda y observa cómo llegan WhatsApp, SMS y llamada
               al panel del cuidador. Datos simulados — sin registro.
             </p>
-            <EmergencySimulator embedded showIntro={false} />
+            <EmergencySimulator embedded showIntro={false} showConversionTrigger />
           </CollapsibleContent>
         </Collapsible>
       </main>
