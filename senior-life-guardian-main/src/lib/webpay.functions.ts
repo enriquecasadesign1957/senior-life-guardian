@@ -1,8 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { normalizePlanKey, planKeySchema, periodoSchema } from "@/lib/plans";
-import { chargeAmountFromSignup } from "@/lib/discount-codes";
-import { recordDiscountRedemption, resolveDiscountForCheckout } from "@/lib/discount.functions";
+import { recordDiscountRedemption, resolveChargeAmountForSignup } from "@/lib/discount.functions";
 import { CONTRACT_SIGNUPS_TABLE, isSignupPaidAndActive } from "@/lib/signups-db";
 import {
   buildWebpayReturnUrl,
@@ -43,7 +42,7 @@ export const initWebpayTransaction = createServerFn({ method: "POST" })
     const { data: signup, error: signupErr } = await supabaseAdmin
       .from(CONTRACT_SIGNUPS_TABLE)
       .select(
-        "id,plan,periodo,discount_code,discount_code_id,discount_percent,list_price,payment_status",
+        "id,email,plan,periodo,discount_code,discount_code_id,discount_percent,list_price,payment_status",
       )
       .eq("id", data.signupId)
       .maybeSingle();
@@ -56,20 +55,7 @@ export const initWebpayTransaction = createServerFn({ method: "POST" })
     const periodo = (signup.periodo as "mensual" | "anual") || data.periodo;
     const plan = normalizePlanKey(signup.plan || data.plan);
 
-    let amount = chargeAmountFromSignup(plan, periodo, {
-      list_price: signup.list_price,
-      discount_percent: signup.discount_percent,
-    });
-
-    if (signup.discount_code) {
-      try {
-        const resolved = await resolveDiscountForCheckout(signup.discount_code, plan, periodo);
-        amount = resolved.finalPrice;
-      } catch (err) {
-        const message = err instanceof Error ? err.message : "Código de convenio inválido.";
-        throw new Error(`${message} Actualiza el checkout e intenta nuevamente.`);
-      }
-    }
+    let amount = await resolveChargeAmountForSignup(signup, plan, periodo);
     const buyOrder = generateWebpayBuyOrder();
     const sessionId = generateWebpaySessionId(data.signupId);
     const returnUrl = buildWebpayReturnUrl();

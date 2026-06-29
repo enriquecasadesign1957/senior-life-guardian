@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState, useCallback, useRef } from "react";
+import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { z } from "zod";
 import {
   Shield, Lock, CreditCard, Clock, CheckCircle2, ArrowRight,
@@ -35,7 +35,7 @@ import {
   SENIOR_SAFE_TERMS_CANCELLATION_URL,
 } from "@/lib/recurring-billing-consent";
 import { Checkbox } from "@/components/ui/checkbox";
-import { normalizeDiscountCodeInput, type PublicDiscountPreview } from "@/lib/discount-codes";
+import { normalizeDiscountCodeInput, FIRST_MONTH_PROMO_CODE, type PublicDiscountPreview } from "@/lib/discount-codes";
 import { getServerErrorMessage } from "@/lib/server-error-message";
 
 const searchSchema = z.object({
@@ -130,12 +130,16 @@ function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
   const [mockLoading, setMockLoading] = useState(false);
-  const [discountInput, setDiscountInput] = useState("");
+  const [discountInput, setDiscountInput] = useState(() =>
+    search.codigo ? normalizeDiscountCodeInput(search.codigo) : "",
+  );
   const [appliedDiscount, setAppliedDiscount] = useState<PublicDiscountPreview | null>(null);
   const [discountError, setDiscountError] = useState<string | null>(null);
   const [discountLoading, setDiscountLoading] = useState(false);
   const [recurringConsent, setRecurringConsent] = useState(false);
   const discountRequestRef = useRef(0);
+  const urlCodigoAppliedRef = useRef(false);
+  const discountEmailRef = useRef("");
 
   const listPrice = yearly ? PLAN.yearly : PLAN.monthly;
   const price = appliedDiscount?.finalPrice ?? listPrice;
@@ -146,6 +150,7 @@ function CheckoutPage() {
   const applyDiscountCode = useCallback(async (
     rawCode?: string,
     periodoOverride?: "mensual" | "anual",
+    emailOverride?: string,
   ) => {
     const code = normalizeDiscountCodeInput(rawCode ?? discountInput);
     if (!code) {
@@ -155,16 +160,18 @@ function CheckoutPage() {
     }
 
     const activePeriodo = periodoOverride ?? periodo;
+    const email = (emailOverride ?? form.email).trim().toLowerCase();
     const requestId = ++discountRequestRef.current;
 
     setDiscountLoading(true);
     setDiscountError(null);
     try {
-      const discount = await validateDiscountViaApi(code, planKey, activePeriodo);
+      const discount = await validateDiscountViaApi(code, planKey, activePeriodo, email || undefined);
       if (requestId !== discountRequestRef.current) return;
 
       setAppliedDiscount(discount);
       setDiscountInput(discount.code);
+      discountEmailRef.current = email;
       toast.success(`Convenio aplicado: ${discount.percentOff}% de descuento`);
     } catch (err) {
       if (requestId !== discountRequestRef.current) return;
@@ -175,7 +182,33 @@ function CheckoutPage() {
         setDiscountLoading(false);
       }
     }
-  }, [discountInput, periodo, planKey]);
+  }, [discountInput, periodo, planKey, form.email]);
+
+  useEffect(() => {
+    const code = search.codigo ? normalizeDiscountCodeInput(search.codigo) : "";
+    if (!code || urlCodigoAppliedRef.current) return;
+    urlCodigoAppliedRef.current = true;
+    const activePeriodo = search.periodo === "anual" ? "anual" : "mensual";
+    void applyDiscountCode(code, activePeriodo);
+  }, [search.codigo, search.periodo, applyDiscountCode]);
+
+  useEffect(() => {
+    if (!discountError?.toLowerCase().includes("correo")) return;
+    const code = normalizeDiscountCodeInput(discountInput);
+    const email = form.email.trim().toLowerCase();
+    if (!code || !schema.shape.email.safeParse(email).success) return;
+    const timer = setTimeout(() => void applyDiscountCode(code, periodo, email), 400);
+    return () => clearTimeout(timer);
+  }, [form.email, discountInput, discountError, periodo, applyDiscountCode]);
+
+  useEffect(() => {
+    const email = form.email.trim().toLowerCase();
+    if (!appliedDiscount || !discountEmailRef.current) return;
+    if (email === discountEmailRef.current) return;
+    if (!schema.shape.email.safeParse(email).success) return;
+    setAppliedDiscount(null);
+    setDiscountError("Cambiaste tu correo. Vuelve a aplicar el código promocional.");
+  }, [form.email, appliedDiscount]);
 
   const setBillingPeriod = (nextYearly: boolean) => {
     setYearly(nextYearly);
@@ -471,7 +504,12 @@ function CheckoutPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-bold text-foreground mb-3 block">5. Código Institucional? Ingrésalo</label>
+                  <label className="text-sm font-bold text-foreground mb-1 block">5. Código Institucional? Ingrésalo</label>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    ¿Primer mes con 50%? Usa{" "}
+                    <span className="font-mono font-semibold text-foreground">{FIRST_MONTH_PROMO_CODE}</span>
+                    {" "}— un uso por correo, solo plan mensual. Ingresa tu email antes de aplicar.
+                  </p>
                   <div className="flex flex-col sm:flex-row gap-3">
                     <input
                       type="text"
@@ -523,6 +561,7 @@ function CheckoutPage() {
                           setDiscountInput("");
                           setAppliedDiscount(null);
                           setDiscountError(null);
+                          discountEmailRef.current = "";
                         }}
                         className="mt-2 text-xs font-semibold underline text-muted-foreground"
                       >

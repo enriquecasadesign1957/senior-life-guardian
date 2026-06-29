@@ -67,6 +67,18 @@ export function yearlyEquivalentMonthly(): number {
   return Math.round(PLAN.yearly / 12);
 }
 
+/** Copy CRO — ahorro anual vs 12 meses al precio mensual publicado. */
+export const ANNUAL_SAVINGS_CRO_CLP = 15000;
+
+/** Bundle familiar — 2 adultos mayores (marketing / upsell). */
+export const FAMILY_BUNDLE = {
+  label: "Bundle Familiar",
+  monthly: 10900,
+  /** Ahorro vs contratar 2 planes mensuales ($6.900 c/u). */
+  monthlySavingsVsTwo: 2900,
+  adults: 2,
+} as const;
+
 export function checkoutUrl(opts?: {
   periodo?: BillingPeriod;
 }): string {

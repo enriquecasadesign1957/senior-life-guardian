@@ -54,7 +54,9 @@ export const createPurchaseSignup = createServerFn({ method: "POST" })
     let discountFields = clearDiscountSignupFields();
     const rawCode = data.discountCode?.trim();
     if (rawCode) {
-      const resolved = await resolveDiscountForCheckout(rawCode, data.plan, data.periodo);
+      const resolved = await resolveDiscountForCheckout(rawCode, data.plan, data.periodo, {
+        email,
+      });
       discountFields = discountSignupFields(resolved);
     }
 

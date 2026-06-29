@@ -48,6 +48,7 @@ function AdminDiscountsInner({ pin }: { pin: string }) {
   const [percentOff, setPercentOff] = useState("15");
   const [appliesMonthly, setAppliesMonthly] = useState(true);
   const [appliesAnnual, setAppliesAnnual] = useState(true);
+  const [onePerCustomer, setOnePerCustomer] = useState(false);
   const [maxRedemptions, setMaxRedemptions] = useState("");
   const [notes, setNotes] = useState("");
 
@@ -79,6 +80,7 @@ function AdminDiscountsInner({ pin }: { pin: string }) {
           percent_off: Number(percentOff),
           applies_monthly: appliesMonthly,
           applies_annual: appliesAnnual,
+          one_per_customer: onePerCustomer,
           max_redemptions: maxRedemptions ? Number(maxRedemptions) : null,
           notes: notes.trim() || null,
         },
@@ -186,6 +188,10 @@ function AdminDiscountsInner({ pin }: { pin: string }) {
                 <Switch checked={appliesAnnual} onCheckedChange={setAppliesAnnual} />
                 Aplica anual
               </label>
+              <label className="flex items-center gap-2 text-sm">
+                <Switch checked={onePerCustomer} onCheckedChange={setOnePerCustomer} />
+                Un uso por correo
+              </label>
             </div>
             <div>
               <Label htmlFor="notes">Notas internas</Label>
@@ -222,7 +228,10 @@ function AdminDiscountsInner({ pin }: { pin: string }) {
                     <tr key={row.id} className="border-t border-border">
                       <td className="p-3">
                         <div className="font-mono font-bold">{row.code}</div>
-                        <div className="text-xs text-muted-foreground truncate max-w-[200px]">{row.label}</div>
+                        <div className="text-xs text-muted-foreground truncate max-w-[200px]">
+                          {row.label}
+                          {row.one_per_customer ? " · 1× por correo" : ""}
+                        </div>
                       </td>
                       <td className="p-3">{row.percent_off}%</td>
                       <td className="p-3">

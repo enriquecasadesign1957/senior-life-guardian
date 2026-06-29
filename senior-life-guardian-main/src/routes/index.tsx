@@ -1,12 +1,11 @@
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
-import { useState } from "react";
 import { isDemoMode } from "@/lib/demo/demo-config";
 import {
   Shield, MessageCircle, MapPin, CheckCircle2,
   Mail, ArrowRight, Heart, AlertCircle, Users, Zap, Smartphone,
   Clock, Activity, Star, Accessibility, Home,
   PhoneCall, Radio, Navigation, Send,
-  Brain, Sparkles, Layers, HelpCircle,
+  Brain, Sparkles, HelpCircle,
 } from "lucide-react";
 import {
   Accordion,
@@ -14,10 +13,10 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import emergencyButton from "@/assets/emergency-button.jpg";
 import seniorCouple from "@/assets/senior-couple.jpg";
 import seniorPhone from "@/assets/senior-phone.jpg";
-import logo from "@/assets/logo-senior-safe.png";
+import familyPhoto from "@/assets/family-photo.jpg";
+import heroSeniorPhone from "@/assets/hero-senior-phone.png";
 import screenRedProteccion from "@/assets/screen-red-proteccion.png";
 import screenUbicacionGps from "@/assets/screen-ubicacion-gps.png";
 import screenAlertaMulticanal from "@/assets/screen-alerta-multicanal.png";
@@ -28,18 +27,26 @@ import {
   checkoutUrl,
   formatPlanPrice,
   yearlyEquivalentMonthly,
+  ANNUAL_SAVINGS_CRO_CLP,
+  FAMILY_BUNDLE,
 } from "@/lib/plans";
 import { WhatsAppFloat } from "@/components/whatsapp-float";
+import {
+  TrustStackChileno,
+  FAQ_CANCELLATION_POSITIVE_A,
+  FAQ_CANCELLATION_POSITIVE_Q,
+  FEATURED_TESTIMONIAL_CARMEN,
+} from "@/components/trust-stack-chileno";
 import { seniorSafeWhatsAppMeUrl } from "@/lib/twilio";
 import { CANCELLATION_POLICY_FAQ_ANSWER, CANCELLATION_POLICY_SUMMARY } from "@/lib/subscription-cancellation-policy";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Senior Safe — Ecosistema Inteligente de Protección de Toda la Familia" },
-      { name: "description", content: "Infraestructura blindada con IA, telemetría y comunicaciones redundantes: WhatsApp, SMS, GPS en vivo y escalamiento por voz. Plan Único desde $6.900/mes." },
-      { property: "og:title", content: "Senior Safe — Ecosistema Inteligente de Protección Familiar" },
-      { property: "og:description", content: "Protección resiliente para toda la familia con canales redundantes y telemetría avanzada." },
+      { title: "Senior Safe — Tu mamá siempre protegida, aunque no estés cerca" },
+      { name: "description", content: "Red de cuidado inteligente que alerta a la familia en menos de 3 segundos ante caídas o emergencias. Sin contratos ni burocracia. Desde $6.900/mes." },
+      { property: "og:title", content: "Senior Safe — Protección familiar en menos de 3 segundos" },
+      { property: "og:description", content: "Alertas por WhatsApp, SMS, GPS y llamada automática. Plan Único $6.900/mes, sin permanencia." },
     ],
   }),
   component: Landing,
@@ -50,60 +57,76 @@ const DEEP = "var(--brand-petrol-deep)";
 const RED = "#dc2626";
 const GREEN = "#16a34a";
 
-function HeroPhoneMockup() {
+const HERO_CTA_GREEN = "#22c55e";
+const HERO_CTA_GREEN_DARK = "#15803d";
+
+const HERO_TRUST_AVATARS = [
+  { src: seniorCouple, alt: "Pareja de adultos mayores" },
+  { src: seniorPhone, alt: "Adulto mayor con celular" },
+  { src: familyPhoto, alt: "Familia conectada" },
+] as const;
+
+function HeroSocialProof() {
   return (
-    <div className="relative mx-auto w-full max-w-[340px] lg:max-w-none lg:min-h-[480px] flex items-center justify-center py-8 lg:py-0">
-      <div
-        className="absolute w-[min(100%,320px)] aspect-square rounded-full bg-gradient-to-tr from-white/25 via-[#ffd66b]/20 to-emerald-400/25 blur-3xl animate-glow-pulse"
-        aria-hidden
-      />
-      <div
-        className="absolute w-[min(90%,260px)] aspect-[3/4] rounded-[3rem] bg-black/20 blur-2xl translate-y-8"
-        aria-hidden
-      />
-
-      <div className="relative z-10 animate-float">
-        <div className="relative w-[240px] sm:w-[270px] md:w-[300px] rounded-[2.75rem] border-[7px] border-white/25 bg-gradient-to-b from-slate-800/95 to-slate-950/95 p-2.5 shadow-hero-dynamic backdrop-blur-md ring-1 ring-white/20">
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 w-24 h-6 rounded-full bg-black/80 z-20" aria-hidden />
-          <div className="relative rounded-[2.25rem] overflow-hidden bg-black aspect-[9/19.5] ring-1 ring-white/10">
+    <div
+      className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5 animate-fade-in"
+      style={{ animationDelay: "320ms" }}
+    >
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <div className="flex items-center gap-0.5" aria-label="Calificación 5 de 5 estrellas">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400 shrink-0" aria-hidden />
+          ))}
+        </div>
+        <span className="text-sm font-semibold text-white/95">
+          2.000+ familias protegidas en Chile
+        </span>
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="flex -space-x-2.5">
+          {HERO_TRUST_AVATARS.map((avatar) => (
             <img
-              src={emergencyButton}
-              alt="Aplicación Senior Safe con red de protección familiar activa"
-              className="h-full w-full object-cover object-top"
+              key={avatar.alt}
+              src={avatar.src}
+              alt={avatar.alt}
+              className="w-9 h-9 rounded-full border-2 border-white/90 object-cover shadow-md"
             />
-            <div className="absolute inset-x-0 bottom-0 p-4 pt-16 bg-gradient-to-t from-black/85 via-black/40 to-transparent">
-              <div
-                className="mx-auto w-full max-w-[200px] py-3 rounded-2xl text-center font-bold text-white text-sm shadow-lg border border-emerald-400/40"
-                style={{ background: `linear-gradient(180deg, ${GREEN}, #15803d)` }}
-              >
-                <Shield className="inline w-4 h-4 mr-1 align-text-bottom" />
-                Red protegida 24/7
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
+      </div>
+    </div>
+  );
+}
 
-        <div className="absolute -top-5 -right-4 sm:-right-8 z-20 animate-float-delayed">
-          <div className="bg-white rounded-2xl p-3 shadow-2xl ring-1 ring-white/50 border border-white/80">
-            <img src={logo} alt="Senior Safe" className="h-12 sm:h-14 w-auto" />
+function HeroCreative() {
+  return (
+    <div className="relative mx-auto w-full max-w-[420px] lg:max-w-none">
+      <div
+        className="absolute -inset-4 rounded-[2rem] bg-gradient-to-tr from-white/20 via-amber-300/15 to-emerald-400/20 blur-2xl"
+        aria-hidden
+      />
+      <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/25">
+        <img
+          src={heroSeniorPhone}
+          alt="Adulto mayor usando Senior Safe con botón SOS en su celular, conectada con su familia"
+          className="w-full h-auto object-cover object-center"
+          width={1024}
+          height={1024}
+          fetchPriority="high"
+        />
+      </div>
+      <div className="absolute -bottom-3 -left-3 sm:-left-5 z-10 bg-white/95 backdrop-blur-md text-foreground px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-white/60">
+        <span
+          className="w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 shadow-md"
+          style={{ background: RED }}
+        >
+          <Zap className="w-5 h-5" />
+        </span>
+        <div>
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+            Respuesta
           </div>
-        </div>
-
-        <div className="absolute -bottom-4 -left-6 sm:-left-10 z-20 bg-white/95 backdrop-blur-md text-foreground px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 max-w-[220px] border border-white/60 animate-float-delayed">
-          <span className="w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 shadow-md" style={{ background: RED }}>
-            <Zap className="w-5 h-5" />
-          </span>
-          <div>
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Respuesta</div>
-            <div className="font-bold text-sm leading-tight">menos de 3 s</div>
-          </div>
-        </div>
-
-        <div className="absolute top-1/3 -left-8 sm:-left-12 z-20 hidden sm:flex bg-white/95 backdrop-blur-md text-foreground p-2.5 rounded-xl shadow-xl items-center gap-2 border border-emerald-200/80">
-          <span className="w-8 h-8 rounded-full flex items-center justify-center text-white" style={{ background: GREEN }}>
-            <CheckCircle2 className="w-4 h-4" />
-          </span>
-          <span className="text-xs font-bold pr-1">Red activa</span>
+          <div className="font-bold text-sm leading-tight">menos de 3 s</div>
         </div>
       </div>
     </div>
@@ -133,18 +156,19 @@ function Hero() {
             Plan Único · desde ${formatPlanPrice(PLAN.monthly)}/mes
           </p>
           <h1
-            className="text-[30px] md:text-[44px] lg:text-[50px] font-bold leading-[1.08] tracking-tight animate-fade-in"
+            className="text-[1.625rem] sm:text-3xl md:text-[2.125rem] lg:text-[2.75rem] font-bold leading-[1.2] sm:leading-[1.15] tracking-tight animate-fade-in [overflow-wrap:anywhere] hyphens-none"
             style={{ animationDelay: "80ms" }}
           >
-            Senior Safe — Ecosistema Inteligente de Protección de{" "}
-            <span className="text-[#ffd66b] drop-shadow-sm">Toda la Familia</span>
+            Tu mamá siempre protegida —{" "}
+            <span className="text-[#ffd66b] drop-shadow-sm">aunque no estés cerca</span>
           </h1>
-          <h2
-            className="mt-5 text-lg md:text-xl text-white/90 font-medium leading-relaxed max-w-xl animate-fade-in"
+          <p
+            className="mt-4 sm:mt-5 text-base sm:text-lg md:text-xl text-white/90 font-medium leading-relaxed max-w-xl animate-fade-in"
             style={{ animationDelay: "140ms" }}
           >
-            Una infraestructura tecnológica blindada que fusiona Inteligencia Artificial, telemetría avanzada y comunicaciones resilientes para cuidar a quienes más quieres.
-          </h2>
+            Una red de cuidado inteligente que alerta a la familia en menos de 3 segundos ante caídas
+            o emergencias, sin contratos ni burocracia.
+          </p>
           <div
             className="mt-6 inline-flex flex-wrap items-center gap-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 px-5 py-3 animate-fade-in"
             style={{ animationDelay: "200ms" }}
@@ -156,30 +180,32 @@ function Hero() {
             </span>
             <span className="text-xs text-white/70">Sin permanencia · Webpay Plus</span>
           </div>
-          <div className="mt-8 flex flex-col sm:flex-row gap-3 animate-fade-in" style={{ animationDelay: "260ms" }}>
+          <div className="mt-7 sm:mt-8 flex flex-col gap-3 animate-fade-in" style={{ animationDelay: "260ms" }}>
             <a
               href={checkoutUrl()}
-              className="inline-flex items-center justify-center gap-3 px-7 py-5 rounded-full bg-white text-base font-bold shadow-xl hover:scale-[1.03] hover:shadow-2xl transition-all duration-300"
-              style={{ color: DEEP }}
+              className="inline-flex items-center justify-center gap-3 px-7 py-5 rounded-full text-base sm:text-lg font-extrabold text-white shadow-2xl hover:scale-[1.03] hover:shadow-[0_20px_50px_rgba(34,197,94,0.45)] transition-all duration-300 ring-2 ring-white/30"
+              style={{
+                background: `linear-gradient(180deg, ${HERO_CTA_GREEN} 0%, ${HERO_CTA_GREEN_DARK} 100%)`,
+              }}
             >
-              Contratar Plan Único — ${formatPlanPrice(PLAN.monthly)}/mes
-              <ArrowRight className="w-5 h-5" />
+              Proteger a mi familia — ${formatPlanPrice(PLAN.monthly)}/mes
+              <ArrowRight className="w-5 h-5 shrink-0" />
             </a>
-            <a
-              href="/instalar-app?entrenamiento=1"
-              className="inline-flex items-center justify-center gap-3 px-7 py-5 rounded-full text-base font-bold shadow-xl hover:scale-[1.03] transition-all duration-300 text-white ring-2 ring-white/20"
-              style={{ background: GREEN }}
-            >
-              Ya tengo cuenta · Entrar
-              <CheckCircle2 className="w-5 h-5" />
-            </a>
-            <Link
-              to="/guia"
-              className="inline-flex items-center justify-center gap-3 px-7 py-5 rounded-full text-base font-bold shadow-xl hover:scale-[1.03] transition-all duration-300 text-white bg-white/15 ring-2 ring-white/25 backdrop-blur-sm"
-            >
-              Guía de instalación
-              <Smartphone className="w-5 h-5" />
-            </Link>
+            <HeroSocialProof />
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 pt-1">
+              <a
+                href="/instalar-app?entrenamiento=1"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold text-white/85 border border-white/25 bg-transparent hover:bg-white/10 transition-colors"
+              >
+                Ya tengo cuenta · Entrar
+              </a>
+              <Link
+                to="/guia"
+                className="inline-flex items-center justify-center text-sm font-medium text-white/70 hover:text-white underline underline-offset-4 transition-colors"
+              >
+                Guía de instalación
+              </Link>
+            </div>
           </div>
           <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-white/80 animate-fade-in" style={{ animationDelay: "300ms" }}>
             <div className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 backdrop-blur-sm">
@@ -194,68 +220,73 @@ function Hero() {
           </div>
         </div>
 
-        <div className="order-1 lg:order-2 animate-fade-in" style={{ animationDelay: "200ms" }}>
-          <HeroPhoneMockup />
+        <div className="order-1 lg:order-2 animate-fade-in py-4 lg:py-0" style={{ animationDelay: "200ms" }}>
+          <HeroCreative />
         </div>
       </div>
     </section>
   );
 }
 
+const QUE_ES_BENEFITS = [
+  "Tu familiar puede pedir ayuda con un toque",
+  "Tu familia recibe alerta instantánea",
+  "Red de respuesta activa en <3 segundos",
+  "Cobertura nacional sin zonas ciegas",
+] as const;
+
 function QueEs() {
-  const items = [
-    { icon: Layers, color: DEEP, title: "Ecosistema unificado", desc: "Una sola plataforma conecta senior, familia y canales de respuesta." },
-    { icon: Zap, color: "#f59e0b", title: "Alertas resilientes", desc: "WhatsApp, SMS, GPS y voz en cascada ante emergencias reales." },
-    { icon: MapPin, color: PETROL, title: "Telemetría en vivo", desc: "Coordenadas exactas y contexto operativo en cada evento." },
-    { icon: Users, color: GREEN, title: "Red familiar priorizada", desc: "Hasta 3 guardianes con orden de escalamiento inteligente." },
-    { icon: Smartphone, color: RED, title: "Diseño senior-first", desc: "Interfaz clara, accesible y pensada para el uso diario en casa." },
-  ];
   return (
     <section id="que-es" className="py-20 md:py-24 bg-background">
       <div className="max-w-6xl mx-auto px-6">
-        <div className="text-center max-w-3xl mx-auto mb-12">
-          <div className="text-sm font-bold uppercase tracking-[0.18em] mb-3" style={{ color: PETROL }}>¿Qué es?</div>
+        <div className="text-center max-w-3xl mx-auto mb-10 md:mb-12">
+          <div className="text-sm font-bold uppercase tracking-[0.18em] mb-3" style={{ color: PETROL }}>
+            ¿Qué es?
+          </div>
           <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight">
             Más que una app: un ecosistema de protección familiar.
           </h2>
-          <p className="mt-5 text-lg text-muted-foreground leading-relaxed">
-            Senior Safe integra inteligencia artificial, sensores del teléfono y comunicaciones redundantes para que tu familia reciba ayuda cuando más importa — sin depender de un solo canal.
+          <p className="mt-5 text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+            Senior Safe conecta a tu familiar con la familia en segundos — WhatsApp, SMS, GPS y llamada
+            automática, sin depender de un solo canal.
           </p>
-          <div className="mt-8 flex flex-col items-center text-center gap-4">
-            <p className="text-base md:text-lg text-foreground/90 font-medium max-w-2xl leading-relaxed">
-              Te invitamos a probar el simulador S.O.S: botón de emergencia, tipo de ayuda y panel de envíos a
-              la familia en tiempo real — sin instalar nada.
-            </p>
-            <Link
-              to="/como-funciona"
-              className="inline-flex items-center justify-center gap-2 px-10 py-5 md:px-12 md:py-6 rounded-2xl font-bold text-lg md:text-xl text-white no-underline transition-all duration-200 hover:scale-[1.03] hover:shadow-xl active:scale-[0.98]"
-              style={{
-                backgroundColor: "#007bff",
-                boxShadow: "0 8px 24px rgba(0,123,255,0.35)",
-                fontFamily: "system-ui, sans-serif",
-              }}
+        </div>
+
+        <ul className="grid sm:grid-cols-2 gap-4 md:gap-5 max-w-4xl mx-auto mb-12 md:mb-14">
+          {QUE_ES_BENEFITS.map((benefit) => (
+            <li
+              key={benefit}
+              className="flex items-start gap-3.5 bg-card border border-border rounded-2xl p-5 md:p-6 shadow-sm hover:shadow-md transition-shadow"
             >
-              📱 Entrar — ver cómo funciona en tu celular →
-            </Link>
-            <p className="text-sm text-muted-foreground">Recorrido interactivo · unos 2 minutos · gratis</p>
-          </div>
-        </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-5">
-          {items.map((it) => (
-            <div key={it.title} className="bg-card border border-border rounded-2xl p-6 hover:shadow-lg transition">
-              <span className="w-12 h-12 rounded-xl flex items-center justify-center text-white mb-4" style={{ background: it.color }}>
-                <it.icon className="w-6 h-6" />
+              <CheckCircle2
+                className="w-5 h-5 md:w-6 md:h-6 shrink-0 mt-0.5"
+                style={{ color: GREEN }}
+                aria-hidden
+              />
+              <span className="text-base md:text-lg font-semibold text-foreground leading-snug">
+                {benefit}
               </span>
-              <h3 className="font-bold text-foreground mb-1.5">{it.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{it.desc}</p>
-            </div>
+            </li>
           ))}
-        </div>
-        <div className="mt-12 text-center">
-          <div className="inline-flex items-center gap-3 px-6 py-4 rounded-full text-white font-bold text-lg" style={{ background: DEEP }}>
-            <Shield className="w-5 h-5" />
-            Infraestructura blindada para toda la familia.
-          </div>
+        </ul>
+
+        <div className="flex flex-col items-center text-center gap-4 max-w-2xl mx-auto">
+          <p className="text-base md:text-lg text-foreground/90 font-medium leading-relaxed">
+            Prueba el simulador S.O.S: botón de emergencia, tipo de ayuda y panel de envíos en tiempo
+            real — sin instalar nada.
+          </p>
+          <Link
+            to="/como-funciona"
+            className="inline-flex items-center justify-center gap-2 px-10 py-5 md:px-12 md:py-6 rounded-2xl font-bold text-lg md:text-xl text-white no-underline transition-all duration-200 hover:scale-[1.03] hover:shadow-xl active:scale-[0.98]"
+            style={{
+              backgroundColor: "#007bff",
+              boxShadow: "0 8px 24px rgba(0,123,255,0.35)",
+              fontFamily: "system-ui, sans-serif",
+            }}
+          >
+            📱 Entrar — ver cómo funciona en tu celular →
+          </Link>
+          <p className="text-sm text-muted-foreground">Recorrido interactivo · unos 2 minutos · gratis</p>
         </div>
       </div>
     </section>
@@ -705,84 +736,134 @@ function Beneficios() {
 }
 
 function Planes() {
-  const [yearly, setYearly] = useState(false);
-  const price = yearly ? PLAN.yearly : PLAN.monthly;
-
   return (
     <section id="planes" className="py-20 md:py-24" style={{ background: "var(--gradient-soft)" }}>
       <div className="max-w-6xl mx-auto px-6">
-        <div className="text-center max-w-2xl mx-auto mb-10">
-          <div className="text-sm font-bold uppercase tracking-[0.18em] mb-3" style={{ color: PETROL }}>{PLAN.displayName}</div>
+        <div className="text-center max-w-2xl mx-auto mb-10 md:mb-12">
+          <div className="text-sm font-bold uppercase tracking-[0.18em] mb-3" style={{ color: PETROL }}>
+            {PLAN.displayName}
+          </div>
           <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight">{PLAN.tagline}</h2>
           <p className="mt-4 text-lg text-muted-foreground">Sin permanencia. Cancela cuando quieras.</p>
           <p className="mt-2 text-sm text-muted-foreground max-w-xl mx-auto">{CANCELLATION_POLICY_SUMMARY}</p>
-          <div className="mt-7 inline-flex items-center bg-card border border-border rounded-full p-1.5 shadow-sm">
-            <button
-              onClick={() => setYearly(false)}
-              className={`px-5 py-2 rounded-full text-sm font-semibold transition ${!yearly ? "text-white" : "text-muted-foreground"}`}
-              style={!yearly ? { background: DEEP } : undefined}
-            >
-              Mensual · ${formatPlanPrice(PLAN.monthly)}
-            </button>
-            <button
-              onClick={() => setYearly(true)}
-              className={`px-5 py-2 rounded-full text-sm font-semibold transition flex items-center gap-2 ${yearly ? "text-white" : "text-muted-foreground"}`}
-              style={yearly ? { background: DEEP } : undefined}
-            >
-              Anual · ${formatPlanPrice(PLAN.yearly)}
-              <span className="px-2 py-0.5 rounded-full bg-[#16a34a] text-white text-[10px] font-bold">{PLAN.yearlySavingsLabel.toUpperCase()}</span>
-            </button>
-          </div>
         </div>
 
-        <div className="max-w-lg mx-auto">
-          <div
-            className="p-10 rounded-3xl relative transition shadow-lg text-white"
-            style={{ background: `linear-gradient(135deg, ${DEEP}, ${PETROL})` }}
-          >
-            <span className="absolute -top-3 right-8 px-3 py-1 rounded-full bg-white text-xs font-bold uppercase tracking-wider" style={{ color: DEEP }}>
-              Plan oficial
-            </span>
-            <h3 className="text-sm font-bold uppercase tracking-wider mb-2 text-white/80">{PLAN.displayName}</h3>
-            <p className="text-base mb-7 text-white/85">{PLAN.name} — protección completa.</p>
-            <div className="mb-8">
+        <div className="grid md:grid-cols-2 gap-5 md:gap-6 max-w-4xl mx-auto items-stretch">
+          {/* Plan mensual — ancla */}
+          <article className="relative flex flex-col rounded-3xl border-2 border-border bg-card p-7 md:p-8 shadow-sm">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-1">
+              Plan Mensual
+            </h3>
+            <p className="text-xs text-muted-foreground mb-5">Flexibilidad mes a mes</p>
+            <div className="mb-6">
               <div className="flex items-baseline gap-1">
-                <span className="text-5xl md:text-6xl font-bold tracking-tight">${formatPlanPrice(price)}</span>
-                <span className="text-white/80">/{yearly ? "año" : "mes"}</span>
+                <span className="text-4xl md:text-5xl font-bold tracking-tight text-foreground">
+                  ${formatPlanPrice(PLAN.monthly)}
+                </span>
+                <span className="text-muted-foreground font-medium">/mes</span>
               </div>
-              {yearly ? (
-                <div className="mt-2 text-sm text-[#a7f3d0] font-semibold">
-                  {PLAN.yearlySavingsLabel} · equivale a ${formatPlanPrice(yearlyEquivalentMonthly())}/mes
-                </div>
-              ) : (
-                <div className="mt-2 text-sm text-white/80">
-                  Anual ${formatPlanPrice(PLAN.yearly)} — {PLAN.yearlySavingsLabel.toLowerCase()}
-                </div>
-              )}
             </div>
-            <ul className="space-y-3 mb-10">
-              {PLAN.features.map((f) => (
-                <li key={f} className="flex items-start gap-3 text-base">
-                  <CheckCircle2 className="w-5 h-5 mt-0.5 shrink-0 text-white" />
+            <ul className="space-y-2.5 mb-8 flex-1">
+              {PLAN.features.slice(0, 4).map((f) => (
+                <li key={f} className="flex items-start gap-2.5 text-sm text-muted-foreground">
+                  <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" style={{ color: PETROL }} />
                   <span>{f}</span>
                 </li>
               ))}
             </ul>
-            <div className="space-y-2">
-              <a
-                href={checkoutUrl({ periodo: yearly ? "anual" : "mensual" })}
-                className="block text-center py-4 rounded-full font-bold text-base transition bg-white"
-                style={{ color: DEEP }}
-              >
-                Contratar con Webpay Plus
-              </a>
+            <a
+              href={checkoutUrl({ periodo: "mensual" })}
+              className="block text-center py-3.5 rounded-full font-bold text-sm transition border-2 border-border text-foreground hover:bg-muted/60"
+            >
+              Contratar plan mensual
+            </a>
+          </article>
+
+          {/* Plan anual — destacado */}
+          <article
+            className="relative flex flex-col rounded-3xl border-2 p-7 md:p-8 shadow-xl text-white md:scale-[1.02] md:-my-1"
+            style={{
+              background: `linear-gradient(145deg, ${DEEP}, ${PETROL})`,
+              borderColor: GREEN,
+            }}
+          >
+            <div className="flex flex-wrap gap-2 mb-5 -mt-1">
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white text-[11px] font-bold uppercase tracking-wide shadow-sm" style={{ color: DEEP }}>
+                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" aria-hidden />
+                Más popular
+              </span>
+              <span className="px-3 py-1 rounded-full bg-white/15 border border-white/30 text-[11px] font-bold uppercase tracking-wide">
+                Sin permanencia
+              </span>
+              <span className="px-3 py-1 rounded-full bg-[#22c55e] text-[11px] font-bold uppercase tracking-wide text-white shadow-sm">
+                Activación inmediata
+              </span>
             </div>
-          </div>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-white/80 mb-1">Plan Anual</h3>
+            <p className="text-xs text-white/70 mb-4">La mejor oferta para tu familia</p>
+            <div className="mb-4">
+              <div className="flex flex-wrap items-baseline gap-x-1 gap-y-0">
+                <span className="text-4xl md:text-5xl font-bold tracking-tight">
+                  ${formatPlanPrice(PLAN.yearly)}
+                </span>
+                <span className="text-white/80 font-medium">/año</span>
+              </div>
+              <p className="mt-3 text-sm md:text-base font-bold text-[#bbf7d0] leading-snug">
+                Equivale a ${formatPlanPrice(yearlyEquivalentMonthly())}/mes. ¡Ahorras $
+                {formatPlanPrice(ANNUAL_SAVINGS_CRO_CLP)} al año!
+              </p>
+            </div>
+            <ul className="space-y-2.5 mb-8 flex-1">
+              {PLAN.features.map((f) => (
+                <li key={f} className="flex items-start gap-2.5 text-sm">
+                  <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-white" />
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
+            <a
+              href={checkoutUrl({ periodo: "anual" })}
+              className="block text-center py-4 rounded-full font-bold text-base transition bg-white shadow-lg hover:scale-[1.02] hover:shadow-xl"
+              style={{ color: DEEP }}
+            >
+              Contratar plan anual — mejor oferta
+            </a>
+          </article>
         </div>
 
-        <p className="text-center mt-8 text-sm text-muted-foreground">
-          Pago seguro con Webpay Plus · Cancela cuando quieras
-        </p>
+        {/* Bundle familiar — upsell */}
+        <aside className="mt-6 md:mt-8 max-w-4xl mx-auto rounded-2xl border-2 border-dashed border-[var(--brand-petrol)]/35 bg-card p-5 md:p-6 shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-xs font-bold uppercase tracking-wider mb-1.5" style={{ color: PETROL }}>
+                ¿Quieres cuidar a ambos padres?
+              </p>
+              <p className="text-base md:text-lg font-semibold text-foreground leading-snug">
+                Introduce nuestro{" "}
+                <span className="font-bold" style={{ color: DEEP }}>
+                  {FAMILY_BUNDLE.label}
+                </span>
+                : Protege a {FAMILY_BUNDLE.adults} adultos mayores por{" "}
+                <span className="font-bold">${formatPlanPrice(FAMILY_BUNDLE.monthly)}/mes</span>
+                {" "}— ahorra ${formatPlanPrice(FAMILY_BUNDLE.monthlySavingsVsTwo)}/mes.
+              </p>
+            </div>
+            <a
+              href={seniorSafeWhatsAppMeUrl(
+                `Hola, me interesa el ${FAMILY_BUNDLE.label} para ${FAMILY_BUNDLE.adults} adultos mayores ($${formatPlanPrice(FAMILY_BUNDLE.monthly)}/mes).`,
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex shrink-0 items-center justify-center gap-2 px-6 py-3.5 rounded-full font-bold text-sm text-white transition hover:scale-[1.02] shadow-md"
+              style={{ background: `linear-gradient(135deg, ${DEEP}, ${PETROL})` }}
+            >
+              Consultar bundle familiar
+              <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
+        </aside>
+
+        <TrustStackChileno className="mt-8 max-w-4xl mx-auto" />
       </div>
     </section>
   );
@@ -801,6 +882,7 @@ function Prueba() {
             👉 Contratar Plan Único — ${formatPlanPrice(PLAN.monthly)}/mes
             <ArrowRight className="w-5 h-5" />
           </a>
+          <TrustStackChileno className="mt-8 text-left" />
           <p className="mt-6 text-xs text-muted-foreground">
             Al continuar aceptas nuestros términos y política de privacidad.
           </p>
@@ -863,6 +945,33 @@ function Capturas() {
 function PreguntasFrecuentes() {
   const sections = [
     {
+      title: "Planes y pagos",
+      icon: CheckCircle2,
+      items: [
+        {
+          q: FAQ_CANCELLATION_POSITIVE_Q,
+          a: FAQ_CANCELLATION_POSITIVE_A,
+          highlight: true,
+        },
+        {
+          q: "¿Cuánto cuesta el servicio?",
+          a: `Ofrecemos un Plan Único de protección completa: $${formatPlanPrice(PLAN.monthly)} al mes o $${formatPlanPrice(PLAN.yearly)} al año (${PLAN.yearlySavingsLabel.toLowerCase()}).`,
+        },
+        {
+          q: "¿Existe algún contrato de amarre o permanencia?",
+          a: "No, ninguno. Puede dar de baja el plan cuando lo desee, sin multas. " + CANCELLATION_POLICY_SUMMARY,
+        },
+        {
+          q: "¿Hay reembolso si cancelo el plan?",
+          a: CANCELLATION_POLICY_FAQ_ANSWER,
+        },
+        {
+          q: "¿Cuáles son los medios de pago disponibles?",
+          a: "Los pagos se realizan de manera 100% segura en línea a través de Webpay Plus, utilizando tarjetas de crédito, débito o prepago.",
+        },
+      ],
+    },
+    {
       title: "Funcionamiento",
       icon: Smartphone,
       items: [
@@ -921,28 +1030,6 @@ function PreguntasFrecuentes() {
       ],
     },
     {
-      title: "Planes y pagos",
-      icon: CheckCircle2,
-      items: [
-        {
-          q: "¿Cuánto cuesta el servicio?",
-          a: `Ofrecemos un Plan Único de protección completa: $${formatPlanPrice(PLAN.monthly)} al mes o $${formatPlanPrice(PLAN.yearly)} al año (${PLAN.yearlySavingsLabel.toLowerCase()}).`,
-        },
-        {
-          q: "¿Existe algún contrato de amarre o permanencia?",
-          a: "No, ninguno. Puede dar de baja el plan cuando lo desee, sin multas. " + CANCELLATION_POLICY_SUMMARY,
-        },
-        {
-          q: "¿Hay reembolso si cancelo el plan?",
-          a: CANCELLATION_POLICY_FAQ_ANSWER,
-        },
-        {
-          q: "¿Cuáles son los medios de pago disponibles?",
-          a: "Los pagos se realizan de manera 100% segura en línea a través de Webpay Plus, utilizando tarjetas de crédito, débito o prepago.",
-        },
-      ],
-    },
-    {
       title: "Soporte",
       icon: PhoneCall,
       items: [
@@ -987,6 +1074,24 @@ function PreguntasFrecuentes() {
           </div>
 
           <div className="px-6 md:px-8 py-2">
+            <div
+              className="my-4 rounded-2xl border-2 p-5 md:p-6"
+              style={{
+                borderColor: "color-mix(in oklab, #16a34a 35%, transparent)",
+                background: "color-mix(in oklab, #16a34a 8%, white)",
+              }}
+            >
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" style={{ color: GREEN }} />
+                <div>
+                  <h3 className="text-base md:text-lg font-bold text-foreground">{FAQ_CANCELLATION_POSITIVE_Q}</h3>
+                  <p className="mt-2 text-base text-muted-foreground leading-relaxed">
+                    {FAQ_CANCELLATION_POSITIVE_A}
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {sections.map((section, sectionIdx) => (
               <div key={section.title} className={sectionIdx > 0 ? "mt-6 pt-6 border-t border-border" : "pt-4"}>
                 <div className="flex items-center gap-2 mb-3">
@@ -995,14 +1100,18 @@ function PreguntasFrecuentes() {
                     {section.title}
                   </h3>
                 </div>
-                <Accordion type="single" collapsible className="w-full">
+                <Accordion type="single" collapsible className="w-full" defaultValue="0-0">
                   {section.items.map((item, itemIdx) => (
                     <AccordionItem
                       key={item.q}
                       value={`${sectionIdx}-${itemIdx}`}
-                      className="border-border/70"
+                      className={`border-border/70 ${"highlight" in item && item.highlight ? "bg-green-50/50 rounded-xl px-2 -mx-2" : ""}`}
                     >
-                      <AccordionTrigger className="text-base font-semibold text-foreground hover:no-underline py-4">
+                      <AccordionTrigger
+                        className={`text-base font-semibold text-foreground hover:no-underline py-4 ${
+                          "highlight" in item && item.highlight ? "text-[#15803d]" : ""
+                        }`}
+                      >
                         {item.q}
                       </AccordionTrigger>
                       <AccordionContent className="text-base text-muted-foreground leading-relaxed">
@@ -1037,17 +1146,66 @@ function PreguntasFrecuentes() {
 
 function Testimonios() {
   const items = [
-    { name: "Carmen R.", role: "Hija", quote: "Ahora puedo estar tranquila sabiendo que mi madre puede avisarnos inmediatamente." },
-    { name: "Jorge M.", role: "Adulto mayor, 74", quote: "Es muy fácil de usar. Mis hijos reciben la alerta al instante por WhatsApp y SMS." },
-    { name: "Familia Pérez", role: "Familia conectada", quote: "Por primera vez sentimos que toda la familia está protegida y unida." },
+    {
+      name: "Jorge M.",
+      role: "Adulto mayor, 74",
+      quote:
+        "Es muy fácil de usar. Mis hijos reciben la alerta al instante por WhatsApp y SMS.",
+    },
+    {
+      name: "Paulina S.",
+      role: "Viña del Mar",
+      quote:
+        "Agregar la app a la pantalla de inicio del celular de mi papá fue un trámite de un minuto. Totalmente recomendado.",
+    },
+    {
+      name: "Familia Pérez",
+      role: "Familia conectada",
+      quote: "Por primera vez sentimos que toda la familia está protegida y unida.",
+    },
   ];
   return (
     <section className="py-20 md:py-24 bg-background">
       <div className="max-w-6xl mx-auto px-6">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <div className="text-sm font-bold uppercase tracking-[0.18em] mb-3" style={{ color: PETROL }}>Testimonios</div>
-          <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight">Familias que confían en nosotros.</h2>
+        <div className="text-center max-w-2xl mx-auto mb-10 md:mb-12">
+          <div className="text-sm font-bold uppercase tracking-[0.18em] mb-3" style={{ color: PETROL }}>
+            Testimonios
+          </div>
+          <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight">
+            Familias que confían en nosotros.
+          </h2>
         </div>
+
+        <figure
+          className="relative max-w-4xl mx-auto mb-10 md:mb-12 rounded-3xl border-2 p-8 md:p-12 shadow-lg overflow-hidden"
+          style={{
+            borderColor: "color-mix(in oklab, var(--brand-petrol) 25%, transparent)",
+            background: "linear-gradient(145deg, white 0%, color-mix(in oklab, var(--brand-petrol) 6%, white) 100%)",
+          }}
+        >
+          <Heart
+            className="absolute top-6 right-6 w-8 h-8 fill-red-500/20 text-red-500/40"
+            aria-hidden
+          />
+          <blockquote className="relative">
+            <p className="text-xl sm:text-2xl md:text-3xl font-semibold text-foreground leading-snug md:leading-relaxed">
+              &ldquo;{FEATURED_TESTIMONIAL_CARMEN.quote}&rdquo;
+            </p>
+            <figcaption className="mt-6 flex items-center gap-3">
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
+                style={{ background: PETROL }}
+              >
+                C
+              </div>
+              <div>
+                <cite className="not-italic font-bold text-foreground">{FEATURED_TESTIMONIAL_CARMEN.name}</cite>
+                <span className="block text-sm text-muted-foreground">{FEATURED_TESTIMONIAL_CARMEN.role}</span>
+              </div>
+            </figcaption>
+          </blockquote>
+        </figure>
+
         <div className="grid md:grid-cols-3 gap-6">
           {items.map((t) => (
             <div key={t.name} className="bg-card border border-border rounded-2xl p-7">

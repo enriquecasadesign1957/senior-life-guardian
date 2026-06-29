@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Menu, X, Mail, Globe, Shield, BookOpen } from "lucide-react";
 import logo from "@/assets/logo-senior-safe.png";
 import { PLAN_KEY } from "@/lib/plans";
+import { FIRST_MONTH_PROMO_CODE } from "@/lib/discount-codes";
 import { isDemoMode } from "@/lib/demo/demo-config";
 
 const defaultCheckoutSearch = {
@@ -10,6 +11,33 @@ const defaultCheckoutSearch = {
   plan: PLAN_KEY,
   periodo: "mensual" as const,
 };
+
+/** Altura reservada para la barra fija (padding-top del header). */
+export const ANNOUNCEMENT_BAR_HEIGHT = "2.5rem";
+
+export function AnnouncementBar() {
+  return (
+    <div
+      role="region"
+      aria-label="Promoción"
+      className="fixed top-0 inset-x-0 z-[60] flex items-center justify-center px-4 text-center text-white text-xs sm:text-sm font-semibold tracking-wide leading-snug"
+      style={{
+        height: ANNOUNCEMENT_BAR_HEIGHT,
+        background: "linear-gradient(90deg, #b91c1c 0%, #dc2626 50%, #ea580c 100%)",
+      }}
+    >
+      <p className="max-w-5xl">
+        <Link
+          to="/checkout"
+          search={{ mode: "contratar", plan: PLAN_KEY, periodo: "mensual", codigo: FIRST_MONTH_PROMO_CODE }}
+          className="hover:underline underline-offset-2"
+        >
+          ✓ Sin permanencia · Primer mes con 50% descuento · Cancela cuando quieras
+        </Link>
+      </p>
+    </div>
+  );
+}
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
@@ -22,7 +50,13 @@ export function SiteHeader() {
     { label: "Contacto", href: "/#contacto" },
   ];
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/90 border-b border-border">
+    <>
+      <AnnouncementBar />
+      <div aria-hidden className="shrink-0" style={{ height: ANNOUNCEMENT_BAR_HEIGHT }} />
+      <header
+        className="sticky z-50 backdrop-blur-xl bg-white/90 border-b border-border"
+        style={{ top: ANNOUNCEMENT_BAR_HEIGHT }}
+      >
       <nav className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5">
           <img src={logo} alt="Alarma Senior Safe" className="h-10 w-auto" />
@@ -76,6 +110,7 @@ export function SiteHeader() {
         </div>
       )}
     </header>
+    </>
   );
 }
 

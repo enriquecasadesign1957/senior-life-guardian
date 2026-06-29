@@ -14,6 +14,7 @@ const createSchema = pinSchema.extend({
   applies_monthly: z.boolean().default(true),
   applies_annual: z.boolean().default(true),
   active: z.boolean().default(true),
+  one_per_customer: z.boolean().default(false),
   max_redemptions: z.number().int().min(1).nullable().optional(),
   valid_from: z.string().datetime().nullable().optional(),
   valid_until: z.string().datetime().nullable().optional(),
@@ -29,7 +30,7 @@ const updateSchema = pinSchema.extend({
 });
 
 const DISCOUNT_SELECT =
-  "id,code,label,partner_slug,percent_off,applies_monthly,applies_annual,active,max_redemptions,redemption_count,valid_from,valid_until,notes,created_at,updated_at";
+  "id,code,label,partner_slug,percent_off,applies_monthly,applies_annual,active,one_per_customer,max_redemptions,redemption_count,valid_from,valid_until,notes,created_at,updated_at";
 
 export const adminListDiscountCodes = createServerFn({ method: "POST" })
   .inputValidator((input) => pinSchema.parse(input))
@@ -68,6 +69,7 @@ export const adminCreateDiscountCode = createServerFn({ method: "POST" })
         applies_monthly: data.applies_monthly,
         applies_annual: data.applies_annual,
         active: data.active,
+        one_per_customer: data.one_per_customer,
         max_redemptions: data.max_redemptions ?? null,
         valid_from: data.valid_from ?? null,
         valid_until: data.valid_until ?? null,

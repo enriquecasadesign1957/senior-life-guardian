@@ -504,6 +504,7 @@ export type Database = {
           label: string
           max_redemptions: number | null
           notes: string | null
+          one_per_customer: boolean
           partner_slug: string
           percent_off: number
           redemption_count: number
@@ -521,6 +522,7 @@ export type Database = {
           label: string
           max_redemptions?: number | null
           notes?: string | null
+          one_per_customer?: boolean
           partner_slug: string
           percent_off: number
           redemption_count?: number
@@ -538,6 +540,7 @@ export type Database = {
           label?: string
           max_redemptions?: number | null
           notes?: string | null
+          one_per_customer?: boolean
           partner_slug?: string
           percent_off?: number
           redemption_count?: number

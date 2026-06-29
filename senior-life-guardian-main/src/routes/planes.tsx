@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { CheckCircle2, Shield, Clock, CreditCard, ArrowRight, Sparkles } from "lucide-react";
+import { CheckCircle2, ArrowRight, Sparkles } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
+import { TrustStackChileno } from "@/components/trust-stack-chileno";
 import {
   PLAN,
   checkoutUrl,
@@ -108,6 +109,8 @@ function PlanesPage() {
                 </a>
               </div>
 
+              <TrustStackChileno className="mt-6" variant="onDark" />
+
               <ul className="mt-8 space-y-3.5">
                 {PLAN.features.map((f) => (
                   <li key={f} className="flex items-start gap-3">
@@ -119,38 +122,8 @@ function PlanesPage() {
             </div>
           </div>
 
-          <div className="max-w-5xl mx-auto px-6 mt-14">
-            <div className="bg-card border border-border rounded-3xl p-8 md:p-10 grid sm:grid-cols-3 gap-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white shrink-0" style={{ background: DEEP }}>
-                  <CreditCard className="w-6 h-6" />
-                </div>
-                <div>
-                  <div className="font-bold text-foreground">Webpay</div>
-                  <div className="text-xs text-muted-foreground">Pago seguro en CLP</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white shrink-0" style={{ background: GREEN }}>
-                  <Shield className="w-6 h-6" />
-                </div>
-                <div>
-                  <div className="font-bold text-foreground">Pago 100% seguro</div>
-                  <div className="text-xs text-muted-foreground">Datos cifrados SSL</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white shrink-0" style={{ background: PETROL }}>
-                  <Clock className="w-6 h-6" />
-                </div>
-                <div>
-                  <div className="font-bold text-foreground">Soporte 24/7</div>
-                  <div className="text-xs text-muted-foreground">Asistencia humana siempre</div>
-                </div>
-              </div>
-            </div>
-
-            <p className="text-center text-sm text-muted-foreground mt-8">
+          <div className="max-w-lg mx-auto px-6 mt-10">
+            <p className="text-center text-sm text-muted-foreground">
               ¿Dudas? <Link to="/" hash="contacto" className="font-semibold" style={{ color: DEEP }}>Contáctanos</Link> y te ayudamos.
             </p>
           </div>

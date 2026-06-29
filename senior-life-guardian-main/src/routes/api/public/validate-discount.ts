@@ -8,6 +8,7 @@ const bodySchema = z.object({
   code: z.string().trim().min(2).max(64),
   plan: planKeySchema.transform(normalizePlanKey),
   periodo: periodoSchema,
+  email: z.string().trim().email().max(255).optional().or(z.literal("")),
 });
 
 export const Route = createFileRoute("/api/public/validate-discount")({
@@ -31,6 +32,7 @@ export const Route = createFileRoute("/api/public/validate-discount")({
             parsed.data.code,
             parsed.data.plan,
             parsed.data.periodo,
+            { email: parsed.data.email || undefined },
           );
           return Response.json({
             ok: true,

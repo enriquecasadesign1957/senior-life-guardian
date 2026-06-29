@@ -1,5 +1,4 @@
-import { chargeAmountFromSignup } from "@/lib/discount-codes";
-import { resolveDiscountForCheckout } from "@/lib/discount.functions";
+import { resolveChargeAmountForSignup } from "@/lib/discount.functions";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { Json } from "@/integrations/supabase/types";
 import { normalizePlanKey } from "@/lib/plans";
@@ -14,30 +13,6 @@ import {
 
 function toSupabaseJson(value: Record<string, unknown>): Json {
   return JSON.parse(JSON.stringify(value)) as Json;
-}
-
-async function resolveCheckoutAmount(
-  signup: {
-    plan: string | null;
-    periodo: string | null;
-    discount_code: string | null;
-    list_price: number | null;
-    discount_percent: number | null;
-  },
-  plan: string,
-  periodo: "mensual" | "anual",
-): Promise<number> {
-  let amount = chargeAmountFromSignup(plan, periodo, {
-    list_price: signup.list_price,
-    discount_percent: signup.discount_percent,
-  });
-
-  if (signup.discount_code) {
-    const resolved = await resolveDiscountForCheckout(signup.discount_code, plan, periodo);
-    amount = resolved.finalPrice;
-  }
-
-  return amount;
 }
 
 function computeRenewalDate(periodo: "mensual" | "anual", from = new Date()): Date {
@@ -72,7 +47,7 @@ export async function attemptOneclickRecurringCharge(
   const { data: signup, error } = await supabaseAdmin
     .from(CONTRACT_SIGNUPS_TABLE)
     .select(
-      "id,plan,periodo,discount_code,list_price,discount_percent,oneclick_username,oneclick_tbk_user,payment_status,recurring_billing_consented_at",
+      "id,email,plan,periodo,discount_code,list_price,discount_percent,payment_status,oneclick_username,oneclick_tbk_user,recurring_billing_consented_at",
     )
     .eq("id", signupId)
     .maybeSingle();
@@ -90,7 +65,7 @@ export async function attemptOneclickRecurringCharge(
 
   const periodo = (signup.periodo as "mensual" | "anual") || "mensual";
   const plan = normalizePlanKey(signup.plan);
-  const amount = await resolveCheckoutAmount(signup, plan, periodo);
+  const amount = await resolveChargeAmountForSignup(signup, plan, periodo);
   const { mallBuyOrder, storeBuyOrder } = generateOneclickBuyOrders();
 
   await supabaseAdmin.from("oneclick_transactions").insert({

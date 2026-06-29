@@ -12,6 +12,7 @@ export async function validateDiscountViaApi(
   code: string,
   plan: string,
   periodo: BillingPeriod,
+  email?: string,
 ): Promise<PublicDiscountPreview> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), VALIDATE_TIMEOUT_MS);
@@ -20,7 +21,12 @@ export async function validateDiscountViaApi(
     const res = await fetch("/api/public/validate-discount", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code, plan, periodo }),
+      body: JSON.stringify({
+        code,
+        plan,
+        periodo,
+        ...(email?.trim() ? { email: email.trim().toLowerCase() } : {}),
+      }),
       signal: controller.signal,
     });
 

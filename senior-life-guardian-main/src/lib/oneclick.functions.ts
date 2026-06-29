@@ -1,8 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { assertAdminPin } from "@/lib/admin-auth";
-import { chargeAmountFromSignup } from "@/lib/discount-codes";
-import { recordDiscountRedemption, resolveDiscountForCheckout } from "@/lib/discount.functions";
+import { recordDiscountRedemption, resolveChargeAmountForSignup } from "@/lib/discount.functions";
 import { CONTRACT_SIGNUPS_TABLE, isSignupPaidAndActive } from "@/lib/signups-db";
 import { normalizePlanKey, planKeySchema, periodoSchema } from "@/lib/plans";
 import { clearRenewalNoticeFlags } from "@/lib/subscription-renewal-flags";
@@ -114,30 +113,6 @@ async function runValidationAuthorize(
   return { auth, primary, mallBuyOrder, storeBuyOrder, amount };
 }
 
-async function resolveCheckoutAmount(
-  signup: {
-    plan: string | null;
-    periodo: string | null;
-    discount_code: string | null;
-    list_price: number | null;
-    discount_percent: number | null;
-  },
-  plan: string,
-  periodo: "mensual" | "anual",
-): Promise<number> {
-  let amount = chargeAmountFromSignup(plan, periodo, {
-    list_price: signup.list_price,
-    discount_percent: signup.discount_percent,
-  });
-
-  if (signup.discount_code) {
-    const resolved = await resolveDiscountForCheckout(signup.discount_code, plan, periodo);
-    amount = resolved.finalPrice;
-  }
-
-  return amount;
-}
-
 function computeRenewalDate(periodo: "mensual" | "anual", from = new Date()): Date {
   const renewal = new Date(from);
   if (periodo === "anual") renewal.setFullYear(renewal.getFullYear() + 1);
@@ -187,7 +162,7 @@ export const initOneclickCheckout = createServerFn({ method: "POST" })
     }
     const periodo = (signup.periodo as "mensual" | "anual") || data.periodo;
     const plan = normalizePlanKey(signup.plan || data.plan);
-    let amount = await resolveCheckoutAmount(signup, plan, periodo);
+    let amount = await resolveChargeAmountForSignup(signup, plan, periodo);
     const prodTestAmount = resolveProdTestCheckoutAmount();
     if (prodTestAmount != null) amount = prodTestAmount;
     const username = generateOneclickUsername(data.signupId);

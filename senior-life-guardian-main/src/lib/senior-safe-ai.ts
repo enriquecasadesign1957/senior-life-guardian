@@ -95,8 +95,8 @@ FAQ — SOPORTE
 P: ¿Tienen atención por dudas?
 R: Sí. El Plan Único incluye soporte prioritario 24/7 para configuración de guardianes y la app. WhatsApp comercial o correo ${SENIOR_SAFE_SUPPORT_EMAIL}.
 
-P: ¿Cómo descargo o instalo la app?
-R: Guía paso a paso en ${SENIOR_SAFE_INSTALL_GUIDE_URL} — contratar, abrir enlace en el celular, instalar en pantalla de inicio (Android/iPhone), configurar PIN y guardianes, escribir ACTIVAR por WhatsApp.
+P: ¿Cómo descargo o instalo la app? / ¿Está en Google Play o App Store?
+R: NO está en tiendas tradicionales (Google Play / App Store). Ventaja: no ocupa espacio extra ni requiere contraseñas difíciles. Tras contratar, se abre un enlace seguro en el navegador del celular y con un toque se añade un ícono a la pantalla de inicio (como cualquier app). Simulador antes de contratar: ${SENIOR_SAFE_SOS_SIMULATOR_URL}. Plan $6.900/mes: pago Transbank en ${SENIOR_SAFE_CHECKOUT_URL} y guía paso a paso para activar el botón S.O.S. Guía extendida: ${SENIOR_SAFE_INSTALL_GUIDE_URL}.
 
 P: ¿Cómo se usa la app día a día?
 R: Ver sección "Uso diario" en ${SENIOR_SAFE_INSTALL_GUIDE_URL}: botón SOS rojo para emergencias; sensor de caídas con sirena 30 s para cancelar si está bien.
@@ -143,6 +143,7 @@ CIERRE OBLIGATORIO: Termina SIEMPRE con una pregunta abierta que avance la conve
 
 REGLAS ESTRICTAS:
 - Solo información del CONTEXTO OFICIAL adjunto. No inventes funciones, precios ni plazos.
+- Si pregunta cómo descargar/instalar la app o si está en Google Play / App Store: NO está en tiendas; es ventaja (poco espacio, sin contraseñas difíciles). Enlace seguro → ícono en pantalla de inicio. Simulador: ${SENIOR_SAFE_SOS_SIMULATOR_URL}. Contratar: ${SENIOR_SAFE_CHECKOUT_URL}. Cierra preguntando si quiere los pasos y si su papá/mamá usa smartphone con internet.
 - Si pregunta cómo funciona, quiere ver el flujo, probar el botón SOS, demo o simulador: comparte ${SENIOR_SAFE_SOS_SIMULATOR_URL} y explica que puede pulsar S.O.S, elegir Salud/Accidente/Delincuencia y ver el panel de envíos en vivo (sin instalar).
 - Contratación: ${SENIOR_SAFE_CHECKOUT_URL}
 - Tras contratar y pagar: el cliente envía ACTIVAR por WhatsApp (solo funciona con pago confirmado). Guía: ${SENIOR_SAFE_INSTALL_GUIDE_URL}
@@ -203,6 +204,7 @@ CIERRE OBLIGATORIO: Pregunta directa y sencilla. Ejemplos:
 
 REGLAS ESTRICTAS:
 - Solo información del CONTEXTO OFICIAL adjunto. No invente nada.
+- Si pregunta cómo descargar/instalar o si está en Google Play / App Store: NO está en tiendas; ventaja (poco espacio, sin contraseñas complicadas). Enlace seguro → ícono en pantalla de inicio. Simulador: ${SENIOR_SAFE_SOS_SIMULATOR_URL}. Contratar: ${SENIOR_SAFE_CHECKOUT_URL}. Cierre preguntando si desea los pasos y si usa smartphone con internet.
 - Si pregunta cómo funciona, quiere ver el flujo, probar el botón de emergencia, demo o simulador: comparta ${SENIOR_SAFE_SOS_SIMULATOR_URL} y explique en pocas palabras: toque el botón rojo, elija el tipo de ayuda y vea cómo avisa a su familia (sin instalar nada).
 - Contratación: ${SENIOR_SAFE_CHECKOUT_URL} — "Le ayudamos en cada paso."
 - Si ya pagó en checkout: escriba ACTIVAR por WhatsApp (el sistema lo verifica). Guía: ${SENIOR_SAFE_INSTALL_GUIDE_URL}
@@ -294,6 +296,46 @@ function wantsSosSimulator(text: string): boolean {
 
 function replyIncludesSimulator(text: string): boolean {
   return /simulador-senior-safe|\/simulador\b/i.test(text);
+}
+
+const APP_DOWNLOAD_STORE_SIGNAL =
+  /\b(google play|play store|app store|apple store|playstore|appstore|tienda de apps?|tienda de aplicaciones|tiendas tradicionales|disponible en (google|play|app store|la tienda)|est[aá] en (google play|play store|app store|play|google|la tienda)|hay en (google play|play store|play|la tienda)|publicad[oa] en play|descarg(ar|o|a|ue) (la )?app|como descarg|d[oó]nde descarg|como (la )?instal|como bajo|bajar (la )?app|instal[ae]r (la )?app|instalaci[oó]n de la app|link de descarga|enlace de descarga|descarga de la app)\b/;
+
+const APP_DOWNLOAD_GENERAL_SIGNAL =
+  /\b(como descarg|d[oó]nde descarg|descargar|descargo|instalar|instalo|instalaci[oó]n|bajar la app)\b/;
+
+function wantsAppDownloadOrStoreInfo(text: string): boolean {
+  const q = normalizeForAudienceMatch(text);
+  return APP_DOWNLOAD_STORE_SIGNAL.test(q) || APP_DOWNLOAD_GENERAL_SIGNAL.test(q);
+}
+
+function appDownloadStoreFallbackReply(audience: WhatsAppCommercialAudience): string {
+  const base = "Senior Safe 🛡️\n";
+  if (audience === "senior") {
+    return (
+      base +
+      "Hola! Nuestra aplicación no se descarga de Google Play ni App Store. " +
+      "Así ocupa menos espacio en su celular y no requiere contraseñas complicadas. 🛡️\n\n" +
+      "Funciona al instante: abre un enlace seguro en el navegador de su teléfono y, con un solo toque, " +
+      "queda un ícono en la pantalla de inicio, listo como cualquier app.\n\n" +
+      `• Antes de instalar, pruebe el simulador (Salud, Accidente y Delincuencia): ${SENIOR_SAFE_SOS_SIMULATOR_URL}\n` +
+      `• Si desea el plan único de $6.900/mes, le envío el pago seguro Transbank: ${SENIOR_SAFE_CHECKOUT_URL} ` +
+      "y le guío paso a paso para dejar activo el botón S.O.S.\n\n" +
+      "¿Le gustaría que le explique los pasos? ¿Usted ya usa un smartphone con acceso a internet?"
+    );
+  }
+  return (
+    base +
+    "Hola! Nuestra aplicación no se descarga de las tiendas tradicionales como Google Play o App Store, " +
+    "lo que es una gran ventaja porque no ocupa espacio en el celular de tu familiar ni requiere contraseñas difíciles. 🛡️\n\n" +
+    "Funciona de forma instantánea: abres un enlace seguro en el navegador del celular y, con un solo toque, " +
+    "se añade un icono directo a la pantalla de inicio, lista como cualquier otra app.\n\n" +
+    `• Antes de instalarla, revisa nuestro simulador para ver en tiempo real ` +
+    `cómo funciona el sistema de alertas (Salud, Accidente y Delincuencia): ${SENIOR_SAFE_SOS_SIMULATOR_URL}\n` +
+    `• Si deseas contratar nuestro plan único de $6.900/mes, te proporciono el enlace de pago seguro por Transbank: ${SENIOR_SAFE_CHECKOUT_URL} ` +
+    "y te guío paso a paso para dejar el botón S.O.S activo en el teléfono de tu familiar.\n\n" +
+    "¿Te gustaría que te explique los pasos? ¿Tu papá o mamá ya usa un smartphone con acceso a internet?"
+  );
 }
 
 function simulatorFallbackReply(audience: WhatsAppCommercialAudience): string {
@@ -546,7 +588,10 @@ function fallbackReply(userMessage: string, audience: WhatsAppCommercialAudience
       " 💙"
     );
   }
-  if (/instal|descarg|qr|pwa|configur|como uso|usar la app|paso a paso/.test(q)) {
+  if (wantsAppDownloadOrStoreInfo(userMessage)) {
+    return appDownloadStoreFallbackReply(audience);
+  }
+  if (/qr|pwa|configur|como uso|usar la app|paso a paso/.test(q)) {
     return (
       base +
       `Te dejamos la guía completa paso a paso aquí: ${SENIOR_SAFE_INSTALL_GUIDE_URL} 😊 Si te atoras, escríbenos por aquí mismo.`
@@ -752,6 +797,10 @@ export async function generateSeniorSafeWhatsAppReply(
 
   if (wantsSosSimulator(trimmed)) {
     return simulatorFallbackReply(audience);
+  }
+
+  if (wantsAppDownloadOrStoreInfo(trimmed)) {
+    return appDownloadStoreFallbackReply(audience);
   }
 
   const systemPrompt = whatsAppSystemPromptForAudience(audience);

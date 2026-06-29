@@ -1,5 +1,8 @@
 import { normalizePlanKey, planAmount, type BillingPeriod } from "@/lib/plans";
 
+/** Código promocional público — 50% primer mes (checkout). */
+export const FIRST_MONTH_PROMO_CODE = "PRIMER50";
+
 export type DiscountCodeRow = {
   id: string;
   code: string;
@@ -9,6 +12,7 @@ export type DiscountCodeRow = {
   applies_monthly: boolean;
   applies_annual: boolean;
   active: boolean;
+  one_per_customer: boolean;
   max_redemptions: number | null;
   redemption_count: number;
   valid_from: string | null;
