@@ -14,6 +14,14 @@ import { installApiBaseFetch } from "@/lib/api-base";
 import { productionHomeUrl } from "@/lib/app-url";
 import { Toaster } from "@/components/ui/sonner";
 
+/** Microsoft Clarity — mapas de calor y sesiones (producción). */
+const CLARITY_PROJECT_ID = "xepub34xxl";
+const CLARITY_HEAD_SNIPPET = `(function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "${CLARITY_PROJECT_ID}");`;
+
 // Parchea fetch para APK (Capacitor / file://). En preview de Lovable y
 // localhost NO se activa para evitar CORS. Se ejecuta dentro de useEffect
 // (ver RootComponent) para no interferir con la evaluación del módulo durante SSR.
@@ -147,6 +155,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
     <html lang="en">
       <head>
         <HeadContent />
+        <script
+          type="text/javascript"
+          dangerouslySetInnerHTML={{ __html: CLARITY_HEAD_SNIPPET }}
+        />
       </head>
       <body>
         {children}
