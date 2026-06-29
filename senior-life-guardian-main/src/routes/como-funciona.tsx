@@ -175,53 +175,56 @@ function ComoFuncionaPage() {
         <Collapsible
           open={simulatorOpen}
           onOpenChange={setSimulatorOpen}
-          className="my-12 sm:my-14 md:my-16 lg:my-20 max-w-3xl mx-auto"
+          className="my-12 sm:my-14 md:my-16 lg:my-20 w-full max-w-3xl mx-auto px-1 sm:px-0"
         >
           <CollapsibleTrigger
             aria-expanded={simulatorOpen}
-            className={`group relative flex w-full items-center gap-4 sm:gap-5 rounded-2xl sm:rounded-3xl border-2 px-4 py-5 sm:px-6 sm:py-6 text-left shadow-md transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 active:scale-[0.99] ${
+            className={`group relative flex w-full flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 rounded-xl sm:rounded-2xl border border-slate-200/90 px-5 py-5 sm:px-6 sm:py-6 text-center sm:text-left shadow-md transition-all duration-200 cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 active:scale-[0.98] active:shadow-sm touch-manipulation ${
               simulatorOpen
-                ? "border-sky-400 bg-gradient-to-br from-sky-100 via-sky-50 to-white shadow-lg ring-2 ring-sky-200/60"
-                : "border-sky-200/90 bg-gradient-to-br from-slate-50 via-sky-50/80 to-white hover:border-sky-300 hover:from-sky-50 hover:to-white hover:shadow-lg hover:-translate-y-0.5"
+                ? "bg-sky-50 border-sky-300 shadow-lg ring-2 ring-sky-200/70"
+                : "bg-gray-100 hover:bg-gray-200/90 hover:shadow-lg hover:border-slate-300 hover:-translate-y-0.5"
             }`}
           >
             <span
-              className={`flex shrink-0 items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl shadow-sm transition-colors ${
+              className={`mx-auto sm:mx-0 flex shrink-0 items-center justify-center w-14 h-14 rounded-xl shadow-sm transition-colors ${
                 simulatorOpen
-                  ? "bg-sky-500 text-white"
-                  : "bg-white text-sky-600 border border-sky-100 group-hover:bg-sky-500 group-hover:text-white group-hover:border-sky-400"
+                  ? "bg-sky-600 text-white"
+                  : "bg-white text-sky-600 border border-sky-100 group-hover:bg-sky-600 group-hover:text-white group-hover:border-sky-500"
               }`}
               aria-hidden
             >
-              <Laptop className="w-6 h-6 sm:w-7 sm:h-7" />
+              <Laptop className="w-7 h-7" />
             </span>
 
-            <span className="min-w-0 flex-1 space-y-1 sm:space-y-1.5">
-              <span className="flex items-center gap-2 flex-wrap">
-                <span className="text-base sm:text-lg md:text-xl font-extrabold text-slate-900 leading-tight">
+            <span className="min-w-0 flex-1 space-y-2">
+              <span className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+                <span className="text-lg sm:text-xl md:text-2xl font-extrabold text-slate-900 leading-tight tracking-tight">
                   ¡Pruébalo en tiempo real!
                 </span>
                 <Play
-                  className={`w-4 h-4 sm:w-5 sm:h-5 shrink-0 fill-current ${
-                    simulatorOpen ? "text-sky-600" : "text-sky-500 group-hover:text-sky-600"
+                  className={`w-5 h-5 shrink-0 fill-current ${
+                    simulatorOpen ? "text-sky-700" : "text-sky-500 group-hover:text-sky-700"
                   }`}
                   aria-hidden
                 />
               </span>
-              <span className="block text-xs sm:text-sm text-slate-600 leading-snug">
-                💻 ¿Quieres ver cómo funciona?{" "}
-                <span className="font-semibold text-slate-800">
+              <span className="block text-sm sm:text-[15px] leading-relaxed max-w-md mx-auto sm:mx-0">
+                <span className="text-slate-500">💻 ¿Quieres ver cómo funciona? </span>
+                <span className="text-slate-700 font-medium">
                   Haz clic aquí para activar el simulador en vivo
                 </span>
               </span>
             </span>
 
             <ChevronDown
-              className={`w-5 h-5 sm:w-6 sm:h-6 shrink-0 text-sky-500 transition-transform duration-300 ${
+              className={`hidden sm:block w-6 h-6 shrink-0 text-sky-600 transition-transform duration-300 ${
                 simulatorOpen ? "rotate-180" : "group-hover:translate-y-0.5"
               }`}
               aria-hidden
             />
+            <span className="sm:hidden text-xs font-semibold text-sky-700 mt-1">
+              {simulatorOpen ? "Toca para cerrar ↑" : "Toca para abrir ↓"}
+            </span>
           </CollapsibleTrigger>
           <CollapsibleContent className="pt-5 sm:pt-6 md:pt-7 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden">
             <p className="text-xs sm:text-sm text-muted-foreground mb-4 leading-relaxed max-w-2xl">
