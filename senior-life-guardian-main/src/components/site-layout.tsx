@@ -14,8 +14,8 @@ const defaultCheckoutSearch = {
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const links = [
+    { label: "Inicio", href: "/", isRoute: true },
     { label: "¿Qué es?", href: "/#que-es" },
-    { label: "Funciones técnicas", href: "/#funciones" },
     { label: "Cómo funciona", href: "/como-funciona", isRoute: true },
     { label: "Planes", href: "/#planes" },
     { label: "Guía de uso", href: "/guia", isRoute: true },
@@ -100,8 +100,8 @@ export function SiteFooter() {
         <div>
           <h4 className="text-xs uppercase tracking-wider text-white/50 mb-4 font-bold">Producto</h4>
           <ul className="space-y-3 text-sm">
+            <li><Link to="/" className="text-white/85 hover:text-white">Inicio</Link></li>
             <li><a href="/#que-es" className="text-white/85 hover:text-white">¿Qué es?</a></li>
-            <li><a href="/#funciones" className="text-white/85 hover:text-white">Funciones técnicas</a></li>
             <li><Link to="/como-funciona" className="text-white/85 hover:text-white">Cómo funciona</Link></li>
             <li><a href="/#planes" className="text-white/85 hover:text-white">Planes</a></li>
             <li><Link to="/guia" className="text-white/85 hover:text-white">Guía de instalación</Link></li>
