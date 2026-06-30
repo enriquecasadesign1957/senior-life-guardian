@@ -1,21 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import {
-  ArrowLeft,
-  ArrowRight,
-  ChevronDown,
-  Laptop,
-  Play,
-  Star,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Play, Star } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { WhatsAppFloat } from "@/components/whatsapp-float";
 import { EmergencySimulator } from "@/components/sales-demo/emergency-simulator";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { checkoutUrl, formatPlanPrice, PLAN } from "@/lib/plans";
 
 const YOUTUBE_VIDEO_ID = "xSOKFh1oZnI";
@@ -66,11 +54,11 @@ const TRUST_CTA_ITEMS = [
 export const Route = createFileRoute("/como-funciona")({
   head: () => ({
     meta: [
-      { title: "Cómo protege Senior Safe a tu familia — Video y testimonios" },
+      { title: "Cómo protege Senior Safe a tu familia — Simulador y testimonios" },
       {
         name: "description",
         content:
-          "Mira cómo Senior Safe alerta a tu familia al instante por WhatsApp, SMS y llamada. Sin equipos caros. Desde $6.900 al mes, sin permanencia.",
+          "Prueba el simulador SOS en vivo y mira cómo Senior Safe alerta a tu familia por WhatsApp, SMS y llamada. Desde $6.900/mes, sin permanencia.",
       },
     ],
   }),
@@ -91,31 +79,25 @@ function StarRating() {
   );
 }
 
-function VideoHeroSection({ compact = false }: { compact?: boolean }) {
+function VideoReinforcementSection() {
   const [playing, setPlaying] = useState(false);
 
   return (
-    <section aria-labelledby="video-tranquilidad" className={compact ? "mt-0" : "mt-8 md:mt-10"}>
-      {!compact && (
-        <>
-          <h2
-            id="video-tranquilidad"
-            className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-slate-900 leading-snug px-1"
-          >
-            La tranquilidad que tu familia merece
-          </h2>
-          <p className="text-center text-muted-foreground text-sm sm:text-base max-w-xl mx-auto mt-3 mb-5 md:mb-6 leading-relaxed px-1">
-            Conoce en 2 minutos cómo funciona Senior Safe — sin equipos caros ni permanencias.
-          </p>
-        </>
-      )}
-      {compact && (
-        <h2 id="video-tranquilidad" className="sr-only">
-          Video explicativo Senior Safe
-        </h2>
-      )}
+    <section
+      aria-labelledby="video-tranquilidad"
+      className="mt-10 md:mt-14 pt-8 md:pt-10 border-t border-slate-200"
+    >
+      <h2
+        id="video-tranquilidad"
+        className="text-lg sm:text-xl md:text-2xl font-bold text-center text-slate-900 leading-snug px-1"
+      >
+        Mira cómo Senior Safe protege a tu familiar en caso de emergencia
+      </h2>
+      <p className="text-center text-muted-foreground text-sm sm:text-base max-w-xl mx-auto mt-2 mb-5 md:mb-6 leading-relaxed px-1 line-clamp-2 sm:line-clamp-none">
+        Ya probaste el simulador — ahora conoce el servicio completo en 2 minutos.
+      </p>
 
-      <div className={`relative aspect-video w-full max-w-2xl mx-auto rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-slate-900 ${compact ? "max-h-[200px] sm:max-h-none" : ""}`}>
+      <div className="relative aspect-video w-full max-w-2xl mx-auto rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-slate-900">
         {playing ? (
           <iframe
             src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}?rel=0&modestbranding=1&autoplay=1`}
@@ -135,15 +117,15 @@ function VideoHeroSection({ compact = false }: { compact?: boolean }) {
               src={YOUTUBE_THUMB}
               alt=""
               className="absolute inset-0 h-full w-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-              loading="eager"
+              loading="lazy"
             />
             <span className="absolute inset-0 bg-slate-950/35 group-hover:bg-slate-950/25 transition-colors" />
             <span className="relative z-10 flex flex-col items-center gap-3 px-4">
-              <span className="flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#00845a] text-white shadow-2xl group-hover:scale-105 group-hover:bg-[#006b48] transition-all duration-300">
-                <Play className="w-7 h-7 sm:w-9 sm:h-9 ml-1 fill-current" aria-hidden />
+              <span className="flex items-center justify-center w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-[#00845a] text-white shadow-2xl group-hover:scale-105 group-hover:bg-[#006b48] transition-all duration-300">
+                <Play className="w-6 h-6 sm:w-9 sm:h-9 ml-1 fill-current" aria-hidden />
               </span>
               <span className="text-white text-sm sm:text-base font-bold drop-shadow-md text-center leading-snug">
-                Ver cómo protege a tu familia
+                Ver video explicativo
               </span>
             </span>
           </button>
@@ -153,81 +135,7 @@ function VideoHeroSection({ compact = false }: { compact?: boolean }) {
   );
 }
 
-function SimulatorCollapsible({
-  open,
-  onOpenChange,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  return (
-    <Collapsible
-      open={open}
-      onOpenChange={onOpenChange}
-      className="my-12 sm:my-14 md:my-16 lg:my-20 w-full max-w-3xl mx-auto px-1 sm:px-0"
-    >
-      <CollapsibleTrigger
-        aria-expanded={open}
-        className={`group relative flex w-full flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 rounded-xl sm:rounded-2xl border border-slate-200/90 px-5 py-5 sm:px-6 sm:py-6 text-center sm:text-left shadow-md transition-all duration-200 cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 active:scale-[0.98] active:shadow-sm touch-manipulation ${
-          open
-            ? "bg-sky-50 border-sky-300 shadow-lg ring-2 ring-sky-200/70"
-            : "bg-gray-100 hover:bg-gray-200/90 hover:shadow-lg hover:border-slate-300 hover:-translate-y-0.5"
-        }`}
-      >
-        <span
-          className={`mx-auto sm:mx-0 flex shrink-0 items-center justify-center w-14 h-14 rounded-xl shadow-sm transition-colors ${
-            open
-              ? "bg-sky-600 text-white"
-              : "bg-white text-sky-600 border border-sky-100 group-hover:bg-sky-600 group-hover:text-white group-hover:border-sky-500"
-          }`}
-          aria-hidden
-        >
-          <Laptop className="w-7 h-7" />
-        </span>
-
-        <span className="min-w-0 flex-1 space-y-2">
-          <span className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
-            <span className="text-lg sm:text-xl md:text-2xl font-extrabold text-slate-900 leading-tight tracking-tight">
-              ¡Pruébalo en tiempo real!
-            </span>
-            <Play
-              className={`w-5 h-5 shrink-0 fill-current ${
-                open ? "text-sky-700" : "text-sky-500 group-hover:text-sky-700"
-              }`}
-              aria-hidden
-            />
-          </span>
-          <span className="block text-sm sm:text-[15px] leading-relaxed max-w-md mx-auto sm:mx-0">
-            <span className="text-slate-500">💻 ¿Quieres ver cómo funciona? </span>
-            <span className="text-slate-700 font-medium">
-              Haz clic aquí para activar el simulador en vivo
-            </span>
-          </span>
-        </span>
-
-        <ChevronDown
-          className={`hidden sm:block w-6 h-6 shrink-0 text-sky-600 transition-transform duration-300 ${
-            open ? "rotate-180" : "group-hover:translate-y-0.5"
-          }`}
-          aria-hidden
-        />
-        <span className="sm:hidden text-xs font-semibold text-sky-700 mt-1">
-          {open ? "Toca para cerrar ↑" : "Toca para abrir ↓"}
-        </span>
-      </CollapsibleTrigger>
-      <CollapsibleContent className="pt-5 sm:pt-6 md:pt-7 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden">
-        <p className="text-xs sm:text-sm text-muted-foreground mb-4 leading-relaxed max-w-2xl">
-          Pulsa el botón SOS, elige el tipo de ayuda y observa cómo llegan WhatsApp, SMS y llamada
-          al panel del cuidador. Datos simulados — sin registro.
-        </p>
-        <EmergencySimulator embedded showIntro={false} showConversionTrigger />
-      </CollapsibleContent>
-    </Collapsible>
-  );
-}
-
 function ComoFuncionaPage() {
-  const [simulatorOpen, setSimulatorOpen] = useState(false);
   const monthlyLabel = `$${formatPlanPrice(PLAN.monthly)}/mes`;
 
   return (
@@ -242,50 +150,37 @@ function ComoFuncionaPage() {
           Volver al inicio
         </Link>
 
-        {/* Hero móvil — compacto para in-app browsers (Instagram, etc.) */}
-        <header className="text-center max-w-3xl mx-auto md:hidden">
-          <h1 className="text-xl font-extrabold text-slate-900 leading-tight tracking-tight px-1">
+        {/* 1. Hero */}
+        <header className="text-center max-w-3xl mx-auto">
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-slate-900 leading-tight tracking-tight px-1">
             Protege a tu familiar en una emergencia
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground leading-snug line-clamp-2 px-1">
+          <p className="mt-2 md:mt-4 text-sm sm:text-base md:text-lg text-muted-foreground leading-snug md:leading-relaxed max-w-2xl mx-auto px-1 line-clamp-2 md:line-clamp-none">
             Un botón y la alerta llega al instante por WhatsApp, SMS y llamada.
           </p>
         </header>
 
-        {/* Simulador primero en móvil — S.O.S above the fold */}
-        <div className="mt-2 md:hidden">
+        {/* 2. Simulador interactivo — inmediatamente tras el hero */}
+        <section aria-labelledby="simulador-titulo" className="mt-3 md:mt-6">
+          <h2 id="simulador-titulo" className="sr-only">
+            Simulador interactivo Senior Safe
+          </h2>
+          <p className="text-center text-xs sm:text-sm font-semibold text-sky-700 mb-2 md:mb-3">
+            ¡Pruébalo en tiempo real! Toca S.O.S abajo ↓
+          </p>
           <EmergencySimulator
             embedded
             showIntro={false}
             showConversionTrigger
             priorityMobile
           />
-        </div>
+        </section>
 
-        {/* Hero desktop */}
-        <header className="hidden md:block text-center max-w-3xl mx-auto">
-          <h1 className="text-3xl md:text-4xl lg:text-[2.65rem] font-extrabold text-slate-900 leading-tight tracking-tight px-1">
-            Mira cómo Senior Safe protege a tu familiar en caso de emergencia
-          </h1>
-          <p className="mt-4 md:mt-5 text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto px-1">
-            Sin configuraciones difíciles, sin equipos costosos. Tu familiar solo presiona un botón y
-            la alerta te llega al instante por WhatsApp, SMS y llamada.
-          </p>
-        </header>
-
-        <div className="hidden md:block">
-          <VideoHeroSection />
-          <SimulatorCollapsible open={simulatorOpen} onOpenChange={setSimulatorOpen} />
-        </div>
-
-        <div className="md:hidden mt-6">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide text-center mb-3">
-            Ver video explicativo
-          </p>
-          <VideoHeroSection compact />
-        </div>
+        {/* 3. Video — refuerzo después del simulador */}
+        <VideoReinforcementSection />
       </main>
 
+      {/* 4. Testimonios */}
       <section
         aria-labelledby="testimonios-titulo"
         className="bg-slate-50 border-y border-slate-100 py-10 md:py-16 mt-8 md:mt-12"
@@ -329,6 +224,7 @@ function ComoFuncionaPage() {
         </div>
       </section>
 
+      {/* CTA final */}
       <section aria-labelledby="cta-contratar" className="py-12 md:py-20 bg-background">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 text-center">
           <h2
