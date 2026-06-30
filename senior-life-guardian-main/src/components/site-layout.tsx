@@ -20,9 +20,8 @@ export function AnnouncementBar() {
     <div
       role="region"
       aria-label="Promoción"
-      className="fixed top-0 inset-x-0 z-[60] flex items-center justify-center px-4 text-center text-white text-xs sm:text-sm font-semibold tracking-wide leading-snug"
+      className="fixed top-0 inset-x-0 z-[60] flex h-8 md:h-10 items-center justify-center px-2 sm:px-4 text-center text-white text-[10px] sm:text-xs md:text-sm font-semibold tracking-wide leading-snug"
       style={{
-        height: ANNOUNCEMENT_BAR_HEIGHT,
         background: "linear-gradient(90deg, #b91c1c 0%, #dc2626 50%, #ea580c 100%)",
       }}
     >
@@ -52,14 +51,13 @@ export function SiteHeader() {
   return (
     <>
       <AnnouncementBar />
-      <div aria-hidden className="shrink-0" style={{ height: ANNOUNCEMENT_BAR_HEIGHT }} />
+      <div aria-hidden className="shrink-0 h-8 md:h-10" />
       <header
-        className="sticky z-50 backdrop-blur-xl bg-white/90 border-b border-border"
-        style={{ top: ANNOUNCEMENT_BAR_HEIGHT }}
+        className="sticky z-50 top-8 md:top-10 backdrop-blur-xl bg-white/90 border-b border-border"
       >
-      <nav className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2.5">
-          <img src={logo} alt="Alarma Senior Safe" className="h-10 w-auto" />
+      <nav className="max-w-6xl mx-auto px-3 sm:px-5 h-11 md:h-16 py-2 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-2">
+          <img src={logo} alt="Alarma Senior Safe" className="h-7 w-auto md:h-10" />
         </Link>
         <div className="hidden md:flex items-center gap-7 text-sm text-muted-foreground font-medium">
           {links.map((l) =>

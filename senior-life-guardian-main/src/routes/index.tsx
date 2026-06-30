@@ -69,7 +69,7 @@ const HERO_TRUST_AVATARS = [
 function HeroSocialProof() {
   return (
     <div
-      className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5 animate-fade-in"
+      className="hidden sm:flex mt-5 flex-col gap-3 sm:flex-row sm:items-center sm:gap-5 animate-fade-in"
       style={{ animationDelay: "320ms" }}
     >
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -100,7 +100,7 @@ function HeroSocialProof() {
 
 function HeroCreative() {
   return (
-    <div className="relative mx-auto w-full max-w-[420px] lg:max-w-none">
+    <div className="relative mx-auto w-full max-w-[420px] lg:max-w-none hidden md:block">
       <div
         className="absolute -inset-4 rounded-[2rem] bg-gradient-to-tr from-white/20 via-amber-300/15 to-emerald-400/20 blur-2xl"
         aria-hidden
@@ -139,10 +139,10 @@ function Hero() {
       className="relative overflow-hidden text-white"
       style={{ background: `linear-gradient(135deg, ${DEEP} 0%, ${PETROL} 55%, oklch(0.5 0.14 235) 100%)` }}
     >
-      <div className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full bg-white/10 blur-3xl animate-glow-pulse" />
-      <div className="absolute -bottom-40 -left-40 w-[480px] h-[480px] rounded-full bg-emerald-400/10 blur-3xl" />
+      <div className="hidden md:block absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full bg-white/10 blur-3xl animate-glow-pulse" />
+      <div className="hidden md:block absolute -bottom-40 -left-40 w-[480px] h-[480px] rounded-full bg-emerald-400/10 blur-3xl" />
       <div
-        className="absolute inset-0 opacity-[0.07]"
+        className="hidden md:block absolute inset-0 opacity-[0.07]"
         style={{
           backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
           backgroundSize: "28px 28px",
@@ -150,27 +150,26 @@ function Hero() {
         aria-hidden
       />
 
-      <div className="relative max-w-6xl mx-auto px-6 pt-12 pb-16 md:pt-20 md:pb-24 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-2 pb-8 md:pt-20 md:pb-24 grid lg:grid-cols-2 gap-6 lg:gap-16 items-center">
         <div className="order-2 lg:order-1">
-          <p className="text-sm font-bold uppercase tracking-[0.2em] text-white/70 mb-4 animate-fade-in">
+          <p className="hidden sm:block text-sm font-bold uppercase tracking-[0.2em] text-white/70 mb-2 md:mb-4 animate-fade-in">
             Plan Único · desde ${formatPlanPrice(PLAN.monthly)}/mes
           </p>
           <h1
-            className="text-[1.625rem] sm:text-3xl md:text-[2.125rem] lg:text-[2.75rem] font-bold leading-[1.2] sm:leading-[1.15] tracking-tight animate-fade-in [overflow-wrap:anywhere] hyphens-none"
+            className="text-xl sm:text-3xl md:text-[2.125rem] lg:text-[2.75rem] font-bold leading-tight sm:leading-[1.15] tracking-tight animate-fade-in [overflow-wrap:anywhere] hyphens-none"
             style={{ animationDelay: "80ms" }}
           >
-            Tu mamá siempre protegida —{" "}
+            Tu mamá protegida —{" "}
             <span className="text-[#ffd66b] drop-shadow-sm">aunque no estés cerca</span>
           </h1>
           <p
-            className="mt-4 sm:mt-5 text-base sm:text-lg md:text-xl text-white/90 font-medium leading-relaxed max-w-xl animate-fade-in"
+            className="mt-2 sm:mt-5 text-sm sm:text-lg md:text-xl text-white/90 font-medium leading-snug sm:leading-relaxed max-w-xl line-clamp-2 sm:line-clamp-none animate-fade-in"
             style={{ animationDelay: "140ms" }}
           >
-            Una red de cuidado inteligente que alerta a la familia en menos de 3 segundos ante caídas
-            o emergencias, sin contratos ni burocracia.
+            Alerta a tu familia en menos de 3 segundos por WhatsApp, SMS y llamada. Sin contratos.
           </p>
           <div
-            className="mt-6 inline-flex flex-wrap items-center gap-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 px-5 py-3 animate-fade-in"
+            className="hidden sm:inline-flex mt-4 md:mt-6 flex-wrap items-center gap-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 px-5 py-3 animate-fade-in"
             style={{ animationDelay: "200ms" }}
           >
             <span className="text-sm font-bold text-white/90">{PLAN.displayName}</span>
@@ -180,10 +179,10 @@ function Hero() {
             </span>
             <span className="text-xs text-white/70">Sin permanencia · Webpay Plus</span>
           </div>
-          <div className="mt-7 sm:mt-8 flex flex-col gap-3 animate-fade-in" style={{ animationDelay: "260ms" }}>
+          <div className="mt-4 sm:mt-8 flex flex-col gap-2 sm:gap-3 animate-fade-in" style={{ animationDelay: "260ms" }}>
             <a
               href={checkoutUrl()}
-              className="inline-flex items-center justify-center gap-3 px-7 py-5 rounded-full text-base sm:text-lg font-extrabold text-white shadow-2xl hover:scale-[1.03] hover:shadow-[0_20px_50px_rgba(34,197,94,0.45)] transition-all duration-300 ring-2 ring-white/30"
+              className="inline-flex items-center justify-center gap-2 sm:gap-3 px-5 py-3.5 sm:px-7 sm:py-5 rounded-full text-sm sm:text-lg font-extrabold text-white shadow-2xl hover:scale-[1.03] hover:shadow-[0_20px_50px_rgba(34,197,94,0.45)] transition-all duration-300 ring-2 ring-white/30"
               style={{
                 background: `linear-gradient(180deg, ${HERO_CTA_GREEN} 0%, ${HERO_CTA_GREEN_DARK} 100%)`,
               }}
@@ -192,7 +191,7 @@ function Hero() {
               <ArrowRight className="w-5 h-5 shrink-0" />
             </a>
             <HeroSocialProof />
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 pt-1">
+            <div className="hidden sm:flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 pt-1">
               <a
                 href="/instalar-app?entrenamiento=1"
                 className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold text-white/85 border border-white/25 bg-transparent hover:bg-white/10 transition-colors"
@@ -207,7 +206,7 @@ function Hero() {
               </Link>
             </div>
           </div>
-          <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-white/80 animate-fade-in" style={{ animationDelay: "300ms" }}>
+          <div className="hidden sm:flex mt-6 flex-wrap items-center gap-4 text-sm text-white/80 animate-fade-in" style={{ animationDelay: "300ms" }}>
             <div className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 backdrop-blur-sm">
               <CheckCircle2 className="w-4 h-4" /> Sin permanencia
             </div>

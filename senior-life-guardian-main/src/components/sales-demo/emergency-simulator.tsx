@@ -64,12 +64,15 @@ type EmergencySimulatorProps = {
   showIntro?: boolean;
   /** Banner + CTA de cierre cuando termina la simulación (p. ej. /como-funciona). */
   showConversionTrigger?: boolean;
+  /** Vista móvil compacta: S.O.S above the fold, panel cuidador tras activar. */
+  priorityMobile?: boolean;
 };
 
 export function EmergencySimulator({
   embedded = false,
   showIntro,
   showConversionTrigger = false,
+  priorityMobile = false,
 }: EmergencySimulatorProps) {
   const showPageIntro = showIntro ?? !embedded;
   const [phase, setPhase] = useState<Phase>("idle");
@@ -153,6 +156,11 @@ export function EmergencySimulator({
   );
 
   const sosDisabled = phase !== "idle";
+  const compactMobile = priorityMobile && embedded;
+  const showCaregiverPanel =
+    !compactMobile || phase === "running" || phase === "done" || phase === "sending";
+  const sosButtonSize = compactMobile ? "w-32 h-32" : "w-44 h-44";
+  const sosIconSize = compactMobile ? "w-8 h-8" : "w-10 h-10";
 
   const resetButton = (
     <Button
@@ -173,20 +181,20 @@ export function EmergencySimulator({
 
   const simulatorGrid = (
     <>
-      <div className="grid lg:grid-cols-2 gap-8 items-start">
+      <div className={`grid gap-4 md:gap-8 items-start ${compactMobile ? "grid-cols-1" : "lg:grid-cols-2"}`}>
           {/* PANTALLA 1 — Dispositivo */}
-          <section className="rounded-3xl border border-white/10 bg-gradient-to-b from-slate-900 to-slate-950 p-6 md:p-8 shadow-2xl">
-            <div className="flex items-center gap-2 mb-6">
+          <section className={`rounded-2xl md:rounded-3xl border border-white/10 bg-gradient-to-b from-slate-900 to-slate-950 shadow-2xl ${compactMobile ? "p-3 sm:p-5" : "p-6 md:p-8"}`}>
+            <div className={`flex items-center gap-2 ${compactMobile ? "mb-3" : "mb-6"}`}>
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300">
-                Pantalla 1 · Dispositivo del adulto mayor
+              <h2 className="text-[10px] sm:text-sm font-bold uppercase tracking-wider text-slate-300">
+                {compactMobile ? "Toca S.O.S para probar" : "Pantalla 1 · Dispositivo del adulto mayor"}
               </h2>
             </div>
 
-            <DemoPhoneFrame accent={RED} className="mx-auto">
+            <DemoPhoneFrame accent={RED} className="mx-auto max-w-[280px] sm:max-w-none">
               <div className="w-full text-center">
                 <p className="text-[10px] font-semibold text-slate-500 mb-1">Senior Safe</p>
-                <p className="text-xs font-bold text-slate-700 mb-5">María González</p>
+                <p className={`text-xs font-bold text-slate-700 ${compactMobile ? "mb-3" : "mb-5"}`}>María González</p>
 
                 {phase === "category" ? (
                   <div className="w-full text-left">
@@ -253,7 +261,7 @@ export function EmergencySimulator({
                   <>
                     <div className="sos-wrap mx-auto">
                       <span
-                        className="relative flex flex-col items-center justify-center w-44 h-44 rounded-full text-white font-extrabold opacity-90 border-4 border-red-300/40"
+                        className={`relative flex flex-col items-center justify-center ${sosButtonSize} rounded-full text-white font-extrabold opacity-90 border-4 border-red-300/40`}
                         style={{
                           background: `radial-gradient(circle at 30% 25%, #f87171, ${RED} 55%, #7f1d1d)`,
                         }}
@@ -296,14 +304,14 @@ export function EmergencySimulator({
                         </>
                       )}
                       <span
-                        className="relative flex flex-col items-center justify-center w-44 h-44 rounded-full text-white font-extrabold shadow-[0_24px_60px_-18px_rgba(220,38,38,0.75)] border-4 border-red-300/40"
+                        className={`relative flex flex-col items-center justify-center ${sosButtonSize} rounded-full text-white font-extrabold shadow-[0_24px_60px_-18px_rgba(220,38,38,0.75)] border-4 border-red-300/40`}
                         style={{
                           background: `radial-gradient(circle at 30% 25%, #f87171, ${RED} 55%, #7f1d1d)`,
                         }}
                       >
-                        <AlertTriangle className="w-10 h-10 mb-1" strokeWidth={2.5} aria-hidden />
-                        <span className="text-base leading-tight px-2">S.O.S</span>
-                        <span className="text-[9px] font-semibold text-white/90 mt-1 uppercase tracking-wide px-2">
+                        <AlertTriangle className={`${sosIconSize} mb-1`} strokeWidth={2.5} aria-hidden />
+                        <span className="text-sm sm:text-base leading-tight px-2">S.O.S</span>
+                        <span className="text-[8px] sm:text-[9px] font-semibold text-white/90 mt-0.5 uppercase tracking-wide px-2">
                           Presionar en caso de emergencia
                         </span>
                       </span>
@@ -318,7 +326,11 @@ export function EmergencySimulator({
           </section>
 
           {/* PANTALLA 2 — Panel cuidador */}
-          <section className="rounded-3xl border border-white/10 bg-slate-900 p-6 md:p-8 shadow-2xl min-h-[520px] flex flex-col">
+          <section
+            className={`rounded-2xl md:rounded-3xl border border-white/10 bg-slate-900 shadow-2xl flex flex-col ${
+              compactMobile ? "p-3 sm:p-5" : "p-6 md:p-8"
+            } ${showCaregiverPanel ? "" : "hidden"} ${compactMobile ? "min-h-0" : "min-h-[520px]"}`}
+          >
             <div className="flex items-center justify-between gap-3 mb-4">
               <div className="flex items-center gap-2">
                 <span
@@ -433,7 +445,7 @@ export function EmergencySimulator({
           </div>
         )}
 
-      <p className="text-center text-[11px] text-slate-600 mt-8">
+      <p className={`text-center text-slate-600 mt-4 md:mt-8 ${compactMobile ? "text-[10px]" : "text-[11px]"}`}>
         Coordenadas demo: {SIMULATOR_GPS.lat.toFixed(4)}, {SIMULATOR_GPS.lng.toFixed(4)} ·{" "}
         {SIMULATOR_GPS.label}
       </p>
@@ -480,7 +492,7 @@ export function EmergencySimulator({
         </div>
       )}
 
-      <div className={embedded ? "rounded-3xl bg-slate-950 text-slate-100 p-4 md:p-8" : ""}>
+      <div className={embedded ? `rounded-2xl md:rounded-3xl bg-slate-950 text-slate-100 ${compactMobile ? "p-2 sm:p-3" : "p-4 md:p-8"}` : ""}>
         <main className={embedded ? "" : "max-w-7xl mx-auto px-4 py-8"}>
           {!embedded && showPageIntro && (
             <p className="text-center text-slate-400 text-sm max-w-2xl mx-auto mb-8 leading-relaxed">
