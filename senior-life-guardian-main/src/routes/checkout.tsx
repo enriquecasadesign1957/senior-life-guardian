@@ -35,7 +35,7 @@ import {
   SENIOR_SAFE_TERMS_CANCELLATION_URL,
 } from "@/lib/recurring-billing-consent";
 import { Checkbox } from "@/components/ui/checkbox";
-import { normalizeDiscountCodeInput, FIRST_MONTH_PROMO_CODE, type PublicDiscountPreview } from "@/lib/discount-codes";
+import { normalizeDiscountCodeInput, type PublicDiscountPreview } from "@/lib/discount-codes";
 import { getServerErrorMessage } from "@/lib/server-error-message";
 
 const searchSchema = z.object({
@@ -506,9 +506,8 @@ function CheckoutPage() {
                 <div>
                   <label className="text-sm font-bold text-foreground mb-1 block">5. Código Institucional? Ingrésalo</label>
                   <p className="text-xs text-muted-foreground mb-3">
-                    ¿Primer mes con 50%? Usa{" "}
-                    <span className="font-mono font-semibold text-foreground">{FIRST_MONTH_PROMO_CODE}</span>
-                    {" "}— un uso por correo, solo plan mensual. Ingresa tu email antes de aplicar.
+                    Si tienes un código de convenio, ingrésalo aquí. Los descuentos promocionales acordados
+                    con nuestro equipo se aplican de forma manual.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3">
                     <input
