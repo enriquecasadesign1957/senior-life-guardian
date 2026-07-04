@@ -22,6 +22,10 @@ permissions:
 
 env:
   APP_DIR: senior-life-guardian-main
+  JAVA_VERSION: "21"
+  ANDROID_PLATFORM: "platforms;android-35"
+  ANDROID_BUILD_TOOLS: "build-tools;35.0.0"
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.jvmargs=-Xmx2g"
 
 jobs:
   build-aab:
@@ -66,16 +70,32 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Setup Java 21
+      # Gradle 8.14.x (Capacitor 8) — Java 17+; usamos Temurin 21 LTS.
+      - name: Setup Java 21 (Temurin)
         uses: actions/setup-java@v4
         with:
-          distribution: "temurin"
-          java-version: "21"
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: gradle
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: platforms;android-35 build-tools;35.0.0 platform-tools
+          accept-android-sdk-licenses: true
+          log-accepted-android-sdk-licenses: false
+          packages: ${{ env.ANDROID_PLATFORM }} ${{ env.ANDROID_BUILD_TOOLS }} platform-tools
+
+      - name: Aceptar licencias Android SDK (inicial)
+        run: |
+          set -euo pipefail
+          yes | sdkmanager --licenses
+          sdkmanager --install "${{ env.ANDROID_PLATFORM }}" "${{ env.ANDROID_BUILD_TOOLS }}" platform-tools
+
+      - name: Verificar Java y SDK
+        run: |
+          java -version
+          echo "JAVA_HOME=${JAVA_HOME:-}"
+          sdkmanager --list_installed | grep -E "platforms;android-|build-tools;" || true
 
       - name: Install dependencies
         run: bun install
@@ -112,6 +132,13 @@ jobs:
             sed -i '/<application/i \    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-feature android:name="android.hardware.location.gps" android:required="true" />' "$MANIFEST"
           fi
 
+      - name: Aceptar licencias Android SDK (post-Capacitor)
+        run: |
+          set -euo pipefail
+          yes | sdkmanager --licenses
+          sdkmanager --install "${{ env.ANDROID_PLATFORM }}" "${{ env.ANDROID_BUILD_TOOLS }}" platform-tools
+          echo "Gradle wrapper:" && cat android/gradle/wrapper/gradle-wrapper.properties | grep distributionUrl
+
       - name: Configurar firma release
         id: signing
         env:
@@ -128,7 +155,7 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
           keytool -list -storetype PKCS12 -keystore android/release.keystore \
-            -storepass "$ANDROID_KEYSTORE_PASSWORD" | head -n 5
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" | head -n 8
 
       - name: Build AAB (bundleRelease)
         working-directory: ${{ env.APP_DIR }}/android
@@ -138,12 +165,14 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           chmod +x ./gradlew
+          ./gradlew --version
           ./gradlew bundleRelease --no-daemon --stacktrace
 
       - name: Empaquetar AAB
         run: |
           mkdir -p artifacts
           SRC="android/app/build/outputs/bundle/release/app-release.aab"
+          test -f "$SRC"
           OUT="artifacts/SeniorSafe-${{ steps.ver.outputs.name }}-${{ steps.ver.outputs.code }}.aab"
           cp "$SRC" "$OUT"
           cp "$SRC" artifacts/SeniorSafe-release.aab
