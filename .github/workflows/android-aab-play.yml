@@ -31,17 +31,25 @@ jobs:
   build-aab:
     runs-on: ubuntu-22.04
     timeout-minutes: 45
-    defaults:
-      run:
-        working-directory: ${{ env.APP_DIR }}
 
     steps:
-      - name: Checkout
+      # Obligatorio: clonar el repo antes de Java, Android SDK o Gradle.
+      - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verificar código descargado
+        run: |
+          set -euo pipefail
+          echo "Workspace: $(pwd)"
+          ls -la
+          test -d "${{ env.APP_DIR }}"
+          test -f "${{ env.APP_DIR }}/package.json"
+          echo "✓ Repositorio listo en ${{ env.APP_DIR }}"
 
       - name: Resolver versión
         id: ver
-        working-directory: .
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "name=${{ github.event.inputs.version_name }}" >> "$GITHUB_OUTPUT"
@@ -70,13 +78,47 @@ jobs:
         with:
           bun-version: latest
 
-      # Gradle 8.14.x (Capacitor 8) — Java 17+; usamos Temurin 21 LTS.
+      - name: Install dependencies
+        working-directory: ${{ env.APP_DIR }}
+        run: bun install
+
+      - name: Generate app icons
+        working-directory: ${{ env.APP_DIR }}
+        run: node scripts/generate-app-icons.mjs
+
+      - name: Install Capacitor Android
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          bun add @capacitor/core @capacitor/cli @capacitor/android \
+                  @capacitor/splash-screen @capacitor/local-notifications \
+                  @capacitor/geolocation @capacitor/device
+
+      - name: Build web bundle
+        working-directory: ${{ env.APP_DIR }}
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
+        run: bun run build
+
+      - name: Sync Android project
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          if [ ! -d "android" ]; then
+            bunx cap add android
+          fi
+          bunx @capacitor/assets generate --assetPath resources --iconBackgroundColor '#dc2626' --iconBackgroundColorDark '#dc2626' --splashBackgroundColor '#dc2626' --splashBackgroundColorDark '#dc2626'
+          bunx cap sync android
+          test -f android/app/src/main/assets/capacitor.plugins.json
+
+      # Gradle 8.14.x (Capacitor 8) — Java 17+; Temurin 21 LTS (después de generar android/).
       - name: Setup Java 21 (Temurin)
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
           cache: gradle
+          cache-dependency-path: ${{ env.APP_DIR }}/android/gradle/wrapper/gradle-wrapper.properties
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -85,7 +127,8 @@ jobs:
           log-accepted-android-sdk-licenses: false
           packages: ${{ env.ANDROID_PLATFORM }} ${{ env.ANDROID_BUILD_TOOLS }} platform-tools
 
-      - name: Aceptar licencias Android SDK (inicial)
+      - name: Aceptar licencias Android SDK
+        working-directory: ${{ env.APP_DIR }}
         run: |
           set -euo pipefail
           yes | sdkmanager --licenses
@@ -97,50 +140,17 @@ jobs:
           echo "JAVA_HOME=${JAVA_HOME:-}"
           sdkmanager --list_installed | grep -E "platforms;android-|build-tools;" || true
 
-      - name: Install dependencies
-        run: bun install
-
-      - name: Generate app icons
-        run: node scripts/generate-app-icons.mjs
-
-      - name: Install Capacitor Android
-        run: |
-          bun add @capacitor/core @capacitor/cli @capacitor/android \
-                  @capacitor/splash-screen @capacitor/local-notifications \
-                  @capacitor/geolocation @capacitor/device
-
-      - name: Build web bundle
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-          VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
-        run: bun run build
-
-      - name: Sync Android project
-        run: |
-          if [ ! -d "android" ]; then
-            bunx cap add android
-          fi
-          bunx @capacitor/assets generate --assetPath resources --iconBackgroundColor '#dc2626' --iconBackgroundColorDark '#dc2626' --splashBackgroundColor '#dc2626' --splashBackgroundColorDark '#dc2626'
-          bunx cap sync android
-          test -f android/app/src/main/assets/capacitor.plugins.json
-
       - name: Permisos GPS en AndroidManifest
+        working-directory: ${{ env.APP_DIR }}
         run: |
           MANIFEST="android/app/src/main/AndroidManifest.xml"
           if [ -f "$MANIFEST" ] && ! grep -q "ACCESS_FINE_LOCATION" "$MANIFEST"; then
             sed -i '/<application/i \    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-feature android:name="android.hardware.location.gps" android:required="true" />' "$MANIFEST"
           fi
 
-      - name: Aceptar licencias Android SDK (post-Capacitor)
-        run: |
-          set -euo pipefail
-          yes | sdkmanager --licenses
-          sdkmanager --install "${{ env.ANDROID_PLATFORM }}" "${{ env.ANDROID_BUILD_TOOLS }}" platform-tools
-          echo "Gradle wrapper:" && cat android/gradle/wrapper/gradle-wrapper.properties | grep distributionUrl
-
       - name: Configurar firma release
         id: signing
+        working-directory: ${{ env.APP_DIR }}
         env:
           ANDROID_VERSION_CODE: ${{ steps.ver.outputs.code }}
           ANDROID_VERSION_NAME: ${{ steps.ver.outputs.name }}
@@ -151,6 +161,7 @@ jobs:
         run: node scripts/configure-android-release.mjs
 
       - name: Verificar keystore (alias PKCS12)
+        working-directory: ${{ env.APP_DIR }}
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
@@ -169,6 +180,7 @@ jobs:
           ./gradlew bundleRelease --no-daemon --stacktrace
 
       - name: Empaquetar AAB
+        working-directory: ${{ env.APP_DIR }}
         run: |
           mkdir -p artifacts
           SRC="android/app/build/outputs/bundle/release/app-release.aab"
