@@ -35,6 +35,23 @@ function escapeProperty(value) {
     .replace(/\t/g, "\\t");
 }
 
+function parseKeytoolAliases(output) {
+  const aliases = [];
+
+  for (const match of output.matchAll(/^Alias name: (.+)$/gm)) {
+    aliases.push(match[1].trim());
+  }
+
+  for (const line of output.split("\n")) {
+    const entry = line.match(/^([^,]+?), .+, (PrivateKeyEntry|SecretKeyEntry|TrustedCertEntry)/);
+    if (entry) {
+      aliases.push(entry[1].trim());
+    }
+  }
+
+  return [...new Set(aliases.filter(Boolean))];
+}
+
 function detectPkcs12Alias(keystorePath, password) {
   try {
     const out = execFileSync(
@@ -42,12 +59,18 @@ function detectPkcs12Alias(keystorePath, password) {
       ["-list", "-storetype", "PKCS12", "-keystore", keystorePath, "-storepass", password],
       { encoding: "utf8" },
     );
-    const match = out.match(/^Alias name: (.+)$/m);
-    return match?.[1]?.trim() || requestedAlias;
+    const aliases = parseKeytoolAliases(out);
+    if (aliases.length === 1) return aliases[0];
+    if (aliases.length > 1) {
+      const preferred = aliases.find((a) => a === requestedAlias);
+      return preferred ?? aliases.find((a) => a.includes("PrivateKeyEntry") === false) ?? aliases[0];
+    }
+    console.warn("⚠️ keytool no devolvió alias; salida:", out.split("\n").slice(0, 8).join(" | "));
   } catch (err) {
     console.warn("⚠️ No se pudo auto-detectar alias PKCS12; uso ANDROID_KEY_ALIAS");
-    return requestedAlias;
+    console.warn(String(err.message || err).split("\n")[0]);
   }
+  return requestedAlias;
 }
 
 function patchBuildGradle(source) {
@@ -69,7 +92,7 @@ function patchBuildGradle(source) {
             def envKeyAlias = System.getenv("ANDROID_KEY_ALIAS")
             keyAlias keystoreProperties['keyAlias'] ?: envKeyAlias
             keyPassword envKeyPassword ?: keystoreProperties['keyPassword']
-            storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+            storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : file("../release.keystore")
             storePassword envStorePassword ?: keystoreProperties['storePassword']
             storeType "pkcs12"
         }
@@ -105,6 +128,8 @@ function main() {
   const resolvedAlias = detectPkcs12Alias(KEYSTORE_PATH, storePassword) || requestedAlias;
   if (resolvedAlias !== requestedAlias) {
     console.log(`✓ Alias PKCS12 detectado: ${resolvedAlias} (secret: ${requestedAlias})`);
+  } else {
+    console.log(`✓ Alias de firma: ${resolvedAlias}`);
   }
 
   fs.writeFileSync(

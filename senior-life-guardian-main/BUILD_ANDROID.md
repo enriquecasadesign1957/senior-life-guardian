@@ -120,7 +120,7 @@ Repo → **Settings → Secrets and variables → Actions → New repository sec
 | `VITE_SUPABASE_PROJECT_ID` | (igual que APK) |
 | `ANDROID_KEYSTORE_BASE64` | Base64 del `.jks` (ver abajo) |
 | `ANDROID_KEYSTORE_PASSWORD` | Contraseña del keystore |
-| `ANDROID_KEY_ALIAS` | `senior-safe` |
+| `ANDROID_KEY_ALIAS` | Alias real del `.jks` (ver abajo con `show-keystore-alias.mjs`) |
 | `ANDROID_KEY_PASSWORD` | (opcional si es la misma que keystore) |
 
 Base64 del keystore en PowerShell:
