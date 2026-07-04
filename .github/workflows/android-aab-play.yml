@@ -127,17 +127,6 @@ jobs:
           log-accepted-android-sdk-licenses: false
           packages: ${{ env.ANDROID_PLATFORM }} ${{ env.ANDROID_BUILD_TOOLS }} platform-tools
 
-      # setup-android ya acepta licencias; no usar "yes | sdkmanager" con pipefail (exit 1 por SIGPIPE).
-      - name: Verificar componentes Android SDK
-        run: |
-          set -eu
-          sdkmanager --list_installed | grep -E "platforms;android-|build-tools;|platform-tools" || true
-
-      - name: Verificar Java
-        run: |
-          java -version
-          echo "JAVA_HOME=${JAVA_HOME:-}"
-
       - name: Permisos GPS en AndroidManifest
         working-directory: ${{ env.APP_DIR }}
         run: |
@@ -174,7 +163,6 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           chmod +x ./gradlew
-          ./gradlew --version
           ./gradlew bundleRelease --no-daemon --stacktrace
 
       - name: Empaquetar AAB
