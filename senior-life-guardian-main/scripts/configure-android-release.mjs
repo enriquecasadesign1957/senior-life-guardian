@@ -113,7 +113,7 @@ function main() {
       `storePassword=${escapeProperty(storePassword)}`,
       `keyPassword=${escapeProperty(keyPassword)}`,
       `keyAlias=${escapeProperty(resolvedAlias)}`,
-      "storeFile=release.keystore",
+      "storeFile=../release.keystore",
       "storeType=pkcs12",
       "",
     ].join("\n"),
