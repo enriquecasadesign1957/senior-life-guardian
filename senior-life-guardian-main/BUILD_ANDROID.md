@@ -90,9 +90,84 @@ Todo sin que tú toques Android Studio.
 
 ---
 
-## APK firmado para Play Store (opcional)
+## APK firmado para Play Store
 
-El workflow actual genera un APK **debug** (firmado con la clave debug de Android),
-suficiente para instalación directa. Para subir a Google Play necesitas un AAB
-firmado con tu propia clave: avísame y agrego el job correspondiente con
-`assembleRelease` + secrets del keystore.
+Para **Google Play** usa el workflow **Build Android AAB (Google Play)** — genera un `.aab` firmado listo para Prueba interna.
+
+El workflow **Build Android APK** sigue generando APK debug para pruebas locales; **no** lo uses para Play si activaste protección de instalador.
+
+---
+
+## Google Play — AAB release (v1.0.0)
+
+### Paso 1 — Crear keystore (una sola vez, en tu PC)
+
+```powershell
+cd senior-life-guardian-main
+.\scripts\generate-play-keystore.ps1
+```
+
+Se crea `senior-safe-release.jks`. **Guárdalo en lugar seguro** (copia en USB cifrado). Si lo pierdes, no podrás actualizar la app en Play.
+
+### Paso 2 — Secrets en GitHub
+
+Repo → **Settings → Secrets and variables → Actions → New repository secret**
+
+| Secret | Valor |
+|--------|--------|
+| `VITE_SUPABASE_URL` | (igual que APK) |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | (igual que APK) |
+| `VITE_SUPABASE_PROJECT_ID` | (igual que APK) |
+| `ANDROID_KEYSTORE_BASE64` | Base64 del `.jks` (ver abajo) |
+| `ANDROID_KEYSTORE_PASSWORD` | Contraseña del keystore |
+| `ANDROID_KEY_ALIAS` | `senior-safe` |
+| `ANDROID_KEY_PASSWORD` | (opcional si es la misma que keystore) |
+
+Base64 del keystore en PowerShell:
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes(".\senior-safe-release.jks"))
+```
+
+Pega el resultado completo en `ANDROID_KEYSTORE_BASE64`.
+
+### Paso 3 — Generar el AAB en GitHub
+
+1. Repo → **Actions** → **Build Android AAB (Google Play)**
+2. **Run workflow** → rama `main`
+3. `version_name`: `1.0.0`
+4. `version_code`: `1` (sube a `2`, `3`… en cada nueva subida a Play)
+5. Espera ~10–15 minutos
+
+### Paso 4 — Descargar y subir a Play Console
+
+1. Abre la ejecución → **Artifacts** → descarga `SeniorSafe-AAB-v1.0.0`
+2. Play Console → **Pruebas → Prueba interna → Crear versión**
+3. Sube `SeniorSafe-release.aab`
+4. Notas: texto v1.0.0 de lanzamiento
+5. **Iniciar implementación**
+
+### Paso 5 — Instalarte la app desde Play
+
+Prueba interna → **Testers** → agrega tu Gmail → abre el enlace opt-in en el celular.
+
+---
+
+## Alternativa: tag de release
+
+```bash
+git tag v1.0.0+1
+git push origin v1.0.0+1
+```
+
+El sufijo `+1` es el `versionCode` de Play. En la siguiente versión: `v1.0.1+2`, etc.
+
+---
+
+## Package name (Play Console)
+
+```
+cl.alarmaseniorsafe.app
+```
+
+Debe coincidir con `capacitor.config.ts` — **no se puede cambiar** después de crear la app en Play.

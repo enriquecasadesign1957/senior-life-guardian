@@ -38,3 +38,10 @@ scripts/tmp-token-aprobada.mjs
 *.njsproj
 *.sln
 *.sw?
+
+# Android / Play Store (generado en CI; keystore nunca en Git)
+android/
+*.jks
+*.keystore
+keystore.properties
+senior-safe-release.jks
