@@ -12,6 +12,7 @@ import { useEffect } from "react";
 import appCss from "../styles.css?url";
 import { installApiBaseFetch } from "@/lib/api-base";
 import { productionHomeUrl } from "@/lib/app-url";
+import { canonicalLink } from "@/lib/seo";
 import { Toaster } from "@/components/ui/sonner";
 
 /** Microsoft Clarity — mapas de calor y sesiones (producción). */
@@ -113,8 +114,12 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
+  head: ({ matches }) => {
+    const leaf = matches[matches.length - 1];
+    const pathname = leaf?.pathname ?? "/";
+
+    return {
+      meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Alarma Senior Safe" },
@@ -136,14 +141,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-title", content: "Senior Safe" },
       { name: "application-name", content: "Senior Safe" },
       { name: "format-detection", content: "telephone=yes" },
-    ],
-    links: [
+      ],
+      links: [
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/manifest.json?v=2026-06-22" },
       { rel: "apple-touch-icon", href: "/senior-safe-512.webp" },
       { rel: "icon", type: "image/webp", href: "/senior-safe-512.webp" },
-    ],
-  }),
+      canonicalLink(pathname),
+      ],
+    };
+  },
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,

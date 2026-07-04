@@ -49,8 +49,29 @@ const searchSchema = z.object({
   codigo: z.string().trim().max(64).optional(),
 });
 
+/** Defaults seguros: query inválida (crawlers/ads) no debe devolver 5xx. */
+function parseCheckoutSearch(raw: Record<string, unknown>) {
+  const parsed = searchSchema.safeParse(raw);
+  if (parsed.success) return parsed.data;
+
+  const planRaw = typeof raw.plan === "string" ? raw.plan : undefined;
+  const periodoRaw = typeof raw.periodo === "string" ? raw.periodo : undefined;
+  const codigoRaw =
+    typeof raw.codigo === "string" ? raw.codigo.trim().slice(0, 64) || undefined : undefined;
+
+  const planOk = planKeySchema.safeParse(planRaw);
+  const periodoOk = periodoSchema.safeParse(periodoRaw);
+
+  return {
+    mode: "contratar" as const,
+    plan: planOk.success ? normalizePlanKey(planOk.data) : PLAN_KEY,
+    periodo: periodoOk.success ? periodoOk.data : ("mensual" as const),
+    codigo: codigoRaw,
+  };
+}
+
 export const Route = createFileRoute("/checkout")({
-  validateSearch: (s) => searchSchema.parse(s),
+  validateSearch: (s) => parseCheckoutSearch(s as Record<string, unknown>),
   head: () => ({
     meta: [
       { title: "Checkout — Senior Safe" },
