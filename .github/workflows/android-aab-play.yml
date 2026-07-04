@@ -113,6 +113,7 @@ jobs:
           fi
 
       - name: Configurar firma release
+        id: signing
         env:
           ANDROID_VERSION_CODE: ${{ steps.ver.outputs.code }}
           ANDROID_VERSION_NAME: ${{ steps.ver.outputs.name }}
@@ -122,11 +123,22 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: node scripts/configure-android-release.mjs
 
+      - name: Verificar keystore (alias PKCS12)
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          keytool -list -storetype PKCS12 -keystore android/release.keystore \
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" | head -n 5
+
       - name: Build AAB (bundleRelease)
         working-directory: ${{ env.APP_DIR }}/android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ steps.signing.outputs.key_alias || secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           chmod +x ./gradlew
-          ./gradlew bundleRelease --no-daemon
+          ./gradlew bundleRelease --no-daemon --stacktrace
 
       - name: Empaquetar AAB
         run: |

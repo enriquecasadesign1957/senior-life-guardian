@@ -45,3 +45,4 @@ android/
 *.keystore
 keystore.properties
 senior-safe-release.jks
+play-keystore-credentials.local.txt
