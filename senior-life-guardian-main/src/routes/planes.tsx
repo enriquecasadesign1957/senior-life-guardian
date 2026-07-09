@@ -9,16 +9,32 @@ import {
   formatPlanPrice,
   yearlyEquivalentMonthly,
 } from "@/lib/plans";
+import { buildPublicPageMeta, breadcrumbJsonLd, jsonLdHeadScript, serviceJsonLd } from "@/lib/seo";
 
 export const Route = createFileRoute("/planes")({
-  head: () => ({
-    meta: [
-      { title: "Plan Único — Alarma Senior Safe" },
-      { name: "description", content: "Plan Único Senior Safe: $6.900/mes o $69.000/año (ahorras 2 meses). Sin permanencia, pago seguro Webpay y soporte 24/7." },
-      { property: "og:title", content: "Plan Único Senior Safe" },
-      { property: "og:description", content: "Protección completa para tu familia. Mensual o anual con ahorro de 2 meses." },
-    ],
-  }),
+  head: () => {
+    const page = buildPublicPageMeta({
+      title: "Plan Único — Alarma Senior Safe | Desde $6.900/mes",
+      description:
+        "Plan Único Senior Safe: $6.900/mes o $69.000/año (ahorras 2 meses). Botón SOS, WhatsApp, SMS, GPS y llamada. Sin permanencia, Webpay Plus.",
+      pathname: "/planes",
+      ogTitle: "Plan Único Senior Safe",
+      ogDescription: "Protección completa para tu familia. Mensual o anual con ahorro de 2 meses.",
+    });
+
+    return {
+      ...page,
+      scripts: [
+        jsonLdHeadScript([
+          serviceJsonLd(),
+          breadcrumbJsonLd([
+            { name: "Inicio", path: "/" },
+            { name: "Planes", path: "/planes" },
+          ]),
+        ]),
+      ],
+    };
+  },
   component: PlanesPage,
 });
 

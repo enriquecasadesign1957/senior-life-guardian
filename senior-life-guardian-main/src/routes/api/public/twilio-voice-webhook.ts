@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { supabaseAdmin } from '@/integrations/supabase/client.server'
+import { buildEmergencyVoiceTwiml } from '@/lib/emergency-voice-twiml'
 import { CONTRACT_SIGNUPS_TABLE } from '@/lib/signups-db'
 
 /**
@@ -16,23 +17,8 @@ import { CONTRACT_SIGNUPS_TABLE } from '@/lib/signups-db'
  * No bloquea ningún flujo existente. Solo agrega entrada por llamada.
  */
 
-function escapeXml(s: string) {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-}
-
 function voiceTwiml(text: string) {
-  const xml =
-    `<?xml version="1.0" encoding="UTF-8"?>` +
-    `<Response>` +
-    `<Say language="es-MX" voice="Polly.Mia">${escapeXml(text)}</Say>` +
-    `<Pause length="1"/>` +
-    `<Say language="es-MX" voice="Polly.Mia">${escapeXml(text)}</Say>` +
-    `</Response>`
-  return new Response(xml, {
+  return new Response(buildEmergencyVoiceTwiml(text), {
     status: 200,
     headers: { 'Content-Type': 'text/xml; charset=utf-8' },
   })

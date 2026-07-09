@@ -158,6 +158,7 @@ function AppHome() {
   const [trainingRunActive, setTrainingRunActive] = useState(false);
   const emergencySendGenRef = useRef(0);
   const categoryPickRef = useRef(false);
+  const sosTriggeredAtMsRef = useRef<number | undefined>(undefined);
   const [clientReady, setClientReady] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
   const [loginBusy, setLoginBusy] = useState(false);
@@ -357,6 +358,7 @@ function AppHome() {
           emergencyCategory: "accidente",
           trainingMode,
           graceBeforeSend: !trainingMode,
+          sosTriggeredAtMs: Date.now(),
         },
       });
       if (res?.status === "cancelled_by_senior") {
@@ -510,6 +512,7 @@ function AppHome() {
   const chooseEmergencyCategory = useCallback((category: EmergencyCategory) => {
     if (categoryPickRef.current) return;
     categoryPickRef.current = true;
+    sosTriggeredAtMsRef.current = Date.now();
     if ("vibrate" in navigator) navigator.vibrate?.(80);
     setEmergencyCategory(category);
     setStage("sending");
@@ -596,6 +599,7 @@ function AppHome() {
             trainingMode,
             emergencyCategory,
             graceBeforeSend: !trainingMode,
+            sosTriggeredAtMs: sosTriggeredAtMsRef.current,
           },
         });
         if (cancelled || emergencySendGenRef.current !== gen) return;

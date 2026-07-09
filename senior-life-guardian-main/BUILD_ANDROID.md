@@ -109,6 +109,12 @@ cd senior-life-guardian-main
 
 Se crea `senior-safe-release.jks`. **Guárdalo en lugar seguro** (copia en USB cifrado). Si lo pierdes, no podrás actualizar la app en Play.
 
+> **Alias en Java:** si el keystore se generó con PowerShell (`Export-PfxCertificate`), el alias dentro del archivo **no** es `senior-safe` sino un UUID. Descúbrelo con:
+> ```powershell
+> node scripts/show-keystore-alias.mjs
+> ```
+> Usa ese valor en el secret `ANDROID_KEY_ALIAS` de GitHub.
+
 ### Paso 2 — Secrets en GitHub
 
 Repo → **Settings → Secrets and variables → Actions → New repository secret**

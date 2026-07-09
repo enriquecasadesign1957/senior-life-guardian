@@ -12,7 +12,7 @@
   "theme_color": "#dc2626",
   "lang": "es-CL",
   "dir": "ltr",
-  "categories": ["health", "lifestyle", "medical"],
+  "categories": ["utilities", "lifestyle"],
   "prefer_related_applications": false,
   "icons": [
     {

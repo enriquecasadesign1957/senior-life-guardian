@@ -5,7 +5,7 @@ import {
   Mail, ArrowRight, Heart, AlertCircle, Users, Zap, Smartphone,
   Clock, Activity, Star, Accessibility, Home,
   PhoneCall, Radio, Navigation, Send,
-  Brain, Sparkles, HelpCircle,
+  HelpCircle,
 } from "lucide-react";
 import {
   Accordion,
@@ -38,17 +38,39 @@ import {
   FEATURED_TESTIMONIAL_CARMEN,
 } from "@/components/trust-stack-chileno";
 import { seniorSafeWhatsAppMeUrl } from "@/lib/twilio";
-import { CANCELLATION_POLICY_FAQ_ANSWER, CANCELLATION_POLICY_SUMMARY } from "@/lib/subscription-cancellation-policy";
+import { LANDING_FAQ_SECTIONS, landingFaqFlatItems } from "@/lib/landing-faq";
+import {
+  buildPublicPageMeta,
+  faqPageJsonLd,
+  jsonLdHeadScript,
+  mobileApplicationJsonLd,
+  serviceJsonLd,
+} from "@/lib/seo";
+import { CANCELLATION_POLICY_SUMMARY } from "@/lib/subscription-cancellation-policy";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Senior Safe — Tu mamá siempre protegida, aunque no estés cerca" },
-      { name: "description", content: "Red de cuidado inteligente que alerta a la familia en menos de 3 segundos ante caídas o emergencias. Sin contratos ni burocracia. Desde $6.900/mes." },
-      { property: "og:title", content: "Senior Safe — Protección familiar en menos de 3 segundos" },
-      { property: "og:description", content: "Alertas por WhatsApp, SMS, GPS y llamada automática. Plan Único $6.900/mes, sin permanencia." },
-    ],
-  }),
+  head: () => {
+    const page = buildPublicPageMeta({
+      title: "Senior Safe — Alarma para adultos mayores en Chile",
+      description:
+        "App de emergencia con botón SOS, alerta familiar por WhatsApp, SMS, GPS y llamada. Desde $6.900/mes, sin permanencia. Ideal si tu mamá o papá vive solo.",
+      pathname: "/",
+      ogTitle: "Senior Safe — Protección familiar en menos de 3 segundos",
+      ogDescription:
+        "Alertas por WhatsApp, SMS, GPS y llamada automática. Plan Único $6.900/mes, sin permanencia.",
+    });
+
+    return {
+      ...page,
+      scripts: [
+        jsonLdHeadScript([
+          serviceJsonLd(),
+          mobileApplicationJsonLd(),
+          faqPageJsonLd(landingFaqFlatItems()),
+        ]),
+      ],
+    };
+  },
   component: Landing,
 });
 
@@ -191,13 +213,13 @@ function Hero() {
               <ArrowRight className="w-5 h-5 shrink-0" />
             </a>
             <HeroSocialProof />
-            <div className="hidden sm:flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 pt-1">
-              <a
-                href="/instalar-app?entrenamiento=1"
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 pt-1">
+              <Link
+                to="/native"
                 className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold text-white/85 border border-white/25 bg-transparent hover:bg-white/10 transition-colors"
               >
                 Ya tengo cuenta · Entrar
-              </a>
+              </Link>
               <Link
                 to="/guia"
                 className="inline-flex items-center justify-center text-sm font-medium text-white/70 hover:text-white underline underline-offset-4 transition-colors"
@@ -294,8 +316,8 @@ function QueEs() {
 
 function ParaQuien() {
   const cards = [
-    { icon: Home, title: "Adultos mayores", desc: "Que viven solos y necesitan tranquilidad diaria." },
-    { icon: Heart, title: "Toda la familia conectada por emergencias", desc: "" },
+    { icon: Home, title: "Adultos mayores", desc: "Que viven solos en Chile y necesitan una alarma accesible en su celular." },
+    { icon: Heart, title: "Hijos y familiares", desc: "Para cuidar a mamá o papá desde lejos, con avisos al instante." },
     { icon: Activity, title: "Asistencia rápida", desc: "Personas con condiciones médicas o riesgo de caídas." },
     { icon: Accessibility, title: "Movilidad reducida", desc: "Quienes necesitan ayuda inmediata en casa." },
   ];
@@ -328,8 +350,8 @@ const BENTO_CHANNELS = [
     icon: MessageCircle,
     color: "#25D366",
     badge: "Canal A",
-    title: "WhatsApp + IA Groq",
-    desc: "Notificación automatizada e instantánea al núcleo familiar. Procesamiento de respuestas con Inteligencia Artificial para confirmar lectura y contexto.",
+    title: "WhatsApp a tu familia",
+    desc: "Mensaje automático al instante a los guardianes prioritarios, con enlace para confirmar que recibieron la alerta.",
     tag: "Paralelo · Top 3 guardianes",
     span: "md:col-span-2",
   },
@@ -429,9 +451,9 @@ function ComunicacionRedundanteBento() {
 
 const FALL_DETECTION_STEPS = [
   {
-    label: "Impacto Crítico",
-    title: "Monitoreo Telemetría G",
-    desc: "Analiza de forma constante los vectores de movimiento mediante el acelerómetro, identificando desaceleraciones severas superiores a 3.8G.",
+    label: "Impacto detectado",
+    title: "Sensor de movimiento",
+    desc: "El acelerómetro del celular detecta caídas bruscas y activa el protocolo de alerta automáticamente.",
     icon: Activity,
     color: RED,
   },
@@ -468,10 +490,10 @@ function DeteccionCaidasActiva() {
               Protección activa
             </span>
             <h2 className="text-2xl md:text-4xl font-bold text-foreground tracking-tight">
-              Protección Activa: Detección Inteligente y Autónoma de Caídas
+              Detección de caídas en adultos mayores
             </h2>
             <p className="mt-4 text-base md:text-lg text-muted-foreground leading-relaxed">
-              Transformamos el smartphone en un guardián continuo que actúa por sí solo cuando más se necesita, ideal para la seguridad de adultos mayores dentro y fuera del hogar.
+              El celular detecta una caída y avisa a la familia si tu familiar no cancela la alerta a tiempo — dentro y fuera de casa.
             </p>
           </div>
 
@@ -512,70 +534,88 @@ function DeteccionCaidasActiva() {
   );
 }
 
-function CapacidadesPredictivas() {
-  const cards = [
-    {
-      icon: Brain,
-      color: DEEP,
-      title: "Patrones Preventivos con IA",
-      desc: "Inteligencia Artificial orientada a identificar ausencia de actividad, priorizar niveles de emergencia crítica en el hogar y enriquecer respuestas familiares vía Groq.",
-      badge: "IA predictiva",
-    },
-  ];
+const ALARMA_CHILE_CARDS = [
+  {
+    icon: Shield,
+    color: RED,
+    title: "Botón SOS en el celular",
+    desc: "Tu familiar pide ayuda con un toque. La alerta sale en segundos — sin pulseras ni equipos extra.",
+  },
+  {
+    icon: MessageCircle,
+    color: "#25D366",
+    title: "Alerta familiar WhatsApp, SMS y GPS",
+    desc: "Los guardianes reciben mensaje, ubicación en Google Maps y llamada si nadie confirma recepción.",
+  },
+  {
+    icon: Users,
+    color: PETROL,
+    title: "Para quien cuida desde lejos",
+    desc: "Ideal si tu mamá o papá vive solo: tú y tu familia saben al instante cuando necesita ayuda.",
+  },
+] as const;
 
+function AlarmaAdultosMayoresChile() {
   return (
-    <section id="inteligencia" className="py-20 md:py-24 bg-background">
+    <section id="alarma-adultos-mayores" className="py-20 md:py-24 bg-background">
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center max-w-3xl mx-auto mb-12">
           <div className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.18em] mb-3" style={{ color: PETROL }}>
-            <Sparkles className="w-4 h-4" />
-            Capacidades en evolución
+            <Shield className="w-4 h-4" />
+            Chile · sin permanencia
           </div>
           <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight">
-            Telemetría inteligente que anticipa el riesgo.
+            Alarma para adultos mayores en Chile — desde ${formatPlanPrice(PLAN.monthly)}/mes
           </h2>
-          <p className="mt-4 text-lg text-muted-foreground">
-            Sensores del dispositivo e IA trabajan en conjunto para proteger antes de que una emergencia se agrave.
+          <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
+            Senior Safe es la app de emergencia que conecta a tu familiar con la familia por WhatsApp, SMS y GPS.
+            Más accesible que una alarma médica tradicional y sin contratos de amarre.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-1 gap-6 max-w-2xl mx-auto">
-          {cards.map((c) => (
-            <div
+        <div className="grid md:grid-cols-3 gap-5 md:gap-6">
+          {ALARMA_CHILE_CARDS.map((c) => (
+            <article
               key={c.title}
-              className="relative overflow-hidden rounded-3xl border-2 border-border p-8 shadow-lg"
-              style={{ background: "linear-gradient(145deg, white 0%, color-mix(in oklab, var(--brand-petrol) 5%, white) 100%)" }}
+              className="rounded-3xl border-2 border-border p-7 shadow-sm hover:shadow-lg transition-shadow"
+              style={{ background: "linear-gradient(145deg, white 0%, color-mix(in oklab, var(--brand-petrol) 4%, white) 100%)" }}
             >
               <span
-                className="inline-block text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full mb-5 text-white"
+                className="w-12 h-12 rounded-2xl flex items-center justify-center text-white mb-5 shadow-md"
                 style={{ background: c.color }}
               >
-                {c.badge}
+                <c.icon className="w-6 h-6" />
               </span>
-              <span
-                className="w-14 h-14 rounded-2xl flex items-center justify-center text-white mb-5 shadow-md"
-                style={{ background: c.color }}
-              >
-                <c.icon className="w-7 h-7" />
-              </span>
-              <h3 className="text-2xl font-bold text-foreground mb-3">{c.title}</h3>
-              <p className="text-base text-muted-foreground leading-relaxed">{c.desc}</p>
-            </div>
+              <h3 className="text-lg md:text-xl font-bold text-foreground mb-2">{c.title}</h3>
+              <p className="text-sm md:text-base text-muted-foreground leading-relaxed">{c.desc}</p>
+            </article>
           ))}
         </div>
 
         <div className="mt-10 grid lg:grid-cols-2 gap-8 items-center rounded-3xl overflow-hidden border border-border shadow-xl">
           <img
             src={seniorCouple}
-            alt="Pareja de adultos mayores protegida por Senior Safe"
+            alt="Adultos mayores en Chile protegidos con alarma familiar Senior Safe"
             loading="lazy"
             className="w-full h-full object-cover min-h-[240px]"
           />
           <div className="p-8 md:p-10 bg-card">
-            <h3 className="text-xl font-bold text-foreground mb-3">Protección que evoluciona contigo</h3>
-            <p className="text-muted-foreground leading-relaxed">
-              El ecosistema combina detección física en el teléfono, análisis de patrones y comunicación multicanal para que tu familia nunca quede desconectada ante un evento crítico.
+            <h3 className="text-xl font-bold text-foreground mb-3">
+              ¿Alarma médica o alerta familiar?
+            </h3>
+            <p className="text-muted-foreground leading-relaxed mb-4">
+              Las alarmas clásicas cuestan $30.000–80.000 al mes y llaman a un call center. Senior Safe avisa
+              directo a tus hijos y guardianes por WhatsApp — con GPS en cada alerta y plan desde $
+              {formatPlanPrice(PLAN.monthly)}/mes.
             </p>
+            <Link
+              to="/planes"
+              className="inline-flex items-center gap-2 text-sm font-semibold hover:underline"
+              style={{ color: PETROL }}
+            >
+              Ver precios y plan único
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
       </div>
@@ -942,103 +982,12 @@ function Capturas() {
 }
 
 function PreguntasFrecuentes() {
-  const sections = [
-    {
-      title: "Planes y pagos",
-      icon: CheckCircle2,
-      items: [
-        {
-          q: FAQ_CANCELLATION_POSITIVE_Q,
-          a: FAQ_CANCELLATION_POSITIVE_A,
-          highlight: true,
-        },
-        {
-          q: "¿Cuánto cuesta el servicio?",
-          a: `Ofrecemos un Plan Único de protección completa: $${formatPlanPrice(PLAN.monthly)} al mes o $${formatPlanPrice(PLAN.yearly)} al año (${PLAN.yearlySavingsLabel.toLowerCase()}).`,
-        },
-        {
-          q: "¿Existe algún contrato de amarre o permanencia?",
-          a: "No, ninguno. Puede dar de baja el plan cuando lo desee, sin multas. " + CANCELLATION_POLICY_SUMMARY,
-        },
-        {
-          q: "¿Hay reembolso si cancelo el plan?",
-          a: CANCELLATION_POLICY_FAQ_ANSWER,
-        },
-        {
-          q: "¿Cuáles son los medios de pago disponibles?",
-          a: "Los pagos se realizan de manera 100% segura en línea a través de Webpay Plus, utilizando tarjetas de crédito, débito o prepago.",
-        },
-      ],
-    },
-    {
-      title: "Funcionamiento",
-      icon: Smartphone,
-      items: [
-        {
-          q: "¿Qué es exactamente Senior Safe?",
-          a: "Senior Safe no es un dispositivo físico adicional, sino un ecosistema de protección inteligente basado en una aplicación para smartphone. Utiliza Inteligencia Artificial, los sensores del propio teléfono y un sistema de comunicación redundante para alertar a la familia de inmediato ante caídas o emergencias.",
-        },
-        {
-          q: "¿Cómo funciona el sistema de alerta en cascada?",
-          a: "Ante una emergencia, nuestro algoritmo activa cuatro canales de respaldo en tiempo real: (A) WhatsApp + IA para confirmar lecturas; (B) SMS de respaldo simultáneo; (C) GPS en vivo con enlace Google Maps; (D) llamadas de voz automáticas y secuenciales a los guardianes si nadie confirma en los primeros segundos.",
-        },
-        {
-          q: "¿A quién notifica la aplicación cuando ocurre una emergencia?",
-          a: "Las alertas van directamente al núcleo familiar, sin pasar por centrales de monitoreo externas ni intermediarios. Puedes configurar hasta 3 guardianes (hijos, nietos, vecinos o cuidadores) con orden de prioridad.",
-        },
-        {
-          q: "¿Cuánto tarda en llegar una alerta a la familia?",
-          a: "El sistema es ultra rápido. Desde que se detecta el impacto o se presiona el botón SOS, la primera notificación tarda menos de 3 segundos en ser despachada a la red familiar.",
-        },
-      ],
-    },
-    {
-      title: "Caídas y emergencias",
-      icon: AlertCircle,
-      items: [
-        {
-          q: "¿Cómo funciona la detección automática de caídas?",
-          a: "La aplicación transforma el smartphone en un guardián continuo: (1) el acelerómetro analiza impactos abruptos superiores a 3.8G; (2) valida 3 segundos de inmovilidad para evitar falsos positivos; (3) activa vibración y sirena por 30 segundos — si el usuario está bien puede cancelar; si no responde, la ayuda se despacha de inmediato.",
-        },
-        {
-          q: "¿Qué pasa si el adulto mayor no puede presionar el botón?",
-          a: "No se preocupe. Si el sistema detecta una caída crítica seguida de inmovilidad, la alerta se envía de forma completamente autónoma, incluso si el usuario queda inconsciente o en estado de shock.",
-        },
-        {
-          q: "¿La localización GPS funciona fuera de la casa?",
-          a: "Sí. El sistema inyecta coordenadas satelitales en vivo. Esto permite saber la ubicación exacta del adulto mayor dentro del hogar, caminando, de compras o en terreno abierto.",
-        },
-      ],
-    },
-    {
-      title: "Uso diario",
-      icon: Accessibility,
-      items: [
-        {
-          q: "¿Es difícil de usar para un adulto mayor?",
-          a: "Para nada. Senior Safe cuenta con un diseño Senior-First: botones grandes, textos claros y acciones muy visibles, pensado para operarse en segundos y sin complicaciones tecnológicas.",
-        },
-        {
-          q: "¿Qué requisitos debe cumplir el teléfono del adulto mayor?",
-          a: "Solo requiere un smartphone compatible con la aplicación. Al contratar recibirá instrucciones de instalación paso a paso. No necesita comprar aparatos ni collares adicionales.",
-        },
-        {
-          q: "¿Cómo descargo e instalo la app?",
-          a: "Guía completa en alarmaseniorsafe.cl/guia: contratar, abrir el enlace en el celular, agregar a la pantalla de inicio (Android o iPhone), configurar PIN y guardianes, y escribir ACTIVAR por WhatsApp.",
-        },
-      ],
-    },
-    {
-      title: "Soporte",
-      icon: PhoneCall,
-      items: [
-        {
-          q: "¿Tienen atención en caso de dudas?",
-          a: "Sí, el Plan Único incluye soporte prioritario 24/7. Si tiene problemas con la configuración de guardianes o la aplicación, nuestro equipo estará disponible por WhatsApp o en hola@alarmaseniorsafe.cl.",
-        },
-      ],
-    },
-  ];
+  const sections = LANDING_FAQ_SECTIONS;
+  const sectionIcons: Record<string, typeof CheckCircle2> = {
+    "Planes y pagos": CheckCircle2,
+    Funcionamiento: Smartphone,
+    Emergencias: AlertCircle,
+  };
 
   return (
     <section id="faq" className="py-20 md:py-24" style={{ background: "var(--gradient-soft)" }}>
@@ -1068,7 +1017,7 @@ function PreguntasFrecuentes() {
             </span>
             <div>
               <div className="font-bold text-foreground">FAQ Senior Safe</div>
-              <div className="text-sm text-muted-foreground">Funcionamiento, caídas, planes y soporte</div>
+              <div className="text-sm text-muted-foreground">Funcionamiento, emergencias, planes y soporte</div>
             </div>
           </div>
 
@@ -1091,10 +1040,12 @@ function PreguntasFrecuentes() {
               </div>
             </div>
 
-            {sections.map((section, sectionIdx) => (
+            {sections.map((section, sectionIdx) => {
+              const SectionIcon = sectionIcons[section.title] ?? HelpCircle;
+              return (
               <div key={section.title} className={sectionIdx > 0 ? "mt-6 pt-6 border-t border-border" : "pt-4"}>
                 <div className="flex items-center gap-2 mb-3">
-                  <section.icon className="w-4 h-4 shrink-0" style={{ color: PETROL }} />
+                  <SectionIcon className="w-4 h-4 shrink-0" style={{ color: PETROL }} />
                   <h3 className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: PETROL }}>
                     {section.title}
                   </h3>
@@ -1120,7 +1071,8 @@ function PreguntasFrecuentes() {
                   ))}
                 </Accordion>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -1311,7 +1263,7 @@ function Landing() {
         <Hero />
         <QueEs />
         <ComunicacionRedundanteBento />
-        <CapacidadesPredictivas />
+        <AlarmaAdultosMayoresChile />
         <DeteccionCaidasActiva />
         <ParaQuien />
         <Como />

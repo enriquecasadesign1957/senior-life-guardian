@@ -19,18 +19,29 @@ import { WhatsAppFloat } from "@/components/whatsapp-float";
 import { checkoutUrl } from "@/lib/plans";
 import { SENIOR_SAFE_INSTALL_GUIDE_URL } from "@/lib/app-url";
 import { seniorSafeWhatsAppMeUrl } from "@/lib/twilio";
+import { buildPublicPageMeta, breadcrumbJsonLd, jsonLdHeadScript } from "@/lib/seo";
 
 export const Route = createFileRoute("/guia")({
-  head: () => ({
-    meta: [
-      { title: "Guía de instalación y uso — Senior Safe" },
-      {
-        name: "description",
-        content:
-          "Aprende paso a paso cómo descargar, instalar y usar Senior Safe en el celular del adulto mayor.",
-      },
-    ],
-  }),
+  head: () => {
+    const page = buildPublicPageMeta({
+      title: "Guía de instalación y uso — Senior Safe",
+      description:
+        "Aprende paso a paso cómo instalar y usar Senior Safe en el celular del adulto mayor: guardianes, WhatsApp, GPS y botón SOS.",
+      pathname: "/guia",
+    });
+
+    return {
+      ...page,
+      scripts: [
+        jsonLdHeadScript(
+          breadcrumbJsonLd([
+            { name: "Inicio", path: "/" },
+            { name: "Guía de instalación", path: "/guia" },
+          ]),
+        ),
+      ],
+    };
+  },
   component: GuiaPage,
 });
 

@@ -5,7 +5,6 @@ import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
 import { locationShareUrl } from "@/lib/maps";
 import {
   isTwilioConfigured,
-  twilioPost,
   twilioResourceSid,
   twilioSmsFrom,
   twilioVoiceFrom,
@@ -36,7 +35,7 @@ import {
   isAlertCancelled,
 } from "@/lib/emergency-alert-cancel";
 import { buildCascadeMetadataPatch } from "@/lib/emergency-cascade-continuation";
-import { buildEmergencyVoiceMessage, buildEmergencyVoiceTwiml } from "@/lib/emergency-voice-twiml";
+import { emergencyOutboundCallUrl } from "@/lib/emergency-voice-twiml";
 import {
   loadEmergencyContactRows,
 } from "@/lib/emergency-recipients";
@@ -48,6 +47,11 @@ import {
   CASCADE_VOICE_AFTER_WHATSAPP_MS,
   CASCADE_WHATSAPP_AFTER_SMS_MS,
 } from "@/lib/emergency-cascade-timing";
+import {
+  computeTiempoSupabaseMs,
+  createTwilioLatencyTracker,
+  persistMetricasLatencia,
+} from "@/lib/metricas-latencia";
 
 // Acepta el formato { lat, lng } y también el formato nativo de
 // @capacitor/geolocation: { latitude, longitude, accuracy } o
@@ -121,6 +125,8 @@ const Schema = z.object({
   intent: z.enum(["send", "arm", "dispatch"]).optional().default("send"),
   /** Requerido cuando intent=dispatch. */
   alertId: z.string().uuid().optional(),
+  /** Epoch ms (Date.now()) cuando el cliente gatilló el S.O.S. */
+  sosTriggeredAtMs: z.number().int().positive().optional(),
 });
 
 const WHATSAPP_DELAY_AFTER_SMS_MS = CASCADE_WHATSAPP_AFTER_SMS_MS;
@@ -340,6 +346,25 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
   .inputValidator((input) => Schema.parse(input))
   .handler(async ({ data }) => {
     await assertSeniorAccess(data.signupId, data.accessToken);
+    const twilioLatency = createTwilioLatencyTracker();
+    let tiempoSupabaseMs: number | null = null;
+    let metricsAlertId: string | null = null;
+    let metricsSignupId: string | null = null;
+
+    const flushMetricasLatencia = async () => {
+      if (!metricsAlertId || !metricsSignupId) return;
+      const { totalMs, calls } = twilioLatency.snapshot();
+      await persistMetricasLatencia({
+        alertLogId: metricsAlertId,
+        contractSignupId: metricsSignupId,
+        tiempoSupabase: tiempoSupabaseMs,
+        tiempoTwilioApi: totalMs,
+        twilioCalls: calls,
+        training: data.trainingMode === true,
+      });
+    };
+
+    try {
     const waFrom = twilioWhatsappEmergencyFrom();
     const smsFrom = twilioSmsFrom();
     const voiceFrom = twilioVoiceFrom();
@@ -355,6 +380,8 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
     if (userErr || !user) {
       return { ok: false, error: "user_not_found", results: [] as ChannelResult[] };
     }
+
+    metricsSignupId = user.id;
 
     if (!data.trainingMode && !isSubscriptionServiceAllowed(user.subscription_status)) {
       return {
@@ -403,9 +430,6 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
     const categoryBlock = data.emergencyCategory
       ? `🏷️ Tipo de emergencia:\n${emergencyCategoryMessageLine(data.emergencyCategory)}`
       : "";
-
-    const voiceText = buildEmergencyVoiceMessage(user.nombre, data.emergencyCategory ?? null);
-    const callTwiml = buildEmergencyVoiceTwiml(voiceText);
 
     const baseMetadata = {
       maps_link: mapsLink,
@@ -459,6 +483,7 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
         .eq("id", data.alertId);
       logRow = { id: data.alertId };
       alertId = data.alertId;
+      metricsAlertId = data.alertId;
       const armedMeta = (armedRow.metadata ?? {}) as Record<string, unknown>;
       if (typeof armedMeta.text_message === "string" && armedMeta.text_message.length > 0) {
         textMessage = armedMeta.text_message;
@@ -515,6 +540,10 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
       }
 
       alertId = logRow?.id ?? null;
+      metricsAlertId = alertId;
+      if (alertId) {
+        tiempoSupabaseMs = computeTiempoSupabaseMs(data.sosTriggeredAtMs, Date.now());
+      }
       const shortAckUrl = buildConfirmAlertUrl(ackToken);
       ackUrl = shortAckUrl;
       textMessage = buildEmergencyAlertMessage({
@@ -688,7 +717,8 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
               smsBody.StatusCallback = twilioStatusCallbackUrl(alertId, "sms");
             }
             smsTasks.push(
-              twilioPost("/Messages.json", smsBody)
+              twilioLatency
+                .post("/Messages.json", smsBody)
                 .then((r) => ({
                   channel: "sms" as const,
                   to: c.phone,
@@ -773,9 +803,9 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
                 textMessage,
                 alertId,
               });
-              let r = await twilioPost("/Messages.json", waBody);
+              let r = await twilioLatency.post("/Messages.json", waBody);
               if (!r.ok) {
-                r = await twilioPost(
+                r = await twilioLatency.post(
                   "/Messages.json",
                   buildEmergencyWhatsAppFallbackParams(waBody, user.nombre, waSummary),
                 );
@@ -859,10 +889,15 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
             break;
           }
           try {
-            const r = await twilioPost("/Calls.json", {
+            if (!alertId) {
+              pushSkipped("call", c.phone, "missing_alert_id", "call_skipped");
+              continue;
+            }
+            const r = await twilioLatency.post("/Calls.json", {
               To: c.phone,
               From: voiceFrom,
-              Twiml: callTwiml,
+              Url: emergencyOutboundCallUrl(alertId),
+              Method: "GET",
               Timeout: "25",
             });
             const callSid = twilioResourceSid(r.data);
@@ -941,6 +976,9 @@ export const sendEmergencyAlert = createServerFn({ method: "POST" })
         ack_url: ackUrl,
         alertId,
       };
+    }
+    } finally {
+      await flushMetricasLatencia();
     }
   });
 

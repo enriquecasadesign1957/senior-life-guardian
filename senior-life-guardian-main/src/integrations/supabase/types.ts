@@ -79,6 +79,57 @@ export type Database = {
           },
         ]
       }
+      metricas_latencia: {
+        Row: {
+          alert_log_id: string | null
+          algorithm: string | null
+          contract_signup_id: string | null
+          created_at: string
+          id: string
+          tiempo_supabase: number | null
+          tiempo_twilio_api: number
+          training: boolean
+          twilio_calls: Json | null
+        }
+        Insert: {
+          alert_log_id?: string | null
+          algorithm?: string | null
+          contract_signup_id?: string | null
+          created_at?: string
+          id?: string
+          tiempo_supabase?: number | null
+          tiempo_twilio_api?: number
+          training?: boolean
+          twilio_calls?: Json | null
+        }
+        Update: {
+          alert_log_id?: string | null
+          algorithm?: string | null
+          contract_signup_id?: string | null
+          created_at?: string
+          id?: string
+          tiempo_supabase?: number | null
+          tiempo_twilio_api?: number
+          training?: boolean
+          twilio_calls?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metricas_latencia_alert_log_id_fkey"
+            columns: ["alert_log_id"]
+            isOneToOne: false
+            referencedRelation: "alert_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "metricas_latencia_contract_signup_id_fkey"
+            columns: ["contract_signup_id"]
+            isOneToOne: false
+            referencedRelation: "contract_signups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       device_status: {
         Row: {
           app_version: string | null

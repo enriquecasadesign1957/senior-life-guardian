@@ -1,12 +1,17 @@
 import type { EmergencyCategory } from "@/lib/emergency-category";
 import { emergencyCategoryMessageLine } from "@/lib/emergency-category";
 
+/** Voz básica Twilio: más compatible en rutas PSTN Chile que Polly en algunas cuentas. */
+export const TWILIO_EMERGENCY_SAY_LANGUAGE = "es-MX";
+export const TWILIO_EMERGENCY_SAY_VOICE = "alice";
+
 export function escapeTwimlText(value: string): string {
   return value
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
 }
 
 export function buildEmergencyVoiceMessage(
@@ -24,17 +29,18 @@ export function buildEmergencyVoiceMessage(
 
 /** Un solo mensaje de voz (sin repetición) para reducir costo Twilio. */
 export function buildEmergencyVoiceTwiml(text: string): string {
+  const safe = escapeTwimlText(text);
+  const sayAttrs = `language="${TWILIO_EMERGENCY_SAY_LANGUAGE}" voice="${TWILIO_EMERGENCY_SAY_VOICE}"`;
   return (
-    `<?xml version="1.0" encoding="UTF-8"?>` +
     `<Response>` +
-    `<Say language="es-MX" voice="Polly.Mia">${escapeTwimlText(text)}</Say>` +
+    `<Say ${sayAttrs}>${safe}</Say>` +
     `<Hangup/>` +
     `</Response>`
   );
 }
 
 export function buildEmergencyVoiceTwimlHangup(): string {
-  return `<?xml version="1.0" encoding="UTF-8"?><Response><Hangup/></Response>`;
+  return `<Response><Hangup/></Response>`;
 }
 
 export function emergencyOutboundCallUrl(alertId: string): string {

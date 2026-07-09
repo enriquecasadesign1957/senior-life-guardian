@@ -37,6 +37,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { normalizeDiscountCodeInput, type PublicDiscountPreview } from "@/lib/discount-codes";
 import { getServerErrorMessage } from "@/lib/server-error-message";
+import { buildPrivatePageMeta } from "@/lib/seo";
 
 const searchSchema = z.object({
   mode: z
@@ -72,12 +73,11 @@ function parseCheckoutSearch(raw: Record<string, unknown>) {
 
 export const Route = createFileRoute("/checkout")({
   validateSearch: (s) => parseCheckoutSearch(s as Record<string, unknown>),
-  head: () => ({
-    meta: [
-      { title: "Checkout — Senior Safe" },
-      { name: "description", content: "Contrata Senior Safe con pago seguro Oneclick (Transbank). Activación inmediata tras confirmar el pago." },
-    ],
-  }),
+  head: () =>
+    buildPrivatePageMeta(
+      "Contratar Senior Safe — Checkout seguro",
+      "Contrata Senior Safe con pago seguro Webpay Plus. Activación inmediata tras confirmar el pago.",
+    ),
   component: CheckoutPage,
 });
 

@@ -73,6 +73,9 @@ export function SiteHeader() {
           <Link to="/guia" onClick={() => setOpen(false)} className="px-5 py-4 rounded-full border border-[var(--brand-petrol)]/30 text-[var(--brand-petrol-deep)] font-semibold text-center">
             Guía de instalación
           </Link>
+          <Link to="/native" onClick={() => setOpen(false)} className="px-5 py-4 rounded-full border border-[var(--brand-petrol)]/30 text-[var(--brand-petrol-deep)] font-semibold text-center">
+            Ya tengo cuenta · Entrar
+          </Link>
           <Link to="/checkout" search={defaultCheckoutSearch} onClick={() => setOpen(false)} className="px-5 py-4 rounded-full bg-[var(--brand-petrol-deep)] text-white font-semibold text-center">Contratar</Link>
         </div>
       )}

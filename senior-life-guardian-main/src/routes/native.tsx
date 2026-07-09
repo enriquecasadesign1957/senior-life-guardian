@@ -314,6 +314,7 @@ function NativeApp() {
           emergencyCategory: "accidente",
           trainingMode,
           graceBeforeSend: !trainingMode,
+          sosTriggeredAtMs: Date.now(),
         },
       });
       if ((res as { status?: string })?.status === "cancelled_by_senior") {
@@ -433,6 +434,7 @@ function NativeApp() {
     sendingRef.current = true;
     const gen = emergencySendGenRef.current;
     const trainingMode = isTrainingRunRef.current;
+    const sosTriggeredAtMs = Date.now();
 
     setStage("sending");
     setSummary(null);
@@ -461,6 +463,7 @@ function NativeApp() {
           emergencyCategory: category,
           trainingMode,
           graceBeforeSend: !trainingMode,
+          sosTriggeredAtMs,
         },
       });
       if (emergencySendGenRef.current !== gen) return;

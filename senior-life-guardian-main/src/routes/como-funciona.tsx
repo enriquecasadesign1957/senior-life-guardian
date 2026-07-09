@@ -5,6 +5,7 @@ import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { WhatsAppFloat } from "@/components/whatsapp-float";
 import { EmergencySimulator } from "@/components/sales-demo/emergency-simulator";
 import { checkoutUrl, formatPlanPrice, PLAN } from "@/lib/plans";
+import { buildPublicPageMeta, breadcrumbJsonLd, jsonLdHeadScript } from "@/lib/seo";
 
 const YOUTUBE_VIDEO_ID = "xSOKFh1oZnI";
 const YOUTUBE_THUMB = `https://img.youtube.com/vi/${YOUTUBE_VIDEO_ID}/maxresdefault.jpg`;
@@ -52,16 +53,26 @@ const TRUST_CTA_ITEMS = [
 ] as const;
 
 export const Route = createFileRoute("/como-funciona")({
-  head: () => ({
-    meta: [
-      { title: "Cómo protege Senior Safe a tu familia — Simulador y testimonios" },
-      {
-        name: "description",
-        content:
-          "Prueba el simulador SOS en vivo y mira cómo Senior Safe alerta a tu familia por WhatsApp, SMS y llamada. Desde $6.900/mes, sin permanencia.",
-      },
-    ],
-  }),
+  head: () => {
+    const page = buildPublicPageMeta({
+      title: "Cómo protege Senior Safe a tu familia — Simulador y testimonios",
+      description:
+        "Prueba el simulador SOS en vivo y mira cómo Senior Safe alerta a tu familia por WhatsApp, SMS y llamada. Desde $6.900/mes, sin permanencia.",
+      pathname: "/como-funciona",
+    });
+
+    return {
+      ...page,
+      scripts: [
+        jsonLdHeadScript(
+          breadcrumbJsonLd([
+            { name: "Inicio", path: "/" },
+            { name: "Cómo funciona", path: "/como-funciona" },
+          ]),
+        ),
+      ],
+    };
+  },
   component: ComoFuncionaPage,
 });
 

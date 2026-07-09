@@ -66,18 +66,28 @@ async function handleEmergencyCall(request: Request): Promise<Response> {
   }
 
   if (await isAlertCancelled(alertId)) {
-    return new Response(buildEmergencyVoiceTwimlHangup(), {
-      status: 200,
-      headers: { "Content-Type": "text/xml; charset=utf-8" },
-    });
+    return new Response(
+      buildEmergencyVoiceTwiml(
+        "La alerta de emergencia fue cancelada por el usuario. No se requiere acción.",
+      ),
+      {
+        status: 200,
+        headers: { "Content-Type": "text/xml; charset=utf-8" },
+      },
+    );
   }
 
   const ctx = await loadAlertVoiceContext(alertId);
   if (ctx.alert && isAcknowledgedForCall(ctx.alert)) {
-    return new Response(buildEmergencyVoiceTwimlHangup(), {
-      status: 200,
-      headers: { "Content-Type": "text/xml; charset=utf-8" },
-    });
+    return new Response(
+      buildEmergencyVoiceTwiml(
+        "La alerta de emergencia ya fue confirmada por un guardián. Gracias.",
+      ),
+      {
+        status: 200,
+        headers: { "Content-Type": "text/xml; charset=utf-8" },
+      },
+    );
   }
 
   const text = buildEmergencyVoiceMessage(ctx.seniorName, ctx.category);
@@ -87,7 +97,7 @@ async function handleEmergencyCall(request: Request): Promise<Response> {
   });
 }
 
-/** TwiML dinámico (reserva). Producción usa Twiml inline en la llamada saliente. */
+/** TwiML dinámico al contestar llamadas salientes de emergencia (Url en Calls.json). */
 export const Route = createFileRoute("/api/public/twilio-emergency-call")({
   server: {
     handlers: {

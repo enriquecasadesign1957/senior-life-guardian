@@ -4,6 +4,8 @@ export type TwilioPostResult = {
   ok: boolean;
   status: number;
   data: Record<string, unknown>;
+  /** Duración HTTP de la llamada a Twilio (ms). */
+  durationMs: number;
 };
 
 /** SID de recurso Twilio (Messages/Calls) con tipado seguro. */
@@ -56,10 +58,11 @@ export async function twilioPost(
 ): Promise<TwilioPostResult> {
   const creds = getCredentials();
   if (!creds) {
-    return { ok: false, status: 0, data: { error: "twilio_not_configured" } };
+    return { ok: false, status: 0, data: { error: "twilio_not_configured" }, durationMs: 0 };
   }
 
   const resource = path.startsWith("/") ? path : `/${path}`;
+  const startedAt = Date.now();
 
   if (isTwilioSimulationMode()) {
     logSimulation(resource, body);
@@ -67,6 +70,7 @@ export async function twilioPost(
       ok: true,
       status: 201,
       data: { sid: `SIM_${Date.now()}`, status: "simulated" },
+      durationMs: Date.now() - startedAt,
     };
   }
 
@@ -83,7 +87,7 @@ export async function twilioPost(
   });
 
   const data = (await resp.json().catch(() => ({}))) as Record<string, unknown>;
-  return { ok: resp.ok, status: resp.status, data };
+  return { ok: resp.ok, status: resp.status, data, durationMs: Date.now() - startedAt };
 }
 
 export function twilioSmsFrom(): string {

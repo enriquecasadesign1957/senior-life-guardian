@@ -1,14 +1,30 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { CANCELLATION_POLICY_BULLETS } from "@/lib/subscription-cancellation-policy";
+import { buildPublicPageMeta, breadcrumbJsonLd, jsonLdHeadScript } from "@/lib/seo";
 
 export const Route = createFileRoute("/terminos")({
-  head: () => ({
-    meta: [
-      { title: "Términos y Condiciones — Alarma Senior Safe" },
-      { name: "description", content: "Términos del servicio de Alarma Senior Safe: uso, suscripciones y responsabilidades." },
-    ],
-  }),
+  head: () => {
+    const page = buildPublicPageMeta({
+      title: "Términos y Condiciones — Alarma Senior Safe",
+      description:
+        "Términos del servicio de Alarma Senior Safe: uso, suscripciones, cancelación y responsabilidades. Chile.",
+      pathname: "/terminos",
+      robots: "index,follow",
+    });
+
+    return {
+      ...page,
+      scripts: [
+        jsonLdHeadScript(
+          breadcrumbJsonLd([
+            { name: "Inicio", path: "/" },
+            { name: "Términos", path: "/terminos" },
+          ]),
+        ),
+      ],
+    };
+  },
   component: Terms,
 });
 

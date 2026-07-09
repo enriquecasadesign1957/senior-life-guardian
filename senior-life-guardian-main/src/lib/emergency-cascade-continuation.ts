@@ -21,8 +21,7 @@ import {
   twilioVoiceFrom,
 } from "@/lib/twilio";
 import {
-  buildEmergencyVoiceMessage,
-  buildEmergencyVoiceTwiml,
+  emergencyOutboundCallUrl,
 } from "@/lib/emergency-voice-twiml";
 
 import {
@@ -365,18 +364,8 @@ async function runVoiceEscalation(alertId: string): Promise<ChannelResult[]> {
     .maybeSingle();
   if (!alert) return results;
 
-  const meta = (alert.metadata ?? {}) as Record<string, unknown>;
-  const { data: user } = await supabaseAdmin
-    .from(CONTRACT_SIGNUPS_TABLE)
-    .select("nombre")
-    .eq("id", alert.contract_signup_id)
-    .maybeSingle();
-
-  const category = meta.emergency_category as EmergencyCategory | null | undefined;
-  const voiceText = buildEmergencyVoiceMessage(user?.nombre ?? "el usuario", category ?? null);
-  const callTwiml = buildEmergencyVoiceTwiml(voiceText);
-
   const voiceFrom = twilioVoiceFrom();
+  const callUrl = emergencyOutboundCallUrl(alertId);
   if (!voiceFrom) {
     results.push({
       channel: "call",
@@ -423,7 +412,8 @@ async function runVoiceEscalation(alertId: string): Promise<ChannelResult[]> {
       const r = await twilioPost("/Calls.json", {
         To: c.phone,
         From: voiceFrom,
-        Twiml: callTwiml,
+        Url: callUrl,
+        Method: "GET",
         Timeout: "25",
       });
       results.push({
