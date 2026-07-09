@@ -55,10 +55,11 @@ const TRUST_CTA_ITEMS = [
 export const Route = createFileRoute("/como-funciona")({
   head: () => {
     const page = buildPublicPageMeta({
-      title: "Cómo protege Senior Safe a tu familia — Simulador y testimonios",
+      title: "Alerta familiar WhatsApp, SMS y GPS — Cómo funciona Senior Safe",
       description:
-        "Prueba el simulador SOS en vivo y mira cómo Senior Safe alerta a tu familia por WhatsApp, SMS y llamada. Desde $6.900/mes, sin permanencia.",
+        "Simulador SOS en vivo: mira cómo Senior Safe envía alerta familiar por WhatsApp, SMS, GPS y llamada automática. Desde $6.900/mes, sin permanencia.",
       pathname: "/como-funciona",
+      ogTitle: "Alerta familiar WhatsApp, SMS y GPS",
     });
 
     return {
@@ -164,10 +165,10 @@ function ComoFuncionaPage() {
         {/* 1. Hero */}
         <header className="text-center max-w-3xl mx-auto">
           <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-slate-900 leading-tight tracking-tight px-1">
-            Protege a tu familiar en una emergencia
+            Alerta familiar por WhatsApp, SMS y GPS
           </h1>
           <p className="mt-2 md:mt-4 text-sm sm:text-base md:text-lg text-muted-foreground leading-snug md:leading-relaxed max-w-2xl mx-auto px-1 line-clamp-2 md:line-clamp-none">
-            Un botón y la alerta llega al instante por WhatsApp, SMS y llamada.
+            Un botón SOS y la alerta llega al instante a tu familia — con ubicación en Google Maps y llamada si nadie confirma.
           </p>
         </header>
 

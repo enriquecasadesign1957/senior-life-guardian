@@ -19,7 +19,7 @@ export const Route = createFileRoute("/planes")({
         "Plan Único Senior Safe: $6.900/mes o $69.000/año (ahorras 2 meses). Botón SOS, WhatsApp, SMS, GPS y llamada. Sin permanencia, Webpay Plus.",
       pathname: "/planes",
       ogTitle: "Plan Único Senior Safe",
-      ogDescription: "Protección completa para tu familia. Mensual o anual con ahorro de 2 meses.",
+      ogDescription: `Protección completa desde $${formatPlanPrice(PLAN.monthly)}/mes. Mensual o anual con ahorro de 2 meses.`,
     });
 
     return {
@@ -60,7 +60,8 @@ function PlanesPage() {
               {PLAN.displayName}
             </h1>
             <p className="mt-5 text-lg md:text-xl text-white/85 max-w-2xl mx-auto">
-              {PLAN.tagline} Activa la protección en menos de 2 minutos.
+              Alarma familiar para adultos mayores desde ${formatPlanPrice(PLAN.monthly)}/mes, sin permanencia.
+              Botón SOS, WhatsApp, SMS, GPS y llamada automática. Activa la protección en menos de 2 minutos.
             </p>
 
             <div className="mt-9 inline-flex items-center bg-white rounded-full p-1.5 shadow-xl">

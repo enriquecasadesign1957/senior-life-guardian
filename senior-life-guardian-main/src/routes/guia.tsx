@@ -24,10 +24,11 @@ import { buildPublicPageMeta, breadcrumbJsonLd, jsonLdHeadScript } from "@/lib/s
 export const Route = createFileRoute("/guia")({
   head: () => {
     const page = buildPublicPageMeta({
-      title: "Guía de instalación y uso — Senior Safe",
+      title: "Cómo instalar Senior Safe en el celular del abuelo — Guía paso a paso",
       description:
-        "Aprende paso a paso cómo instalar y usar Senior Safe en el celular del adulto mayor: guardianes, WhatsApp, GPS y botón SOS.",
+        "Guía para instalar Senior Safe en el celular del abuelo o abuela: enlace, pantalla de inicio, guardianes, WhatsApp, GPS y botón SOS. Chile.",
       pathname: "/guia",
+      ogTitle: "Instalar Senior Safe en el celular del abuelo",
     });
 
     return {
@@ -59,8 +60,8 @@ const STEPS = [
   },
   {
     n: 2,
-    title: "Abre el enlace en el celular del adulto mayor",
-    desc: "Escanea el QR con la cámara del teléfono o abre el enlace que te enviamos. Debe abrirse en el navegador del celular (Chrome en Android o Safari en iPhone).",
+    title: "Abre el enlace en el celular del abuelo o abuela",
+    desc: "Escanea el QR con la cámara del teléfono o abre el enlace que te enviamos. Debe abrirse en Chrome (Android) o Safari (iPhone) del celular de tu familiar.",
     tip: "La app funciona en el smartphone; no hace falta comprar otro aparato.",
   },
   {
@@ -104,11 +105,11 @@ function GuiaPage() {
               Guía paso a paso
             </div>
             <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
-              Cómo descargar y usar Senior Safe
+              Cómo instalar Senior Safe en el celular del abuelo
             </h1>
             <p className="text-lg text-white/90 leading-relaxed max-w-2xl mx-auto">
-              Instrucciones simples para instalar la app en el celular del adulto mayor y dejar la red
-              familiar lista en pocos minutos.
+              Pasos simples para dejar la app en la pantalla de inicio del abuelo o abuela y conectar a la familia
+              en pocos minutos — sin comprar otro dispositivo.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
               <a
