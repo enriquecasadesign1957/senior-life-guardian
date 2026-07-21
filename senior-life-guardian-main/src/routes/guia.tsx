@@ -17,7 +17,7 @@ import {
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { WhatsAppFloat } from "@/components/whatsapp-float";
 import { checkoutUrl } from "@/lib/plans";
-import { SENIOR_SAFE_INSTALL_GUIDE_URL } from "@/lib/app-url";
+import { SENIOR_SAFE_INSTALL_GUIDE_URL, SENIOR_SAFE_PLAY_STORE_URL } from "@/lib/app-url";
 import { seniorSafeWhatsAppMeUrl } from "@/lib/twilio";
 import { buildPublicPageMeta, breadcrumbJsonLd, jsonLdHeadScript } from "@/lib/seo";
 
@@ -26,7 +26,7 @@ export const Route = createFileRoute("/guia")({
     const page = buildPublicPageMeta({
       title: "Cómo instalar Senior Safe en el celular del abuelo — Guía paso a paso",
       description:
-        "Guía para instalar Senior Safe en el celular del abuelo o abuela: enlace, pantalla de inicio, guardianes, WhatsApp, GPS y botón SOS. Chile.",
+        "Cómo instalar Senior Safe: Google Play en Android, guía iPhone, guardianes, WhatsApp, GPS y botón SOS. Chile.",
       pathname: "/guia",
       ogTitle: "Instalar Senior Safe en el celular del abuelo",
     });
@@ -60,15 +60,15 @@ const STEPS = [
   },
   {
     n: 2,
-    title: "Abre el enlace en el celular del abuelo o abuela",
-    desc: "Escanea el QR con la cámara del teléfono o abre el enlace que te enviamos. Debe abrirse en Chrome (Android) o Safari (iPhone) del celular de tu familiar.",
-    tip: "La app funciona en el smartphone; no hace falta comprar otro aparato.",
+    title: "Descarga la app en el celular (Android)",
+    desc: "En Google Play busca “Senior Safe” o abre play.google.com/store/apps/details?id=cl.alarmaseniorsafe.app. Instala e inicia sesión con el mismo correo del plan. En iPhone usa la guía Safari más abajo.",
+    tip: "La app oficial de Android ya está en Google Play.",
   },
   {
     n: 3,
-    title: "Instala Senior Safe en la pantalla de inicio",
-    desc: "Sigue las instrucciones según tu teléfono (detalle abajo). Al final verás el ícono de Senior Safe como cualquier otra app.",
-    tip: "Si ya pagaste y no tienes el enlace, escríbenos por WhatsApp.",
+    title: "Abre Senior Safe e inicia sesión",
+    desc: "Al abrir la app, inicia sesión con el correo de la cuenta. Luego crea el PIN, agrega guardianes y activa ubicación.",
+    tip: "Si ya pagaste y no encuentras la app, escríbenos por WhatsApp.",
   },
   {
     n: 4,
@@ -108,16 +108,18 @@ function GuiaPage() {
               Cómo instalar Senior Safe en el celular del abuelo
             </h1>
             <p className="text-lg text-white/90 leading-relaxed max-w-2xl mx-auto">
-              Pasos simples para dejar la app en la pantalla de inicio del abuelo o abuela y conectar a la familia
-              en pocos minutos — sin comprar otro dispositivo.
+              En Android: descarga desde Google Play. En iPhone: agrega a la pantalla de inicio con Safari.
+              Luego conecta a la familia en pocos minutos.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
               <a
-                href="/instalar-app?entrenamiento=1"
+                href={SENIOR_SAFE_PLAY_STORE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full bg-white font-bold shadow-lg"
                 style={{ color: DEEP }}
               >
-                Ir a instalar ahora
+                Disponible en Google Play
                 <ArrowRight className="w-5 h-5" />
               </a>
               <a
@@ -195,16 +197,25 @@ function GuiaPage() {
                 <ol className="space-y-4 text-muted-foreground">
                   <li className="flex gap-3">
                     <span className="font-bold text-foreground">1.</span>
-                    Abre el enlace en <strong className="text-foreground">Google Chrome</strong>.
+                    Abre{" "}
+                    <a
+                      href={SENIOR_SAFE_PLAY_STORE_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold underline underline-offset-2"
+                      style={{ color: PETROL }}
+                    >
+                      Google Play — Senior Safe
+                    </a>
+                    .
                   </li>
                   <li className="flex gap-3">
                     <span className="font-bold text-foreground">2.</span>
-                    Toca <strong className="text-foreground">Instalar app</strong> o{" "}
-                    <strong className="text-foreground">Agregar a pantalla de inicio</strong>.
+                    Toca <strong className="text-foreground">Instalar</strong> y espera a que termine.
                   </li>
                   <li className="flex gap-3">
                     <span className="font-bold text-foreground">3.</span>
-                    Confirma. El ícono de Senior Safe quedará en tu pantalla principal.
+                    Abre la app e inicia sesión con el correo de tu plan.
                   </li>
                 </ol>
               </div>

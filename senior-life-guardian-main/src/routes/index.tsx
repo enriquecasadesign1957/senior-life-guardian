@@ -47,6 +47,7 @@ import {
   serviceJsonLd,
 } from "@/lib/seo";
 import { CANCELLATION_POLICY_SUMMARY } from "@/lib/subscription-cancellation-policy";
+import { SENIOR_SAFE_PLAY_STORE_URL } from "@/lib/app-url";
 
 export const Route = createFileRoute("/")({
   head: () => {
@@ -220,6 +221,14 @@ function Hero() {
               >
                 Ya tengo cuenta · Entrar
               </Link>
+              <a
+                href={SENIOR_SAFE_PLAY_STORE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center text-sm font-medium text-white/70 hover:text-white underline underline-offset-4 transition-colors"
+              >
+                Google Play
+              </a>
               <Link
                 to="/guia"
                 className="inline-flex items-center justify-center text-sm font-medium text-white/70 hover:text-white underline underline-offset-4 transition-colors"
@@ -1078,6 +1087,16 @@ function PreguntasFrecuentes() {
 
         <p className="text-center mt-8 text-sm text-muted-foreground">
           ¿Necesitas instalar la app?{" "}
+          <a
+            href={SENIOR_SAFE_PLAY_STORE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold hover:underline"
+            style={{ color: PETROL }}
+          >
+            Google Play
+          </a>
+          {" · "}
           <Link to="/guia" className="font-semibold hover:underline" style={{ color: PETROL }}>
             Ver guía paso a paso
           </Link>
@@ -1107,7 +1126,7 @@ function Testimonios() {
       name: "Paulina S.",
       role: "Viña del Mar",
       quote:
-        "Agregar la app a la pantalla de inicio del celular de mi papá fue un trámite de un minuto. Totalmente recomendado.",
+        "La bajamos desde Google Play en el celular de mi papá en un minuto. Totalmente recomendado.",
     },
     {
       name: "Familia Pérez",

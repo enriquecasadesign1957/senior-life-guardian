@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { APK_DOWNLOAD_URL, buildNativeHandoffUrl } from "@/lib/install-config";
+import { SENIOR_SAFE_PLAY_STORE_URL } from "@/lib/app-url";
 import { isAppInstalled } from "@/lib/device";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Smartphone, Apple, Download, Share, Plus, ShieldCheck, CheckCircle2, AlertTriangle, Settings as SettingsIcon } from "lucide-react";
+import { Smartphone, Apple, Download, Share, Plus, ShieldCheck, CheckCircle2 } from "lucide-react";
 
 type BIPEvent = Event & {
   prompt: () => Promise<void>;
@@ -38,8 +39,6 @@ ensureInstallPromptCapture();
 const DEEP = "var(--brand-petrol-deep)";
 const PETROL = "var(--brand-petrol)";
 const GREEN = "#16a34a";
-
-import { APK_DOWNLOAD_URL, buildNativeHandoffUrl } from "@/lib/install-config";
 
 function detectPlatform() {
   if (typeof navigator === "undefined") return { isIOS: false, isAndroid: false, isSafari: false };
@@ -96,10 +95,9 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
   const handleBigInstall = async () => {
     setInstalling(true);
     try {
-      // 1) Android → SIEMPRE priorizar descarga de APK real (no PWA).
-      //    Evita que el usuario crea que "ya instaló" cuando solo abrió la web.
+      // 1) Android → Google Play (app oficial).
       if (isAndroid) {
-        window.location.assign(APK_DOWNLOAD_URL);
+        window.location.assign(SENIOR_SAFE_PLAY_STORE_URL);
         setShowGuide(true);
         return;
       }
@@ -126,8 +124,7 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
   };
 
   // Solo mostramos el acceso a la versión web cuando la PWA ya está realmente
-  // instalada (standalone) o como fallback explícito de debug. Nunca como flujo
-  // principal del onboarding — el usuario debe instalar la APK.
+  // instalada (standalone) o como fallback explícito. Nunca como flujo principal.
   const showOpenWebFallback = installed;
 
   return (
@@ -154,7 +151,7 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
         )}
 
         <div className="space-y-3">
-          {/* BOTÓN PRINCIPAL — descargar APK */}
+          {/* BOTÓN PRINCIPAL — Google Play (Android) o guía iOS */}
           {!installed && (
             <>
               <Button
@@ -164,10 +161,16 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
                 style={{ background: GREEN, color: "white" }}
               >
                 <Download className="w-6 h-6 mr-2" />
-                {installing ? "Preparando descarga…" : "📥 Descargar App"}
+                {installing
+                  ? "Abriendo…"
+                  : isAndroid
+                    ? "Instalar desde Google Play"
+                    : "📥 Instalar app"}
               </Button>
               <p className="text-xs text-muted-foreground text-center px-2">
-                Importante: no cierres esta ventana hasta terminar la instalación. La versión web no reemplaza la app instalada.
+                {isAndroid
+                  ? "Te llevamos a la ficha oficial en Google Play. Luego inicia sesión con el correo de tu plan."
+                  : "Sigue los pasos para añadir Senior Safe a tu teléfono."}
               </p>
             </>
           )}
@@ -204,26 +207,11 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
                   <div className="font-bold text-foreground flex items-center gap-2 text-base">
                     <Smartphone className="w-5 h-5" /> Cómo instalar en Android
                   </div>
-
-                  {/* AVISO CLAVE — fuentes desconocidas */}
-                  <div className="rounded-xl p-3 flex items-start gap-3" style={{ background: "color-mix(in oklab, #f59e0b 14%, white)", border: "2px solid #f59e0b" }}>
-                    <AlertTriangle className="w-6 h-6 shrink-0 mt-0.5" style={{ color: "#b45309" }} />
-                    <div className="text-sm text-foreground">
-                      <div className="font-bold mb-1">Tu teléfono mostrará un aviso de seguridad</div>
-                      <p className="leading-relaxed">Como Senior Safe aún no está en Google Play, Android dirá: <i>"Por tu seguridad, no se permite instalar apps desconocidas de esta fuente"</i>. Es <b>normal y seguro</b>. Solo hay que autorizarlo una vez.</p>
-                    </div>
-                  </div>
-
                   <ol className="space-y-2 text-foreground">
-                    <li className="flex gap-3"><span className="w-7 h-7 rounded-full bg-[var(--brand-petrol-deep)] text-white font-bold flex items-center justify-center shrink-0 text-sm">1</span><span>Cuando aparezca el aviso, toca <b>"Configuración"</b> (o <SettingsIcon className="inline w-4 h-4 align-text-bottom" /> Ajustes).</span></li>
-                    <li className="flex gap-3"><span className="w-7 h-7 rounded-full bg-[var(--brand-petrol-deep)] text-white font-bold flex items-center justify-center shrink-0 text-sm">2</span><span>Activa <b>"Permitir desde esta fuente"</b> para tu navegador (Chrome, Samsung Internet, etc.).</span></li>
-                    <li className="flex gap-3"><span className="w-7 h-7 rounded-full bg-[var(--brand-petrol-deep)] text-white font-bold flex items-center justify-center shrink-0 text-sm">3</span><span>Vuelve atrás y toca <b>"Instalar"</b>.</span></li>
-                    <li className="flex gap-3"><span className="w-7 h-7 rounded-full bg-[var(--brand-petrol-deep)] text-white font-bold flex items-center justify-center shrink-0 text-sm">4</span><span>Si Play Protect avisa, toca <b>"Instalar de todas formas"</b>.</span></li>
+                    <li className="flex gap-3"><span className="w-7 h-7 rounded-full bg-[var(--brand-petrol-deep)] text-white font-bold flex items-center justify-center shrink-0 text-sm">1</span><span>Abre <b>Google Play</b> y busca Senior Safe (o usa el botón de arriba).</span></li>
+                    <li className="flex gap-3"><span className="w-7 h-7 rounded-full bg-[var(--brand-petrol-deep)] text-white font-bold flex items-center justify-center shrink-0 text-sm">2</span><span>Toca <b>Instalar</b> y espera a que termine.</span></li>
+                    <li className="flex gap-3"><span className="w-7 h-7 rounded-full bg-[var(--brand-petrol-deep)] text-white font-bold flex items-center justify-center shrink-0 text-sm">3</span><span>Abre la app e inicia sesión con el correo de tu plan.</span></li>
                   </ol>
-
-                  <p className="text-xs text-muted-foreground pt-1">
-                    ¿No ves el aviso? Ve a <b>Ajustes → Apps → Acceso especial → Instalar apps desconocidas</b> y autoriza tu navegador.
-                  </p>
                 </div>
               )}
             </div>
@@ -232,8 +220,8 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
           {/* Pasos resumen */}
           <div className="grid gap-2 text-sm">
             {[
-              isAndroid ? "Toca 'Descargar App' arriba." : "Toca el botón verde de arriba.",
-              isAndroid ? "Abre el archivo APK descargado y confirma 'Instalar'." : (isIOS ? "Sigue los pasos para añadir a inicio." : "Confirma la instalación."),
+              isAndroid ? "Toca 'Instalar desde Google Play'." : "Toca el botón verde de arriba.",
+              isAndroid ? "Instala desde Play e inicia sesión con tu correo." : (isIOS ? "Sigue los pasos para añadir a inicio." : "Confirma la instalación."),
               "Abre Senior Safe desde el ícono en tu teléfono.",
             ].map((step, i) => (
               <div key={step} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
@@ -243,12 +231,20 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
             ))}
           </div>
 
-          {/* Fallback web — solo como último recurso, no destacado */}
+          {/* Fallback web — solo como último recurso */}
           {!installed && (
             <details className="text-xs text-muted-foreground pt-1">
               <summary className="cursor-pointer hover:text-foreground select-none">¿No puedes instalar ahora? Ver opción temporal</summary>
               <div className="mt-2 rounded-2xl border border-dashed border-border p-3 space-y-2">
-                <p>La versión web es temporal y se pierde al cerrar el navegador. Úsala solo si no puedes instalar la APK.</p>
+                <p>La versión web es temporal. En Android prioriza Google Play.</p>
+                <a
+                  href={SENIOR_SAFE_PLAY_STORE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline text-foreground font-semibold block"
+                >
+                  Abrir Google Play
+                </a>
                 <button
                   type="button"
                   onClick={openInstalledApp}
@@ -256,17 +252,29 @@ export function InstallAppModal({ open, onClose, signupId, showContinuityHint }:
                 >
                   Abrir versión web temporal
                 </button>
+                <a
+                  href={APK_DOWNLOAD_URL}
+                  className="underline text-muted-foreground block"
+                >
+                  Descargar APK (alternativa)
+                </a>
               </div>
             </details>
           )}
 
-          {/* Stores próximamente */}
+          {/* Tiendas */}
           <div className="grid sm:grid-cols-2 gap-3 pt-1">
-            <div className="relative rounded-2xl border-2 border-border p-4 text-center opacity-70">
+            <a
+              href={SENIOR_SAFE_PLAY_STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative rounded-2xl border-2 p-4 text-center hover:shadow-md transition-shadow"
+              style={{ borderColor: "color-mix(in oklab, var(--brand-petrol) 35%, transparent)" }}
+            >
               <Smartphone className="w-7 h-7 mx-auto mb-2" style={{ color: DEEP }} />
               <div className="font-bold text-foreground text-sm">Google Play</div>
-              <span className="absolute -top-2 -right-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400 text-amber-950">Próximamente</span>
-            </div>
+              <div className="text-xs text-muted-foreground mt-1">Disponible ahora</div>
+            </a>
             <div className="relative rounded-2xl border-2 border-border p-4 text-center opacity-70">
               <Apple className="w-7 h-7 mx-auto mb-2" />
               <div className="font-bold text-foreground text-sm">App Store</div>

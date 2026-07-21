@@ -37,7 +37,7 @@ const TESTIMONIALS: {
   },
   {
     segments: [
-      { text: "Al principio tenía dudas porque no se descarga de la Play Store, pero agregarlo a la pantalla de inicio del celular de mi papá fue un trámite de un minuto. No gasta memoria y " },
+      { text: "La bajamos desde Google Play en el celular de mi papá en un minuto. Inició sesión con el correo y " },
       { text: "funciona impecable", highlight: true },
       { text: ". Totalmente recomendado por el precio." },
     ],

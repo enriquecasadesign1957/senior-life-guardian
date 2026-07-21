@@ -4,6 +4,7 @@ import { Menu, X, Mail, Globe, Shield, BookOpen } from "lucide-react";
 import logo from "@/assets/logo-senior-safe.png";
 import { PLAN_KEY } from "@/lib/plans";
 import { isDemoMode } from "@/lib/demo/demo-config";
+import { SENIOR_SAFE_PLAY_STORE_URL } from "@/lib/app-url";
 
 const defaultCheckoutSearch = {
   mode: "contratar" as const,
@@ -108,6 +109,16 @@ export function SiteFooter() {
             <li><Link to="/como-funciona" className="text-white/85 hover:text-white">Cómo funciona</Link></li>
             <li><a href="/#planes" className="text-white/85 hover:text-white">Planes</a></li>
             <li><Link to="/guia" className="text-white/85 hover:text-white">Guía de instalación</Link></li>
+            <li>
+              <a
+                href={SENIOR_SAFE_PLAY_STORE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/85 hover:text-white"
+              >
+                Google Play
+              </a>
+            </li>
             <li><Link to="/checkout" search={defaultCheckoutSearch} className="text-white/85 hover:text-white">Contratar</Link></li>
           </ul>
         </div>

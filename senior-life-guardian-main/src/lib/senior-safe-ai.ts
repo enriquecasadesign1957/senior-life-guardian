@@ -3,7 +3,11 @@
  * Solo responde con el contexto oficial de Senior Safe.
  */
 
-import { SENIOR_SAFE_INSTALL_GUIDE_URL, SENIOR_SAFE_SOS_SIMULATOR_URL } from "@/lib/app-url";
+import {
+  SENIOR_SAFE_INSTALL_GUIDE_URL,
+  SENIOR_SAFE_PLAY_STORE_URL,
+  SENIOR_SAFE_SOS_SIMULATOR_URL,
+} from "@/lib/app-url";
 import { SENIOR_SAFE_CHECKOUT_URL } from "@/lib/whatsapp-commercial-activation";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { normalizeTwilioPhone } from "@/lib/twilio-inbound";
@@ -96,7 +100,7 @@ P: ¿Tienen atención por dudas?
 R: Sí. El Plan Único incluye soporte prioritario 24/7 para configuración de guardianes y la app. WhatsApp comercial o correo ${SENIOR_SAFE_SUPPORT_EMAIL}.
 
 P: ¿Cómo descargo o instalo la app? / ¿Está en Google Play o App Store?
-R: NO está en tiendas tradicionales (Google Play / App Store). Ventaja: no ocupa espacio extra ni requiere contraseñas difíciles. Tras contratar, se abre un enlace seguro en el navegador del celular y con un toque se añade un ícono a la pantalla de inicio (como cualquier app). Simulador antes de contratar: ${SENIOR_SAFE_SOS_SIMULATOR_URL}. Plan $6.900/mes: pago Transbank en ${SENIOR_SAFE_CHECKOUT_URL} y guía paso a paso para activar el botón S.O.S. Guía extendida: ${SENIOR_SAFE_INSTALL_GUIDE_URL}.
+R: Sí está en Google Play (Android): ${SENIOR_SAFE_PLAY_STORE_URL}. Contrata el plan en ${SENIOR_SAFE_CHECKOUT_URL}, descarga la app, inicia sesión con tu correo y configura guardianes. En iPhone aún no está en App Store: se agrega a la pantalla de inicio desde Safari (guía: ${SENIOR_SAFE_INSTALL_GUIDE_URL}). Simulador antes de contratar: ${SENIOR_SAFE_SOS_SIMULATOR_URL}.
 
 P: ¿Cómo se usa la app día a día?
 R: Ver sección "Uso diario" en ${SENIOR_SAFE_INSTALL_GUIDE_URL}: botón SOS rojo para emergencias; sensor de caídas con sirena 30 s para cancelar si está bien.
@@ -143,7 +147,7 @@ CIERRE OBLIGATORIO: Termina SIEMPRE con una pregunta abierta que avance la conve
 
 REGLAS ESTRICTAS:
 - Solo información del CONTEXTO OFICIAL adjunto. No inventes funciones, precios ni plazos.
-- Si pregunta cómo descargar/instalar la app o si está en Google Play / App Store: NO está en tiendas; es ventaja (poco espacio, sin contraseñas difíciles). Enlace seguro → ícono en pantalla de inicio. Simulador: ${SENIOR_SAFE_SOS_SIMULATOR_URL}. Contratar: ${SENIOR_SAFE_CHECKOUT_URL}. Cierra preguntando si quiere los pasos y si su papá/mamá usa smartphone con internet.
+- Si pregunta cómo descargar/instalar la app o si está en Google Play / App Store: SÍ está en Google Play (Android): ${SENIOR_SAFE_PLAY_STORE_URL}. App Store (iPhone) aún no. Flujo: contratar en ${SENIOR_SAFE_CHECKOUT_URL} → descargar en Play → iniciar sesión con el correo. iPhone: guía ${SENIOR_SAFE_INSTALL_GUIDE_URL}. Simulador: ${SENIOR_SAFE_SOS_SIMULATOR_URL}. Cierra preguntando si quiere los pasos y si su papá/mamá usa Android o iPhone.
 - Si pregunta cómo funciona, quiere ver el flujo, probar el botón SOS, demo o simulador: comparte ${SENIOR_SAFE_SOS_SIMULATOR_URL} y explica que puede pulsar S.O.S, elegir Salud/Accidente/Delincuencia y ver el panel de envíos en vivo (sin instalar).
 - Contratación: ${SENIOR_SAFE_CHECKOUT_URL}
 - Tras contratar y pagar: el cliente envía ACTIVAR por WhatsApp (solo funciona con pago confirmado). Guía: ${SENIOR_SAFE_INSTALL_GUIDE_URL}
@@ -204,7 +208,7 @@ CIERRE OBLIGATORIO: Pregunta directa y sencilla. Ejemplos:
 
 REGLAS ESTRICTAS:
 - Solo información del CONTEXTO OFICIAL adjunto. No invente nada.
-- Si pregunta cómo descargar/instalar o si está en Google Play / App Store: NO está en tiendas; ventaja (poco espacio, sin contraseñas complicadas). Enlace seguro → ícono en pantalla de inicio. Simulador: ${SENIOR_SAFE_SOS_SIMULATOR_URL}. Contratar: ${SENIOR_SAFE_CHECKOUT_URL}. Cierre preguntando si desea los pasos y si usa smartphone con internet.
+- Si pregunta cómo descargar/instalar o si está en Google Play / App Store: SÍ está en Google Play (Android): ${SENIOR_SAFE_PLAY_STORE_URL}. App Store aún no. Contratar: ${SENIOR_SAFE_CHECKOUT_URL}. Luego descargar e iniciar sesión con su correo. iPhone: guía ${SENIOR_SAFE_INSTALL_GUIDE_URL}. Simulador: ${SENIOR_SAFE_SOS_SIMULATOR_URL}. Cierre preguntando si desea los pasos y si su celular es Android.
 - Si pregunta cómo funciona, quiere ver el flujo, probar el botón de emergencia, demo o simulador: comparta ${SENIOR_SAFE_SOS_SIMULATOR_URL} y explique en pocas palabras: toque el botón rojo, elija el tipo de ayuda y vea cómo avisa a su familia (sin instalar nada).
 - Contratación: ${SENIOR_SAFE_CHECKOUT_URL} — "Le ayudamos en cada paso."
 - Si ya pagó en checkout: escriba ACTIVAR por WhatsApp (el sistema lo verifica). Guía: ${SENIOR_SAFE_INSTALL_GUIDE_URL}
@@ -314,27 +318,24 @@ function appDownloadStoreFallbackReply(audience: WhatsAppCommercialAudience): st
   if (audience === "senior") {
     return (
       base +
-      "Hola! Nuestra aplicación no se descarga de Google Play ni App Store. " +
-      "Así ocupa menos espacio en su celular y no requiere contraseñas complicadas. 🛡️\n\n" +
-      "Funciona al instante: abre un enlace seguro en el navegador de su teléfono y, con un solo toque, " +
-      "queda un ícono en la pantalla de inicio, listo como cualquier app.\n\n" +
-      `• Antes de instalar, pruebe el simulador (Salud, Accidente y Delincuencia): ${SENIOR_SAFE_SOS_SIMULATOR_URL}\n` +
-      `• Si desea el plan único de $6.900/mes, le envío el pago seguro Transbank: ${SENIOR_SAFE_CHECKOUT_URL} ` +
-      "y le guío paso a paso para dejar activo el botón S.O.S.\n\n" +
-      "¿Le gustaría que le explique los pasos? ¿Usted ya usa un smartphone con acceso a internet?"
+      "Hola! En Android ya puede descargar Senior Safe desde Google Play. 🙂\n\n" +
+      `• Google Play: ${SENIOR_SAFE_PLAY_STORE_URL}\n` +
+      `• Primero contrate el plan ($6.900/mes) aquí: ${SENIOR_SAFE_CHECKOUT_URL}\n` +
+      "• Luego abra la app e inicie sesión con su correo.\n" +
+      `• iPhone: aún no está en App Store; guía: ${SENIOR_SAFE_INSTALL_GUIDE_URL}\n` +
+      `• Simulador antes de contratar: ${SENIOR_SAFE_SOS_SIMULATOR_URL}\n\n` +
+      "¿Su celular es Android? ¿Le ayudo con el plan?"
     );
   }
   return (
     base +
-    "Hola! Nuestra aplicación no se descarga de las tiendas tradicionales como Google Play o App Store, " +
-    "lo que es una gran ventaja porque no ocupa espacio en el celular de tu familiar ni requiere contraseñas difíciles. 🛡️\n\n" +
-    "Funciona de forma instantánea: abres un enlace seguro en el navegador del celular y, con un solo toque, " +
-    "se añade un icono directo a la pantalla de inicio, lista como cualquier otra app.\n\n" +
-    `• Antes de instalarla, revisa nuestro simulador para ver en tiempo real ` +
-    `cómo funciona el sistema de alertas (Salud, Accidente y Delincuencia): ${SENIOR_SAFE_SOS_SIMULATOR_URL}\n` +
-    `• Si deseas contratar nuestro plan único de $6.900/mes, te proporciono el enlace de pago seguro por Transbank: ${SENIOR_SAFE_CHECKOUT_URL} ` +
-    "y te guío paso a paso para dejar el botón S.O.S activo en el teléfono de tu familiar.\n\n" +
-    "¿Te gustaría que te explique los pasos? ¿Tu papá o mamá ya usa un smartphone con acceso a internet?"
+    "Hola! Senior Safe ya está en Google Play (Android). 🛡️\n\n" +
+    `• Descargar: ${SENIOR_SAFE_PLAY_STORE_URL}\n` +
+    `• Contratar primero ($6.900/mes): ${SENIOR_SAFE_CHECKOUT_URL}\n` +
+    "• Después: instalar e iniciar sesión con el correo de la cuenta.\n" +
+    `• iPhone: aún no en App Store — guía: ${SENIOR_SAFE_INSTALL_GUIDE_URL}\n` +
+    `• Simulador: ${SENIOR_SAFE_SOS_SIMULATOR_URL}\n\n` +
+    "¿Tu papá o mamá usa Android? ¿Te paso los pasos?"
   );
 }
 

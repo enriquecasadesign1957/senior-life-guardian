@@ -1,6 +1,13 @@
 /** Dominio público oficial (producción). */
 export const PRODUCTION_SITE_URL = "https://alarmaseniorsafe.cl";
 
+/** Package ID Android (Capacitor / Google Play). */
+export const SENIOR_SAFE_ANDROID_PACKAGE_ID = "cl.alarmaseniorsafe.app";
+
+/** Ficha pública en Google Play. */
+export const SENIOR_SAFE_PLAY_STORE_URL =
+  `https://play.google.com/store/apps/details?id=${SENIOR_SAFE_ANDROID_PACKAGE_ID}`;
+
 /** Guía pública de descarga, instalación y uso diario. */
 export const SENIOR_SAFE_INSTALL_GUIDE_URL = `${PRODUCTION_SITE_URL}/guia`;
 

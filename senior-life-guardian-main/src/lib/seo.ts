@@ -1,5 +1,5 @@
 import { PLAN } from "@/lib/plans";
-import { PRODUCTION_SITE_URL } from "@/lib/app-url";
+import { PRODUCTION_SITE_URL, SENIOR_SAFE_PLAY_STORE_URL, SENIOR_SAFE_ANDROID_PACKAGE_ID } from "@/lib/app-url";
 
 export const SEO_SITE_NAME = "Senior Safe";
 export const SEO_BRAND = "Alarma Senior Safe";
@@ -65,7 +65,7 @@ export function organizationJsonLd(): JsonLd {
       "@type": "Country",
       name: "Chile",
     },
-    sameAs: [PRODUCTION_SITE_URL],
+    sameAs: [PRODUCTION_SITE_URL, SENIOR_SAFE_PLAY_STORE_URL],
   };
 }
 
@@ -118,6 +118,10 @@ export function mobileApplicationJsonLd(): JsonLd {
     name: SEO_SITE_NAME,
     operatingSystem: "Android",
     applicationCategory: "UtilitiesApplication",
+    installUrl: SENIOR_SAFE_PLAY_STORE_URL,
+    downloadUrl: SENIOR_SAFE_PLAY_STORE_URL,
+    sameAs: [SENIOR_SAFE_PLAY_STORE_URL],
+    identifier: SENIOR_SAFE_ANDROID_PACKAGE_ID,
     offers: {
       "@type": "Offer",
       price: String(PLAN.monthly),

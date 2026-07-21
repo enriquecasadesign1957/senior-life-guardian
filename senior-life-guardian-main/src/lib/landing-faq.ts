@@ -76,7 +76,7 @@ export const LANDING_FAQ_SECTIONS: LandingFaqSection[] = [
       },
       {
         q: "¿Cómo descargo e instalo la app?",
-        a: "Guía completa en alarmaseniorsafe.cl/guia: contratar, instalar en el celular, configurar guardianes y activar WhatsApp.",
+        a: "En Android: descárgala desde Google Play (play.google.com/store/apps/details?id=cl.alarmaseniorsafe.app). Contrata el plan en alarmaseniorsafe.cl, inicia sesión con tu correo y configura guardianes. Guía completa: alarmaseniorsafe.cl/guia.",
       },
       {
         q: "¿Tienen atención en caso de dudas?",
