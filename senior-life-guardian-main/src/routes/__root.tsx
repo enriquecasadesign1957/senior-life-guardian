@@ -1,9 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
-  Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -12,6 +12,7 @@ import { useEffect } from "react";
 import appCss from "../styles.css?url";
 import { installApiBaseFetch } from "@/lib/api-base";
 import { productionHomeUrl } from "@/lib/app-url";
+import { GA4_MEASUREMENT_ID, GOOGLE_ADS_ID, shouldLoadGa4, trackGa4Pageview } from "@/lib/ga4";
 import {
   SEO_BRAND,
   SEO_DEFAULT_DESCRIPTION,
@@ -32,6 +33,8 @@ const CLARITY_HEAD_SNIPPET = `(function(c,l,a,r,i,t,y){
         t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     })(window, document, "clarity", "script", "${CLARITY_PROJECT_ID}");`;
+
+const GA4_INIT_SNIPPET = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA4_MEASUREMENT_ID}',{send_page_view:false,anonymize_ip:true});gtag('config','${GOOGLE_ADS_ID}');`;
 
 // Parchea fetch para APK (Capacitor / file://). En preview de Lovable y
 // localhost NO se activa para evitar CORS. Se ejecuta dentro de useEffect
@@ -183,6 +186,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
           type="text/javascript"
           dangerouslySetInnerHTML={{ __html: CLARITY_HEAD_SNIPPET }}
         />
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA4_MEASUREMENT_ID}`} />
+        <script
+          type="text/javascript"
+          dangerouslySetInnerHTML={{ __html: GA4_INIT_SNIPPET }}
+        />
       </head>
       <body>
         {children}
@@ -195,6 +203,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+  const location = useRouterState({ select: (s) => s.location });
 
   // Si la app corre dentro de Capacitor (APK/iOS), redirigir SIEMPRE a /native.
   // En navegador web normal no hace nada (Capacitor no está definido).
@@ -202,8 +211,6 @@ function RootComponent() {
     if (typeof window === "undefined") return;
 
     setupApiBase();
-
-
 
     // Captura global y temprana del prompt nativo de instalación PWA
     // (Chrome/Edge mini-infobar). Llamar preventDefault suprime el banner
@@ -229,6 +236,12 @@ function RootComponent() {
     }
   }, [router]);
 
+  // GA4: pageviews en carga inicial y navegación SPA (solo producción).
+  useEffect(() => {
+    if (!shouldLoadGa4()) return;
+    const path = `${location.pathname}${location.searchStr || ""}`;
+    trackGa4Pageview(path);
+  }, [location.pathname, location.searchStr]);
 
   return (
     <QueryClientProvider client={queryClient}>

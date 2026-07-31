@@ -284,7 +284,7 @@ function CheckoutPage() {
       toast.success(`Pago mock aprobado (${mock.authorizationCode})`);
       navigate({
         to: POST_PAYMENT_INSTALL_PATH,
-        search: { pago: "ok", entrenamiento: "1", ss: signup.id },
+        search: { pago: "ok", ss: signup.id },
       });
     } catch (err) {
       console.error("Mock approve error:", err);
@@ -341,7 +341,7 @@ function CheckoutPage() {
         });
         navigate({
           to: POST_PAYMENT_INSTALL_PATH,
-          search: { entrenamiento: "1", ss: signup.id },
+          search: { ss: signup.id },
         });
         return;
       }
@@ -425,7 +425,7 @@ function CheckoutPage() {
               Contrata Senior Safe
             </h1>
             <p className="mt-4 text-base md:text-lg text-muted-foreground">
-              Pago con Oneclick (Transbank). Tras aprobar, entras a la app con modo entrenamiento (sin alertas reales).
+              Pago con Oneclick (Transbank). Tras aprobar, te guiamos a instalar la app en el celular.
             </p>
           </div>
 

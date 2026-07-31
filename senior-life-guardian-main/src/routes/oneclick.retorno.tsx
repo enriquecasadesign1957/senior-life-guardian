@@ -16,6 +16,7 @@ import {
   type OneclickVoucherDisplay,
 } from "@/lib/oneclick-voucher";
 import { markRequiresPwaInstall, persistSignupHandoff } from "@/lib/post-payment";
+import { trackGoogleAdsSubscriptionConversion } from "@/lib/ga4";
 import { WhatsAppActivarCta } from "@/components/whatsapp-activar-cta";
 import { InstallNotifyBanner } from "@/components/install-notify-banner";
 import type { PostPaymentInstallNotifyResult } from "@/lib/post-payment-install-notify";
@@ -68,6 +69,28 @@ function OneclickSuccessView({
   isValidationPreview: boolean;
   installNotify?: PostPaymentInstallNotifyResult | null;
 }) {
+  useEffect(() => {
+    if (isValidationPreview) return;
+    const transactionId =
+      String(voucher.ordenCompraMall || voucher.ordenCompraTienda || voucher.codigoAutorizacion || "").trim();
+    if (!transactionId || !signupId) return;
+    const rawMonto = String(voucher.monto ?? "").replace(/[^\d]/g, "");
+    const value = rawMonto ? Number(rawMonto) : null;
+    trackGoogleAdsSubscriptionConversion({
+      value: value && Number.isFinite(value) ? value : null,
+      currency: "CLP",
+      transactionId,
+      signupId,
+    });
+  }, [
+    isValidationPreview,
+    voucher.monto,
+    voucher.ordenCompraMall,
+    voucher.ordenCompraTienda,
+    voucher.codigoAutorizacion,
+    signupId,
+  ]);
+
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground antialiased">
       <SiteHeader />
@@ -126,7 +149,6 @@ function OneclickSuccessView({
               <Link
                 to="/instalar-app"
                 search={{
-                  entrenamiento: "1",
                   pago: "ok",
                   ...(signupId ? { ss: signupId } : {}),
                 }}

@@ -5,13 +5,17 @@ import { clearSeniorAccessToken } from "@/lib/senior-access-auth";
 export const APP_ENTRENAMIENTO_SEARCH = { entrenamiento: "1" } as const;
 
 export type AppHandoffSearch = {
-  entrenamiento: "1";
+  entrenamiento?: "1";
   ss?: string;
 };
 
-/** Parámetros de búsqueda al abrir /app tras pago o escaneo QR (propaga contract_signup id). */
-export function buildAppHandoffSearch(signupId?: string | null): AppHandoffSearch {
-  const search: AppHandoffSearch = { entrenamiento: "1" };
+/** Parámetros al abrir /app tras pago o instalación. Por defecto sin modo entrenamiento. */
+export function buildAppHandoffSearch(
+  signupId?: string | null,
+  opts?: { training?: boolean },
+): AppHandoffSearch {
+  const search: AppHandoffSearch = {};
+  if (opts?.training) search.entrenamiento = "1";
   if (signupId) search.ss = signupId;
   return search;
 }
@@ -84,14 +88,13 @@ export function requiresPwaInstall(): boolean {
   }
 }
 
-/** URL absoluta que codifica el QR de instalación (siempre dominio de producción en build PROD). */
+/** URL absoluta del QR / enlace de instalación (sin modo entrenamiento). */
 export function buildMobileInstallPageUrl(
   signupId?: string | null,
   opts?: { paymentSuccess?: boolean },
 ): string {
   const origin = import.meta.env.PROD ? PRODUCTION_SITE_URL : resolveProductionSiteOrigin();
   const u = new URL(POST_PAYMENT_INSTALL_PATH, origin);
-  u.searchParams.set("entrenamiento", "1");
   if (opts?.paymentSuccess) u.searchParams.set("pago", "ok");
   if (signupId) u.searchParams.set("ss", signupId);
   return u.toString();

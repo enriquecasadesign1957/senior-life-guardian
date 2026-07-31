@@ -177,6 +177,7 @@ function WebpayReturnPage() {
         paymentSummary={info}
         signupId={signupId}
         showPaymentSuccess
+        trackConversion
         installNotify={installNotify}
       />
     );

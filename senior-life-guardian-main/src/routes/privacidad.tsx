@@ -33,7 +33,7 @@ function Privacy() {
       <SiteHeader />
       <main className="max-w-3xl mx-auto px-6 py-16 md:py-24">
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-3">Política de Privacidad</h1>
-        <p className="text-muted-foreground mb-10">Última actualización: mayo 2026</p>
+        <p className="text-muted-foreground mb-10">Última actualización: julio 2026</p>
 
         <div className="prose prose-neutral max-w-none space-y-8 text-foreground">
           <section>
@@ -62,7 +62,17 @@ function Privacy() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold mb-3">4. Seguridad</h2>
+            <h2 className="text-2xl font-bold mb-3">4. Analítica y publicidad</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Usamos Google Analytics 4 y, cuando corresponde, herramientas vinculadas a Google Ads para
+              medir visitas, campañas y conversiones en el sitio. Estos servicios pueden usar cookies o
+              identificadores similares. También usamos Microsoft Clarity para mejorar la experiencia de
+              uso. Puedes limitar el seguimiento desde la configuración de tu navegador.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold mb-3">5. Seguridad</h2>
             <p className="text-muted-foreground leading-relaxed">
               Aplicamos cifrado en tránsito y en reposo. Nuestra plataforma cloud cumple con estándares
               internacionales de seguridad para proteger tu información.
@@ -70,7 +80,7 @@ function Privacy() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold mb-3">5. Tus derechos</h2>
+            <h2 className="text-2xl font-bold mb-3">6. Tus derechos</h2>
             <p className="text-muted-foreground leading-relaxed">
               Puedes acceder, modificar o eliminar tus datos en cualquier momento escribiendo a
               hola@alarmaseniorsafe.cl.
@@ -78,7 +88,7 @@ function Privacy() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold mb-3">6. Contacto</h2>
+            <h2 className="text-2xl font-bold mb-3">7. Contacto</h2>
             <p className="text-muted-foreground leading-relaxed">
               Para cualquier consulta sobre privacidad, contáctanos en hola@alarmaseniorsafe.cl.
             </p>

@@ -34,6 +34,5 @@ export function buildNativeHandoffUrl(signupId: string | null, source = "postpay
   const u = new URL(NATIVE_APP_PATH, base);
   if (signupId) u.searchParams.set("ss", signupId);
   u.searchParams.set("source", source);
-  u.searchParams.set("entrenamiento", "1");
   return u.toString();
 }

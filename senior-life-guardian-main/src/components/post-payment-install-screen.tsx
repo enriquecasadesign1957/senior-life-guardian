@@ -26,6 +26,7 @@ import {
 } from "@/lib/pwa-install";
 import { PRODUCTION_SITE_URL } from "@/lib/app-url";
 import { toast } from "sonner";
+import { trackGoogleAdsSubscriptionConversion } from "@/lib/ga4";
 import {
   buildAppHandoffSearch,
   buildMobileInstallPageUrl,
@@ -54,6 +55,11 @@ type Props = {
   signupId?: string | null;
   /** Si false, no muestra el bloque de pago aprobado (p. ej. acceso directo desde QR). */
   showPaymentSuccess?: boolean;
+  /**
+   * Disparar conversión Ads/GA4. Solo true tras Webpay/Oneclick confirmado en servidor
+   * (con authorizationCode o buyOrder). Nunca por solo ?pago=ok.
+   */
+  trackConversion?: boolean;
   installNotify?: PostPaymentInstallNotifyResult | null;
 };
 
@@ -82,11 +88,10 @@ function resolveSignupId(explicit?: string | null): string | null {
   }
 }
 
-/** URL codificada en el QR — en producción siempre alarmaseniorsafe.cl/instalar-app */
+/** URL codificada en el QR — instalación limpia (sin modo entrenamiento). */
 function buildQrTargetUrl(signupId: string | null, paymentSuccess: boolean): string {
   if (import.meta.env.PROD) {
     const u = new URL("/instalar-app", PRODUCTION_SITE_URL);
-    u.searchParams.set("entrenamiento", "1");
     if (paymentSuccess) u.searchParams.set("pago", "ok");
     if (signupId) u.searchParams.set("ss", signupId);
     return u.toString();
@@ -127,6 +132,7 @@ export function PostPaymentInstallScreen({
   paymentSummary,
   signupId: signupIdProp,
   showPaymentSuccess = true,
+  trackConversion = false,
   installNotify,
 }: Props) {
   const navigate = useNavigate();
@@ -162,6 +168,27 @@ export function PostPaymentInstallScreen({
     setSignupId(id);
     if (id) persistSignupHandoff(id);
   }, [signupIdProp]);
+
+  useEffect(() => {
+    if (!trackConversion || !signupId) return;
+    const transactionId =
+      displaySummary.buyOrder?.trim() ||
+      displaySummary.authorizationCode?.trim() ||
+      "";
+    if (!transactionId) return;
+    trackGoogleAdsSubscriptionConversion({
+      value: displaySummary.amount ?? null,
+      currency: "CLP",
+      transactionId,
+      signupId,
+    });
+  }, [
+    trackConversion,
+    signupId,
+    displaySummary.amount,
+    displaySummary.buyOrder,
+    displaySummary.authorizationCode,
+  ]);
 
   useEffect(() => {
     ensureInstallPromptCapture();
@@ -209,8 +236,14 @@ export function PostPaymentInstallScreen({
       return;
     }
 
-    navigate({ to: "/app", search: buildAppHandoffSearch(id) });
-  }, [navigate, signupId, showPaymentSuccess, platform.isAndroid, simulateIos]);
+    // iPhone PWA: entrar directo, sin modo entrenamiento (pruebas opcionales después).
+    if (effectiveIsIOS) {
+      navigate({ to: "/app", search: buildAppHandoffSearch(id, { training: false }) });
+      return;
+    }
+
+    navigate({ to: "/app", search: buildAppHandoffSearch(id, { training: true }) });
+  }, [navigate, signupId, showPaymentSuccess, platform.isAndroid, simulateIos, effectiveIsIOS]);
 
   const handleInstallClick = async () => {
     setInstalling(true);
@@ -269,11 +302,13 @@ export function PostPaymentInstallScreen({
               <Download className="w-8 h-8" />
             </div>
             <h1 className="mt-5 text-2xl md:text-3xl font-bold text-foreground tracking-tight">
-              Instala Senior Safe
+              {effectiveIsIOS ? "Pon Senior Safe en tu pantalla" : "Instala Senior Safe"}
             </h1>
             <p className="mt-2 text-muted-foreground text-lg leading-relaxed">
               {effectiveIsIOS
-                ? "Sigue los 3 pasos de abajo en Safari."
+                ? needsSafariOnIos
+                  ? "Primero ábrelo en Safari (el navegador azul)."
+                  : "Solo 3 toques. Sin pruebas ni pasos extras."
                 : "Toca el botón verde de abajo. Solo toma un minuto."}
             </p>
           </>
@@ -345,7 +380,9 @@ export function PostPaymentInstallScreen({
             <h1 className="mt-4 text-2xl font-bold text-foreground">Instala Senior Safe</h1>
             <p className="mt-2 text-muted-foreground text-base leading-relaxed">
               {effectiveIsIOS
-                ? "Toca el botón verde y sigue los 3 pasos en Safari."
+                ? needsSafariOnIos
+                  ? "Abre este enlace en Safari y sigue los 3 toques."
+                  : "Solo 3 toques en Safari. Sin pruebas."
                 : "Toca el botón verde de abajo para descargar la app."}
             </p>
           </>
@@ -383,12 +420,18 @@ export function PostPaymentInstallScreen({
           <DesktopInstallPanel installPageUrl={installPageUrl} qrSrc={qrImageUrl(installPageUrl)} />
         )}
 
-        {showPaymentSuccess && seniorSimpleMode && !installed && (
+        {/* WhatsApp: solo después de instalar, o en Android/desktop — no estorba el flujo iPhone */}
+        {showPaymentSuccess && seniorSimpleMode && !effectiveIsIOS && !installed && (
           <div className="mt-6">
             <WhatsAppActivarCta compact />
             <p className="mt-2 text-center text-xs text-muted-foreground">
               WhatsApp se puede vincular después. Primero instala la app.
             </p>
+          </div>
+        )}
+        {showPaymentSuccess && seniorSimpleMode && effectiveIsIOS && installed && (
+          <div className="mt-6">
+            <WhatsAppActivarCta compact />
           </div>
         )}
 
@@ -412,7 +455,7 @@ function IosOpenInSafariBanner({ installPageUrl }: { installPageUrl: string }) {
   const copyForSafari = async () => {
     try {
       await navigator.clipboard.writeText(installPageUrl);
-      toast.success("Enlace copiado. Pégalo en Safari.");
+      toast.success("Enlace copiado. Ábrelo en Safari (ícono azul).");
     } catch {
       toast.error("Copia el enlace manualmente y ábrelo en Safari.");
     }
@@ -420,22 +463,49 @@ function IosOpenInSafariBanner({ installPageUrl }: { installPageUrl: string }) {
 
   return (
     <div
-      className="mb-5 rounded-2xl border-2 p-4 text-base"
-      style={{ borderColor: "#f59e0b", background: "color-mix(in oklab, #f59e0b 10%, white)" }}
+      className="mb-2 rounded-3xl border-4 p-6 md:p-8 text-center shadow-lg"
+      style={{
+        borderColor: "#f59e0b",
+        background: "linear-gradient(180deg, #fffbeb 0%, #ffffff 100%)",
+      }}
       role="alert"
     >
-      <p className="font-bold text-foreground">Abre este enlace en Safari</p>
-      <p className="mt-1 text-foreground/90 leading-relaxed">
-        En iPhone, la instalación solo funciona bien en Safari (ícono azul). Copia el enlace y pégalo ahí.
+      <div
+        className="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center text-white text-3xl font-black"
+        style={{ background: "#0A84FF" }}
+        aria-hidden
+      >
+        S
+      </div>
+      <h2 className="mt-4 text-2xl font-extrabold text-foreground leading-tight">
+        Abre esto en Safari
+      </h2>
+      <p className="mt-3 text-lg text-foreground/90 leading-relaxed">
+        En iPhone solo funciona desde Safari (el navegador azul). No uses Chrome ni WhatsApp interno.
       </p>
+      <ol className="mt-5 text-left space-y-3 text-base font-medium text-foreground">
+        <li className="flex gap-3">
+          <span className="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold shrink-0">1</span>
+          <span className="pt-1">Copia el enlace con el botón de abajo.</span>
+        </li>
+        <li className="flex gap-3">
+          <span className="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold shrink-0">2</span>
+          <span className="pt-1">Abre Safari y pégalo en la barra de arriba.</span>
+        </li>
+        <li className="flex gap-3">
+          <span className="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold shrink-0">3</span>
+          <span className="pt-1">Sigue los 3 toques para ponerlo en tu pantalla.</span>
+        </li>
+      </ol>
       <Button
         type="button"
         onClick={copyForSafari}
-        className="mt-3 w-full h-12 font-bold rounded-xl"
+        className="mt-6 w-full h-16 text-xl font-bold rounded-2xl shadow-lg"
         style={{ background: DEEP, color: "white" }}
       >
         Copiar enlace para Safari
       </Button>
+      <p className="mt-3 text-xs text-muted-foreground break-all font-mono">{installPageUrl}</p>
     </div>
   );
 }
@@ -443,9 +513,31 @@ function IosOpenInSafariBanner({ installPageUrl }: { installPageUrl: string }) {
 function IosSafariInstallGuide({ simple = false }: { simple?: boolean }) {
   const steps = simple
     ? [
-        { n: 1, title: "Toca Compartir ↓", body: "El botón con flecha hacia arriba, abajo en el centro." },
-        { n: 2, title: "Añadir a pantalla de inicio", body: "Desliza el menú y elige esa opción." },
-        { n: 3, title: 'Toca "Añadir"', body: "Listo. Abre Senior Safe desde el ícono nuevo." },
+        {
+          n: 1,
+          title: "Toca Compartir",
+          body: (
+            <>
+              Abajo en el centro de Safari:{" "}
+              <span
+                className="inline-flex items-center justify-center w-10 h-10 rounded-xl border-2 bg-white align-middle mx-1"
+                style={{ borderColor: PETROL, color: DEEP }}
+              >
+                <IosShareIcon className="w-6 h-6" />
+              </span>
+            </>
+          ),
+        },
+        {
+          n: 2,
+          title: "Añadir a pantalla de inicio",
+          body: "Desliza el menú y elige esa opción.",
+        },
+        {
+          n: 3,
+          title: 'Toca "Añadir"',
+          body: "Arriba a la derecha. Luego abre el ícono nuevo.",
+        },
       ]
     : [
         {
@@ -495,7 +587,7 @@ function IosSafariInstallGuide({ simple = false }: { simple?: boolean }) {
 
   return (
     <div
-      className="rounded-3xl border-4 p-5 md:p-6 space-y-4 shadow-lg"
+      className={simple ? "rounded-3xl border-4 p-5 md:p-6 space-y-5 shadow-lg" : "rounded-3xl border-4 p-5 md:p-6 space-y-4 shadow-lg"}
       style={{
         borderColor: PETROL,
         background: "linear-gradient(180deg, #ffffff 0%, color-mix(in oklab, var(--brand-petrol) 6%, white) 100%)",
@@ -511,8 +603,10 @@ function IosSafariInstallGuide({ simple = false }: { simple?: boolean }) {
           <Apple className="w-6 h-6" />
         </div>
         <div>
-          <h2 className="text-xl font-extrabold text-foreground leading-tight">Instalar en iPhone</h2>
-          <p className="text-sm text-muted-foreground font-medium">Safari · 3 pasos sencillos</p>
+          <h2 className="text-xl font-extrabold text-foreground leading-tight">
+            {simple ? "Solo 3 toques" : "Instalar en iPhone"}
+          </h2>
+          <p className="text-sm text-muted-foreground font-medium">Safari · sin pruebas</p>
         </div>
       </div>
 
@@ -520,27 +614,32 @@ function IosSafariInstallGuide({ simple = false }: { simple?: boolean }) {
         {steps.map((step) => (
           <li
             key={step.n}
-            className="flex gap-4 rounded-2xl bg-white/90 border border-border p-4 shadow-sm"
+            className={`flex gap-4 rounded-2xl bg-white/90 border border-border shadow-sm ${simple ? "p-5" : "p-4"}`}
           >
             <span
-              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-extrabold text-lg shrink-0"
+              className={`rounded-full flex items-center justify-center text-white font-extrabold shrink-0 ${simple ? "w-14 h-14 text-2xl" : "w-10 h-10 text-lg"}`}
               style={{ background: step.n === 3 ? GREEN : DEEP }}
             >
               {step.n}
             </span>
-            <div className="min-w-0">
-              <p className="text-base font-bold text-foreground mb-1">{step.title}</p>
-              <p className="text-base text-foreground/90 leading-relaxed">
-                {typeof step.body === "string" ? step.body : step.body}
+            <div className="min-w-0 flex-1">
+              <p className={`font-bold text-foreground mb-1 ${simple ? "text-xl" : "text-base"}`}>
+                {step.title}
+              </p>
+              <p className={`text-foreground/90 leading-relaxed ${simple ? "text-lg" : "text-base"}`}>
+                {step.body}
               </p>
             </div>
           </li>
         ))}
       </ol>
 
-      <p className="text-sm text-center font-semibold rounded-xl py-3 px-4" style={{ background: "color-mix(in oklab, #16a34a 10%, white)", color: "#166534" }}>
+      <p
+        className="text-center font-semibold rounded-xl py-3 px-4"
+        style={{ background: "color-mix(in oklab, #16a34a 10%, white)", color: "#166534", fontSize: simple ? "1rem" : "0.875rem" }}
+      >
         <ArrowUp className="inline w-4 h-4 mr-1 align-text-bottom" />
-        El botón Compartir está abajo en el centro de Safari
+        El botón Compartir está abajo en el centro
       </p>
     </div>
   );
@@ -604,7 +703,24 @@ function MobileInstallPanel({
   return (
     <div className="bg-card border-2 border-border rounded-3xl p-6 md:p-8 shadow-xl space-y-5">
       {isIOS && showIosGuide ? (
-        <IosSafariInstallGuide simple={seniorSimpleMode} />
+        <>
+          <IosSafariInstallGuide simple={seniorSimpleMode} />
+          <Button
+            onClick={onContinue}
+            className="w-full font-bold rounded-2xl shadow-xl"
+            style={{
+              background: GREEN,
+              color: "white",
+              height: seniorSimpleMode ? "5.5rem" : "4.5rem",
+              fontSize: seniorSimpleMode ? "1.35rem" : "1.25rem",
+            }}
+          >
+            Ya lo agregué → Entrar
+          </Button>
+          <p className="text-center text-sm text-muted-foreground">
+            Si ya tocaste «Añadir», entra aquí. Las pruebas son opcionales después.
+          </p>
+        </>
       ) : (
         <>
           {!seniorSimpleMode && (

@@ -24,7 +24,6 @@ function firstName(nombre: string): string {
 
 export function buildPostPaymentInstallUrl(signupId: string): string {
   const u = new URL("/instalar-app", PRODUCTION_SITE_URL);
-  u.searchParams.set("entrenamiento", "1");
   u.searchParams.set("pago", "ok");
   u.searchParams.set("ss", signupId);
   return u.toString();
@@ -58,9 +57,11 @@ function buildInstallEmailBodies(input: {
   const textBody =
     `Hola ${name},\n\n` +
     `Tu suscripción Senior Safe ya está activa.\n\n` +
-    `Abre este enlace en el celular de quien usará la app (Android o iPhone):\n${input.installUrl}\n\n` +
+    `Abre este enlace en Safari (iPhone) o Chrome (Android):\n${input.installUrl}\n\n` +
+    `En iPhone: usa Safari → Compartir → Añadir a pantalla de inicio.\n` +
+    `En Android: instala desde Google Play o el enlace del sitio.\n\n` +
     `Pasos:\n` +
-    `1) Descarga o instala Senior Safe desde el enlace.\n` +
+    `1) Instala Senior Safe en el celular.\n` +
     `2) Inicia sesión con este correo: ${input.email}\n` +
     `3) Crea tu PIN y agrega familiares guardianes.\n` +
     `4) Responde por WhatsApp al ${wa} (Sí, Hola, OK o cualquier mensaje).\n\n` +

@@ -75,7 +75,7 @@ export const Route = createFileRoute('/api/public/send-welcome-whatsapp')({
         // Content Template SID aprobado (Twilio)
         // Variables: {{1}} = nombre, {{2}} = link activación
         const contentSid = process.env.TWILIO_WHATSAPP_CONTENT_SID || 'HXb5b62575e6e4ff6129ad7c8efe1f983e'
-        const activationLink = 'https://alarmaseniorsafe.cl/instalar-app?entrenamiento=1'
+        const activationLink = 'https://alarmaseniorsafe.cl/instalar-app?pago=ok'
         const contentVariables = JSON.stringify({
           '1': signup.nombre,
           '2': activationLink,
