@@ -11,6 +11,7 @@ import {
   Apple,
   Shield,
   ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { detectPlatform, isMobileDevice, isNativeApp, isPwaStandalone } from "@/lib/device";
@@ -389,7 +390,13 @@ export function PostPaymentInstallScreen({
         )}
       </header>
 
-      <main className="flex-1 px-6 pb-10 max-w-lg mx-auto w-full">
+      <main
+        className={`flex-1 px-6 max-w-lg mx-auto w-full ${
+          showIosGuide && effectiveIsIOS && !needsSafariOnIos && !installed
+            ? "pb-36"
+            : "pb-10"
+        }`}
+      >
         {showPaymentSuccess && !seniorSimpleMode && (
           <div className="mb-6 space-y-4">
             <InstallNotifyBanner notify={installNotify} />
@@ -447,6 +454,45 @@ export function PostPaymentInstallScreen({
           </p>
         )}
       </main>
+
+      {/* Solo Safari iPhone + guía activa: apunta al botón Compartir de la barra inferior. */}
+      {showIosGuide && effectiveIsIOS && !needsSafariOnIos && !installed && (
+        <IosSafariShareHint />
+      )}
+    </div>
+  );
+}
+
+/** Flecha fija sobre la barra de Safari — solo mientras dura la guía de instalación. */
+function IosSafariShareHint() {
+  return (
+    <div
+      className="pointer-events-none fixed left-1/2 z-50 flex flex-col items-center"
+      style={{
+        bottom: "max(0.75rem, env(safe-area-inset-bottom, 20px))",
+        transform: "translateX(-50%)",
+      }}
+      role="status"
+      aria-live="polite"
+      aria-label="Toca Compartir abajo en Safari"
+    >
+      <div
+        className="rounded-2xl px-4 py-2.5 shadow-lg border-2 text-center"
+        style={{
+          background: "rgba(255,255,255,0.96)",
+          borderColor: PETROL,
+          backdropFilter: "blur(8px)",
+        }}
+      >
+        <p className="text-sm font-bold text-foreground leading-tight">Toca aquí abajo</p>
+        <p className="text-xs text-muted-foreground mt-0.5">Compartir → Añadir a inicio</p>
+      </div>
+      <div
+        className="mt-2 flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg"
+        style={{ background: DEEP, animation: "ss-share-bounce 1.2s ease-in-out infinite" }}
+      >
+        <ArrowDown className="h-7 w-7" strokeWidth={2.5} aria-hidden />
+      </div>
     </div>
   );
 }
