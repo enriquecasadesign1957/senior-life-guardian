@@ -19,6 +19,8 @@ import {
   SEO_DEFAULT_TITLE,
   SEO_LANGUAGE,
   SEO_OG_IMAGE,
+  SEO_OG_IMAGE_HEIGHT,
+  SEO_OG_IMAGE_WIDTH,
   SEO_SITE_NAME,
   canonicalLink,
   globalJsonLdScripts,
@@ -134,10 +136,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     return {
       meta: [
         { charSet: "utf-8" },
-        { name: "viewport", content: "width=device-width, initial-scale=1" },
+        { name: "viewport", content: "width=device-width, initial-scale=1.0" },
         { title: SEO_DEFAULT_TITLE },
         { name: "description", content: SEO_DEFAULT_DESCRIPTION },
         { name: "author", content: SEO_BRAND },
+        // Discover: permite previsualizaciones de imágenes grandes (≥1200px)
+        { name: "robots", content: "index, follow, max-image-preview:large" },
         { name: "geo.region", content: "CL" },
         { name: "language", content: SEO_LANGUAGE },
         { property: "og:site_name", content: SEO_SITE_NAME },
@@ -147,6 +151,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { property: "og:type", content: "website" },
         { property: "og:url", content: canonicalLink(pathname).href },
         { property: "og:image", content: SEO_OG_IMAGE },
+        { property: "og:image:width", content: SEO_OG_IMAGE_WIDTH },
+        { property: "og:image:height", content: SEO_OG_IMAGE_HEIGHT },
         { property: "og:image:alt", content: `${SEO_SITE_NAME} — botón SOS y alertas familiares` },
         { name: "twitter:card", content: "summary_large_image" },
         { name: "twitter:title", content: SEO_DEFAULT_TITLE },

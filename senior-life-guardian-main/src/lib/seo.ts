@@ -12,8 +12,10 @@ export const SEO_DEFAULT_TITLE =
 export const SEO_DEFAULT_DESCRIPTION =
   "Botón SOS que alerta a tu familia por WhatsApp, SMS, GPS y llamada automática. Plan desde $6.900/mes, sin permanencia. Chile.";
 
-/** Imagen Open Graph (1200×630) servida desde el dominio oficial. */
+/** Imagen Open Graph (1200×630) servida desde el dominio oficial — requisito Discover ≥1200px. */
 export const SEO_OG_IMAGE = `${PRODUCTION_SITE_URL}/og-senior-safe.jpg`;
+export const SEO_OG_IMAGE_WIDTH = "1200";
+export const SEO_OG_IMAGE_HEIGHT = "630";
 
 /** URL canónica absoluta (sin query ni hash). Coincide con public/sitemap.xml. */
 export function canonicalUrl(pathname: string): string {
@@ -180,7 +182,7 @@ export function buildPublicPageMeta(input: SeoPageMetaInput) {
     ogTitle = title,
     ogDescription = description,
     ogType = "website",
-    robots = "index,follow,max-image-preview:large",
+    robots = "index, follow, max-image-preview:large",
   } = input;
 
   const url = canonicalUrl(pathname);
@@ -200,6 +202,8 @@ export function buildPublicPageMeta(input: SeoPageMetaInput) {
       { property: "og:description", content: ogDescription },
       { property: "og:url", content: url },
       { property: "og:image", content: SEO_OG_IMAGE },
+      { property: "og:image:width", content: SEO_OG_IMAGE_WIDTH },
+      { property: "og:image:height", content: SEO_OG_IMAGE_HEIGHT },
       { property: "og:image:alt", content: `${SEO_SITE_NAME} — botón SOS y alertas familiares` },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: ogTitle },
