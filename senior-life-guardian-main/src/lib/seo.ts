@@ -168,6 +168,12 @@ export function discoverEducationalGraphJsonLd(): JsonLd {
         description:
           "Protocolo inteligente de tres pasos para detectar impactos y notificar de emergencia a los familiares en Chile.",
         url: `${PRODUCTION_SITE_URL}/#deteccion-caidas`,
+        image: {
+          "@type": "ImageObject",
+          url: `${PRODUCTION_SITE_URL}/images/deteccion-caidas-senior.jpg`,
+          width: 1200,
+          height: 675,
+        },
         inLanguage: SEO_LANGUAGE,
         step: [
           {

@@ -1,5 +1,6 @@
 /**
  * Imagen Open Graph 1200×630 para alarmaseniorsafe.cl
+ * Foto limpia (sin texto superpuesto) — requisito Google Discover.
  * Uso: npm run seo:og-image
  */
 import fs from "node:fs";
@@ -7,21 +8,23 @@ import path from "node:path";
 import sharp from "sharp";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
-const SRC = path.join(ROOT, "play-store", "feature-graphic-1024x500.png");
+/** Foto editorial sin banners/texto (preferida por Discover). */
+const SRC = path.join(ROOT, "src", "assets", "anciana-living-discover.png");
 const OUT = path.join(ROOT, "public", "og-senior-safe.jpg");
 
 async function main() {
   if (!fs.existsSync(SRC)) {
-    console.error(`❌ Falta ${path.relative(ROOT, SRC)} — ejecuta npm run play:feature-graphic`);
+    console.error(`❌ Falta ${path.relative(ROOT, SRC)}`);
     process.exit(1);
   }
 
   await sharp(SRC)
-    .resize(1200, 630, { fit: "cover", position: "centre" })
-    .jpeg({ quality: 88 })
+    .resize(1200, 630, { fit: "cover", position: "attention" })
+    .jpeg({ quality: 90, mozjpeg: true })
     .toFile(OUT);
 
-  console.log(`✓ ${path.relative(ROOT, OUT)} (1200×630)`);
+  const meta = await sharp(OUT).metadata();
+  console.log(`✓ ${path.relative(ROOT, OUT)} (${meta.width}×${meta.height}, sin texto incrustado)`);
 }
 
 main().catch((err) => {

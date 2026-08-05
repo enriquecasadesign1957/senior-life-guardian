@@ -114,6 +114,9 @@ function HeroSocialProof() {
               key={avatar.alt}
               src={avatar.src}
               alt={avatar.alt}
+              width={72}
+              height={72}
+              loading="lazy"
               className="w-9 h-9 rounded-full border-2 border-white/90 object-cover shadow-md"
             />
           ))}
@@ -135,8 +138,8 @@ function HeroCreative() {
           src={heroSeniorPhone}
           alt="Adulto mayor usando Senior Safe con botón SOS en su celular, conectada con su familia"
           className="w-full h-auto object-cover object-center"
-          width={1024}
-          height={1024}
+          width={1400}
+          height={1400}
           fetchPriority="high"
         />
       </div>
@@ -508,6 +511,21 @@ function DeteccionCaidasActiva() {
             </p>
           </div>
 
+          <figure className="mb-10 md:mb-12 overflow-hidden rounded-2xl border border-border/60 shadow-md bg-white">
+            <img
+              src="/images/deteccion-caidas-senior.jpg"
+              width={1200}
+              height={675}
+              alt="Adulto mayor usando Senior Safe con botón SOS en su celular"
+              loading="lazy"
+              decoding="async"
+              className="w-full h-auto object-cover"
+            />
+            <figcaption className="sr-only">
+              Ilustración del protocolo de detección de caídas Senior Safe
+            </figcaption>
+          </figure>
+
           <div className="grid md:grid-cols-3 gap-5 md:gap-6">
             {FALL_DETECTION_STEPS.map((step, index) => (
               <article
@@ -607,7 +625,10 @@ function AlarmaAdultosMayoresChile() {
           <img
             src={seniorCouple}
             alt="Adultos mayores en Chile protegidos con alarma familiar Senior Safe"
+            width={1200}
+            height={1000}
             loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover min-h-[240px]"
           />
           <div className="p-8 md:p-10 bg-card">
@@ -758,7 +779,15 @@ function Beneficios() {
     <section id="beneficios" className="py-20 md:py-24 bg-background">
       <div className="max-w-6xl mx-auto px-6 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
         <div className="relative">
-          <img src={seniorPhone} alt="Pareja mayor usando la app" loading="lazy" className="w-full rounded-3xl object-cover aspect-[4/5] shadow-xl" />
+          <img
+            src={seniorPhone}
+            alt="Pareja mayor usando la app"
+            width={1200}
+            height={1400}
+            loading="lazy"
+            decoding="async"
+            className="w-full rounded-3xl object-cover aspect-[4/5] shadow-xl"
+          />
           <div className="absolute -bottom-6 -right-6 bg-white p-5 rounded-2xl shadow-2xl max-w-[260px] border border-border">
             <Heart className="w-5 h-5 fill-red-500 text-red-500 mb-2" />
             <p className="text-sm leading-relaxed text-foreground">"Por fin puedo dormir tranquila sabiendo que mi madre está protegida."</p>
@@ -963,7 +992,10 @@ function Capturas() {
                 <img
                   src={s.image}
                   alt={s.alt}
+                  width={1536}
+                  height={1024}
                   loading="lazy"
+                  decoding="async"
                   className="absolute inset-0 h-full w-full object-cover object-top"
                 />
                 <div
