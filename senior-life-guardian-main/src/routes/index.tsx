@@ -16,7 +16,7 @@ import {
 import seniorCouple from "@/assets/senior-couple.jpg";
 import seniorPhone from "@/assets/senior-phone.jpg";
 import familyPhoto from "@/assets/family-photo.jpg";
-import heroSeniorPhone from "@/assets/hero-senior-phone.png";
+import ancianaLivingDiscover from "@/assets/anciana-living-discover.png";
 import screenRedProteccion from "@/assets/screen-red-proteccion.png";
 import screenUbicacionGps from "@/assets/screen-ubicacion-gps.png";
 import screenAlertaMulticanal from "@/assets/screen-alerta-multicanal.png";
@@ -135,11 +135,11 @@ function HeroCreative() {
       />
       <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/25">
         <img
-          src={heroSeniorPhone}
-          alt="Adulto mayor usando Senior Safe con botón SOS en su celular, conectada con su familia"
-          className="w-full h-auto object-cover object-center"
-          width={1400}
-          height={1400}
+          src={ancianaLivingDiscover}
+          alt="Adulta mayor tranquila en su hogar con Senior Safe cerca, conectada con su familia"
+          className="w-full h-auto object-cover object-center aspect-[4/3]"
+          width={1600}
+          height={1178}
           fetchPriority="high"
         />
       </div>
