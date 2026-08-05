@@ -133,6 +133,67 @@ export function mobileApplicationJsonLd(): JsonLd {
   };
 }
 
+/**
+ * Graph educativo para Google Discover: app + protocolo HowTo de caídas
+ * (empaqueta secciones de la landing sin blog).
+ * Actualizar SEO_PRICE_VALID_UNTIL cuando renueves vigencia comercial.
+ */
+export const SEO_PRICE_VALID_UNTIL = "2027-12-31";
+
+export function discoverEducationalGraphJsonLd(): JsonLd {
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "@id": `${PRODUCTION_SITE_URL}/#software`,
+        name: SEO_SITE_NAME,
+        url: PRODUCTION_SITE_URL,
+        operatingSystem: "Android",
+        applicationCategory: "HealthApplication",
+        offers: {
+          "@type": "Offer",
+          name: "Plan Único",
+          price: String(PLAN.monthly),
+          priceCurrency: "CLP",
+          priceValidUntil: SEO_PRICE_VALID_UNTIL,
+          availability: "https://schema.org/InStock",
+          url: `${PRODUCTION_SITE_URL}/planes`,
+        },
+      },
+      {
+        "@type": "HowTo",
+        "@id": `${PRODUCTION_SITE_URL}/#deteccion-caidas`,
+        name: "Cómo funciona el sistema de detección de caídas en adultos mayores",
+        description:
+          "Protocolo inteligente de tres pasos para detectar impactos y notificar de emergencia a los familiares en Chile.",
+        url: `${PRODUCTION_SITE_URL}/#deteccion-caidas`,
+        inLanguage: SEO_LANGUAGE,
+        step: [
+          {
+            "@type": "HowToStep",
+            position: 1,
+            name: "Sensor de movimiento",
+            text: "El acelerómetro del celular detecta caídas bruscas y activa el protocolo automáticamente.",
+          },
+          {
+            "@type": "HowToStep",
+            position: 2,
+            name: "Validación de Inmovilidad",
+            text: "El sistema verifica una ventana de quietud total durante 3 segundos continuos para descartar falsos positivos.",
+          },
+          {
+            "@type": "HowToStep",
+            position: 3,
+            name: "Alerta Progresiva",
+            text: "Activa una cuenta regresiva de 30 segundos con vibración y sirena antes de despachar el auxilio simultáneo por WhatsApp y SMS.",
+          },
+        ],
+      },
+    ],
+  };
+}
+
 export function faqPageJsonLd(items: { q: string; a: string }[]): JsonLd {
   return {
     "@context": "https://schema.org",

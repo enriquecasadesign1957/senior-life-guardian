@@ -41,6 +41,7 @@ import { seniorSafeWhatsAppMeUrl } from "@/lib/twilio";
 import { LANDING_FAQ_SECTIONS, landingFaqFlatItems } from "@/lib/landing-faq";
 import {
   buildPublicPageMeta,
+  discoverEducationalGraphJsonLd,
   faqPageJsonLd,
   jsonLdHeadScript,
   mobileApplicationJsonLd,
@@ -69,6 +70,7 @@ export const Route = createFileRoute("/")({
           mobileApplicationJsonLd(),
           faqPageJsonLd(landingFaqFlatItems()),
         ]),
+        jsonLdHeadScript(discoverEducationalGraphJsonLd()),
       ],
     };
   },
