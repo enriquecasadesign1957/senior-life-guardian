@@ -12,8 +12,8 @@ export const SEO_DEFAULT_TITLE =
 export const SEO_DEFAULT_DESCRIPTION =
   "Botón SOS que alerta a tu familia por WhatsApp, SMS, GPS y llamada automática. Plan desde $6.900/mes, sin permanencia. Chile.";
 
-/** Imagen Open Graph (1200×630) servida desde el dominio oficial — requisito Discover ≥1200px. */
-export const SEO_OG_IMAGE = `${PRODUCTION_SITE_URL}/og-senior-safe.jpg`;
+/** Imagen Open Graph (1200×630) limpia, sin texto — requisito Discover ≥1200px. */
+export const SEO_OG_IMAGE = `${PRODUCTION_SITE_URL}/og-senior-safe-v2.jpg`;
 export const SEO_OG_IMAGE_WIDTH = "1200";
 export const SEO_OG_IMAGE_HEIGHT = "630";
 

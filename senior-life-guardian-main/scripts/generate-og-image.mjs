@@ -10,7 +10,8 @@ import sharp from "sharp";
 const ROOT = path.resolve(import.meta.dirname, "..");
 /** Foto editorial sin banners/texto (preferida por Discover). */
 const SRC = path.join(ROOT, "src", "assets", "anciana-living-discover.png");
-const OUT = path.join(ROOT, "public", "og-senior-safe.jpg");
+const OUT = path.join(ROOT, "public", "og-senior-safe-v2.jpg");
+const OUT_LEGACY = path.join(ROOT, "public", "og-senior-safe.jpg");
 
 async function main() {
   if (!fs.existsSync(SRC)) {
@@ -22,6 +23,12 @@ async function main() {
     .resize(1200, 630, { fit: "cover", position: "attention" })
     .jpeg({ quality: 90, mozjpeg: true })
     .toFile(OUT);
+
+  // Mantener legacy sincronizado (cachés antiguos / GSC)
+  await sharp(SRC)
+    .resize(1200, 630, { fit: "cover", position: "attention" })
+    .jpeg({ quality: 90, mozjpeg: true })
+    .toFile(OUT_LEGACY);
 
   const meta = await sharp(OUT).metadata();
   console.log(`✓ ${path.relative(ROOT, OUT)} (${meta.width}×${meta.height}, sin texto incrustado)`);

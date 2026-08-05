@@ -14,6 +14,7 @@ const paths = [
   "/robots.txt",
   "/sitemap.xml",
   "/manifest.json",
+  "/og-senior-safe-v2.jpg",
   "/og-senior-safe.jpg",
   "/BingSiteAuth.xml",
 ];
