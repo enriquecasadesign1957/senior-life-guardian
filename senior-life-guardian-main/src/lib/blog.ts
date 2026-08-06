@@ -31,11 +31,11 @@ export const BLOG_POSTS: BlogPost[] = [
     author: "Equipo Senior Safe",
     category: "Prensa",
     readingMinutes: 5,
-    coverImage: "/images/blog-ia-teleasistencia.jpg",
+    coverImage: "/images/blog-prensa-seguridad.jpg",
     coverWidth: 1200,
     coverHeight: 675,
     coverAlt:
-      "Teleasistencia familiar con inteligencia artificial para adultos mayores en Chile",
+      "Adulta mayor tranquila en su hogar con smartphone y teleasistencia Senior Safe",
     tags: ["prensa", "lanzamiento", "Revista Seguridad", "Chile"],
   },
   {

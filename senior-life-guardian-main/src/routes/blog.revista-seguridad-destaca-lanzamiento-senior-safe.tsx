@@ -21,7 +21,7 @@ const HEADLINE =
   'Revista Seguridad destaca el lanzamiento de Senior Safe en Chile: "Tecnología con corazón"';
 const TECH_DESCRIPTION =
   "Reseña del reportaje de Revista Seguridad & Defensa sobre la plataforma chilena de teleasistencia con IA y algoritmo en cascada.";
-const COVER = "/images/blog-ia-teleasistencia.jpg";
+const COVER = "/images/blog-prensa-seguridad.jpg";
 const COVER_ABS = `${PRODUCTION_SITE_URL}${COVER}`;
 
 /** Enlace canónico del reportaje original (tinyurl del brief era placeholder). */
