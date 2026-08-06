@@ -215,6 +215,50 @@ export function faqPageJsonLd(items: { q: string; a: string }[]): JsonLd {
   };
 }
 
+export function blogArticleJsonLd(input: {
+  title: string;
+  description: string;
+  pathname: string;
+  publishedAt: string;
+  updatedAt?: string;
+  imageUrl: string;
+  imageWidth: number;
+  imageHeight: number;
+  authorName: string;
+}): JsonLd {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: input.title,
+    description: input.description,
+    image: {
+      "@type": "ImageObject",
+      url: input.imageUrl.startsWith("http")
+        ? input.imageUrl
+        : `${PRODUCTION_SITE_URL}${input.imageUrl}`,
+      width: input.imageWidth,
+      height: input.imageHeight,
+    },
+    datePublished: input.publishedAt,
+    dateModified: input.updatedAt ?? input.publishedAt,
+    author: {
+      "@type": "Organization",
+      name: input.authorName,
+      url: PRODUCTION_SITE_URL,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: SEO_BRAND,
+      logo: {
+        "@type": "ImageObject",
+        url: `${PRODUCTION_SITE_URL}/senior-safe-512.webp`,
+      },
+    },
+    mainEntityOfPage: canonicalUrl(input.pathname),
+    inLanguage: SEO_LANGUAGE,
+  };
+}
+
 export function breadcrumbJsonLd(
   crumbs: { name: string; path: string }[],
 ): JsonLd {

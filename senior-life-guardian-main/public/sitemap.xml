@@ -21,6 +21,16 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://alarmaseniorsafe.cl/blog</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://alarmaseniorsafe.cl/blog/como-la-ia-salva-vidas-emergencias-domesticas</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://alarmaseniorsafe.cl/privacidad</loc>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>

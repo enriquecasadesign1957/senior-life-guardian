@@ -32,6 +32,7 @@ import { Route as ActivarWhatsappRouteImport } from './routes/activar-whatsapp'
 import { Route as ActivacionRouteImport } from './routes/activacion'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DemoIndexRouteImport } from './routes/demo/index'
+import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as WebpayRetornoRouteImport } from './routes/webpay.retorno'
 import { Route as OneclickRetornoRouteImport } from './routes/oneclick.retorno'
@@ -52,6 +53,7 @@ import { Route as DemoEjecutivoRouteImport } from './routes/demo/ejecutivo'
 import { Route as DemoAnaliticaRouteImport } from './routes/demo/analitica'
 import { Route as DemoAlertasRouteImport } from './routes/demo/alertas'
 import { Route as CTokenRouteImport } from './routes/c.$token'
+import { Route as BlogComoLaIaSalvaVidasEmergenciasDomesticasRouteImport } from './routes/blog.como-la-ia-salva-vidas-emergencias-domesticas'
 import { Route as AdminTransbankValidacionRouteImport } from './routes/admin.transbank-validacion'
 import { Route as AdminResetRouteImport } from './routes/admin.reset'
 import { Route as AdminInboxRouteImport } from './routes/admin.inbox'
@@ -200,6 +202,11 @@ const DemoIndexRoute = DemoIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DemoRoute,
 } as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -302,6 +309,12 @@ const CTokenRoute = CTokenRouteImport.update({
   path: '/c/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BlogComoLaIaSalvaVidasEmergenciasDomesticasRoute =
+  BlogComoLaIaSalvaVidasEmergenciasDomesticasRouteImport.update({
+    id: '/blog/como-la-ia-salva-vidas-emergencias-domesticas',
+    path: '/blog/como-la-ia-salva-vidas-emergencias-domesticas',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminTransbankValidacionRoute =
   AdminTransbankValidacionRouteImport.update({
     id: '/transbank-validacion',
@@ -509,6 +522,7 @@ export interface FileRoutesByFullPath {
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/reset': typeof AdminResetRoute
   '/admin/transbank-validacion': typeof AdminTransbankValidacionRoute
+  '/blog/como-la-ia-salva-vidas-emergencias-domesticas': typeof BlogComoLaIaSalvaVidasEmergenciasDomesticasRoute
   '/c/$token': typeof CTokenRoute
   '/demo/alertas': typeof DemoAlertasRoute
   '/demo/analitica': typeof DemoAnaliticaRoute
@@ -529,6 +543,7 @@ export interface FileRoutesByFullPath {
   '/oneclick/retorno': typeof OneclickRetornoRoute
   '/webpay/retorno': typeof WebpayRetornoRoute
   '/admin/': typeof AdminIndexRoute
+  '/blog/': typeof BlogIndexRoute
   '/demo/': typeof DemoIndexRoute
   '/a/$alertId/$ackToken': typeof AAlertIdAckTokenRoute
   '/a/$token/c': typeof ATokenCRoute
@@ -584,6 +599,7 @@ export interface FileRoutesByTo {
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/reset': typeof AdminResetRoute
   '/admin/transbank-validacion': typeof AdminTransbankValidacionRoute
+  '/blog/como-la-ia-salva-vidas-emergencias-domesticas': typeof BlogComoLaIaSalvaVidasEmergenciasDomesticasRoute
   '/c/$token': typeof CTokenRoute
   '/demo/alertas': typeof DemoAlertasRoute
   '/demo/analitica': typeof DemoAnaliticaRoute
@@ -604,6 +620,7 @@ export interface FileRoutesByTo {
   '/oneclick/retorno': typeof OneclickRetornoRoute
   '/webpay/retorno': typeof WebpayRetornoRoute
   '/admin': typeof AdminIndexRoute
+  '/blog': typeof BlogIndexRoute
   '/demo': typeof DemoIndexRoute
   '/a/$alertId/$ackToken': typeof AAlertIdAckTokenRoute
   '/a/$token/c': typeof ATokenCRoute
@@ -662,6 +679,7 @@ export interface FileRoutesById {
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/reset': typeof AdminResetRoute
   '/admin/transbank-validacion': typeof AdminTransbankValidacionRoute
+  '/blog/como-la-ia-salva-vidas-emergencias-domesticas': typeof BlogComoLaIaSalvaVidasEmergenciasDomesticasRoute
   '/c/$token': typeof CTokenRoute
   '/demo/alertas': typeof DemoAlertasRoute
   '/demo/analitica': typeof DemoAnaliticaRoute
@@ -682,6 +700,7 @@ export interface FileRoutesById {
   '/oneclick/retorno': typeof OneclickRetornoRoute
   '/webpay/retorno': typeof WebpayRetornoRoute
   '/admin/': typeof AdminIndexRoute
+  '/blog/': typeof BlogIndexRoute
   '/demo/': typeof DemoIndexRoute
   '/a/$alertId/$ackToken': typeof AAlertIdAckTokenRoute
   '/a/$token/c': typeof ATokenCRoute
@@ -741,6 +760,7 @@ export interface FileRouteTypes {
     | '/admin/inbox'
     | '/admin/reset'
     | '/admin/transbank-validacion'
+    | '/blog/como-la-ia-salva-vidas-emergencias-domesticas'
     | '/c/$token'
     | '/demo/alertas'
     | '/demo/analitica'
@@ -761,6 +781,7 @@ export interface FileRouteTypes {
     | '/oneclick/retorno'
     | '/webpay/retorno'
     | '/admin/'
+    | '/blog/'
     | '/demo/'
     | '/a/$alertId/$ackToken'
     | '/a/$token/c'
@@ -816,6 +837,7 @@ export interface FileRouteTypes {
     | '/admin/inbox'
     | '/admin/reset'
     | '/admin/transbank-validacion'
+    | '/blog/como-la-ia-salva-vidas-emergencias-domesticas'
     | '/c/$token'
     | '/demo/alertas'
     | '/demo/analitica'
@@ -836,6 +858,7 @@ export interface FileRouteTypes {
     | '/oneclick/retorno'
     | '/webpay/retorno'
     | '/admin'
+    | '/blog'
     | '/demo'
     | '/a/$alertId/$ackToken'
     | '/a/$token/c'
@@ -893,6 +916,7 @@ export interface FileRouteTypes {
     | '/admin/inbox'
     | '/admin/reset'
     | '/admin/transbank-validacion'
+    | '/blog/como-la-ia-salva-vidas-emergencias-domesticas'
     | '/c/$token'
     | '/demo/alertas'
     | '/demo/analitica'
@@ -913,6 +937,7 @@ export interface FileRouteTypes {
     | '/oneclick/retorno'
     | '/webpay/retorno'
     | '/admin/'
+    | '/blog/'
     | '/demo/'
     | '/a/$alertId/$ackToken'
     | '/a/$token/c'
@@ -966,6 +991,7 @@ export interface RootRouteChildren {
   UbicacionRoute: typeof UbicacionRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   ATokenRoute: typeof ATokenRouteWithChildren
+  BlogComoLaIaSalvaVidasEmergenciasDomesticasRoute: typeof BlogComoLaIaSalvaVidasEmergenciasDomesticasRoute
   CTokenRoute: typeof CTokenRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   OneclickCreditRetornoRoute: typeof OneclickCreditRetornoRoute
@@ -974,6 +1000,7 @@ export interface RootRouteChildren {
   OneclickInscripcionAbandonadaRoute: typeof OneclickInscripcionAbandonadaRoute
   OneclickRetornoRoute: typeof OneclickRetornoRoute
   WebpayRetornoRoute: typeof WebpayRetornoRoute
+  BlogIndexRoute: typeof BlogIndexRoute
   AAlertIdAckTokenRoute: typeof AAlertIdAckTokenRoute
   ApiCronProcessSubscriptionRenewalsRoute: typeof ApiCronProcessSubscriptionRenewalsRoute
   ApiCronResendInstallInstructionsRoute: typeof ApiCronResendInstallInstructionsRoute
@@ -1163,6 +1190,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoIndexRouteImport
       parentRoute: typeof DemoRoute
     }
+    '/blog/': {
+      id: '/blog/'
+      path: '/blog'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/': {
       id: '/admin/'
       path: '/'
@@ -1301,6 +1335,13 @@ declare module '@tanstack/react-router' {
       path: '/c/$token'
       fullPath: '/c/$token'
       preLoaderRoute: typeof CTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/como-la-ia-salva-vidas-emergencias-domesticas': {
+      id: '/blog/como-la-ia-salva-vidas-emergencias-domesticas'
+      path: '/blog/como-la-ia-salva-vidas-emergencias-domesticas'
+      fullPath: '/blog/como-la-ia-salva-vidas-emergencias-domesticas'
+      preLoaderRoute: typeof BlogComoLaIaSalvaVidasEmergenciasDomesticasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/transbank-validacion': {
@@ -1628,6 +1669,8 @@ const rootRouteChildren: RootRouteChildren = {
   UbicacionRoute: UbicacionRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   ATokenRoute: ATokenRouteWithChildren,
+  BlogComoLaIaSalvaVidasEmergenciasDomesticasRoute:
+    BlogComoLaIaSalvaVidasEmergenciasDomesticasRoute,
   CTokenRoute: CTokenRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   OneclickCreditRetornoRoute: OneclickCreditRetornoRoute,
@@ -1636,6 +1679,7 @@ const rootRouteChildren: RootRouteChildren = {
   OneclickInscripcionAbandonadaRoute: OneclickInscripcionAbandonadaRoute,
   OneclickRetornoRoute: OneclickRetornoRoute,
   WebpayRetornoRoute: WebpayRetornoRoute,
+  BlogIndexRoute: BlogIndexRoute,
   AAlertIdAckTokenRoute: AAlertIdAckTokenRoute,
   ApiCronProcessSubscriptionRenewalsRoute:
     ApiCronProcessSubscriptionRenewalsRoute,
