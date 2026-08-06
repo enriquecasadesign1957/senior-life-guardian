@@ -31,6 +31,11 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://alarmaseniorsafe.cl/blog/revista-seguridad-destaca-lanzamiento-senior-safe</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://alarmaseniorsafe.cl/privacidad</loc>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>

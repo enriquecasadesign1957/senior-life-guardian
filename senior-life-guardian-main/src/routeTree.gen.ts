@@ -53,6 +53,7 @@ import { Route as DemoEjecutivoRouteImport } from './routes/demo/ejecutivo'
 import { Route as DemoAnaliticaRouteImport } from './routes/demo/analitica'
 import { Route as DemoAlertasRouteImport } from './routes/demo/alertas'
 import { Route as CTokenRouteImport } from './routes/c.$token'
+import { Route as BlogRevistaSeguridadDestacaLanzamientoSeniorSafeRouteImport } from './routes/blog.revista-seguridad-destaca-lanzamiento-senior-safe'
 import { Route as BlogComoLaIaSalvaVidasEmergenciasDomesticasRouteImport } from './routes/blog.como-la-ia-salva-vidas-emergencias-domesticas'
 import { Route as AdminTransbankValidacionRouteImport } from './routes/admin.transbank-validacion'
 import { Route as AdminResetRouteImport } from './routes/admin.reset'
@@ -309,6 +310,12 @@ const CTokenRoute = CTokenRouteImport.update({
   path: '/c/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BlogRevistaSeguridadDestacaLanzamientoSeniorSafeRoute =
+  BlogRevistaSeguridadDestacaLanzamientoSeniorSafeRouteImport.update({
+    id: '/blog/revista-seguridad-destaca-lanzamiento-senior-safe',
+    path: '/blog/revista-seguridad-destaca-lanzamiento-senior-safe',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const BlogComoLaIaSalvaVidasEmergenciasDomesticasRoute =
   BlogComoLaIaSalvaVidasEmergenciasDomesticasRouteImport.update({
     id: '/blog/como-la-ia-salva-vidas-emergencias-domesticas',
@@ -523,6 +530,7 @@ export interface FileRoutesByFullPath {
   '/admin/reset': typeof AdminResetRoute
   '/admin/transbank-validacion': typeof AdminTransbankValidacionRoute
   '/blog/como-la-ia-salva-vidas-emergencias-domesticas': typeof BlogComoLaIaSalvaVidasEmergenciasDomesticasRoute
+  '/blog/revista-seguridad-destaca-lanzamiento-senior-safe': typeof BlogRevistaSeguridadDestacaLanzamientoSeniorSafeRoute
   '/c/$token': typeof CTokenRoute
   '/demo/alertas': typeof DemoAlertasRoute
   '/demo/analitica': typeof DemoAnaliticaRoute
@@ -600,6 +608,7 @@ export interface FileRoutesByTo {
   '/admin/reset': typeof AdminResetRoute
   '/admin/transbank-validacion': typeof AdminTransbankValidacionRoute
   '/blog/como-la-ia-salva-vidas-emergencias-domesticas': typeof BlogComoLaIaSalvaVidasEmergenciasDomesticasRoute
+  '/blog/revista-seguridad-destaca-lanzamiento-senior-safe': typeof BlogRevistaSeguridadDestacaLanzamientoSeniorSafeRoute
   '/c/$token': typeof CTokenRoute
   '/demo/alertas': typeof DemoAlertasRoute
   '/demo/analitica': typeof DemoAnaliticaRoute
@@ -680,6 +689,7 @@ export interface FileRoutesById {
   '/admin/reset': typeof AdminResetRoute
   '/admin/transbank-validacion': typeof AdminTransbankValidacionRoute
   '/blog/como-la-ia-salva-vidas-emergencias-domesticas': typeof BlogComoLaIaSalvaVidasEmergenciasDomesticasRoute
+  '/blog/revista-seguridad-destaca-lanzamiento-senior-safe': typeof BlogRevistaSeguridadDestacaLanzamientoSeniorSafeRoute
   '/c/$token': typeof CTokenRoute
   '/demo/alertas': typeof DemoAlertasRoute
   '/demo/analitica': typeof DemoAnaliticaRoute
@@ -761,6 +771,7 @@ export interface FileRouteTypes {
     | '/admin/reset'
     | '/admin/transbank-validacion'
     | '/blog/como-la-ia-salva-vidas-emergencias-domesticas'
+    | '/blog/revista-seguridad-destaca-lanzamiento-senior-safe'
     | '/c/$token'
     | '/demo/alertas'
     | '/demo/analitica'
@@ -838,6 +849,7 @@ export interface FileRouteTypes {
     | '/admin/reset'
     | '/admin/transbank-validacion'
     | '/blog/como-la-ia-salva-vidas-emergencias-domesticas'
+    | '/blog/revista-seguridad-destaca-lanzamiento-senior-safe'
     | '/c/$token'
     | '/demo/alertas'
     | '/demo/analitica'
@@ -917,6 +929,7 @@ export interface FileRouteTypes {
     | '/admin/reset'
     | '/admin/transbank-validacion'
     | '/blog/como-la-ia-salva-vidas-emergencias-domesticas'
+    | '/blog/revista-seguridad-destaca-lanzamiento-senior-safe'
     | '/c/$token'
     | '/demo/alertas'
     | '/demo/analitica'
@@ -992,6 +1005,7 @@ export interface RootRouteChildren {
   UnsubscribeRoute: typeof UnsubscribeRoute
   ATokenRoute: typeof ATokenRouteWithChildren
   BlogComoLaIaSalvaVidasEmergenciasDomesticasRoute: typeof BlogComoLaIaSalvaVidasEmergenciasDomesticasRoute
+  BlogRevistaSeguridadDestacaLanzamientoSeniorSafeRoute: typeof BlogRevistaSeguridadDestacaLanzamientoSeniorSafeRoute
   CTokenRoute: typeof CTokenRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   OneclickCreditRetornoRoute: typeof OneclickCreditRetornoRoute
@@ -1337,6 +1351,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/blog/revista-seguridad-destaca-lanzamiento-senior-safe': {
+      id: '/blog/revista-seguridad-destaca-lanzamiento-senior-safe'
+      path: '/blog/revista-seguridad-destaca-lanzamiento-senior-safe'
+      fullPath: '/blog/revista-seguridad-destaca-lanzamiento-senior-safe'
+      preLoaderRoute: typeof BlogRevistaSeguridadDestacaLanzamientoSeniorSafeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/blog/como-la-ia-salva-vidas-emergencias-domesticas': {
       id: '/blog/como-la-ia-salva-vidas-emergencias-domesticas'
       path: '/blog/como-la-ia-salva-vidas-emergencias-domesticas'
@@ -1671,6 +1692,8 @@ const rootRouteChildren: RootRouteChildren = {
   ATokenRoute: ATokenRouteWithChildren,
   BlogComoLaIaSalvaVidasEmergenciasDomesticasRoute:
     BlogComoLaIaSalvaVidasEmergenciasDomesticasRoute,
+  BlogRevistaSeguridadDestacaLanzamientoSeniorSafeRoute:
+    BlogRevistaSeguridadDestacaLanzamientoSeniorSafeRoute,
   CTokenRoute: CTokenRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   OneclickCreditRetornoRoute: OneclickCreditRetornoRoute,

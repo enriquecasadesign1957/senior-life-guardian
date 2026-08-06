@@ -3,7 +3,7 @@ import { BookOpen } from "lucide-react";
 import { BlogPostCard } from "@/components/blog-post-card";
 import { SiteFooter, SiteHeader } from "@/components/site-layout";
 import { WhatsAppFloat } from "@/components/whatsapp-float";
-import { BLOG_POSTS } from "@/lib/blog";
+import { BLOG_POSTS, getBlogPostsNewestFirst } from "@/lib/blog";
 import { buildPublicPageMeta, breadcrumbJsonLd, jsonLdHeadScript } from "@/lib/seo";
 
 const DISCOVER_ROBOTS = "index, follow, max-image-preview:large";
@@ -77,7 +77,7 @@ function BlogIndexPage() {
           </div>
 
           <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {BLOG_POSTS.map((post) => (
+            {getBlogPostsNewestFirst().map((post) => (
               <li key={post.slug}>
                 <BlogPostCard post={post} />
               </li>
