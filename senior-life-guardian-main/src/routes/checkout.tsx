@@ -4,7 +4,7 @@ import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { z } from "zod";
 import {
   Shield, Lock, CreditCard, Clock, CheckCircle2, ArrowRight,
-  Bell, MapPin, MessageCircle, Users, Heart, Loader2, AlertCircle, Tag,
+  Bell, MapPin, MessageCircle, Users, Heart, Loader2, AlertCircle, Tag, X,
 } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { createPurchaseSignup } from "@/lib/purchase-signup.functions";
