@@ -37,6 +37,7 @@ import {
 } from "@/lib/post-payment";
 import { WhatsAppActivarCta } from "@/components/whatsapp-activar-cta";
 import { InstallNotifyBanner } from "@/components/install-notify-banner";
+import { PostPaymentProfileForm } from "@/components/post-payment-profile-form";
 import type { PostPaymentInstallNotifyResult } from "@/lib/post-payment-install-notify";
 
 const DEEP = "var(--brand-petrol-deep)";
@@ -397,6 +398,10 @@ export function PostPaymentInstallScreen({
             : "pb-10"
         }`}
       >
+        {showPaymentSuccess && (
+          <PostPaymentProfileForm signupId={signupId} />
+        )}
+
         {showPaymentSuccess && !seniorSimpleMode && (
           <div className="mb-6 space-y-4">
             <InstallNotifyBanner notify={installNotify} />

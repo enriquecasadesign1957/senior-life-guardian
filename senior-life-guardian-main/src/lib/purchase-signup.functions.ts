@@ -20,25 +20,31 @@ import {
 import { RECURRING_BILLING_CONSENT_VERSION } from "@/lib/recurring-billing-consent";
 
 /**
- * Crea un registro de contratación directa (Plan Único) antes de iniciar Webpay.
+ * Crea un registro de contratación directa (Plan Único) antes de iniciar Webpay/Oneclick.
+ * Guardián y dirección son opcionales (se completan post-pago).
+ * Por defecto registra consentimiento de cobros recurrentes (Oneclick).
  */
 export const createPurchaseSignup = createServerFn({ method: "POST" })
   .inputValidator((input) =>
-    z.object({
-      nombre: z.string().min(2).max(160),
-      email: z.string().email().max(255),
-      telefono: z.string().min(8).max(40),
-      direccion: z.string().max(255).nullable().optional(),
-      plan: planKeySchema.transform(normalizePlanKey),
-      periodo: periodoSchema,
-      discountCode: z.string().trim().max(64).optional().or(z.literal("")),
-      recurringBillingConsent: z.boolean().optional().default(false),
-      firstGuardian: z.object({
-        nombre: z.string().trim().min(2).max(100),
-        telefono: z.string().trim().min(8).max(40),
-        parentesco: z.string().trim().min(2).max(40),
-      }),
-    }).parse(input),
+    z
+      .object({
+        nombre: z.string().min(2).max(160),
+        email: z.string().email().max(255),
+        telefono: z.string().min(8).max(40),
+        direccion: z.string().max(255).nullable().optional(),
+        plan: planKeySchema.transform(normalizePlanKey),
+        periodo: periodoSchema,
+        discountCode: z.string().trim().max(64).optional().or(z.literal("")),
+        recurringBillingConsent: z.boolean().optional().default(true),
+        firstGuardian: z
+          .object({
+            nombre: z.string().trim().min(2).max(100),
+            telefono: z.string().trim().min(8).max(40),
+            parentesco: z.string().trim().min(2).max(40),
+          })
+          .optional(),
+      })
+      .parse(input),
   )
   .handler(async ({ data }) => {
     const email = data.email.trim().toLowerCase();
@@ -60,10 +66,12 @@ export const createPurchaseSignup = createServerFn({ method: "POST" })
       discountFields = discountSignupFields(resolved);
     }
 
+    const consentRecurring = data.recurringBillingConsent !== false;
+
     const payload = {
       ...basePayload,
       ...discountFields,
-      ...(data.recurringBillingConsent
+      ...(consentRecurring
         ? {
             recurring_billing_consented_at: new Date().toISOString(),
             recurring_billing_consent_version: RECURRING_BILLING_CONSENT_VERSION,
@@ -91,7 +99,7 @@ export const createPurchaseSignup = createServerFn({ method: "POST" })
             plan: basePayload.plan,
             periodo: basePayload.periodo,
             ...discountFields,
-            ...(data.recurringBillingConsent
+            ...(consentRecurring
               ? {
                   recurring_billing_consented_at: new Date().toISOString(),
                   recurring_billing_consent_version: RECURRING_BILLING_CONSENT_VERSION,
@@ -108,7 +116,9 @@ export const createPurchaseSignup = createServerFn({ method: "POST" })
         .maybeSingle();
       if (updErr) throw updErr;
       const signup = updated ?? existing;
-      await savePendingFirstGuardian(signup.id, data.firstGuardian as PendingFirstGuardian);
+      if (data.firstGuardian) {
+        await savePendingFirstGuardian(signup.id, data.firstGuardian as PendingFirstGuardian);
+      }
       return { signup, created: false, alreadyPaid };
     }
 
@@ -121,8 +131,9 @@ export const createPurchaseSignup = createServerFn({ method: "POST" })
     if (insertError) throw insertError;
     if (!inserted) throw new Error("No pudimos crear la orden de compra.");
 
-    const signupId = inserted.id;
-    await savePendingFirstGuardian(signupId, data.firstGuardian as PendingFirstGuardian);
+    if (data.firstGuardian) {
+      await savePendingFirstGuardian(inserted.id, data.firstGuardian as PendingFirstGuardian);
+    }
 
     return { signup: inserted, created: true };
   });

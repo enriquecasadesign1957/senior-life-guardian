@@ -4,7 +4,7 @@ import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { z } from "zod";
 import {
   Shield, Lock, CreditCard, Clock, CheckCircle2, ArrowRight,
-  Bell, MapPin, MessageCircle, Users, Heart, X, Loader2, AlertCircle, Tag,
+  Bell, MapPin, MessageCircle, Users, Heart, Loader2, AlertCircle, Tag,
 } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { createPurchaseSignup } from "@/lib/purchase-signup.functions";
@@ -14,6 +14,7 @@ import { redirectToOneclickInscription } from "@/lib/oneclick-redirect";
 import { initWebpayTransaction, mockApproveWebpay } from "@/lib/webpay.functions";
 import { redirectToWebpayPlus } from "@/lib/webpay-redirect";
 import { markRequiresPwaInstall, POST_PAYMENT_INSTALL_PATH } from "@/lib/post-payment";
+import { saveCheckoutDraft } from "@/lib/checkout-draft";
 import {
   PLAN,
   PLAN_KEY,
@@ -27,14 +28,12 @@ import { WhatsAppFloat } from "@/components/whatsapp-float";
 import { toast } from "sonner";
 import { CANCELLATION_POLICY_BULLETS } from "@/lib/subscription-cancellation-policy";
 import {
-  RECURRING_BILLING_CONSENT_CHECKBOX_LABEL,
   RECURRING_BILLING_DISCLOSURE_BULLETS,
   RECURRING_BILLING_DISCLOSURE_FOOTER,
   RECURRING_BILLING_SUPPORT_EMAIL,
   RECURRING_BILLING_TERMS_LINK_LABEL,
   SENIOR_SAFE_TERMS_CANCELLATION_URL,
 } from "@/lib/recurring-billing-consent";
-import { Checkbox } from "@/components/ui/checkbox";
 import { normalizeDiscountCodeInput, type PublicDiscountPreview } from "@/lib/discount-codes";
 import { getServerErrorMessage } from "@/lib/server-error-message";
 import { buildPrivatePageMeta } from "@/lib/seo";
@@ -88,15 +87,6 @@ const GREEN = "#16a34a";
 
 const CHECKOUT_FEATURE_ICONS = [Bell, MessageCircle, MapPin, Users, Heart, Clock, Shield] as const;
 
-const GUARDIAN_RELATIONS = [
-  "Hijo/a",
-  "Nieto/a",
-  "Hermano/a",
-  "Vecino/a",
-  "Cuidador/a",
-  "Otro familiar",
-] as const;
-
 const phoneField = z
   .string()
   .trim()
@@ -104,27 +94,12 @@ const phoneField = z
   .max(20)
   .regex(/^[0-9+\s-]+$/, "Solo números");
 
-const schema = z
-  .object({
-    name: z.string().trim().min(2, "Ingresa tu nombre completo").max(100),
-    email: z.string().trim().email("Correo inválido").max(255),
-    phone: phoneField,
-    address: z.string().trim().max(200).optional().or(z.literal("")),
-    guardianName: z.string().trim().min(2, "Ingresa el nombre del guardián").max(100),
-    guardianPhone: phoneField,
-    guardianRelation: z.string().trim().min(2, "Elige parentesco").max(40),
-  })
-  .superRefine((data, ctx) => {
-    const senior = data.phone.replace(/\D/g, "").slice(-9);
-    const guardian = data.guardianPhone.replace(/\D/g, "").slice(-9);
-    if (senior.length >= 8 && senior === guardian) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "El guardián debe ser otra persona (teléfono distinto al del adulto mayor).",
-        path: ["guardianPhone"],
-      });
-    }
-  });
+/** Checkout slim: solo 3 campos críticos antes de Oneclick. */
+const schema = z.object({
+  email: z.string().trim().email("Correo inválido").max(255),
+  phone: phoneField,
+  name: z.string().trim().min(2, "Ingresa el nombre del adulto mayor").max(100),
+});
 
 const fmt = formatPlanPrice;
 
@@ -138,13 +113,9 @@ function CheckoutPage() {
 
   const [yearly, setYearly] = useState(search.periodo === "anual");
   const [form, setForm] = useState({
-    name: "",
     email: "",
     phone: "",
-    address: "",
-    guardianName: "",
-    guardianPhone: "",
-    guardianRelation: GUARDIAN_RELATIONS[0],
+    name: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -157,7 +128,6 @@ function CheckoutPage() {
   const [appliedDiscount, setAppliedDiscount] = useState<PublicDiscountPreview | null>(null);
   const [discountError, setDiscountError] = useState<string | null>(null);
   const [discountLoading, setDiscountLoading] = useState(false);
-  const [recurringConsent, setRecurringConsent] = useState(false);
   const discountRequestRef = useRef(0);
   const urlCodigoAppliedRef = useRef(false);
   const discountEmailRef = useRef("");
@@ -217,7 +187,7 @@ function CheckoutPage() {
     if (!discountError?.toLowerCase().includes("correo")) return;
     const code = normalizeDiscountCodeInput(discountInput);
     const email = form.email.trim().toLowerCase();
-    if (!code || !schema.shape.email.safeParse(email).success) return;
+    if (!code || !z.string().email().safeParse(email).success) return;
     const timer = setTimeout(() => void applyDiscountCode(code, periodo, email), 400);
     return () => clearTimeout(timer);
   }, [form.email, discountInput, discountError, periodo, applyDiscountCode]);
@@ -226,7 +196,7 @@ function CheckoutPage() {
     const email = form.email.trim().toLowerCase();
     if (!appliedDiscount || !discountEmailRef.current) return;
     if (email === discountEmailRef.current) return;
-    if (!schema.shape.email.safeParse(email).success) return;
+    if (!z.string().email().safeParse(email).success) return;
     setAppliedDiscount(null);
     setDiscountError("Cambiaste tu correo. Vuelve a aplicar el código promocional.");
   }, [form.email, appliedDiscount]);
@@ -255,17 +225,19 @@ function CheckoutPage() {
         nombre: r.data.name,
         email: r.data.email.toLowerCase(),
         telefono: r.data.phone,
-        direccion: r.data.address || null,
+        direccion: null,
         plan: planKey,
         periodo,
         discountCode: appliedDiscount?.code ?? "",
-        recurringBillingConsent: recurringConsent,
-        firstGuardian: {
-          nombre: r.data.guardianName,
-          telefono: r.data.guardianPhone,
-          parentesco: r.data.guardianRelation,
-        },
+        recurringBillingConsent: true,
       } });
+
+      saveCheckoutDraft({
+        email: r.data.email,
+        phone: r.data.phone,
+        seniorName: r.data.name,
+        signupId: signup.id,
+      });
 
       const mock = await mockApprove({ data: { signupId: signup.id } });
 
@@ -310,20 +282,21 @@ function CheckoutPage() {
       nombre: r.data.name,
       email: r.data.email.toLowerCase(),
       telefono: r.data.phone,
-      direccion: r.data.address || null,
+      direccion: null as string | null,
       plan: planKey,
       periodo,
       discountCode: appliedDiscount?.code ?? "",
-      recurringBillingConsent: recurringConsent,
-      firstGuardian: {
-        nombre: r.data.guardianName,
-        telefono: r.data.guardianPhone,
-        parentesco: r.data.guardianRelation,
-      },
+      recurringBillingConsent: true,
     };
 
     try {
       const { signup, alreadyPaid } = await createPurchase({ data: baseData });
+      saveCheckoutDraft({
+        email: r.data.email,
+        phone: r.data.phone,
+        seniorName: r.data.name,
+        signupId: signup.id,
+      });
       try {
         const userPayload = {
           id: signup.id, nombre: signup.nombre, email: signup.email, telefono: signup.telefono,
@@ -425,7 +398,8 @@ function CheckoutPage() {
               Contrata Senior Safe
             </h1>
             <p className="mt-4 text-base md:text-lg text-muted-foreground">
-              Pago con Oneclick (Transbank). Tras aprobar, te guiamos a instalar la app en el celular.
+              Solo 3 datos y pagas con Oneclick (Transbank) en menos de 30 segundos. El guardián se
+              inscribe después del pago.
             </p>
           </div>
 
@@ -459,141 +433,65 @@ function CheckoutPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-bold text-foreground mb-1 block">3. Datos del adulto mayor</label>
+                  <label className="text-sm font-bold text-foreground mb-1 block">3. Datos para pagar e instalar</label>
                   <p className="text-xs text-muted-foreground mb-3">
-                    Quien usará la app en su celular. Si pagas por otra persona, ingresa su correo y WhatsApp — ahí enviaremos el enlace de instalación.
+                    Solo 3 datos. Guardián, dirección y código institucional se completan después del pago (menos de 1 minuto).
                   </p>
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <Field label="Nombre completo" name="name" value={form.name} onChange={(v) => setForm({ ...form, name: v })} error={errors.name} placeholder="María González" />
-                    <Field label="Email" name="email" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} error={errors.email} placeholder="maria@email.cl" />
-                    <Field label="Teléfono / WhatsApp" name="phone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} error={errors.phone} placeholder="+56 9 ..." />
-                    <Field label="Dirección (opcional)" name="address" value={form.address} onChange={(v) => setForm({ ...form, address: v })} error={errors.address} placeholder="Calle, comuna, ciudad" />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-bold text-foreground mb-1 block">
-                    4. Inscribe al primer guardián
-                  </label>
-                  <p className="text-xs text-muted-foreground mb-3">
-                    Persona que recibirá las alertas de emergencia (hijo/a, familiar o cuidador).
-                    Después podrás agregar más en{" "}
-                    <strong className="text-foreground">Mis guardianes</strong> (hasta 3).
-                  </p>
-                  <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="space-y-4">
                     <Field
-                      label="Nombre del guardián"
-                      name="guardianName"
-                      value={form.guardianName}
-                      onChange={(v) => setForm({ ...form, guardianName: v })}
-                      error={errors.guardianName}
-                      placeholder="Carlos González"
+                      label="Email del comprador / pagador"
+                      name="email"
+                      type="email"
+                      value={form.email}
+                      onChange={(v) => setForm({ ...form, email: v })}
+                      error={errors.email}
+                      placeholder="tu@email.cl"
                     />
                     <Field
-                      label="Teléfono / WhatsApp del guardián"
-                      name="guardianPhone"
-                      value={form.guardianPhone}
-                      onChange={(v) => setForm({ ...form, guardianPhone: v })}
-                      error={errors.guardianPhone}
+                      label="Teléfono / WhatsApp del comprador"
+                      name="phone"
+                      value={form.phone}
+                      onChange={(v) => setForm({ ...form, phone: v })}
+                      error={errors.phone}
                       placeholder="+56 9 ..."
                     />
-                    <div className="sm:col-span-2">
-                      <label
-                        htmlFor="guardianRelation"
-                        className="text-xs font-semibold text-muted-foreground mb-1.5 block"
-                      >
-                        Parentesco
-                      </label>
-                      <select
-                        id="guardianRelation"
-                        name="guardianRelation"
-                        value={form.guardianRelation}
-                        onChange={(e) => setForm({ ...form, guardianRelation: e.target.value })}
-                        className={`w-full px-4 py-3 rounded-xl border bg-background text-foreground text-base outline-none transition focus:border-foreground/40 ${errors.guardianRelation ? "border-destructive" : "border-border"}`}
-                      >
-                        {GUARDIAN_RELATIONS.map((rel) => (
-                          <option key={rel} value={rel}>
-                            {rel}
-                          </option>
-                        ))}
-                      </select>
-                      {errors.guardianRelation && (
-                        <p className="mt-1 text-xs text-destructive">{errors.guardianRelation}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-bold text-foreground mb-1 block">5. Código Institucional? Ingrésalo</label>
-                  <p className="text-xs text-muted-foreground mb-3">
-                    Si tienes un código de convenio, ingrésalo aquí. Los descuentos promocionales acordados
-                    con nuestro equipo se aplican de forma manual.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <input
-                      type="text"
-                      value={discountInput}
-                      onChange={(e) => {
-                        setDiscountInput(e.target.value);
-                        if (discountError) setDiscountError(null);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          void applyDiscountCode();
-                        }
-                      }}
-                      placeholder="Código de convenio"
-                      className={`flex-1 px-4 py-3 rounded-xl border bg-background text-foreground text-base outline-none transition focus:border-foreground/40 uppercase ${discountError ? "border-destructive" : "border-border"}`}
-                      autoComplete="off"
-                      spellCheck={false}
+                    <Field
+                      label="Nombre completo del adulto mayor"
+                      name="name"
+                      value={form.name}
+                      onChange={(v) => setForm({ ...form, name: v })}
+                      error={errors.name}
+                      placeholder="María González"
                     />
-                    <button
-                      type="button"
-                      onClick={() => void applyDiscountCode()}
-                      disabled={!normalizeDiscountCodeInput(discountInput)}
-                      aria-busy={discountLoading}
-                      className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border-2 font-semibold text-sm disabled:opacity-60 shrink-0 min-w-[120px]"
-                      style={{ borderColor: PETROL, color: DEEP, background: "color-mix(in oklab, var(--brand-petrol) 6%, white)" }}
-                    >
-                      {discountLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Tag className="w-4 h-4" />}
-                      {discountLoading ? "Validando…" : "Aplicar"}
-                    </button>
                   </div>
-                  {discountError && <p className="mt-2 text-xs text-destructive">{discountError}</p>}
                   {appliedDiscount && (
                     <div
-                      className="mt-3 p-4 rounded-2xl border text-sm"
+                      className="mt-4 p-4 rounded-2xl border text-sm"
                       style={{
                         borderColor: "color-mix(in oklab, #16a34a 30%, white)",
                         background: "color-mix(in oklab, #16a34a 6%, white)",
                         color: GREEN,
                       }}
                     >
-                      <div className="font-bold text-foreground">{appliedDiscount.label}</div>
+                      <div className="font-bold text-foreground flex items-center gap-2">
+                        <Tag className="w-4 h-4" /> Convenio {appliedDiscount.code} aplicado
+                      </div>
                       <div className="text-muted-foreground mt-1">
                         {appliedDiscount.percentOff}% de descuento · Ahorras ${fmt(appliedDiscount.discountAmount)}
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setDiscountInput("");
-                          setAppliedDiscount(null);
-                          setDiscountError(null);
-                          discountEmailRef.current = "";
-                        }}
-                        className="mt-2 text-xs font-semibold underline text-muted-foreground"
-                      >
-                        Quitar código
-                      </button>
                     </div>
                   )}
+                  {discountLoading && (
+                    <p className="mt-2 text-xs text-muted-foreground inline-flex items-center gap-2">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Validando convenio…
+                    </p>
+                  )}
+                  {discountError && <p className="mt-2 text-xs text-destructive">{discountError}</p>}
                 </div>
 
                 <div>
                   <label className="text-sm font-bold text-foreground mb-3 block">
-                    5. Cobros recurrentes (opcional)
+                    Cobros recurrentes Oneclick
                   </label>
                   <div
                     className="rounded-2xl border p-4 md:p-5 space-y-3 text-sm text-muted-foreground leading-relaxed"
@@ -602,7 +500,9 @@ function CheckoutPage() {
                       background: "color-mix(in oklab, var(--brand-petrol) 4%, white)",
                     }}
                   >
-                    <p className="font-semibold text-foreground">Cobros automáticos de tu suscripción</p>
+                    <p className="font-semibold text-foreground">
+                      Al pagar autorizas los cobros automáticos de tu suscripción
+                    </p>
                     <ul className="space-y-2 list-disc pl-4">
                       {RECURRING_BILLING_DISCLOSURE_BULLETS.map((line) => (
                         <li key={line}>{line}</li>
@@ -630,17 +530,6 @@ function CheckoutPage() {
                       </a>
                     </p>
                   </div>
-                  <label className="mt-4 flex items-start gap-3 cursor-pointer">
-                    <Checkbox
-                      id="recurring-consent"
-                      checked={recurringConsent}
-                      onCheckedChange={(checked) => setRecurringConsent(checked === true)}
-                      className="mt-1"
-                    />
-                    <span className="text-sm text-foreground leading-relaxed">
-                      {RECURRING_BILLING_CONSENT_CHECKBOX_LABEL}
-                    </span>
-                  </label>
                 </div>
 
                 {submitError && (
