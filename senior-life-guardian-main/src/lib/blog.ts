@@ -20,6 +20,25 @@ export type BlogPost = {
 /** Catálogo editorial Senior Safe (extensible). */
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "como-hablar-con-padres-seguridad-sin-perder-independencia",
+    title:
+      "¿No quiere usar un botón de pánico? Cómo hablar con tus padres sobre su seguridad sin que sientan que pierden su independencia",
+    description:
+      "Estrategias de comunicación para convencer a adultos mayores de usar teleasistencia móvil sin afectar su autonomía ni dignidad.",
+    excerpt:
+      "Cómo hablar de seguridad con mamá o papá sin collares estigmatizantes: red de guardianes en el celular, desde $6.900/mes.",
+    publishedAt: "2026-08-09",
+    author: "Equipo de Psicología y Bienestar Senior Safe",
+    category: "Familia y bienestar",
+    readingMinutes: 7,
+    coverImage: "/images/blog-independencia-senior.jpg",
+    coverWidth: 1200,
+    coverHeight: 630,
+    coverAlt:
+      "Adulto mayor independiente en su taller con smartphone como red de protección familiar",
+    tags: ["independencia", "familia", "teleasistencia", "conversación", "Chile"],
+  },
+  {
     slug: "revista-seguridad-destaca-lanzamiento-senior-safe",
     title:
       'Revista Seguridad destaca el lanzamiento de Senior Safe en Chile: "Tecnología con corazón"',
