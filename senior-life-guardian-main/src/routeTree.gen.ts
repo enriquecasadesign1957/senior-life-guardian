@@ -27,6 +27,7 @@ import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as BienvenidaPremiumRouteImport } from './routes/bienvenida-premium'
 import { Route as AppRouteImport } from './routes/app'
+import { Route as AlarmaFamiliarRouteImport } from './routes/alarma-familiar'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ActivarWhatsappRouteImport } from './routes/activar-whatsapp'
 import { Route as ActivacionRouteImport } from './routes/activacion'
@@ -177,6 +178,11 @@ const BienvenidaPremiumRoute = BienvenidaPremiumRouteImport.update({
 const AppRoute = AppRouteImport.update({
   id: '/app',
   path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AlarmaFamiliarRoute = AlarmaFamiliarRouteImport.update({
+  id: '/alarma-familiar',
+  path: '/alarma-familiar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -512,6 +518,7 @@ export interface FileRoutesByFullPath {
   '/activacion': typeof ActivacionRoute
   '/activar-whatsapp': typeof ActivarWhatsappRoute
   '/admin': typeof AdminRouteWithChildren
+  '/alarma-familiar': typeof AlarmaFamiliarRoute
   '/app': typeof AppRoute
   '/bienvenida-premium': typeof BienvenidaPremiumRoute
   '/checkout': typeof CheckoutRoute
@@ -592,6 +599,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/activacion': typeof ActivacionRoute
   '/activar-whatsapp': typeof ActivarWhatsappRoute
+  '/alarma-familiar': typeof AlarmaFamiliarRoute
   '/app': typeof AppRoute
   '/bienvenida-premium': typeof BienvenidaPremiumRoute
   '/checkout': typeof CheckoutRoute
@@ -673,6 +681,7 @@ export interface FileRoutesById {
   '/activacion': typeof ActivacionRoute
   '/activar-whatsapp': typeof ActivarWhatsappRoute
   '/admin': typeof AdminRouteWithChildren
+  '/alarma-familiar': typeof AlarmaFamiliarRoute
   '/app': typeof AppRoute
   '/bienvenida-premium': typeof BienvenidaPremiumRoute
   '/checkout': typeof CheckoutRoute
@@ -756,6 +765,7 @@ export interface FileRouteTypes {
     | '/activacion'
     | '/activar-whatsapp'
     | '/admin'
+    | '/alarma-familiar'
     | '/app'
     | '/bienvenida-premium'
     | '/checkout'
@@ -836,6 +846,7 @@ export interface FileRouteTypes {
     | '/'
     | '/activacion'
     | '/activar-whatsapp'
+    | '/alarma-familiar'
     | '/app'
     | '/bienvenida-premium'
     | '/checkout'
@@ -916,6 +927,7 @@ export interface FileRouteTypes {
     | '/activacion'
     | '/activar-whatsapp'
     | '/admin'
+    | '/alarma-familiar'
     | '/app'
     | '/bienvenida-premium'
     | '/checkout'
@@ -998,6 +1010,7 @@ export interface RootRouteChildren {
   ActivacionRoute: typeof ActivacionRoute
   ActivarWhatsappRoute: typeof ActivarWhatsappRoute
   AdminRoute: typeof AdminRouteWithChildren
+  AlarmaFamiliarRoute: typeof AlarmaFamiliarRoute
   AppRoute: typeof AppRoute
   BienvenidaPremiumRoute: typeof BienvenidaPremiumRoute
   CheckoutRoute: typeof CheckoutRoute
@@ -1181,6 +1194,13 @@ declare module '@tanstack/react-router' {
       path: '/app'
       fullPath: '/app'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/alarma-familiar': {
+      id: '/alarma-familiar'
+      path: '/alarma-familiar'
+      fullPath: '/alarma-familiar'
+      preLoaderRoute: typeof AlarmaFamiliarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -1692,6 +1712,7 @@ const rootRouteChildren: RootRouteChildren = {
   ActivacionRoute: ActivacionRoute,
   ActivarWhatsappRoute: ActivarWhatsappRoute,
   AdminRoute: AdminRouteWithChildren,
+  AlarmaFamiliarRoute: AlarmaFamiliarRoute,
   AppRoute: AppRoute,
   BienvenidaPremiumRoute: BienvenidaPremiumRoute,
   CheckoutRoute: CheckoutRoute,
