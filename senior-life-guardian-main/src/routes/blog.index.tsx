@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { BookOpen } from "lucide-react";
 import { BlogPostCard } from "@/components/blog-post-card";
 import { SiteFooter, SiteHeader } from "@/components/site-layout";
+import { SoroBlogEmbed } from "@/components/soro-blog-embed";
 import { WhatsAppFloat } from "@/components/whatsapp-float";
 import { BLOG_POSTS, getBlogPostsNewestFirst } from "@/lib/blog";
 import { buildPublicPageMeta, breadcrumbJsonLd, jsonLdHeadScript } from "@/lib/seo";
@@ -83,6 +84,10 @@ function BlogIndexPage() {
               </li>
             ))}
           </ul>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-6 pb-12 md:pb-16" aria-label="Más artículos">
+          <SoroBlogEmbed />
         </section>
       </main>
       <SiteFooter />
