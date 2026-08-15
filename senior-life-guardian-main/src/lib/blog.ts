@@ -34,7 +34,7 @@ export const BLOG_POSTS: BlogPost[] = [
     coverWidth: 1200,
     coverHeight: 630,
     coverAlt:
-      "Adulta mayor en su living con smartphone Senior Safe como red de alerta familiar",
+      "Adulto mayor sonriente en su living con smartphone Senior Safe",
     tags: ["SOS", "WhatsApp", "GPS", "adultos mayores", "Chile"],
   },
   {
