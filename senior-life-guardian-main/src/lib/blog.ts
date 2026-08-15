@@ -20,6 +20,24 @@ export type BlogPost = {
 /** Catálogo editorial Senior Safe (extensible). */
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "alarma-sos-para-adultos-mayores-que-si-responde",
+    title: "Alarma SOS para adultos mayores que sí responde",
+    description:
+      "Qué debe resolver una alarma SOS para adultos mayores: botón simple, GPS, alerta en cascada por WhatsApp, SMS y llamada, y una red familiar que confirma quién tomó el caso.",
+    excerpt:
+      "Del botón SOS a una alerta en cascada: WhatsApp, SMS, GPS y escalamiento si nadie confirma. Plan desde $6.900/mes, sin permanencia.",
+    publishedAt: "2026-08-15",
+    author: "Equipo Senior Safe",
+    category: "Protección familiar",
+    readingMinutes: 8,
+    coverImage: "/images/blog-alarma-sos-responde.png",
+    coverWidth: 1200,
+    coverHeight: 630,
+    coverAlt:
+      "Adulta mayor en su living con smartphone Senior Safe como red de alerta familiar",
+    tags: ["SOS", "WhatsApp", "GPS", "adultos mayores", "Chile"],
+  },
+  {
     slug: "como-hablar-con-padres-seguridad-sin-perder-independencia",
     title:
       "¿No quiere usar un botón de pánico? Cómo hablar con tus padres sobre su seguridad sin que sientan que pierden su independencia",
