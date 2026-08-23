@@ -24,6 +24,7 @@ export type PagerDutyAltContent = {
   workflowTitle: string;
   workflowSteps: string[];
   workflowBody: string;
+  workflowOnCallLinkLabel: string;
   voiceTitle: string;
   voiceBody: string[];
   pricingTitle: string;
@@ -35,6 +36,7 @@ export type PagerDutyAltContent = {
   faqItems: FaqItem[];
   relatedWhatIs: string;
   relatedWebhook: string;
+  relatedOnCall: string;
   relatedFaq: string;
   backHome: string;
 };
@@ -119,6 +121,7 @@ const EN: PagerDutyAltContent = {
   ],
   workflowBody:
     "Your monitor sends an HTTP POST to WakeUp Dev. WakeUp Dev places a phone call to the on-call responder and waits for a human acknowledgement. If the call is unanswered or not acknowledged in time, the cascade continues to the next phone number.",
+  workflowOnCallLinkLabel: "Learn how on-call escalation works →",
   voiceTitle: "Why voice-first?",
   voiceBody: [
     "Traditional alerting often relies on push notifications, email, chat, or other notification channels.",
@@ -168,7 +171,7 @@ const EN: PagerDutyAltContent = {
       id: "uptimerobot",
       question: "Can I use UptimeRobot?",
       answer:
-        "Yes. Point UptimeRobot webhook alerts to the same endpoint with your x-api-key header.",
+        "Yes. Point an UptimeRobot webhook alert to https://api.wakeupdev.com/v1/alert. WakeUp Dev requires the x-api-key header. Check that your UptimeRobot webhook configuration supports custom HTTP headers before using this integration.",
     },
     {
       id: "per-user",
@@ -185,6 +188,7 @@ const EN: PagerDutyAltContent = {
   ],
   relatedWhatIs: "What is WakeUp Dev?",
   relatedWebhook: "Webhook to phone call",
+  relatedOnCall: "On-call escalation",
   relatedFaq: "Read the FAQ",
   backHome: "← Back to home",
 };
@@ -269,6 +273,7 @@ const ES: PagerDutyAltContent = {
   ],
   workflowBody:
     "Tu monitor envía un POST HTTP a WakeUp Dev. WakeUp Dev llama al on-call y espera confirmación humana. Si la llamada no se contesta o no se confirma a tiempo, la cascada continúa al siguiente número.",
+  workflowOnCallLinkLabel: "Cómo funciona la escalada on-call →",
   voiceTitle: "¿Por qué voz primero?",
   voiceBody: [
     "Las alertas tradicionales suelen depender de push, email, chat u otros canales.",
@@ -318,7 +323,7 @@ const ES: PagerDutyAltContent = {
       id: "uptimerobot",
       question: "¿Puedo usar UptimeRobot?",
       answer:
-        "Sí. Apunta los webhooks de UptimeRobot al mismo endpoint con tu header x-api-key.",
+        "Sí. Apunta una alerta webhook de UptimeRobot a https://api.wakeupdev.com/v1/alert. WakeUp Dev exige el header x-api-key. Comprueba que tu configuración de webhook en UptimeRobot permita headers HTTP personalizados antes de usar esta integración.",
     },
     {
       id: "per-user",
@@ -335,6 +340,7 @@ const ES: PagerDutyAltContent = {
   ],
   relatedWhatIs: "Qué es WakeUp Dev",
   relatedWebhook: "Webhook a llamada",
+  relatedOnCall: "Escalada on-call",
   relatedFaq: "Leer el FAQ",
   backHome: "← Volver al inicio",
 };

@@ -219,7 +219,7 @@ const EN: OnCallEscalationContent = {
       id: "uptimerobot",
       question: "Can UptimeRobot trigger an on-call escalation?",
       answer:
-        "Yes. Point UptimeRobot webhook alerts to WakeUp Dev with your API key. The same phone call and cascade escalation behavior applies.",
+        "Yes. Point UptimeRobot webhook alerts to WakeUp Dev. WakeUp Dev requires the x-api-key header—check that your UptimeRobot webhook configuration supports custom HTTP headers before using this integration. The same phone call and cascade escalation behavior applies.",
     },
     {
       id: "per-user",
@@ -402,7 +402,7 @@ const ES: OnCallEscalationContent = {
       id: "uptimerobot",
       question: "¿UptimeRobot puede disparar escalada on-call?",
       answer:
-        "Sí. Apunta los webhooks de UptimeRobot a WakeUp Dev con tu API key. Aplica el mismo comportamiento de llamada y cascada.",
+        "Sí. Apunta los webhooks de UptimeRobot a WakeUp Dev. WakeUp Dev exige el header x-api-key—comprueba que tu configuración de webhook en UptimeRobot permita headers HTTP personalizados antes de usar esta integración. Aplica el mismo comportamiento de llamada y cascada.",
     },
     {
       id: "per-user",

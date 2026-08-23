@@ -42,7 +42,7 @@ The dashboard supports CSV import of on-call team members and weekly shifts. Mem
 ## Integrations
 
 - **Grafana** — configure an HTTP webhook contact point to `POST https://api.wakeupdev.com/v1/alert` with header `x-api-key` (see https://wakeupdev.com/grafana-phone-alerts). Not a native Grafana plugin.
-- **UptimeRobot** — configure a webhook alert to `POST https://api.wakeupdev.com/v1/alert` with header `x-api-key` (see https://wakeupdev.com/uptimerobot-phone-alerts). Not a native UptimeRobot integration.
+- **UptimeRobot** — configure a webhook alert to `POST https://api.wakeupdev.com/v1/alert`. WakeUp Dev requires the `x-api-key` header; check that your UptimeRobot webhook configuration supports custom HTTP headers before using this integration (see https://wakeupdev.com/uptimerobot-phone-alerts). Not a native UptimeRobot integration.
 - **Any HTTP webhook** — send the raw alert body; WakeUp Dev accepts plain text or JSON in the request body
 
 ## Pricing model (as implemented)

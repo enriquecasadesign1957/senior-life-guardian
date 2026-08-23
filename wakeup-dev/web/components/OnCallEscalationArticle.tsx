@@ -81,7 +81,9 @@ export function OnCallEscalationArticle({
         <ol className="mt-6 list-decimal space-y-6 pl-5">
           {c.howSteps.map((step) => (
             <li key={step.title}>
-              <h3 className="text-lg font-medium text-zinc-200">{step.title}</h3>
+              <h3 className="inline text-lg font-medium text-zinc-200">
+                {step.title}
+              </h3>
               <p className="mt-2 text-sm leading-relaxed text-zinc-400">
                 {step.body}
               </p>

@@ -120,7 +120,7 @@ const EN: UptimeRobotPhoneAlertsContent = {
   ],
   configTitle: "UptimeRobot webhook configuration",
   configIntro:
-    "WakeUp Dev uses the same public alert API for every HTTP webhook source. Configure UptimeRobot to POST into WakeUp Dev with your API key—no WakeUp Dev agent or native UptimeRobot app is required.",
+    "WakeUp Dev uses the same public alert API for every HTTP webhook source. Configure UptimeRobot to POST to WakeUp Dev’s alert endpoint—no WakeUp Dev agent or native UptimeRobot app is required. WakeUp Dev requires the x-api-key header; check that your UptimeRobot webhook configuration supports custom HTTP headers before using this integration.",
   configSteps: [
     "In UptimeRobot, add or edit a webhook alert contact for the monitor you want to escalate by phone.",
     `Set the webhook URL to ${API_ALERT_URL}.`,
@@ -292,7 +292,7 @@ const ES: UptimeRobotPhoneAlertsContent = {
   ],
   configTitle: "Configuración del webhook de UptimeRobot",
   configIntro:
-    "WakeUp Dev usa la misma API pública de alertas para cualquier webhook HTTP. Configura UptimeRobot para hacer POST a WakeUp Dev con tu API key—no hace falta agente de WakeUp Dev ni app nativa de UptimeRobot.",
+    "WakeUp Dev usa la misma API pública de alertas para cualquier webhook HTTP. Configura UptimeRobot para hacer POST al endpoint de alertas de WakeUp Dev—no hace falta agente de WakeUp Dev ni app nativa de UptimeRobot. WakeUp Dev exige el header x-api-key; comprueba que tu configuración de webhook en UptimeRobot permita headers HTTP personalizados antes de usar esta integración.",
   configSteps: [
     "En UptimeRobot, agrega o edita un contacto de alerta webhook para el monitor que quieras escalar por teléfono.",
     `Configura la URL del webhook a ${API_ALERT_URL}.`,

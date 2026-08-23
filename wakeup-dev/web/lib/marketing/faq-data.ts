@@ -1,6 +1,21 @@
 import type { FaqItem } from "@/components/FaqAccordion";
+import type { Locale } from "@/lib/i18n";
 
-export const FAQ_ITEMS: FaqItem[] = [
+export type FaqSection = {
+  title: string;
+  items: FaqItem[];
+};
+
+export type FaqPageContent = {
+  h1: string;
+  intro: string;
+  sections: FaqSection[];
+  ctaPrimary: string;
+  relatedWhatIs: string;
+  relatedWebhook: string;
+};
+
+const EN_ITEMS: FaqItem[] = [
   {
     id: "what-is",
     question: "What is WakeUp Dev?",
@@ -71,7 +86,7 @@ export const FAQ_ITEMS: FaqItem[] = [
     id: "uptimerobot",
     question: "Does WakeUp Dev work with UptimeRobot?",
     answer:
-      "Yes. Add a webhook alert in UptimeRobot pointing to https://api.wakeupdev.com/v1/alert and include your x-api-key header. UptimeRobot's default webhook payload works as the alert body.",
+      "Yes. Point an UptimeRobot webhook alert to https://api.wakeupdev.com/v1/alert. WakeUp Dev requires the x-api-key header. Check that your UptimeRobot webhook configuration supports custom HTTP headers before using this integration. UptimeRobot's default webhook payload can be used as the alert body.",
   },
   {
     id: "webhooks",
@@ -134,6 +149,196 @@ export const FAQ_ITEMS: FaqItem[] = [
       "GitHub OAuth is the primary sign-in method. After Chile checkout, a magic link can be sent to the payer email to claim the account without GitHub.",
   },
 ];
+
+const ES_ITEMS: FaqItem[] = [
+  {
+    id: "what-is",
+    question: "¿Qué es WakeUp Dev?",
+    answer:
+      "WakeUp Dev es una plataforma de alertas on-call por voz. Recibe alertas críticas de sistemas de monitoreo vía webhook HTTP, llama al on-call y exige confirmación explícita presionando 1 en el teclado del teléfono.",
+  },
+  {
+    id: "problem",
+    question: "¿Qué problema resuelve WakeUp Dev?",
+    answer:
+      "Push, email y chat se pueden perder si estás dormido o lejos del escritorio. WakeUp Dev está pensado para incidentes donde un humano debe responder de verdad—no solo recibir otra notificación.",
+  },
+  {
+    id: "who-for",
+    question: "¿Para quién es WakeUp Dev?",
+    answer:
+      "Ingenieros DevOps, SRE y equipos pequeños que necesitan que las alertas críticas de producción lleguen a un humano on-call. Encaja con Grafana, UptimeRobot o cualquier monitor que envíe webhooks HTTP.",
+  },
+  {
+    id: "how-work",
+    question: "¿Cómo funciona WakeUp Dev?",
+    answer:
+      "Tu monitor envía POST https://api.wakeupdev.com/v1/alert con tu x-api-key. WakeUp Dev valida créditos, resume el payload para voz cuando Groq está configurado, inicia la cascada on-call y llama al primer objetivo. El responsable presiona 1 para ACK o el sistema escala.",
+  },
+  {
+    id: "pagerduty-alt",
+    question: "¿WakeUp Dev es una alternativa a PagerDuty?",
+    answer:
+      "WakeUp Dev es una opción ligera y voice-first enfocada en webhook → llamada con ACK humano y precio por uso (no por asiento). No es una suite completa de gestión de incidentes como PagerDuty. Los equipos lo usan cuando necesitan escalada telefónica sin otra licencia por ingeniero.",
+  },
+  {
+    id: "why-phone",
+    question: "¿Por qué usar una llamada para una alerta crítica?",
+    answer:
+      "Una llamada puede atravesar push en silencio, email sin leer y chat saturado de forma distinta a las notificaciones de texto. WakeUp Dev añade un ACK explícito para saber que alguien confirmó la alerta—no solo que se entregó un mensaje.",
+  },
+  {
+    id: "what-ack",
+    question: "¿Qué es ACK?",
+    answer:
+      "ACK (acknowledgement) significa que un humano confirma haber recibido la alerta. Durante la llamada, WakeUp Dev pide presionar 1. Cuando llega el dígito 1, la alerta se marca ACKNOWLEDGED y se detiene la escalada de ese incidente.",
+  },
+  {
+    id: "phone-ack-how",
+    question: "¿Cómo funciona la confirmación por teléfono?",
+    answer:
+      "Twilio conecta la llamada, reproduce un resumen de voz de la alerta y pide: presiona 1 para confirmar. El callback IVR registra el dígito 1 y marca la alerta confirmada en la base de datos vía oncall_marcar_ack.",
+  },
+  {
+    id: "no-answer",
+    question: "¿Qué pasa si nadie contesta?",
+    answer:
+      "Si la llamada no se contesta, falla o termina sin ACK en la ventana de espera (unos 45 segundos mientras llama), WakeUp Dev registra el timeout y llama al siguiente teléfono de la cascada—hasta 8 intentos entre turnos, roster o teléfono de emergencia verificado.",
+  },
+  {
+    id: "escalation",
+    question: "¿Cómo funciona la escalada?",
+    answer:
+      "Los objetivos se eligen en orden: teléfonos de turnos on-call activos, luego miembros del roster por orden_escalamiento, luego el teléfono de emergencia verificado de la cuenta. Cada intento fallido o sin respuesta pasa al siguiente hasta que alguien confirme o se agote la lista (EXHAUSTED).",
+  },
+  {
+    id: "grafana",
+    question: "¿WakeUp Dev funciona con Grafana?",
+    answer:
+      "Sí. Configura Grafana para enviar un webhook HTTP a POST /v1/alert con el header x-api-key. Envía el body como texto plano o JSON—WakeUp Dev lee el body crudo.",
+  },
+  {
+    id: "uptimerobot",
+    question: "¿WakeUp Dev funciona con UptimeRobot?",
+    answer:
+      "Sí. Apunta una alerta webhook de UptimeRobot a https://api.wakeupdev.com/v1/alert. WakeUp Dev exige el header x-api-key. Comprueba que tu configuración de webhook en UptimeRobot permita headers HTTP personalizados antes de usar esta integración. El payload webhook por defecto de UptimeRobot puede usarse como body de la alerta.",
+  },
+  {
+    id: "webhooks",
+    question: "¿Puedo enviar webhooks HTTP desde otros sistemas?",
+    answer:
+      "Sí. Cualquier sistema que pueda hacer POST HTTP con un header personalizado puede integrarse. El endpoint espera POST, header x-api-key y un body de hasta 4000 bytes.",
+  },
+  {
+    id: "other-monitor",
+    question: "¿Puedo conectar otro sistema de monitoreo?",
+    answer:
+      "Sí, siempre que soporte webhooks HTTP POST salientes. No hay agente propietario—solo la API pública /v1/alert.",
+  },
+  {
+    id: "cascade-def",
+    question: "¿Qué es una cascada on-call?",
+    answer:
+      "Una cascada es la lista ordenada de teléfonos que WakeUp Dev llama para una alerta. Puede incluir teléfonos de turnos, un roster importado por CSV y un teléfono de emergencia verificado de respaldo.",
+  },
+  {
+    id: "escalate-other",
+    question: "¿Las alertas pueden escalar a otro responsable?",
+    answer:
+      "Sí. Importa varios miembros del roster con orden de escalada, o define turnos semanales. Si el primero no confirma, se llama automáticamente al siguiente número.",
+  },
+  {
+    id: "roster",
+    question: "¿Cómo funciona el roster de responsables?",
+    answer:
+      "En el dashboard puedes importar un CSV con columnas: nombre, telefono, orden, email. orden (orden_escalamiento) define la prioridad de llamada—1 es el primero. La misma importación reemplaza el roster de forma atómica.",
+  },
+  {
+    id: "pricing-trial",
+    question: "¿Qué incluye la prueba gratuita?",
+    answer:
+      "Registrarte con GitHub incluye 5 alertas de voz gratis para pruebas. No se pide tarjeta de crédito en el plan de prueba mostrado en el sitio.",
+  },
+  {
+    id: "pricing-pro",
+    question: "¿Cuáles son los planes Pro?",
+    answer:
+      "Pro International: 50 alertas mensuales por $29 USD/mes (Lemon Squeezy), +$0.50 USD por alerta extra despachada. Pro Chile: 50 alertas mensuales por 25.000 CLP/mes (Transbank Oneclick), +450 CLP por alerta extra. Ambos incluyen usuarios ilimitados.",
+  },
+  {
+    id: "pricing-seats",
+    question: "¿Cobran por usuario o por asiento?",
+    answer:
+      "No. WakeUp Dev cobra por volumen de alertas despachadas, no por licencias por asiento. Puedes agregar ingenieros al workspace sin abrir otra línea de licencia por persona.",
+  },
+  {
+    id: "security-api-key",
+    question: "¿Cómo se almacenan las API keys?",
+    answer:
+      "Las API keys se almacenan como hashes en Supabase (con pepper opcional en el Worker). El dashboard muestra una key nueva solo una vez; el Worker valida x-api-key contra el hash, nunca el texto en claro.",
+  },
+  {
+    id: "security-auth",
+    question: "¿Cómo inicio sesión en el dashboard?",
+    answer:
+      "GitHub OAuth es el método principal. Tras el checkout en Chile, se puede enviar un magic link al email del pagador para reclamar la cuenta sin GitHub.",
+  },
+];
+
+function sectionsFromItems(
+  items: FaqItem[],
+  titles: [string, string, string, string, string, string]
+): FaqSection[] {
+  return [
+    { title: titles[0], items: items.slice(0, 5) },
+    { title: titles[1], items: items.slice(5, 10) },
+    { title: titles[2], items: items.slice(10, 14) },
+    { title: titles[3], items: items.slice(14, 17) },
+    { title: titles[4], items: items.slice(17, 20) },
+    { title: titles[5], items: items.slice(20) },
+  ];
+}
+
+const EN: FaqPageContent = {
+  h1: "WakeUp Dev FAQ",
+  intro:
+    "Voice on-call alerts, human ACK, escalation, integrations, and pricing—based on what WakeUp Dev implements today.",
+  sections: sectionsFromItems(EN_ITEMS, [
+    "General",
+    "Alerts and acknowledgement",
+    "Integrations",
+    "On-call",
+    "Pricing",
+    "Security",
+  ]),
+  ctaPrimary: "Start free — 5 voice alerts",
+  relatedWhatIs: "What is WakeUp Dev?",
+  relatedWebhook: "Webhook to phone call",
+};
+
+const ES: FaqPageContent = {
+  h1: "FAQ de WakeUp Dev",
+  intro:
+    "Alertas on-call por voz, ACK humano, escalada, integraciones y precios—según lo que WakeUp Dev implementa hoy.",
+  sections: sectionsFromItems(ES_ITEMS, [
+    "General",
+    "Alertas y confirmación",
+    "Integraciones",
+    "On-call",
+    "Precios",
+    "Seguridad",
+  ]),
+  ctaPrimary: "Empezar gratis — 5 alertas de voz",
+  relatedWhatIs: "¿Qué es WakeUp Dev?",
+  relatedWebhook: "Webhook a llamada",
+};
+
+/** EN FAQ items for JSON-LD (default locale). */
+export const FAQ_ITEMS = EN_ITEMS;
+
+export function faqPageContent(locale: Locale): FaqPageContent {
+  return locale === "es" ? ES : EN;
+}
 
 export function faqJsonLd(items: FaqItem[]) {
   return {

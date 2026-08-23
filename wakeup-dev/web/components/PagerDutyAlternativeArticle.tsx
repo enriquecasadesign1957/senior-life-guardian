@@ -121,6 +121,14 @@ export function PagerDutyAlternativeArticle({
           ))}
         </ol>
         <p className="mt-6 text-zinc-400 leading-relaxed">{c.workflowBody}</p>
+        <p className="mt-4 text-sm">
+          <Link
+            href="/on-call-escalation"
+            className="text-accent hover:underline"
+          >
+            {c.workflowOnCallLinkLabel}
+          </Link>
+        </p>
       </section>
 
       <section className="mt-12">
@@ -165,6 +173,13 @@ export function PagerDutyAlternativeArticle({
             {c.relatedWebhook}
           </Link>
           {" · "}
+          <Link
+            href="/on-call-escalation"
+            className="text-accent hover:underline"
+          >
+            {c.relatedOnCall}
+          </Link>
+          {" · "}
           <Link href="/what-is-wakeup-dev" className="text-accent hover:underline">
             {c.relatedWhatIs}
           </Link>
@@ -184,6 +199,12 @@ export function PagerDutyAlternativeArticle({
 
       <div className="mt-14 flex flex-wrap gap-3 border-t border-zinc-800 pt-10">
         <GitHubLoginButton label={c.ctaPrimary} />
+        <Link
+          href="/on-call-escalation"
+          className="inline-flex h-12 items-center rounded-md border border-zinc-800 px-5 text-sm text-zinc-300 transition hover:bg-zinc-900"
+        >
+          {c.relatedOnCall}
+        </Link>
         <Link
           href="/what-is-wakeup-dev"
           className="inline-flex h-12 items-center rounded-md border border-zinc-800 px-5 text-sm text-zinc-300 transition hover:bg-zinc-900"
