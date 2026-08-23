@@ -179,6 +179,7 @@
   "footerPagerDuty": "PagerDuty Alternative",
   "footerOnCallEscalation": "On-Call Escalation",
   "footerGrafanaPhoneAlerts": "Grafana Phone Alerts",
+  "footerUptimeRobotPhoneAlerts": "UptimeRobot Phone Alerts",
   "footerFaq": "FAQ",
   "footerTagline": "WakeUp Dev — pay per alert, not per seat."
 }

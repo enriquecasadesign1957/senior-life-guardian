@@ -16,6 +16,7 @@ const publicRoutes: PublicRoute[] = [
   { path: "/pagerduty-alternative", priority: 0.85, changeFrequency: "monthly" },
   { path: "/on-call-escalation", priority: 0.85, changeFrequency: "monthly" },
   { path: "/grafana-phone-alerts", priority: 0.85, changeFrequency: "monthly" },
+  { path: "/uptimerobot-phone-alerts", priority: 0.85, changeFrequency: "monthly" },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

@@ -42,6 +42,7 @@ const FOOTER_LINKS: { href: string; labelKey: MsgKey }[] = [
   { href: "/pagerduty-alternative", labelKey: "footerPagerDuty" },
   { href: "/on-call-escalation", labelKey: "footerOnCallEscalation" },
   { href: "/grafana-phone-alerts", labelKey: "footerGrafanaPhoneAlerts" },
+  { href: "/uptimerobot-phone-alerts", labelKey: "footerUptimeRobotPhoneAlerts" },
   { href: "/faq", labelKey: "footerFaq" },
 ];
 

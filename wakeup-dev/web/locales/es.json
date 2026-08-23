@@ -179,6 +179,7 @@
   "footerPagerDuty": "Alternativa a PagerDuty",
   "footerOnCallEscalation": "Escalada on-call",
   "footerGrafanaPhoneAlerts": "Alertas Grafana al teléfono",
+  "footerUptimeRobotPhoneAlerts": "Alertas UptimeRobot al teléfono",
   "footerFaq": "FAQ",
   "footerTagline": "WakeUp Dev — cobro por alerta, no por licencia."
 }
