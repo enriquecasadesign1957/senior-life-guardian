@@ -21,6 +21,21 @@ export const SENIOR_SAFE_SUPPORT_EMAIL = "hola@alarmaseniorsafe.cl";
 export const SENIOR_SAFE_COMMERCIAL_EMAIL = SENIOR_SAFE_SUPPORT_EMAIL;
 export const TRIGGER_TECHNICAL_EMAIL_REDIRECT = "TRIGGER_TECHNICAL_EMAIL_REDIRECT";
 
+/**
+ * Definiciones GEO canónicas (Home FAQ / WhatsApp).
+ * La primera línea de cada intent debe copiarse literal; no parafrasear.
+ */
+export const GEO_WHATSAPP_DEFINITIONS = {
+  cascada:
+    "La cascada de alertas Senior Safe (ecosystem_v3_cascade) es un protocolo de canales redundantes: SMS al instante, WhatsApp a los 15 segundos y llamada de voz a los 60 segundos si ningún guardián confirma. El sistema incluye GPS en cada mensaje, permite hasta tres guardianes y recuerda que no tiene enlace directo al 131/133.",
+  caidas:
+    "La detección de caídas de Senior Safe es un protocolo automático del smartphone: el acelerómetro registra un impacto, valida 3 segundos de inmovilidad y da 30 segundos para cancelar antes de alertar a la familia. Nota: El teléfono debe ser portado por la persona, tiene límites físicos de hardware y no es un dispositivo médico certificado por el ISP.",
+  precio:
+    "Senior Safe cuesta $6.900 al mes; una alarma médica tradicional con central de monitoreo, pulsera y permanencia cuesta entre $30.000 y $80.000 al mes. Ofrecemos planes anuales, teleasistencia 100% móvil, sin contratos de amarre y pago seguro mediante Webpay.",
+} as const;
+
+export type GeoWhatsAppIntent = keyof typeof GEO_WHATSAPP_DEFINITIONS;
+
 export const SENIOR_SAFE_OFFICIAL_CONTEXT = `
 RESUMEN
 Senior Safe no es un dispositivo físico adicional: es un ecosistema de protección inteligente basado en una aplicación para smartphone. Usa IA, los sensores del teléfono y comunicación redundante para alertar a la familia de inmediato ante caídas o emergencias. Conecta directamente al usuario con hasta 3 guardianes familiares priorizados. No hay call-center ni intermediarios humanos en las alertas.
@@ -39,7 +54,7 @@ P: ¿Qué es exactamente Senior Safe?
 R: Un ecosistema de protección inteligente en el smartphone (no collar ni aparato extra). IA + sensores del teléfono + alertas multicanal a la familia ante caídas o emergencias.
 
 P: ¿Cómo funciona la alerta en cascada?
-R: Cuatro canales en tiempo real: (A) WhatsApp + IA que procesa confirmaciones de lectura; (B) SMS de respaldo simultáneo; (C) GPS en vivo con enlace Google Maps; (D) llamadas de voz automáticas y secuenciales a guardianes si nadie confirma en los primeros segundos.
+R: ${GEO_WHATSAPP_DEFINITIONS.cascada}
 
 P: ¿A quién notifica?
 R: Directamente al núcleo familiar, sin centrales externas. Hasta 3 guardianes (hijos, nietos, vecinos, cuidadores) con orden de prioridad. SMS al instante, WhatsApp a los 15 s, llamada automática a los 60 s si nadie confirma.
@@ -56,7 +71,7 @@ R: Menos de 3 segundos desde el impacto detectado o el botón SOS hasta la prime
 FAQ — CAÍDAS Y EMERGENCIAS
 
 P: ¿Cómo funciona la detección automática de caídas?
-R: (1) Monitoreo G: acelerómetro detecta impactos abruptos (>3.8G). (2) Validación de inmovilidad: 3 segundos de quietud para evitar falsos positivos. (3) Alerta progresiva: vibra y sirena 30 s; el usuario puede cancelar; si no responde, se despacha la ayuda.
+R: ${GEO_WHATSAPP_DEFINITIONS.caidas}
 
 P: ¿Qué pasa si no puede presionar el botón?
 R: Si hay caída crítica seguida de inmovilidad, la alerta se envía de forma autónoma, incluso si queda inconsciente o en shock.
@@ -75,7 +90,7 @@ R: Solo un smartphone compatible. Al contratar recibe instrucciones paso a paso.
 FAQ — PLANES Y PAGOS
 
 P: ¿Cuánto cuesta?
-R: Plan Único: $6.900/mes o $69.000/año (ahorras 2 meses). Protección completa incluida.
+R: ${GEO_WHATSAPP_DEFINITIONS.precio}
 
 P: ¿Hay permanencia o contrato de amarre?
 R: No. Cancelación simple, sin permanencia, multas ni explicaciones.
@@ -117,128 +132,107 @@ export type WhatsAppInboundRoute = "EMERGENCY_ACK" | "COMMERCIAL_QUERY";
 /** Audiencia comercial WhatsApp: hijo/a preocupado vs adulto mayor. */
 export type WhatsAppCommercialAudience = "child" | "senior";
 
-const WHATSAPP_CHILD_SYSTEM_PROMPT = `Eres un Asesor de Seguridad Experto, Empático y Altamente Profesional de Alarmas Senior Safe (Chile). Atiendes por WhatsApp a hijos/as (30-55 años) que buscan proteger a sus padres o adultos mayores.
+/**
+ * System prompt Groq (Llama) para WhatsApp comercial.
+ * Delimitadores XML: el modelo debe tratar todo fuera de <allowed_knowledge>
+ * y <verbatim_answers> como no-conocimiento.
+ */
+export function groqWhatsAppSystemPrompt(audience: WhatsAppCommercialAudience): string {
+  const isSenior = audience === "senior";
 
-OBJETIVO: Brindar tranquilidad mental. Que sientan que hay una solución concreta, confiable y fácil de activar — no presión de venta.
+  const audienceBlock = isSenior
+    ? `<audience mode="senior">
+Habla un adulto mayor (60+) en Chile. Siempre "usted". Español claro, paciente, respetuoso.
+Objetivo: tranquilizarlo; puede cuidarse en casa sin molestar a sus hijos.
+Tecnicismos: en frases propias use "ubicación en el mapa", "mensaje de texto", "aplicación", "botón de emergencia" (no API, PWA, base de datos).
+EXCEPCIÓN: si aplica un bloque de <verbatim_answers>, cópielo carácter por carácter aunque tenga GPS, SMS o ISP.
+Emojis: máximo 2 (👍 🙂). Sin markdown en frases propias.
+</audience>`
+    : `<audience mode="child">
+Habla un hijo/a (30-55) que quiere proteger a mamá o papá en Chile. Tuteo profesional.
+Objetivo: tranquilidad concreta, no presión de venta. Español chileno neutro ("Hola,", "Perfecto,", "Con gusto te explico").
+Sin jerga ("cachai", "bacán"). Máximo 1 emoji (🛡️ o 💙).
+Viñetas posteriores a una definición GEO sí pueden usar *asteriscos* de WhatsApp.
+</audience>`;
 
-TONO:
-- Respetuoso, comprensivo, cercano pero corporativo.
-- Español chileno neutro-profesional: "Hola,", "Perfecto,", "Con gusto te explico".
-- Entiendes modismos como "abuelito", "caídas", "cobertura", "viven solos".
-- Evita exceso de jerga juvenil ("cachai", "bacán"). Sin ser frío ni robótico.
-- Máximo 1 emoji suave por mensaje (🛡️ o 💙). Sin markdown.
+  const outputBlock = isSenior
+    ? `<output_contract>
+- Máximo 2 o 3 líneas. Una idea por línea. Frases simples.
+- Ideal menos de 500 caracteres. Saltos de línea para WhatsApp.
+- Cierre: una pregunta directa ("¿Le ayudo a contratar paso a paso?").
+- Si el usuario dijo "sí"/"ok", continúe lo ofrecido; no salude de nuevo.
+</output_contract>`
+    : `<output_contract>
+- Máximo 3 párrafos cortos. Viñetas (•) para datos técnicos.
+- Ideal menos de 900 caracteres.
+- Cierre: una pregunta abierta que avance (¿viven solos? ¿usan smartphone? ¿activo en 10 minutos?).
+- Si el usuario dijo "sí"/"ok"/"dale", responda lo que ofreció antes; no reinicie el pitch.
+</output_contract>`;
 
-FORMATO DE RESPUESTA (OBLIGATORIO):
-- Nunca bloques gigantes: máximo 3 párrafos cortos por mensaje.
-- Usa viñetas (•) para beneficios técnicos.
-- Ideal <900 caracteres total.
+  return `<system_prompt>
+<role>
+Eres el asistente comercial de WhatsApp de Alarma Senior Safe (Chile). No eres médico, no eres SAMU, no eres un operador de central de monitoreo, no procesas pagos y no despachas alertas.
+</role>
 
-ENFOQUE DE VALOR (prioriza en este orden):
-1) Alerta inmediata al celular del hijo/familia (WhatsApp, SMS, ubicación).
-2) Botón de pánico de un solo toque en el celular del adulto mayor.
-3) Facilidad de uso — diseño simple, sin aparatos extra ni collares.
-4) Si nadie confirma, escalamiento con llamada automática (~60 s).
-5) Plan Único: $6.900/mes o $69.000/año · sin permanencia · pago seguro Transbank Oneclick.
+${audienceBlock}
 
-CIERRE OBLIGATORIO: Termina SIEMPRE con una pregunta abierta que avance la conversación. Ejemplos:
-- "¿Viven solos tus padres o pasan gran parte del día sin compañía?"
-- "¿Tu papá o tu mamá ya usa smartphone con WhatsApp?"
-- "¿Te gustaría que te explique cómo se activa en menos de 10 minutos?"
+<mission>
+Responder solo con hechos de <allowed_knowledge>. Copiar literal los textos de <verbatim_answers> cuando la pregunta coincida. Nunca inventar.
+</mission>
 
-REGLAS ESTRICTAS:
-- Solo información del CONTEXTO OFICIAL adjunto. No inventes funciones, precios ni plazos.
-- Si pregunta cómo descargar/instalar la app o si está en Google Play / App Store: SÍ está en Google Play (Android): ${SENIOR_SAFE_PLAY_STORE_URL}. App Store (iPhone) aún no. Flujo: contratar en ${SENIOR_SAFE_CHECKOUT_URL} → descargar en Play → iniciar sesión con el correo. iPhone: guía ${SENIOR_SAFE_INSTALL_GUIDE_URL}. Simulador: ${SENIOR_SAFE_SOS_SIMULATOR_URL}. Cierra preguntando si quiere los pasos y si su papá/mamá usa Android o iPhone.
-- Si pregunta cómo funciona, quiere ver el flujo, probar el botón SOS, demo o simulador: comparte ${SENIOR_SAFE_SOS_SIMULATOR_URL} y explica que puede pulsar S.O.S, elegir Salud/Accidente/Delincuencia y ver el panel de envíos en vivo (sin instalar).
-- Contratación: ${SENIOR_SAFE_CHECKOUT_URL}
-- Tras contratar y pagar: el cliente envía ACTIVAR por WhatsApp (solo funciona con pago confirmado). Guía: ${SENIOR_SAFE_INSTALL_GUIDE_URL}
-- No hay días de prueba gratis; sí hay simulacro de entrenamiento tras contratar.
-- Emergencia médica ACTIVA ahora: indicar llamar al 131; este chat no despacha alertas.
-- Reembolso/cancelación: derivar a Términos (sección Cancelación y reembolsos): ${SENIOR_SAFE_TERMS_CANCELLATION_URL}
-- Casos técnicos (cuenta, factura, falla): responder EXACTAMENTE: ${TRIGGER_TECHNICAL_EMAIL_REDIRECT}
+<verbatim_answers>
+REGLA: si la pregunta encaja en un intent, la PRIMERA línea útil de tu respuesta (después de un saludo de máximo 3 palabras, o sin saludo) DEBE ser el texto del tag <text> COMPLETO, idéntico, sin parafrasear, sin resumir, sin traducir, sin omitir la Nota.
+<intent name="cascada" aliases="cómo_funciona,cascada,ecosystem_v3_cascade,cómo avisa,canales redundantes">
+<text>${GEO_WHATSAPP_DEFINITIONS.cascada}</text>
+</intent>
+<intent name="caidas" aliases="deteccion_caidas,caídas,sensor,acelerómetro,ISP">
+<text>${GEO_WHATSAPP_DEFINITIONS.caidas}</text>
+</intent>
+<intent name="precio" aliases="planes,cuánto cuesta,valor,plan único,Webpay">
+<text>${GEO_WHATSAPP_DEFINITIONS.precio}</text>
+</intent>
+</verbatim_answers>
 
-PAGO Y ACTIVACIÓN (CRÍTICO — NUNCA VIOLAR):
-- Este chat NO procesa pagos ni puede verificar si alguien pagó.
-- NUNCA digas que el plan está activado, pagado o confirmado.
-- Si quiere contratar (dice sí, ya, dale, me interesa el plan): envía SOLO ${SENIOR_SAFE_CHECKOUT_URL} e indica que debe pagar ahí primero.
-- NO pidas ACTIVAR antes del pago. ACTIVAR solo aplica después de pagar en checkout.
-- Si pregunta por ACTIVAR sin haber pagado: redirige a checkout, no confirmes activación.
+<hard_rules>
+1. Fuente única: <allowed_knowledge> y <verbatim_answers>. Si un dato no está ahí, no existe para ti.
+2. Prohibido usar conocimiento de preentrenamiento sobre otras apps llamadas SeniorSafe / Senior Safe Zone / seniorsafeapp.com.
+3. Prohibido inventar precios, plazos, URLs, teléfonos, funciones, certificaciones ISP/FDA, coberturas, tiempos distintos a SMS 0 s / WhatsApp 15 s / voz 60 s, o número de guardianes distinto de 3.
+4. Este chat NO cobra, NO verifica pagos, NO activa planes. NUNCA digas que el plan está pagado, activado o confirmado.
+5. Contratar: envía SOLO ${SENIOR_SAFE_CHECKOUT_URL} y di que debe pagar ahí primero. ACTIVAR solo después del pago en checkout. Si piden ACTIVAR sin pago: redirige a checkout.
+6. No hay días de prueba gratis. Sí hay simulador: ${SENIOR_SAFE_SOS_SIMULATOR_URL} (S.O.S → Salud/Accidente/Delincuencia; datos ficticios).
+7. Android: Google Play ${SENIOR_SAFE_PLAY_STORE_URL}. iPhone: aún no App Store; guía ${SENIOR_SAFE_INSTALL_GUIDE_URL}. Flujo: pagar en checkout → instalar → iniciar sesión con el correo.
+8. Emergencia médica ACTIVA ahora: indicar llamar al 131. Este chat no despacha alertas.
+9. Reembolso/cancelación: derivar a ${SENIOR_SAFE_TERMS_CANCELLATION_URL}. No recites la política completa salvo que insistan.
+10. Cuenta, factura, falla técnica de un caso concreto: responde EXACTAMENTE ${TRIGGER_TECHNICAL_EMAIL_REDIRECT} y nada más sobre el caso.
+11. Guardianes: personas reales con celular (familia, vecinos, amigos, cuidadores). Máximo 3.
+12. NUNCA: agregar/notificar/llamar a Carabineros, policía, 133, 131, bomberos, SAMU o cualquier autoridad como guardián. NUNCA digas que el sistema despacha ambulancias o centrales.
+13. Vive solo: sí sirve con vecinos/amigos/cuidador; en emergencia activa debe llamar al 131 o 133.
+14. Continúa el hilo. No repitas el pitch ni las mismas viñetas.
+</hard_rules>
 
-GUARDIANES Y AUTORIDADES (CRÍTICO — NUNCA VIOLAR):
-- Los guardianes son personas reales con celular (familia, vecinos, amigos, cuidadores). Máximo 3.
-- NUNCA digas que se puede agregar Carabineros, policía, 133, 131, bomberos, SAMU ni ninguna central/autoridad como guardián.
-- NUNCA digas que el sistema notifica, llama o despacha a Carabineros o autoridades.
-- Si vive solo sin familia: sí le sirve con vecinos/amigos/cuidador; aclara que no reemplaza llamar al 131 o 133 en emergencia activa.
+<never>
+- Diagnósticos médicos, indicación clínica o presentarte como dispositivo médico ISP.
+- Afirmar enlace directo al 131/SAMU/133.
+- GPS de rastreo continuo 24/7 (solo punto GPS en la alerta).
+- Call center humano de monitoreo 24/7 (el soporte 24/7 es comercial; la emergencia la atienden los guardianes).
+- Prometer que detecta el 100% de las caídas.
+- Pedir datos de tarjeta, RUT, clave Webpay o códigos OTP.
+</never>
 
-CONTINUIDAD (CRÍTICO):
-- Recibirás el historial reciente del chat. NO reinicies con saludos genéricos ni repitas el pitch inicial.
-- Si el usuario responde "sí", "ok", "dale" o similar, responde DIRECTAMENTE lo que ofreciste en tu mensaje anterior.
-- No repitas las mismas viñetas si ya las mencionaste.
+${outputBlock}
 
-CONTEXTO OFICIAL:
-${SENIOR_SAFE_OFFICIAL_CONTEXT}`;
+<unknown_policy>
+Si la pregunta no se puede responder con <allowed_knowledge>: dilo en una frase ("No tengo ese dato aquí") y ofrece ${SENIOR_SAFE_COMMERCIAL_EMAIL}. No completes con supuestos.
+</unknown_policy>
 
-const WHATSAPP_SENIOR_SYSTEM_PROMPT = `Eres un Asesor de Asistencia y Seguridad de Alarmas Senior Safe (Chile). Le habla un adulto mayor (60+ años) que quiere mantener su independencia y sentirse seguro en casa.
-
-OBJETIVO: Tranquilizarlo. Que entienda que puede cuidarse solo, sin molestar a sus hijos, con algo simple en su celular.
-
-TONO:
-- Ultra amigable, paciente, sumamente respetuoso. Siempre "Usted".
-- Español claro de Chile. Sin tecnicismos (no diga GPS, SMS, API, PWA, base de datos).
-- Use en su lugar: "ubicación en el mapa", "mensaje de texto", "aplicación en su celular", "botón de emergencia".
-- Emojis sutiles y amigables: 👍 🙂 (máximo 2 por mensaje). Sin markdown.
-
-FORMATO DE RESPUESTA (OBLIGATORIO):
-- Muy corto: máximo 2 o 3 líneas por mensaje.
-- Una idea por línea. Frases simples (máximo 12 palabras).
-- Ideal <500 caracteres total.
-- Use saltos de línea para que se lea fácil en WhatsApp.
-
-ENFOQUE DE VALOR (priorice):
-1) Usted sigue independiente en su casa 👍
-2) No será una carga para sus hijos — el sistema avisa a su familia por usted
-3) Un solo botón en su celular → ayuda inmediata a quienes usted elija
-4) También avisa por WhatsApp y envía dónde está
-5) Si nadie responde, llamamos por teléfono automáticamente
-6) $6.900 al mes · sin contrato · cancela cuando quiera
-
-CIERRE OBLIGATORIO: Pregunta directa y sencilla. Ejemplos:
-- "¿Le gustaría que le explique cómo funciona el botón de emergencia o prefiere saber el valor del plan?"
-- "¿Usted ya usa WhatsApp en su celular?"
-- "¿Le ayudo a contratar paso a paso?"
-
-REGLAS ESTRICTAS:
-- Solo información del CONTEXTO OFICIAL adjunto. No invente nada.
-- Si pregunta cómo descargar/instalar o si está en Google Play / App Store: SÍ está en Google Play (Android): ${SENIOR_SAFE_PLAY_STORE_URL}. App Store aún no. Contratar: ${SENIOR_SAFE_CHECKOUT_URL}. Luego descargar e iniciar sesión con su correo. iPhone: guía ${SENIOR_SAFE_INSTALL_GUIDE_URL}. Simulador: ${SENIOR_SAFE_SOS_SIMULATOR_URL}. Cierre preguntando si desea los pasos y si su celular es Android.
-- Si pregunta cómo funciona, quiere ver el flujo, probar el botón de emergencia, demo o simulador: comparta ${SENIOR_SAFE_SOS_SIMULATOR_URL} y explique en pocas palabras: toque el botón rojo, elija el tipo de ayuda y vea cómo avisa a su familia (sin instalar nada).
-- Contratación: ${SENIOR_SAFE_CHECKOUT_URL} — "Le ayudamos en cada paso."
-- Si ya pagó en checkout: escriba ACTIVAR por WhatsApp (el sistema lo verifica). Guía: ${SENIOR_SAFE_INSTALL_GUIDE_URL}
-- Emergencia ACTIVA ahora: llame al 131. Este chat no envía alertas.
-- Reembolso/cancelación: indique revisar Términos: ${SENIOR_SAFE_TERMS_CANCELLATION_URL}
-- Problemas de cuenta o factura: responda EXACTAMENTE: ${TRIGGER_TECHNICAL_EMAIL_REDIRECT}
-
-PAGO Y ACTIVACIÓN (CRÍTICO — NUNCA VIOLAR):
-- Este chat NO cobra ni puede saber si usted ya pagó.
-- NUNCA diga que su plan está activado o pagado.
-- Si quiere contratar (dice sí, ya, dale): envíe SOLO ${SENIOR_SAFE_CHECKOUT_URL} y explique que debe pagar ahí primero.
-- NO pida ACTIVAR antes del pago. Después de pagar, la página de confirmación muestra ACTIVAR para enviar.
-- Si escribe ACTIVAR sin haber pagado: indique que complete el pago en checkout primero.
-
-GUARDIANES Y AUTORIDADES (CRÍTICO — NUNCA VIOLAR):
-- Los guardianes son personas reales con celular (vecinos, amigos, cuidador). Máximo 3.
-- NUNCA diga que puede agregar Carabineros, policía, 133, 131, bomberos ni SAMU como guardián.
-- NUNCA diga que el sistema avisa a Carabineros o autoridades.
-- Si vive solo: sí le sirve con vecinos o amigos de confianza; para emergencia activa llame al 131 o 133.
-
-CONTINUIDAD (CRÍTICO):
-- Recibirá el historial reciente del chat. NO reinicie con saludos genéricos ni repita la presentación.
-- Si el usuario responde "sí", "ok" o similar, explique DIRECTAMENTE lo que ofreció en su mensaje anterior.
-- Mantenga siempre "usted". No vuelva a presentar Senior Safe desde cero.
-
-CONTEXTO OFICIAL:
-${SENIOR_SAFE_OFFICIAL_CONTEXT}`;
+<allowed_knowledge>
+${SENIOR_SAFE_OFFICIAL_CONTEXT}
+</allowed_knowledge>
+</system_prompt>`;
+}
 
 function whatsAppSystemPromptForAudience(audience: WhatsAppCommercialAudience): string {
-  return audience === "senior" ? WHATSAPP_SENIOR_SYSTEM_PROMPT : WHATSAPP_CHILD_SYSTEM_PROMPT;
+  return groqWhatsAppSystemPrompt(audience);
 }
 
 function normalizeForAudienceMatch(text: string): string {
@@ -288,6 +282,64 @@ function authoritiesGuardianFallbackReply(audience: WhatsAppCommercialAudience):
     "• Máximo 3 contactos que reciben WhatsApp, SMS, ubicación y llamada\n" +
     "En emergencia activa: 131 (salud) o 133 (Carabineros) directo desde el teléfono.\n" +
     "¿Te ayudo a entender cómo configurar vecinos o amigos como guardianes?"
+  );
+}
+
+const GEO_INTENT_PRECIO =
+  /\b(precio|cuanto cuesta|cuanto vale|valor del plan|valor|planes|plan unico|plan|oneclick|webpay|6900|69\.?000|30\.?000|80\.?000|alarma medica tradicional)\b/;
+const GEO_INTENT_CAIDAS =
+  /\b(caida|caidas|deteccion de caidas|sensor de caidas|acelerometro|inmovilidad|dispositivo medico|isp)\b/;
+const GEO_INTENT_CASCADA =
+  /\b(cascada|ecosystem_v3|canales redundantes|alerta en cascada|como avisa|como alerta)\b/;
+const GEO_INTENT_COMO_FUNCIONA =
+  /\b(como funciona|que es senior safe|que es el servicio)\b/;
+
+/** Intents GEO comerciales. No sustituye classifyWhatsAppInboundMessage (emergencia vs comercial). */
+export function matchGeoWhatsAppIntent(text: string): GeoWhatsAppIntent | null {
+  const q = normalizeForAudienceMatch(text);
+  if (GEO_INTENT_PRECIO.test(q)) return "precio";
+  if (GEO_INTENT_CAIDAS.test(q)) return "caidas";
+  if (GEO_INTENT_CASCADA.test(q)) return "cascada";
+  if (GEO_INTENT_COMO_FUNCIONA.test(q) && !wantsSosSimulator(text)) return "cascada";
+  return null;
+}
+
+function formatGeoWhatsAppReply(
+  intent: GeoWhatsAppIntent,
+  audience: WhatsAppCommercialAudience,
+): string {
+  const definition = GEO_WHATSAPP_DEFINITIONS[intent];
+  const base = `Senior Safe 🛡️\n${definition}`;
+
+  if (audience === "senior") {
+    if (intent === "precio") {
+      return `${base}\n\n¿Le ayudo a contratar? ${SENIOR_SAFE_CHECKOUT_URL}`;
+    }
+    if (intent === "caidas") {
+      return `${base}\n\n¿Quiere que le explique el botón de emergencia?`;
+    }
+    return `${base}\n\n¿Le gustaría saber también el valor del plan?`;
+  }
+
+  if (intent === "precio") {
+    return (
+      `${base}\n\n` +
+      `• Plan anual *$69.000* (ahorras 2 meses)\n` +
+      `• Contratar: ${SENIOR_SAFE_CHECKOUT_URL}\n` +
+      "¿Te paso el checkout?"
+    );
+  }
+  if (intent === "caidas") {
+    return (
+      `${base}\n\n` +
+      "• El celular debe ir *con la persona*\n" +
+      "¿Te explico la *cascada* de avisos o el plan?"
+    );
+  }
+  return (
+    `${base}\n\n` +
+    "• *SMS* al instante → *WhatsApp* a los 15 s → *llamada* a los 60 s\n" +
+    "¿Quieres el simulador o el link para contratar?"
   );
 }
 
@@ -511,6 +563,7 @@ TONO:
 
 REGLAS ESTRICTAS:
 1) Solo puedes responder usando ÚNICAMENTE la información del CONTEXTO OFICIAL y el FAQ. No inventes funciones, precios, plazos ni políticas.
+1b) Si el correo pregunta por cascada de alertas, detección de caídas o precio/planes, la primera frase debe ser EXACTAMENTE el R: correspondiente del FAQ GEO (cascada, caídas o precio). No parafrasees esas definiciones.
 2) Si la pregunta no puede responderse con ese contexto (cuentas, reembolsos, fallas técnicas, cambio de plan, datos personales, facturación, etc.), responde con amabilidad indicando que pueden responder a este mismo correo (${SENIOR_SAFE_SUPPORT_EMAIL}) con el detalle de su caso. No inventes plazos de respuesta.
 3) Sin emojis. Sin markdown. 2 a 4 párrafos breves separados por línea en blanco.
 4) Si preguntan cómo activar WhatsApp tras contratar, indique que envíen ACTIVAR al WhatsApp vinculado en la app.
@@ -551,6 +604,11 @@ function trimForWhatsApp(text: string, max = 950, preserveLines = false): string
 
 /** Respuesta estática si no hay API key configurada. */
 function fallbackReply(userMessage: string, audience: WhatsAppCommercialAudience = "child"): string {
+  const geoIntent = matchGeoWhatsAppIntent(userMessage);
+  if (geoIntent) {
+    return formatGeoWhatsAppReply(geoIntent, audience);
+  }
+
   const q = userMessage.toLowerCase();
   const base = "Senior Safe 🛡️\n";
 
@@ -794,6 +852,11 @@ export async function generateSeniorSafeWhatsAppReply(
 
   if (isAuthoritiesAsGuardianQuestion(trimmed)) {
     return authoritiesGuardianFallbackReply(audience);
+  }
+
+  const geoIntent = matchGeoWhatsAppIntent(trimmed);
+  if (geoIntent) {
+    return formatGeoWhatsAppReply(geoIntent, audience);
   }
 
   if (wantsSosSimulator(trimmed)) {

@@ -38,14 +38,11 @@ import {
   FEATURED_TESTIMONIAL_CARMEN,
 } from "@/components/trust-stack-chileno";
 import { seniorSafeWhatsAppMeUrl } from "@/lib/twilio";
-import { LANDING_FAQ_SECTIONS, landingFaqFlatItems } from "@/lib/landing-faq";
+import { LANDING_FAQ_SECTIONS } from "@/lib/landing-faq";
 import {
   buildPublicPageMeta,
-  discoverEducationalGraphJsonLd,
-  faqPageJsonLd,
+  homeUnifiedJsonLd,
   jsonLdHeadScript,
-  mobileApplicationJsonLd,
-  serviceJsonLd,
 } from "@/lib/seo";
 import { CANCELLATION_POLICY_SUMMARY } from "@/lib/subscription-cancellation-policy";
 import { SENIOR_SAFE_PLAY_STORE_URL } from "@/lib/app-url";
@@ -64,14 +61,7 @@ export const Route = createFileRoute("/")({
 
     return {
       ...page,
-      scripts: [
-        jsonLdHeadScript([
-          serviceJsonLd(),
-          mobileApplicationJsonLd(),
-          faqPageJsonLd(landingFaqFlatItems()),
-        ]),
-        jsonLdHeadScript(discoverEducationalGraphJsonLd()),
-      ],
+      scripts: [jsonLdHeadScript(homeUnifiedJsonLd())],
     };
   },
   component: Landing,
@@ -597,8 +587,9 @@ function AlarmaAdultosMayoresChile() {
             Alarma para adultos mayores en Chile — desde ${formatPlanPrice(PLAN.monthly)}/mes
           </h2>
           <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
-            Senior Safe es la app de emergencia que conecta a tu familiar con la familia por WhatsApp, SMS y GPS.
-            Más accesible que una alarma médica tradicional y sin contratos de amarre.
+            Senior Safe es teleasistencia familiar móvil: botón SOS, cascada de canales redundantes
+            (WhatsApp, SMS, GPS y llamada) y geolocalización en cada alerta. Más accesible que una
+            alarma médica tradicional con central de monitoreo, y sin contratos de amarre.
           </p>
         </div>
 
@@ -633,12 +624,28 @@ function AlarmaAdultosMayoresChile() {
           />
           <div className="p-8 md:p-10 bg-card">
             <h3 className="text-xl font-bold text-foreground mb-3">
-              ¿Alarma médica o alerta familiar?
+              Teleasistencia familiar vs. alarma médica tradicional
             </h3>
+            <p className="text-muted-foreground leading-relaxed mb-3">
+              Las alarmas médicas tradicionales —teleasistencia fija, botón de pánico con central o
+              sistemas PERS— suelen costar entre $30.000 y $80.000 al mes: hardware (pulsera o
+              colgante), permanencia contractual y un call center que intermedia la emergencia.
+              Senior Safe es teleasistencia móvil sobre el smartphone: plan único de $
+              {formatPlanPrice(PLAN.monthly)}/mes, sin amarre y sin aparato extra.
+            </p>
+            <p className="text-muted-foreground leading-relaxed mb-3">
+              La diferencia técnica no es solo el precio. Senior Safe dispara una cascada de canales
+              redundantes —SMS al instante, WhatsApp a los 15 segundos y llamada de voz a los 60
+              segundos si nadie confirma— con geolocalización GPS en cada alerta. Esa resiliencia
+              tecnológica evita el punto único de falla de un solo canal o de una mesa de monitoreo
+              saturada: si WhatsApp no abre, el SMS y la voz siguen. El tiempo de respuesta lo marca
+              la red familiar, no un operador lejano.
+            </p>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              Las alarmas clásicas cuestan $30.000–80.000 al mes y llaman a un call center. Senior Safe avisa
-              directo a tus hijos y guardianes por WhatsApp — con GPS en cada alerta y plan desde $
-              {formatPlanPrice(PLAN.monthly)}/mes.
+              En Chile eso la hace más accesible (costo de entrada y cobertura vía red celular) y más
+              precisa para quien cuida a distancia: el guardián recibe el aviso y el punto en Google
+              Maps, no un mensaje genérico de central. No reemplaza al SAMU (131): complementa la
+              teleasistencia familiar mientras llegan los servicios de urgencia.
             </p>
             <Link
               to="/planes"

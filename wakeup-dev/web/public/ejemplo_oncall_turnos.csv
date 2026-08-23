@@ -1,0 +1,4 @@
+telefono,dias,hora_inicio,hora_fin,tz
++56911111111,1-5,09:00,18:00,America/Santiago
++56922222222,"0,6",18:00,09:00,America/Santiago
++56933333333,lun-vie,09:00,18:00,America/Santiago

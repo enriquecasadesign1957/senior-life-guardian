@@ -1,0 +1,25 @@
+{
+  "name": "wakeup-dev",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WakeUp Dev — alertas críticas por voz para DevOps",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --config wrangler.toml --port 8787",
+    "deploy": "wrangler deploy --config wrangler.toml",
+    "tail": "wrangler tail --config wrangler.toml",
+    "typecheck": "tsc --noEmit",
+    "hash-key": "node scripts/hash-api-key.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260811.1",
+    "typescript": "^5.8.2",
+    "wrangler": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

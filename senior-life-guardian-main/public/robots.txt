@@ -1,25 +1,33 @@
+# Bloque comodin general para motores de busqueda tradicionales
 User-agent: *
-Allow: /
-
 Disallow: /admin
-Disallow: /admin/
-Disallow: /app
-Disallow: /native
 Disallow: /dashboard
-Disallow: /familia
-Disallow: /familia/
 Disallow: /checkout
+Disallow: /webpay
 Disallow: /webpay/
 Disallow: /oneclick/
-Disallow: /lovable/
+Disallow: /familia
+Disallow: /app
 Disallow: /demo
-Disallow: /simulador
-Disallow: /ubicacion
-Disallow: /activacion
-Disallow: /activar-whatsapp
-Disallow: /bienvenida-premium
-Disallow: /flujo
-Disallow: /tutorial
-Disallow: /instalar-app
+Allow: /
 
+# Bloques especificos para rastreadores de Inteligencia Artificial
+User-agent: GPTBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Google-Extended
+User-agent: PerplexityBot
+User-agent: Applebot-Extended
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /checkout
+Disallow: /webpay
+Disallow: /webpay/
+Disallow: /oneclick/
+Disallow: /familia
+Disallow: /app
+Disallow: /demo
+Allow: /
+
+# Configuracion del Sitemap de la aplicacion
 Sitemap: https://alarmaseniorsafe.cl/sitemap.xml

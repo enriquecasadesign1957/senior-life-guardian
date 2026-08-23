@@ -57,6 +57,7 @@ import { Route as CTokenRouteImport } from './routes/c.$token'
 import { Route as BlogRevistaSeguridadDestacaLanzamientoSeniorSafeRouteImport } from './routes/blog.revista-seguridad-destaca-lanzamiento-senior-safe'
 import { Route as BlogComoLaIaSalvaVidasEmergenciasDomesticasRouteImport } from './routes/blog.como-la-ia-salva-vidas-emergencias-domesticas'
 import { Route as BlogComoHablarConPadresSeguridadSinPerderIndependenciaRouteImport } from './routes/blog.como-hablar-con-padres-seguridad-sin-perder-independencia'
+import { Route as BlogAlarmaSosParaAdultosMayoresQueSiRespondeRouteImport } from './routes/blog.alarma-sos-para-adultos-mayores-que-si-responde'
 import { Route as AdminTransbankValidacionRouteImport } from './routes/admin.transbank-validacion'
 import { Route as AdminResetRouteImport } from './routes/admin.reset'
 import { Route as AdminInboxRouteImport } from './routes/admin.inbox'
@@ -335,6 +336,12 @@ const BlogComoHablarConPadresSeguridadSinPerderIndependenciaRoute =
     path: '/blog/como-hablar-con-padres-seguridad-sin-perder-independencia',
     getParentRoute: () => rootRouteImport,
   } as any)
+const BlogAlarmaSosParaAdultosMayoresQueSiRespondeRoute =
+  BlogAlarmaSosParaAdultosMayoresQueSiRespondeRouteImport.update({
+    id: '/blog/alarma-sos-para-adultos-mayores-que-si-responde',
+    path: '/blog/alarma-sos-para-adultos-mayores-que-si-responde',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminTransbankValidacionRoute =
   AdminTransbankValidacionRouteImport.update({
     id: '/transbank-validacion',
@@ -543,6 +550,7 @@ export interface FileRoutesByFullPath {
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/reset': typeof AdminResetRoute
   '/admin/transbank-validacion': typeof AdminTransbankValidacionRoute
+  '/blog/alarma-sos-para-adultos-mayores-que-si-responde': typeof BlogAlarmaSosParaAdultosMayoresQueSiRespondeRoute
   '/blog/como-hablar-con-padres-seguridad-sin-perder-independencia': typeof BlogComoHablarConPadresSeguridadSinPerderIndependenciaRoute
   '/blog/como-la-ia-salva-vidas-emergencias-domesticas': typeof BlogComoLaIaSalvaVidasEmergenciasDomesticasRoute
   '/blog/revista-seguridad-destaca-lanzamiento-senior-safe': typeof BlogRevistaSeguridadDestacaLanzamientoSeniorSafeRoute
@@ -623,6 +631,7 @@ export interface FileRoutesByTo {
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/reset': typeof AdminResetRoute
   '/admin/transbank-validacion': typeof AdminTransbankValidacionRoute
+  '/blog/alarma-sos-para-adultos-mayores-que-si-responde': typeof BlogAlarmaSosParaAdultosMayoresQueSiRespondeRoute
   '/blog/como-hablar-con-padres-seguridad-sin-perder-independencia': typeof BlogComoHablarConPadresSeguridadSinPerderIndependenciaRoute
   '/blog/como-la-ia-salva-vidas-emergencias-domesticas': typeof BlogComoLaIaSalvaVidasEmergenciasDomesticasRoute
   '/blog/revista-seguridad-destaca-lanzamiento-senior-safe': typeof BlogRevistaSeguridadDestacaLanzamientoSeniorSafeRoute
@@ -706,6 +715,7 @@ export interface FileRoutesById {
   '/admin/inbox': typeof AdminInboxRoute
   '/admin/reset': typeof AdminResetRoute
   '/admin/transbank-validacion': typeof AdminTransbankValidacionRoute
+  '/blog/alarma-sos-para-adultos-mayores-que-si-responde': typeof BlogAlarmaSosParaAdultosMayoresQueSiRespondeRoute
   '/blog/como-hablar-con-padres-seguridad-sin-perder-independencia': typeof BlogComoHablarConPadresSeguridadSinPerderIndependenciaRoute
   '/blog/como-la-ia-salva-vidas-emergencias-domesticas': typeof BlogComoLaIaSalvaVidasEmergenciasDomesticasRoute
   '/blog/revista-seguridad-destaca-lanzamiento-senior-safe': typeof BlogRevistaSeguridadDestacaLanzamientoSeniorSafeRoute
@@ -790,6 +800,7 @@ export interface FileRouteTypes {
     | '/admin/inbox'
     | '/admin/reset'
     | '/admin/transbank-validacion'
+    | '/blog/alarma-sos-para-adultos-mayores-que-si-responde'
     | '/blog/como-hablar-con-padres-seguridad-sin-perder-independencia'
     | '/blog/como-la-ia-salva-vidas-emergencias-domesticas'
     | '/blog/revista-seguridad-destaca-lanzamiento-senior-safe'
@@ -870,6 +881,7 @@ export interface FileRouteTypes {
     | '/admin/inbox'
     | '/admin/reset'
     | '/admin/transbank-validacion'
+    | '/blog/alarma-sos-para-adultos-mayores-que-si-responde'
     | '/blog/como-hablar-con-padres-seguridad-sin-perder-independencia'
     | '/blog/como-la-ia-salva-vidas-emergencias-domesticas'
     | '/blog/revista-seguridad-destaca-lanzamiento-senior-safe'
@@ -952,6 +964,7 @@ export interface FileRouteTypes {
     | '/admin/inbox'
     | '/admin/reset'
     | '/admin/transbank-validacion'
+    | '/blog/alarma-sos-para-adultos-mayores-que-si-responde'
     | '/blog/como-hablar-con-padres-seguridad-sin-perder-independencia'
     | '/blog/como-la-ia-salva-vidas-emergencias-domesticas'
     | '/blog/revista-seguridad-destaca-lanzamiento-senior-safe'
@@ -1030,6 +1043,7 @@ export interface RootRouteChildren {
   UbicacionRoute: typeof UbicacionRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   ATokenRoute: typeof ATokenRouteWithChildren
+  BlogAlarmaSosParaAdultosMayoresQueSiRespondeRoute: typeof BlogAlarmaSosParaAdultosMayoresQueSiRespondeRoute
   BlogComoHablarConPadresSeguridadSinPerderIndependenciaRoute: typeof BlogComoHablarConPadresSeguridadSinPerderIndependenciaRoute
   BlogComoLaIaSalvaVidasEmergenciasDomesticasRoute: typeof BlogComoLaIaSalvaVidasEmergenciasDomesticasRoute
   BlogRevistaSeguridadDestacaLanzamientoSeniorSafeRoute: typeof BlogRevistaSeguridadDestacaLanzamientoSeniorSafeRoute
@@ -1406,6 +1420,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogComoHablarConPadresSeguridadSinPerderIndependenciaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/blog/alarma-sos-para-adultos-mayores-que-si-responde': {
+      id: '/blog/alarma-sos-para-adultos-mayores-que-si-responde'
+      path: '/blog/alarma-sos-para-adultos-mayores-que-si-responde'
+      fullPath: '/blog/alarma-sos-para-adultos-mayores-que-si-responde'
+      preLoaderRoute: typeof BlogAlarmaSosParaAdultosMayoresQueSiRespondeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/transbank-validacion': {
       id: '/admin/transbank-validacion'
       path: '/transbank-validacion'
@@ -1732,6 +1753,8 @@ const rootRouteChildren: RootRouteChildren = {
   UbicacionRoute: UbicacionRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   ATokenRoute: ATokenRouteWithChildren,
+  BlogAlarmaSosParaAdultosMayoresQueSiRespondeRoute:
+    BlogAlarmaSosParaAdultosMayoresQueSiRespondeRoute,
   BlogComoHablarConPadresSeguridadSinPerderIndependenciaRoute:
     BlogComoHablarConPadresSeguridadSinPerderIndependenciaRoute,
   BlogComoLaIaSalvaVidasEmergenciasDomesticasRoute:

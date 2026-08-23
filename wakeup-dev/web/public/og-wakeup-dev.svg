@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="WakeUp Dev  Voice-first on-call alerting">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#09090b"/>
+      <stop offset="100%" stop-color="#050506"/>
+    </linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M 48 0 L 0 0 0 48" fill="none" stroke="#ffffff" stroke-opacity="0.04"/>
+    </pattern>
+    <radialGradient id="glow" cx="85%" cy="20%" r="45%">
+      <stop offset="0%" stop-color="#22c55e" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#22c55e" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <rect x="80" y="72" width="56" height="56" rx="12" fill="#22c55e" fill-opacity="0.12" stroke="#22c55e" stroke-opacity="0.45"/>
+  <path fill="#22c55e" d="M92.2 88.4c.5-.5 1.3-.5 1.8 0l1.7 1.7c.5.5.5 1.3 0 1.8l-.8.8c-.2.2-.2.6 0 .9 1.1 1.8 2.5 3.2 4.3 4.3.3.2.7.2.9 0l.8-.8c.5-.5 1.3-.5 1.8 0l1.7 1.7c.5.5.5 1.3 0 1.8l-1.1 1.1c-.8.8-2 .9-3.1.5-2.5-.9-4.8-2.5-6.6-4.4-1.9-1.8-3.5-4.1-4.4-6.6-.4-1.1-.3-2.3.5-3.1l1.1-1.1Z" transform="translate(4,4) scale(1.15)"/>
+  <text x="152" y="112" fill="#fafafa" font-family="system-ui,Segoe UI,sans-serif" font-size="52" font-weight="700">WakeUp Dev</text>
+  <text x="80" y="168" fill="#a1a1aa" font-family="system-ui,Segoe UI,sans-serif" font-size="28" font-weight="500">Voice-first on-call alerting</text>
+  <g font-family="system-ui,Segoe UI,sans-serif" font-size="22" font-weight="600" fill="#fafafa">
+    <rect x="80" y="420" width="1040" height="120" rx="16" fill="#18181b" stroke="#27272a"/>
+    <text x="120" y="468" fill="#22c55e">Critical alert</text>
+    <text x="310" y="468" fill="#52525b">’</text>
+    <text x="350" y="468">Phone call</text>
+    <text x="520" y="468" fill="#52525b">’</text>
+    <text x="560" y="468" fill="#22c55e">Press 1 to ACK</text>
+    <text x="780" y="468" fill="#52525b">’</text>
+    <text x="820" y="468">Escalation</text>
+    <text x="120" y="508" fill="#71717a" font-size="18" font-weight="400">Webhook ’ WakeUp Dev ’ human acknowledgement</text>
+  </g>
+</svg>

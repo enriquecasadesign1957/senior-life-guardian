@@ -1,0 +1,30 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "wakeup-dev-web",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-03-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "vars": {
+    "NEXT_PUBLIC_SITE_URL": "https://wakeupdev.com",
+    "WAKEUP_API_URL": "https://api.wakeupdev.com",
+    "NEXT_PUBLIC_LEMON_CHECKOUT_URL": "https://wakeupdev.lemonsqueezy.com/checkout/buy/23db93a7-936d-48d2-992f-c796d61c64a6"
+  },
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "wakeup-dev-web"
+    },
+    {
+      "binding": "WAKEUP_API",
+      "service": "wakeup-dev"
+    }
+  ],
+  "routes": [
+    { "pattern": "wakeupdev.com", "custom_domain": true },
+    { "pattern": "www.wakeupdev.com", "custom_domain": true }
+  ]
+}

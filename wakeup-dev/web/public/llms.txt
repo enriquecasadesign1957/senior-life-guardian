@@ -1,0 +1,78 @@
+# WakeUp Dev
+
+WakeUp Dev is a voice-first on-call alerting platform that turns critical technical alerts into phone calls and requires explicit human acknowledgement.
+
+## What problem it solves
+
+Monitoring systems can fire alerts through push, email, or chat. Those channels are easy to miss during sleep, travel, or high-noise environments. WakeUp Dev is built for incidents where someone needs to actually respond—not just receive a notification.
+
+## Who it is for
+
+- DevOps engineers and SREs on call
+- Small and mid-size teams that need critical alerts to reach a human
+- Teams using Grafana, UptimeRobot, or any monitor that can send HTTP webhooks
+
+## How it works
+
+1. Your monitoring system sends an HTTP POST to WakeUp Dev (`POST https://api.wakeupdev.com/v1/alert` with header `x-api-key`).
+2. WakeUp Dev validates your API key and checks alert credits.
+3. The alert payload is summarized for voice (Groq) when configured.
+4. WakeUp Dev places a phone call to the on-call responder (via Twilio).
+5. The responder hears the alert and can press **1** on the phone keypad to acknowledge (ACK).
+6. If the call is not answered, is not acknowledged in time, or the keypad ACK is not received, WakeUp Dev escalates to the next phone number in the configured cascade (up to 8 attempts).
+
+## ACK (acknowledgement)
+
+ACK means a human confirms they received the alert. On a live call, WakeUp Dev asks the responder to **press 1** to confirm. When digit 1 is received, the alert is marked acknowledged and the cascade stops for that incident.
+
+## If nobody responds
+
+If a call is not answered, fails, or times out without ACK, WakeUp Dev moves to the next target in the escalation list. Targets are resolved in this order when configured:
+
+1. Phones on active on-call shifts (`oncall_telefonos_ahora`)
+2. Active roster members ordered by `orden_escalamiento`
+3. The account's verified emergency phone number
+
+When all targets are exhausted, the alert is marked **EXHAUSTED** and recorded in alert history.
+
+## On-call roster and shifts
+
+The dashboard supports CSV import of on-call team members and weekly shifts. Members include name, phone (E.164), escalation order, and optional email. Shifts define recurring windows by day and time zone.
+
+## Integrations
+
+- **Grafana** — configure an HTTP contact point or webhook to `POST /v1/alert`
+- **UptimeRobot** — configure a webhook alert to `POST /v1/alert`
+- **Any HTTP webhook** — send the raw alert body; WakeUp Dev accepts plain text or JSON in the request body
+
+## Pricing model (as implemented)
+
+- **Trial:** 5 free voice alerts when signing up with GitHub (no credit card required on trial)
+- **Pro International:** 50 monthly alerts for $29 USD/month via Lemon Squeezy; +$0.50 USD per additional dispatched alert
+- **Pro Chile:** 50 monthly alerts for 25,000 CLP/month via Transbank Oneclick; +450 CLP per additional dispatched alert
+- **Enterprise:** custom volume and billing (contact sales)
+- Unlimited users in the same workspace; pricing is tied to dispatched alert volume, not per-seat licenses
+
+## Authentication
+
+- GitHub OAuth for dashboard access and trial signup
+- Magic-link email claim after Chile checkout (when applicable)
+- API keys (hashed server-side) for `x-api-key` on `/v1/alert`
+
+## Public URLs
+
+- https://wakeupdev.com/
+- https://wakeupdev.com/what-is-wakeup-dev
+- https://wakeupdev.com/webhook-to-phone-call
+- https://wakeupdev.com/faq
+- https://api.wakeupdev.com/v1/alert (alert ingestion API)
+
+## API endpoint
+
+```
+POST https://api.wakeupdev.com/v1/alert
+Header: x-api-key: YOUR_API_KEY
+Body: raw alert text or JSON from your monitor (max 4000 bytes read)
+```
+
+Successful acceptance returns HTTP 202 with `accepted: true` and starts the on-call cascade asynchronously.
