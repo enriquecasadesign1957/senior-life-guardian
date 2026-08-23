@@ -104,7 +104,7 @@
   "howItWorksStep6": "Escalar si no hay respuesta",
   "howItWorksBody": "Envía un POST desde Grafana, UptimeRobot o cualquier sistema de monitoreo HTTP a WakeUp Dev. WakeUp Dev llama al on-call y espera confirmación humana. Si nadie confirma la alerta, continúa la cascada on-call.",
   "ackSectionTitle": "No solo notifiques. Obtén confirmación humana.",
-  "ackSectionBody": "Las notificaciones tradicionales te dicen que algo pasó. WakeUp Dev está pensado para respuesta a incidentes donde alguien debe actuar. Una llamada puede atravesar modo silencio y sueño; el ACK con dígito 1 confirma que un humano recibió la alerta antes de escalar.",
+  "ackSectionBody": "Las notificaciones tradicionales te dicen que algo pasó. WakeUp Dev está pensado para respuesta a incidentes donde alguien debe actuar. Una llamada puede ofrecer una notificación más directa cuando alguien puede no estar mirando sus canales habituales de alerta; el ACK con dígito 1 confirma que un humano recibió la alerta antes de escalar.",
   "pagerDutyLine": "WakeUp Dev está diseñado como una alternativa ligera por voz para equipos que necesitan que alertas críticas lleguen a un humano—no reemplaza toda plataforma on-call.",
   "integrationsMention": "Funciona con Grafana, UptimeRobot, webhooks HTTP y tu roster on-call para respuesta a incidentes DevOps y SRE.",
   "authRequired": "Inicia sesión con GitHub para entrar al panel o contratar el plan Chile.",

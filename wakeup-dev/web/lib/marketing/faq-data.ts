@@ -50,7 +50,7 @@ const EN_ITEMS: FaqItem[] = [
     id: "why-phone",
     question: "Why use a phone call for a critical alert?",
     answer:
-      "A phone call can cut through silent-mode push, unread email, and busy chat channels in a different way than text notifications. WakeUp Dev adds an explicit ACK step so you know someone confirmed the alert—not just that a message was delivered.",
+      "A phone call can provide a more direct notification when someone may not be watching their usual alert channels—push, email, or chat. WakeUp Dev adds an explicit ACK step so you know someone confirmed the alert—not just that a message was delivered.",
   },
   {
     id: "what-ack",
@@ -185,7 +185,7 @@ const ES_ITEMS: FaqItem[] = [
     id: "why-phone",
     question: "¿Por qué usar una llamada para una alerta crítica?",
     answer:
-      "Una llamada puede atravesar push en silencio, email sin leer y chat saturado de forma distinta a las notificaciones de texto. WakeUp Dev añade un ACK explícito para saber que alguien confirmó la alerta—no solo que se entregó un mensaje.",
+      "Una llamada puede ofrecer una notificación más directa cuando alguien puede no estar mirando sus canales habituales de alerta—push, email o chat. WakeUp Dev añade un ACK explícito para saber que alguien confirmó la alerta—no solo que se entregó un mensaje.",
   },
   {
     id: "what-ack",
