@@ -1,6 +1,30 @@
-import { LandingClient } from "@/components/LandingClient";
+import {
+  LandingClient,
+  type LandingQuery,
+} from "@/components/LandingClient";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import { buildPageMetadata, pageUrl, SITE } from "@/lib/seo";
+
+/** Pick only known landing query keys — never spread searchParams (React reserves `ref`). */
+function landingQueryFromSearchParams(
+  params: Record<string, string | string[] | undefined>
+): LandingQuery {
+  const one = (key: keyof LandingQuery): string | undefined => {
+    const value = params[key];
+    if (Array.isArray(value)) return value[0];
+    return value;
+  };
+  return {
+    auth: one("auth"),
+    reason: one("reason"),
+    error: one("error"),
+    error_code: one("error_code"),
+    error_description: one("error_description"),
+    billing: one("billing"),
+    why: one("why"),
+    hint: one("hint"),
+  };
+}
 
 export const metadata = buildPageMetadata({
   title: "WakeUp Dev — Voice-first on-call alerting",
@@ -78,18 +102,9 @@ const softwareApplicationLd = {
 export default async function LandingPage({
   searchParams,
 }: {
-  searchParams: Promise<{
-    auth?: string;
-    reason?: string;
-    error?: string;
-    error_code?: string;
-    error_description?: string;
-    billing?: string;
-    why?: string;
-    hint?: string;
-  }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const params = await searchParams;
+  const query = landingQueryFromSearchParams(await searchParams);
 
   return (
     <>
@@ -100,7 +115,7 @@ export default async function LandingPage({
         }}
       />
       <LanguageProvider>
-        <LandingClient {...params} />
+        <LandingClient {...query} />
       </LanguageProvider>
     </>
   );
