@@ -23,9 +23,10 @@ export function interpolate(
 }
 
 export function readStoredLocale(): Locale {
-  if (typeof window === "undefined") return "es";
+  if (typeof window === "undefined") return "en";
   const stored = window.localStorage.getItem(LOCALE_STORAGE_KEY);
-  return stored === "en" ? "en" : "es";
+  if (stored === "es") return "es";
+  return "en";
 }
 
 export function dayLabel(locale: Locale, diaSemana: number): string {

@@ -98,12 +98,12 @@
   "howItWorksTitle": "How it works",
   "howItWorksStep1": "Alert",
   "howItWorksStep2": "Webhook",
-  "howItWorksStep3": "WakeUp Dev",
-  "howItWorksStep4": "Phone call",
-  "howItWorksStep5": "Press 1 to ACK",
-  "howItWorksStep6": "Escalation",
-  "howItWorksBody": "Send a POST from Grafana, UptimeRobot, or any HTTP webhook monitor to api.wakeupdev.com/v1/alert. WakeUp Dev calls the on-call responder; press 1 to acknowledge. Unanswered calls escalate through your roster.",
-  "ackSectionTitle": "Don't just notify. Get an acknowledgement.",
+  "howItWorksStep3": "Phone call",
+  "howItWorksStep4": "Press 1 to ACK",
+  "howItWorksStep5": "Escalate if unanswered",
+  "howItWorksStep6": "Escalate if unanswered",
+  "howItWorksBody": "Send a POST from Grafana, UptimeRobot, or any HTTP monitoring system to WakeUp Dev. WakeUp Dev calls the on-call responder and waits for a human acknowledgement. If nobody acknowledges the alert, the on-call cascade continues.",
+  "ackSectionTitle": "Don't just notify. Get a human acknowledgement.",
   "ackSectionBody": "Traditional notifications tell you something happened. WakeUp Dev is designed for incident response where someone needs to actually respond. A phone call can cut through silence mode and sleep; press-1 ACK confirms a human received the alert before the cascade moves on.",
   "pagerDutyLine": "WakeUp Dev is designed as a lightweight voice-first alternative for teams that need critical alerts to reach a human—not a full replacement for every on-call platform.",
   "integrationsMention": "Works with Grafana, UptimeRobot, HTTP webhooks, and your existing on-call roster for DevOps and SRE incident response.",
@@ -177,5 +177,5 @@
   "footerWhatIs": "What is WakeUp Dev",
   "footerHowItWorks": "How it works",
   "footerFaq": "FAQ",
-  "footerTagline": "WakeUp Dev — billed per alert, not per seat."
+  "footerTagline": "WakeUp Dev — pay per alert, not per seat."
 }

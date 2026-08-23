@@ -38,7 +38,7 @@ export function MarketingFooter() {
         <div>
           <BrandLogo href="/" className="w-fit" />
           <p className="mt-3 max-w-sm text-xs leading-relaxed text-zinc-500">
-            Voice-first on-call alerting. Pay per dispatched alert, not per seat.
+            WakeUp Dev — pay per alert, not per seat.
           </p>
         </div>
         <ul className="flex flex-col gap-2 text-sm text-zinc-400">

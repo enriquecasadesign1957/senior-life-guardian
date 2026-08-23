@@ -34,7 +34,6 @@ const HOW_IT_WORKS_STEPS: MsgKey[] = [
   "howItWorksStep3",
   "howItWorksStep4",
   "howItWorksStep5",
-  "howItWorksStep6",
 ];
 
 const FOOTER_LINKS: { href: string; labelKey: MsgKey }[] = [
