@@ -14,6 +14,7 @@ const publicRoutes: PublicRoute[] = [
   { path: "/webhook-to-phone-call", priority: 0.9, changeFrequency: "monthly" },
   { path: "/faq", priority: 0.85, changeFrequency: "monthly" },
   { path: "/pagerduty-alternative", priority: 0.85, changeFrequency: "monthly" },
+  { path: "/on-call-escalation", priority: 0.85, changeFrequency: "monthly" },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

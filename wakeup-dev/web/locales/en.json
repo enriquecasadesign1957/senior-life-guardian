@@ -177,6 +177,7 @@
   "footerWhatIs": "What is WakeUp Dev",
   "footerHowItWorks": "How it works",
   "footerPagerDuty": "PagerDuty Alternative",
+  "footerOnCallEscalation": "On-Call Escalation",
   "footerFaq": "FAQ",
   "footerTagline": "WakeUp Dev — pay per alert, not per seat."
 }

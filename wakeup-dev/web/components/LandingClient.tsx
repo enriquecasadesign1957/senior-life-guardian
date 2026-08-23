@@ -40,6 +40,7 @@ const FOOTER_LINKS: { href: string; labelKey: MsgKey }[] = [
   { href: "/what-is-wakeup-dev", labelKey: "footerWhatIs" },
   { href: "/webhook-to-phone-call", labelKey: "footerHowItWorks" },
   { href: "/pagerduty-alternative", labelKey: "footerPagerDuty" },
+  { href: "/on-call-escalation", labelKey: "footerOnCallEscalation" },
   { href: "/faq", labelKey: "footerFaq" },
 ];
 

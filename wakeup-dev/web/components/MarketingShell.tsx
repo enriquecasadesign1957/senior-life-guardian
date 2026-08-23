@@ -6,6 +6,7 @@ const FOOTER_LINKS = [
   { href: "/what-is-wakeup-dev", label: "What is WakeUp Dev" },
   { href: "/webhook-to-phone-call", label: "How it works" },
   { href: "/pagerduty-alternative", label: "PagerDuty Alternative" },
+  { href: "/on-call-escalation", label: "On-Call Escalation" },
   { href: "/faq", label: "FAQ" },
 ] as const;
 

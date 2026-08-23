@@ -177,6 +177,7 @@
   "footerWhatIs": "Qué es WakeUp Dev",
   "footerHowItWorks": "Cómo funciona",
   "footerPagerDuty": "Alternativa a PagerDuty",
+  "footerOnCallEscalation": "Escalada on-call",
   "footerFaq": "FAQ",
   "footerTagline": "WakeUp Dev — cobro por alerta, no por licencia."
 }
