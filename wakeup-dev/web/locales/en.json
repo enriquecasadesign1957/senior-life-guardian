@@ -176,6 +176,7 @@
   "ctaTitle": "Grafana/UptimeRobot webhook. On-call cascade. 5 trial alerts via GitHub.",
   "footerWhatIs": "What is WakeUp Dev",
   "footerHowItWorks": "How it works",
+  "footerPagerDuty": "PagerDuty Alternative",
   "footerFaq": "FAQ",
   "footerTagline": "WakeUp Dev — pay per alert, not per seat."
 }

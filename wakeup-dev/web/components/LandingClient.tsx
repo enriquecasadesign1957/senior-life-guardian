@@ -39,6 +39,7 @@ const HOW_IT_WORKS_STEPS: MsgKey[] = [
 const FOOTER_LINKS: { href: string; labelKey: MsgKey }[] = [
   { href: "/what-is-wakeup-dev", labelKey: "footerWhatIs" },
   { href: "/webhook-to-phone-call", labelKey: "footerHowItWorks" },
+  { href: "/pagerduty-alternative", labelKey: "footerPagerDuty" },
   { href: "/faq", labelKey: "footerFaq" },
 ];
 
