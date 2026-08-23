@@ -41,6 +41,7 @@ const FOOTER_LINKS: { href: string; labelKey: MsgKey }[] = [
   { href: "/webhook-to-phone-call", labelKey: "footerHowItWorks" },
   { href: "/pagerduty-alternative", labelKey: "footerPagerDuty" },
   { href: "/on-call-escalation", labelKey: "footerOnCallEscalation" },
+  { href: "/grafana-phone-alerts", labelKey: "footerGrafanaPhoneAlerts" },
   { href: "/faq", labelKey: "footerFaq" },
 ];
 

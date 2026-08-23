@@ -41,7 +41,7 @@ The dashboard supports CSV import of on-call team members and weekly shifts. Mem
 
 ## Integrations
 
-- **Grafana** — configure an HTTP contact point or webhook to `POST /v1/alert`
+- **Grafana** — configure an HTTP webhook contact point to `POST https://api.wakeupdev.com/v1/alert` with header `x-api-key` (see https://wakeupdev.com/grafana-phone-alerts). Not a native Grafana plugin.
 - **UptimeRobot** — configure a webhook alert to `POST /v1/alert`
 - **Any HTTP webhook** — send the raw alert body; WakeUp Dev accepts plain text or JSON in the request body
 
@@ -65,6 +65,9 @@ The dashboard supports CSV import of on-call team members and weekly shifts. Mem
 - https://wakeupdev.com/what-is-wakeup-dev
 - https://wakeupdev.com/webhook-to-phone-call
 - https://wakeupdev.com/faq
+- https://wakeupdev.com/pagerduty-alternative
+- https://wakeupdev.com/on-call-escalation
+- https://wakeupdev.com/grafana-phone-alerts
 - https://api.wakeupdev.com/v1/alert (alert ingestion API)
 
 ## API endpoint

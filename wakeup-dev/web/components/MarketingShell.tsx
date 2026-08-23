@@ -7,6 +7,7 @@ const FOOTER_LINKS = [
   { href: "/webhook-to-phone-call", label: "How it works" },
   { href: "/pagerduty-alternative", label: "PagerDuty Alternative" },
   { href: "/on-call-escalation", label: "On-Call Escalation" },
+  { href: "/grafana-phone-alerts", label: "Grafana Phone Alerts" },
   { href: "/faq", label: "FAQ" },
 ] as const;
 
