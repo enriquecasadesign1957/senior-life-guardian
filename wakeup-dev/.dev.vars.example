@@ -17,4 +17,5 @@ TRANSBANK_ONECLICK_API_KEY=
 TRANSBANK_PLAN_CLP=25000
 ENABLE_AMD=false
 RESEND_API_KEY=
+RESEND_FROM=WakeUp Dev <administrador@wakeupdev.com>
 ADMIN_NOTIFY_EMAIL=enriquecasadesign@gmail.com

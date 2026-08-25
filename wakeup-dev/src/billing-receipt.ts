@@ -1,18 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { sendResendTextEmail, type ResendMailEnv } from "./resend-mail";
 
-export type ReceiptEnv = {
-  RESEND_API_KEY?: string;
-  RESEND_FROM?: string;
-};
+export type ReceiptEnv = ResendMailEnv;
 
 type BillingProduct = "chile" | "basic";
 type BillingPeriod = "monthly" | "annual";
-
-function fromAddr(env: ReceiptEnv): string {
-  return (
-    env.RESEND_FROM?.trim() || "WakeUp Dev <onboarding@resend.dev>"
-  );
-}
 
 function formatClp(amount: number): string {
   return new Intl.NumberFormat("es-CL", {
@@ -53,8 +45,7 @@ export async function sendTransbankReceiptOnce(
   const email = input.email.trim().toLowerCase();
   if (!email.includes("@")) return;
 
-  const apiKey = env.RESEND_API_KEY?.trim();
-  if (!apiKey) {
+  if (!env.RESEND_API_KEY?.trim()) {
     console.warn("receipt_skipped", { reason: "missing_resend_key" });
     return;
   }
@@ -100,33 +91,18 @@ export async function sendTransbankReceiptOnce(
     "— WakeUp Dev"
   );
 
-  try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: fromAddr(env),
-        to: [email],
-        subject,
-        text: lines.join("\n"),
-      }),
+  const result = await sendResendTextEmail(env, {
+    to: [email],
+    subject,
+    text: lines.join("\n"),
+  });
+  if (!result.ok) {
+    console.error("receipt_resend_failed", {
+      http: result.status,
+      body: result.body.slice(0, 240),
+      to: email,
     });
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      console.error("receipt_resend_failed", {
-        http: res.status,
-        body: body.slice(0, 240),
-        to: email,
-      });
-      return;
-    }
-    console.info("receipt_sent", { to: email, order: input.mallBuyOrder });
-  } catch (err) {
-    console.error("receipt_throw", {
-      message: err instanceof Error ? err.message : String(err),
-    });
+    return;
   }
+  console.info("receipt_sent", { to: email, order: input.mallBuyOrder });
 }

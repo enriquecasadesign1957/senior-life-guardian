@@ -1,8 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { sendResendTextEmail, type ResendMailEnv } from "./resend-mail";
 
-export type NotifyEnv = {
-  RESEND_API_KEY?: string;
-  RESEND_FROM?: string;
+export type NotifyEnv = ResendMailEnv & {
   ADMIN_NOTIFY_EMAIL?: string;
   BILLING_INTERNAL_SECRET?: string;
 };
@@ -15,22 +14,10 @@ function dest(env: NotifyEnv): string {
   return env.ADMIN_NOTIFY_EMAIL?.trim() || ADMIN_EMAIL;
 }
 
-function fromAddr(env: NotifyEnv): string {
-  return (
-    env.RESEND_FROM?.trim() || "WakeUp Dev <onboarding@resend.dev>"
-  );
-}
-
 export async function sendAdminNotify(
   env: NotifyEnv,
   input: { tipo: NotifyTipo; email: string; usuarioId?: string }
 ): Promise<void> {
-  const apiKey = env.RESEND_API_KEY?.trim();
-  if (!apiKey) {
-    console.warn("admin_notify_skipped", { reason: "missing_resend_key" });
-    return;
-  }
-
   const who = input.email.trim() || "(sin email)";
   const subject =
     input.tipo === "contrato"
@@ -41,30 +28,15 @@ export async function sendAdminNotify(
       ? `Alguien activó Pro Chile.\n\nEmail: ${who}\nUsuario: ${input.usuarioId ?? "—"}\n`
       : `Alguien entró a la prueba (login GitHub, 5 créditos).\n\nEmail: ${who}\nUsuario: ${input.usuarioId ?? "—"}\n`;
 
-  try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: fromAddr(env),
-        to: [dest(env)],
-        subject,
-        text,
-      }),
-    });
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      console.error("admin_notify_resend_failed", {
-        http: res.status,
-        body: body.slice(0, 240),
-      });
-    }
-  } catch (err) {
-    console.error("admin_notify_throw", {
-      message: err instanceof Error ? err.message : String(err),
+  const result = await sendResendTextEmail(env, {
+    to: [dest(env)],
+    subject,
+    text,
+  });
+  if (!result.ok) {
+    console.error("admin_notify_resend_failed", {
+      http: result.status,
+      body: result.body.slice(0, 240),
     });
   }
 }
