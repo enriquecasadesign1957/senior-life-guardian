@@ -422,10 +422,7 @@ export function LandingClient({
                 </li>
               </ul>
               <div className="mt-8">
-                <GitHubLoginButton
-                  className="h-11 w-full rounded-md bg-accent text-black hover:bg-accent-dim"
-                  label={t("planBasicCta")}
-                />
+                <ProChileCheckout product="basic" variant="landing" />
               </div>
             </article>
 

@@ -2,13 +2,16 @@ export const PLAN_CHILE_CLP = 25_000;
 export const PLAN_INTL_USD_CENTS = 2_900;
 /** Basic plan list price in USD cents ($10.00). */
 export const PLAN_BASIC_USD_CENTS = 1_000;
-/** Basic plan list price in CLP when locale is Spanish. */
+/** Basic plan list price in CLP (Transbank Chile). */
 export const PLAN_BASIC_CLP = 9_500;
+/** Basic plan included voice credits. */
+export const PLAN_BASIC_CREDITS = 10;
 /** Annual billing shows 20% off the monthly list (frontend display). */
 export const ANNUAL_DISCOUNT_FACTOR = 0.8;
 
 export type CuponPlan = "chile" | "internacional";
 export type BillingPeriod = "monthly" | "annual";
+export type TransbankProduct = "chile" | "basic";
 
 export function withBillingPeriod(
   amount: number,
@@ -17,6 +20,10 @@ export function withBillingPeriod(
   return period === "annual"
     ? Math.round(amount * ANNUAL_DISCOUNT_FACTOR)
     : amount;
+}
+
+export function transbankListClp(product: TransbankProduct): number {
+  return product === "basic" ? PLAN_BASIC_CLP : PLAN_CHILE_CLP;
 }
 
 export function formatClp(amount: number): string {

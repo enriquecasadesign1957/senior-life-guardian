@@ -1,6 +1,8 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
   authorizeOneclick,
+  BASIC_PLAN_CLP,
+  BASIC_PLAN_CREDITS,
   CHILE_PLAN_CLP,
   generateWkBuyOrders,
   generateWkUsername,
@@ -34,7 +36,32 @@ type InscriptionRow = {
   last_charged_at: string | null;
   pending_cupon?: string | null;
   pending_cupon_monto?: number | null;
+  plan?: string | null;
 };
+
+type BillingProduct = "chile" | "basic";
+
+function normalizeBillingProduct(raw: unknown): BillingProduct {
+  return typeof raw === "string" && raw.trim().toLowerCase() === "basic"
+    ? "basic"
+    : "chile";
+}
+
+function productListClp(
+  env: TransbankBillingEnv,
+  product: BillingProduct
+): number {
+  if (product === "basic") return BASIC_PLAN_CLP;
+  return planClp(env);
+}
+
+function productCredits(
+  env: TransbankBillingEnv,
+  product: BillingProduct
+): number {
+  if (product === "basic") return BASIC_PLAN_CREDITS;
+  return planCredits(env);
+}
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -251,14 +278,15 @@ async function creditPlan(
   supabase: SupabaseClient,
   env: TransbankBillingEnv,
   usuarioId: string,
-  mallBuyOrder: string
+  mallBuyOrder: string,
+  product: BillingProduct = "chile"
 ): Promise<{ ok: boolean; restantes: unknown }> {
   const { data, error } = await supabase.rpc("acreditar_creditos", {
     p_provider: "transbank",
     p_event_id: mallBuyOrder,
     p_event_type: "oneclick_authorize",
     p_usuario_id: usuarioId,
-    p_creditos: planCredits(env),
+    p_creditos: productCredits(env, product),
   });
   if (error) {
     console.error("transbank_credit_failed", {
@@ -298,20 +326,24 @@ async function markActive(
 async function chargeAndCredit(
   env: TransbankBillingEnv,
   supabase: SupabaseClient,
-  inscription: Pick<InscriptionRow, "usuario_id" | "username" | "tbk_user">
+  inscription: Pick<
+    InscriptionRow,
+    "usuario_id" | "username" | "tbk_user" | "plan"
+  >
 ): Promise<{ ok: boolean; mallBuyOrder?: string; reason?: string }> {
   if (!inscription.tbk_user) {
     return { ok: false, reason: "missing_tbk_user" };
   }
 
+  const product = normalizeBillingProduct(inscription.plan);
   const cfg = getOneclickMallConfig(env);
-  const listPrice = planClp(env);
+  const listPrice = productListClp(env, product);
   let amount = listPrice;
   let cuponCodigo: string | null = null;
 
   const { data: pending, error: pendingErr } = await supabase
     .from("transbank_inscriptions")
-    .select("pending_cupon, pending_cupon_monto")
+    .select("pending_cupon, pending_cupon_monto, plan")
     .eq("usuario_id", inscription.usuario_id)
     .maybeSingle();
   if (pendingErr) {
@@ -348,7 +380,8 @@ async function chargeAndCredit(
       supabase,
       env,
       inscription.usuario_id,
-      recent.mall_buy_order as string
+      recent.mall_buy_order as string,
+      product
     );
     if (credited.ok) {
       await markActive(supabase, inscription.usuario_id, {
@@ -431,7 +464,8 @@ async function chargeAndCredit(
     supabase,
     env,
     inscription.usuario_id,
-    mallBuyOrder
+    mallBuyOrder,
+    product
   );
   if (!credited.ok) {
     return { ok: false, reason: "credit_failed", mallBuyOrder };
@@ -477,6 +511,7 @@ export async function handleTransbankStart(
   }
 
   const supabase = serviceClient(env);
+  const product = normalizeBillingProduct(body?.plan);
   const requestedId =
     typeof body?.usuario_id === "string" ? body.usuario_id.trim() : "";
   let usuarioId = UUID_RE.test(requestedId) ? requestedId : "";
@@ -487,7 +522,7 @@ export async function handleTransbankStart(
     }
     usuarioId = ensured;
   }
-  const listPrice = planClp(env);
+  const listPrice = productListClp(env, product);
   const cuponCode = normalizeCupon(body?.cupon);
   const quoted = await quoteCupon(supabase, cuponCode, listPrice);
   let pendingCupon: string | null = null;
@@ -506,7 +541,7 @@ export async function handleTransbankStart(
   const { data: existing } = await supabase
     .from("transbank_inscriptions")
     .select(
-      "usuario_id, username, email, inscription_token, tbk_user, status, next_charge_at, last_charged_at"
+      "usuario_id, username, email, inscription_token, tbk_user, status, next_charge_at, last_charged_at, plan"
     )
     .eq("usuario_id", usuarioId)
     .maybeSingle();
@@ -521,6 +556,7 @@ export async function handleTransbankStart(
     await supabase
       .from("transbank_inscriptions")
       .update({
+        plan: product,
         actualizada_en: new Date().toISOString(),
         ...(pendingCupon
           ? {
@@ -530,7 +566,10 @@ export async function handleTransbankStart(
           : {}),
       })
       .eq("usuario_id", usuarioId);
-    const charged = await chargeAndCredit(env, supabase, row);
+    const charged = await chargeAndCredit(env, supabase, {
+      ...row,
+      plan: product,
+    });
     if (charged.ok) {
       void notifyAdminOnce(env, supabase, {
         tipo: "contrato",
@@ -578,6 +617,7 @@ export async function handleTransbankStart(
     inscription_token: inscription.token,
     tbk_user: null,
     status: "pending",
+    plan: product,
     actualizada_en: now,
   };
   const inscriptionRow = pendingCupon
@@ -630,7 +670,7 @@ export async function handleTransbankFinish(
   const { data: existing } = await supabase
     .from("transbank_inscriptions")
     .select(
-      "usuario_id, username, email, inscription_token, tbk_user, status, next_charge_at, last_charged_at"
+      "usuario_id, username, email, inscription_token, tbk_user, status, next_charge_at, last_charged_at, plan"
     )
     .eq("inscription_token", token)
     .maybeSingle();
@@ -729,7 +769,7 @@ export async function renewDueInscriptions(
   const { data: due, error } = await supabase
     .from("transbank_inscriptions")
     .select(
-      "usuario_id, username, email, inscription_token, tbk_user, status, next_charge_at, last_charged_at"
+      "usuario_id, username, email, inscription_token, tbk_user, status, next_charge_at, last_charged_at, plan"
     )
     .eq("status", "active")
     .not("tbk_user", "is", null)

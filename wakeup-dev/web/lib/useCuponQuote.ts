@@ -10,18 +10,22 @@ import {
   type CuponQuote,
 } from "@/lib/planChile";
 
-function emptyQuote(plan: CuponPlan): CuponQuote {
+function emptyQuote(plan: CuponPlan, baseClp?: number): CuponQuote {
+  const monto =
+    baseClp ??
+    (plan === "internacional" ? PLAN_INTL_USD_CENTS : PLAN_CHILE_CLP);
   return {
     valido: false,
     codigo: null,
     porcentaje: null,
-    monto_clp: plan === "internacional" ? PLAN_INTL_USD_CENTS : PLAN_CHILE_CLP,
+    monto_clp: monto,
   };
 }
 
 export function useCuponQuote(
   code: string,
-  plan: CuponPlan = "chile"
+  plan: CuponPlan = "chile",
+  baseClp?: number
 ): {
   quote: CuponQuote;
   checking: boolean;
@@ -33,20 +37,23 @@ export function useCuponQuote(
       return null;
     }
   }, []);
-  const [quote, setQuote] = useState<CuponQuote>(() => emptyQuote(plan));
+  const [quote, setQuote] = useState<CuponQuote>(() =>
+    emptyQuote(plan, baseClp)
+  );
   const [checking, setChecking] = useState(false);
   const base =
-    plan === "internacional" ? PLAN_INTL_USD_CENTS : PLAN_CHILE_CLP;
+    baseClp ??
+    (plan === "internacional" ? PLAN_INTL_USD_CENTS : PLAN_CHILE_CLP);
 
   useEffect(() => {
     const normalized = normalizeCuponCode(code);
     if (!normalized) {
-      setQuote(emptyQuote(plan));
+      setQuote(emptyQuote(plan, base));
       setChecking(false);
       return;
     }
     if (!supabase) {
-      setQuote({ ...emptyQuote(plan), codigo: normalized });
+      setQuote({ ...emptyQuote(plan, base), codigo: normalized });
       return;
     }
 
@@ -77,7 +84,7 @@ export function useCuponQuote(
         })
         .catch(() => {
           if (cancelled) return;
-          setQuote({ ...emptyQuote(plan), codigo: normalized });
+          setQuote({ ...emptyQuote(plan, base), codigo: normalized });
           setChecking(false);
         });
     }, 280);

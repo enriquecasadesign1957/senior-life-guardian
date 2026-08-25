@@ -3,20 +3,32 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/components/LanguageProvider";
-import { formatClp, normalizeCuponCode, PLAN_CHILE_CLP } from "@/lib/planChile";
+import {
+  formatClp,
+  normalizeCuponCode,
+  transbankListClp,
+  type TransbankProduct,
+} from "@/lib/planChile";
 import { useCuponQuote } from "@/lib/useCuponQuote";
 
 type Props = {
   variant: "dashboard" | "landing";
+  product?: TransbankProduct;
   onQuoteChange?: (montoClp: number, valido: boolean) => void;
 };
 
-export function ProChileCheckout({ variant, onQuoteChange }: Props) {
+export function ProChileCheckout({
+  variant,
+  product = "chile",
+  onQuoteChange,
+}: Props) {
   const { t } = useLanguage();
+  const isBasic = product === "basic";
+  const listPrice = transbankListClp(product);
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
-  const { quote, checking } = useCuponQuote(code, "chile");
+  const { quote, checking } = useCuponQuote(code, "chile", listPrice);
   const normalized = normalizeCuponCode(code);
   const showInvalid = normalized.length >= 4 && !checking && !quote.valido;
 
@@ -35,21 +47,30 @@ export function ProChileCheckout({ variant, onQuoteChange }: Props) {
 
   function activateDashboard() {
     const cupon = normalized;
-    const qs = cupon ? `?cupon=${encodeURIComponent(cupon)}` : "";
-    window.location.href = `/billing/transbank/start${qs}`;
+    const qs = new URLSearchParams();
+    if (cupon) qs.set("cupon", cupon);
+    if (isBasic) qs.set("plan", "basic");
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    window.location.href = `/billing/transbank/start${suffix}`;
   }
 
   const buttonClass =
     variant === "landing"
-      ? "inline-flex h-11 w-full items-center justify-center rounded-md bg-zinc-50 px-5 text-sm font-semibold text-zinc-950 transition hover:bg-white"
+      ? isBasic
+        ? "inline-flex h-11 w-full items-center justify-center rounded-md bg-accent px-5 text-sm font-semibold text-black transition hover:bg-accent-dim"
+        : "inline-flex h-11 w-full items-center justify-center rounded-md bg-zinc-50 px-5 text-sm font-semibold text-zinc-950 transition hover:bg-white"
       : "inline-flex w-full items-center justify-center rounded-md border border-zinc-700 px-4 py-2.5 text-sm font-medium text-zinc-200 transition hover:border-zinc-500 hover:bg-zinc-900";
 
   const label =
     variant === "landing"
-      ? t("activateProChileShort")
+      ? isBasic
+        ? t("activateBasicShort")
+        : t("activateProChileShort")
       : quote.valido
-        ? t("activateProChilePrice", { price: formatClp(quote.monto_clp) })
-        : t("activateProChile");
+        ? t(isBasic ? "activateBasicPrice" : "activateProChilePrice", {
+            price: formatClp(quote.monto_clp),
+          })
+        : t(isBasic ? "activateBasic" : "activateProChile");
 
   const couponField = (
     <label className="block">
@@ -75,7 +96,7 @@ export function ProChileCheckout({ variant, onQuoteChange }: Props) {
             code: quote.codigo ?? normalized,
             pct: quote.porcentaje,
             price: formatClp(quote.monto_clp),
-            full: formatClp(PLAN_CHILE_CLP),
+            full: formatClp(listPrice),
           })}
         </p>
       ) : null}
@@ -84,6 +105,8 @@ export function ProChileCheckout({ variant, onQuoteChange }: Props) {
       ) : null}
     </label>
   );
+
+  const dialogId = isBasic ? "basic-checkout-title" : "chile-checkout-title";
 
   return (
     <div className="w-full">
@@ -112,21 +135,24 @@ export function ProChileCheckout({ variant, onQuoteChange }: Props) {
           <div
             role="dialog"
             aria-modal="true"
-            aria-labelledby="chile-checkout-title"
+            aria-labelledby={dialogId}
             className="relative z-10 w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-950 p-6 shadow-glow"
           >
             <h2
-              id="chile-checkout-title"
+              id={dialogId}
               className="text-lg font-semibold tracking-tight"
             >
-              {t("chileModalTitle")}
+              {t(isBasic ? "basicModalTitle" : "chileModalTitle")}
             </h2>
-            <p className="mt-2 text-sm text-zinc-400">{t("chileModalBody")}</p>
+            <p className="mt-2 text-sm text-zinc-400">
+              {t(isBasic ? "basicModalBody" : "chileModalBody")}
+            </p>
             <form
               method="POST"
               action="/billing/transbank/start"
               className="mt-5 space-y-4"
             >
+              <input type="hidden" name="plan" value={product} />
               <label className="block">
                 <span className="mb-1.5 block text-xs text-zinc-500">
                   {t("email")}
