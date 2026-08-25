@@ -17,7 +17,7 @@ function dest(env: NotifyEnv): string {
 
 function fromAddr(env: NotifyEnv): string {
   return (
-    env.RESEND_FROM?.trim() || "WakeUp Dev <beth.t@example.com>"
+    env.RESEND_FROM?.trim() || "WakeUp Dev <onboarding@resend.dev>"
   );
 }
 

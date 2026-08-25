@@ -402,7 +402,7 @@ async function chargeAndCredit(
     authorizationCode?: string | null
   ): Promise<void> {
     if (!customerEmail.includes("@")) return;
-    void sendTransbankReceiptOnce(env, supabase, {
+    await sendTransbankReceiptOnce(env, supabase, {
       email: customerEmail,
       usuarioId: inscription.usuario_id,
       mallBuyOrder,

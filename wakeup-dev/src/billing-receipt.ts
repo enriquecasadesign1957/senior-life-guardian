@@ -9,7 +9,9 @@ type BillingProduct = "chile" | "basic";
 type BillingPeriod = "monthly" | "annual";
 
 function fromAddr(env: ReceiptEnv): string {
-  return env.RESEND_FROM?.trim() || "WakeUp Dev <beth.t@example.com>";
+  return (
+    env.RESEND_FROM?.trim() || "WakeUp Dev <onboarding@resend.dev>"
+  );
 }
 
 function formatClp(amount: number): string {
@@ -62,9 +64,15 @@ export async function sendTransbankReceiptOnce(
     event_id: `receipt:${input.mallBuyOrder}`,
     event_type: "customer_receipt",
     usuario_id: input.usuarioId,
-    creditos: 0,
+    creditos: 1,
   });
   if (dedupeErr?.code === "23505") return;
+  if (dedupeErr) {
+    console.error("receipt_dedupe_failed", {
+      code: dedupeErr.code,
+      message: dedupeErr.message,
+    });
+  }
 
   const plan = planLabel(input.product, input.period);
   const subject = `Recibo WakeUp Dev — ${plan} — ${formatClp(input.amountClp)}`;
@@ -111,8 +119,11 @@ export async function sendTransbankReceiptOnce(
       console.error("receipt_resend_failed", {
         http: res.status,
         body: body.slice(0, 240),
+        to: email,
       });
+      return;
     }
+    console.info("receipt_sent", { to: email, order: input.mallBuyOrder });
   } catch (err) {
     console.error("receipt_throw", {
       message: err instanceof Error ? err.message : String(err),

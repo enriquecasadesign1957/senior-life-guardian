@@ -21,6 +21,9 @@ TRANSBANK_ENVIRONMENT = "sandbox"
 TRANSBANK_PLAN_CLP = "25000"
 ENABLE_AMD = "false"
 ADMIN_NOTIFY_EMAIL = "enriquecasadesign@gmail.com"
+# Verified sender in Resend (required for customer receipts):
+#   wrangler secret put RESEND_FROM --config wrangler.toml
+# Example: WakeUp Dev <noreply@wakeupdev.com>
 
 [triggers]
 crons = ["0 14 * * *"]
