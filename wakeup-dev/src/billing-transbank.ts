@@ -15,6 +15,7 @@ import {
   type TransbankEnv,
 } from "./transbank-oneclick";
 import { notifyAdminOnce } from "./admin-notify";
+import { sendTransbankReceiptOnce } from "./billing-receipt";
 
 export type TransbankBillingEnv = TransbankEnv & {
   SUPABASE_URL: string;
@@ -355,32 +356,36 @@ async function chargeAndCredit(
   supabase: SupabaseClient,
   inscription: Pick<
     InscriptionRow,
-    "usuario_id" | "username" | "tbk_user" | "plan" | "billing_period"
+    "usuario_id" | "username" | "tbk_user" | "plan" | "billing_period" | "email"
   >
 ): Promise<{ ok: boolean; mallBuyOrder?: string; reason?: string }> {
   if (!inscription.tbk_user) {
     return { ok: false, reason: "missing_tbk_user" };
   }
 
-  const product = normalizeBillingProduct(inscription.plan);
-  const period = normalizeBillingPeriod(inscription.billing_period);
+  const { data: row, error: rowErr } = await supabase
+    .from("transbank_inscriptions")
+    .select("email, pending_cupon, pending_cupon_monto, plan, billing_period")
+    .eq("usuario_id", inscription.usuario_id)
+    .maybeSingle();
+  if (rowErr) {
+    console.error("inscription_select_failed", rowErr.message);
+  }
+
+  const product = normalizeBillingProduct(row?.plan ?? inscription.plan);
+  const period = normalizeBillingPeriod(row?.billing_period ?? inscription.billing_period);
+  const customerEmail =
+    (typeof row?.email === "string" ? row.email.trim() : "") ||
+    (typeof inscription.email === "string" ? inscription.email.trim() : "");
   const cfg = getOneclickMallConfig(env);
   const listPrice = productListClp(env, product, period);
   let amount = listPrice;
   let cuponCodigo: string | null = null;
 
-  const { data: pending, error: pendingErr } = await supabase
-    .from("transbank_inscriptions")
-    .select("pending_cupon, pending_cupon_monto, plan, billing_period")
-    .eq("usuario_id", inscription.usuario_id)
-    .maybeSingle();
-  if (pendingErr) {
-    console.error("cupon_pending_select_failed", pendingErr.message);
-  }
-  const pendingMonto = pending?.pending_cupon_monto;
+  const pendingMonto = row?.pending_cupon_monto;
   const pendingCupon =
-    typeof pending?.pending_cupon === "string"
-      ? pending.pending_cupon.trim().toUpperCase()
+    typeof row?.pending_cupon === "string"
+      ? row.pending_cupon.trim().toUpperCase()
       : "";
   if (
     pendingCupon &&
@@ -390,6 +395,24 @@ async function chargeAndCredit(
   ) {
     amount = pendingMonto;
     cuponCodigo = pendingCupon;
+  }
+
+  async function deliverReceipt(
+    mallBuyOrder: string,
+    authorizationCode?: string | null
+  ): Promise<void> {
+    if (!customerEmail.includes("@")) return;
+    void sendTransbankReceiptOnce(env, supabase, {
+      email: customerEmail,
+      usuarioId: inscription.usuario_id,
+      mallBuyOrder,
+      amountClp: amount,
+      product,
+      period,
+      credits: productCredits(env, product, period),
+      authorizationCode,
+      cuponCodigo,
+    });
   }
   const since = addHoursUtc(new Date(), -24).toISOString();
 
@@ -432,6 +455,7 @@ async function chargeAndCredit(
           })
           .eq("usuario_id", inscription.usuario_id);
       }
+      await deliverReceipt(recent.mall_buy_order as string);
       return { ok: true, mallBuyOrder: recent.mall_buy_order as string };
     }
     return { ok: false, reason: "credit_retry_failed" };
@@ -521,6 +545,7 @@ async function chargeAndCredit(
       })
       .eq("usuario_id", inscription.usuario_id);
   }
+  await deliverReceipt(mallBuyOrder, auth.authorizationCode);
   return { ok: true, mallBuyOrder };
 }
 
@@ -762,6 +787,9 @@ export async function handleTransbankFinish(
     usuario_id: row.usuario_id,
     username: row.username,
     tbk_user: tbkUser,
+    email: row.email,
+    plan: row.plan,
+    billing_period: row.billing_period,
   });
 
   if (!charged.ok) {
