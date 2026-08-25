@@ -7,6 +7,7 @@ import {
   formatClp,
   normalizeCuponCode,
   transbankListClp,
+  type BillingPeriod,
   type TransbankProduct,
 } from "@/lib/planChile";
 import { useCuponQuote } from "@/lib/useCuponQuote";
@@ -14,17 +15,20 @@ import { useCuponQuote } from "@/lib/useCuponQuote";
 type Props = {
   variant: "dashboard" | "landing";
   product?: TransbankProduct;
+  billingPeriod?: BillingPeriod;
   onQuoteChange?: (montoClp: number, valido: boolean) => void;
 };
 
 export function ProChileCheckout({
   variant,
   product = "chile",
+  billingPeriod = "monthly",
   onQuoteChange,
 }: Props) {
   const { t } = useLanguage();
   const isBasic = product === "basic";
-  const listPrice = transbankListClp(product);
+  const isAnnual = billingPeriod === "annual";
+  const listPrice = transbankListClp(product, billingPeriod);
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -46,10 +50,10 @@ export function ProChileCheckout({
   }, [open]);
 
   function activateDashboard() {
-    const cupon = normalized;
     const qs = new URLSearchParams();
-    if (cupon) qs.set("cupon", cupon);
+    if (normalized) qs.set("cupon", normalized);
     if (isBasic) qs.set("plan", "basic");
+    if (isAnnual) qs.set("billing_period", "annual");
     const suffix = qs.toString() ? `?${qs.toString()}` : "";
     window.location.href = `/billing/transbank/start${suffix}`;
   }
@@ -147,12 +151,22 @@ export function ProChileCheckout({
             <p className="mt-2 text-sm text-zinc-400">
               {t(isBasic ? "basicModalBody" : "chileModalBody")}
             </p>
+            {isAnnual ? (
+              <p className="mt-2 text-xs text-accent">
+                {formatClp(listPrice)} · {t("billingBilledAnnually")}
+              </p>
+            ) : null}
             <form
               method="POST"
               action="/billing/transbank/start"
               className="mt-5 space-y-4"
             >
               <input type="hidden" name="plan" value={product} />
+              <input
+                type="hidden"
+                name="billing_period"
+                value={billingPeriod}
+              />
               <label className="block">
                 <span className="mb-1.5 block text-xs text-zinc-500">
                   {t("email")}

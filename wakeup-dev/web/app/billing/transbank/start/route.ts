@@ -26,10 +26,16 @@ async function startAndRespond(args: {
   email: string;
   cupon: string;
   plan: string;
+  billingPeriod: string;
   guest: boolean;
 }): Promise<NextResponse> {
-  const { origin, email, cupon, plan, guest } = args;
-  const body: Record<string, string> = { email, cupon, plan };
+  const { origin, email, cupon, plan, billingPeriod, guest } = args;
+  const body: Record<string, string> = {
+    email,
+    cupon,
+    plan,
+    billing_period: billingPeriod,
+  };
   if (args.usuarioId) body.usuario_id = args.usuarioId;
 
   const { status, payload } = await callWakeupBilling(
@@ -111,6 +117,8 @@ export async function GET(request: NextRequest) {
     email,
     cupon: request.nextUrl.searchParams.get("cupon") ?? "",
     plan: request.nextUrl.searchParams.get("plan") ?? "chile",
+    billingPeriod:
+      request.nextUrl.searchParams.get("billing_period") ?? "monthly",
     guest: false,
   });
 }
@@ -121,21 +129,28 @@ export async function POST(request: NextRequest) {
   let emailRaw = "";
   let cupon = "";
   let plan = "chile";
+  let billingPeriod = "monthly";
 
   if (contentType.includes("json")) {
     const body = (await request.json().catch(() => null)) as {
       email?: unknown;
       cupon?: unknown;
       plan?: unknown;
+      billing_period?: unknown;
     } | null;
     emailRaw = typeof body?.email === "string" ? body.email : "";
     cupon = typeof body?.cupon === "string" ? body.cupon : "";
     plan = typeof body?.plan === "string" ? body.plan : "chile";
+    billingPeriod =
+      typeof body?.billing_period === "string"
+        ? body.billing_period
+        : "monthly";
   } else {
     const form = await request.formData();
     emailRaw = String(form.get("email") ?? "");
     cupon = String(form.get("cupon") ?? "");
     plan = String(form.get("plan") ?? "chile");
+    billingPeriod = String(form.get("billing_period") ?? "monthly");
   }
 
   const email = normalizeEmail(emailRaw);
@@ -148,6 +163,7 @@ export async function POST(request: NextRequest) {
     email,
     cupon,
     plan,
+    billingPeriod,
     guest: true,
   });
 }

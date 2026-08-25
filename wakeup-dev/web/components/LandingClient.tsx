@@ -422,7 +422,11 @@ export function LandingClient({
                 </li>
               </ul>
               <div className="mt-8">
-                <ProChileCheckout product="basic" variant="landing" />
+                <ProChileCheckout
+                  product="basic"
+                  variant="landing"
+                  billingPeriod={billingPeriod}
+                />
               </div>
             </article>
 
@@ -474,6 +478,7 @@ export function LandingClient({
               <div className="mt-8">
                 <ProChileCheckout
                   variant="landing"
+                  billingPeriod={billingPeriod}
                   onQuoteChange={onChileQuote}
                 />
               </div>
@@ -524,7 +529,10 @@ export function LandingClient({
                   {t("planIntlFeat4")}
                 </li>
               </ul>
-              <IntlProCheckout onQuoteChange={onIntlQuote} />
+              <IntlProCheckout
+                billingPeriod={billingPeriod}
+                onQuoteChange={onIntlQuote}
+              />
             </article>
           </div>
 

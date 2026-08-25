@@ -1,8 +1,10 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
   authorizeOneclick,
+  BASIC_PLAN_ANNUAL_CLP,
   BASIC_PLAN_CLP,
   BASIC_PLAN_CREDITS,
+  CHILE_PLAN_ANNUAL_CLP,
   CHILE_PLAN_CLP,
   generateWkBuyOrders,
   generateWkUsername,
@@ -37,9 +39,11 @@ type InscriptionRow = {
   pending_cupon?: string | null;
   pending_cupon_monto?: number | null;
   plan?: string | null;
+  billing_period?: string | null;
 };
 
 type BillingProduct = "chile" | "basic";
+type BillingPeriod = "monthly" | "annual";
 
 function normalizeBillingProduct(raw: unknown): BillingProduct {
   return typeof raw === "string" && raw.trim().toLowerCase() === "basic"
@@ -47,20 +51,36 @@ function normalizeBillingProduct(raw: unknown): BillingProduct {
     : "chile";
 }
 
+function normalizeBillingPeriod(raw: unknown): BillingPeriod {
+  return typeof raw === "string" && raw.trim().toLowerCase() === "annual"
+    ? "annual"
+    : "monthly";
+}
+
 function productListClp(
   env: TransbankBillingEnv,
-  product: BillingProduct
+  product: BillingProduct,
+  period: BillingPeriod = "monthly"
 ): number {
+  if (period === "annual") {
+    return product === "basic" ? BASIC_PLAN_ANNUAL_CLP : CHILE_PLAN_ANNUAL_CLP;
+  }
   if (product === "basic") return BASIC_PLAN_CLP;
   return planClp(env);
 }
 
 function productCredits(
   env: TransbankBillingEnv,
-  product: BillingProduct
+  product: BillingProduct,
+  period: BillingPeriod = "monthly"
 ): number {
-  if (product === "basic") return BASIC_PLAN_CREDITS;
-  return planCredits(env);
+  const monthly =
+    product === "basic" ? BASIC_PLAN_CREDITS : planCredits(env);
+  return period === "annual" ? monthly * 12 : monthly;
+}
+
+function renewIntervalMonths(period: BillingPeriod): number {
+  return period === "annual" ? 12 : 1;
 }
 
 const UUID_RE =
@@ -279,14 +299,15 @@ async function creditPlan(
   env: TransbankBillingEnv,
   usuarioId: string,
   mallBuyOrder: string,
-  product: BillingProduct = "chile"
+  product: BillingProduct = "chile",
+  period: BillingPeriod = "monthly"
 ): Promise<{ ok: boolean; restantes: unknown }> {
   const { data, error } = await supabase.rpc("acreditar_creditos", {
     p_provider: "transbank",
     p_event_id: mallBuyOrder,
     p_event_type: "oneclick_authorize",
     p_usuario_id: usuarioId,
-    p_creditos: productCredits(env, product),
+    p_creditos: productCredits(env, product, period),
   });
   if (error) {
     console.error("transbank_credit_failed", {
@@ -305,14 +326,20 @@ async function markActive(
   extras: {
     tbkUser?: string | null;
     cardLast4?: string | null;
+    billingPeriod?: BillingPeriod;
   } = {}
 ): Promise<void> {
   const now = new Date();
+  const period = extras.billingPeriod ?? "monthly";
   const patch: Record<string, unknown> = {
     status: "active",
     inscription_token: null,
     last_charged_at: now.toISOString(),
-    next_charge_at: addMonthsUtc(now, 1).toISOString(),
+    next_charge_at: addMonthsUtc(
+      now,
+      renewIntervalMonths(period)
+    ).toISOString(),
+    billing_period: period,
     actualizada_en: now.toISOString(),
   };
   if (extras.tbkUser !== undefined) patch.tbk_user = extras.tbkUser;
@@ -328,7 +355,7 @@ async function chargeAndCredit(
   supabase: SupabaseClient,
   inscription: Pick<
     InscriptionRow,
-    "usuario_id" | "username" | "tbk_user" | "plan"
+    "usuario_id" | "username" | "tbk_user" | "plan" | "billing_period"
   >
 ): Promise<{ ok: boolean; mallBuyOrder?: string; reason?: string }> {
   if (!inscription.tbk_user) {
@@ -336,14 +363,15 @@ async function chargeAndCredit(
   }
 
   const product = normalizeBillingProduct(inscription.plan);
+  const period = normalizeBillingPeriod(inscription.billing_period);
   const cfg = getOneclickMallConfig(env);
-  const listPrice = productListClp(env, product);
+  const listPrice = productListClp(env, product, period);
   let amount = listPrice;
   let cuponCodigo: string | null = null;
 
   const { data: pending, error: pendingErr } = await supabase
     .from("transbank_inscriptions")
-    .select("pending_cupon, pending_cupon_monto, plan")
+    .select("pending_cupon, pending_cupon_monto, plan, billing_period")
     .eq("usuario_id", inscription.usuario_id)
     .maybeSingle();
   if (pendingErr) {
@@ -381,11 +409,13 @@ async function chargeAndCredit(
       env,
       inscription.usuario_id,
       recent.mall_buy_order as string,
-      product
+      product,
+      period
     );
     if (credited.ok) {
       await markActive(supabase, inscription.usuario_id, {
         tbkUser: inscription.tbk_user,
+        billingPeriod: period,
       });
       if (cuponCodigo) {
         await supabase.rpc("consumir_cupon_oncall", {
@@ -465,7 +495,8 @@ async function chargeAndCredit(
     env,
     inscription.usuario_id,
     mallBuyOrder,
-    product
+    product,
+    period
   );
   if (!credited.ok) {
     return { ok: false, reason: "credit_failed", mallBuyOrder };
@@ -473,6 +504,7 @@ async function chargeAndCredit(
 
   await markActive(supabase, inscription.usuario_id, {
     tbkUser: inscription.tbk_user,
+    billingPeriod: period,
   });
   if (cuponCodigo) {
     await supabase.rpc("consumir_cupon_oncall", {
@@ -512,6 +544,7 @@ export async function handleTransbankStart(
 
   const supabase = serviceClient(env);
   const product = normalizeBillingProduct(body?.plan);
+  const billingPeriod = normalizeBillingPeriod(body?.billing_period);
   const requestedId =
     typeof body?.usuario_id === "string" ? body.usuario_id.trim() : "";
   let usuarioId = UUID_RE.test(requestedId) ? requestedId : "";
@@ -522,7 +555,7 @@ export async function handleTransbankStart(
     }
     usuarioId = ensured;
   }
-  const listPrice = productListClp(env, product);
+  const listPrice = productListClp(env, product, billingPeriod);
   const cuponCode = normalizeCupon(body?.cupon);
   const quoted = await quoteCupon(supabase, cuponCode, listPrice);
   let pendingCupon: string | null = null;
@@ -541,7 +574,7 @@ export async function handleTransbankStart(
   const { data: existing } = await supabase
     .from("transbank_inscriptions")
     .select(
-      "usuario_id, username, email, inscription_token, tbk_user, status, next_charge_at, last_charged_at, plan"
+      "usuario_id, username, email, inscription_token, tbk_user, status, next_charge_at, last_charged_at, plan, billing_period"
     )
     .eq("usuario_id", usuarioId)
     .maybeSingle();
@@ -557,6 +590,7 @@ export async function handleTransbankStart(
       .from("transbank_inscriptions")
       .update({
         plan: product,
+        billing_period: billingPeriod,
         actualizada_en: new Date().toISOString(),
         ...(pendingCupon
           ? {
@@ -569,6 +603,7 @@ export async function handleTransbankStart(
     const charged = await chargeAndCredit(env, supabase, {
       ...row,
       plan: product,
+      billing_period: billingPeriod,
     });
     if (charged.ok) {
       void notifyAdminOnce(env, supabase, {
@@ -618,6 +653,7 @@ export async function handleTransbankStart(
     tbk_user: null,
     status: "pending",
     plan: product,
+    billing_period: billingPeriod,
     actualizada_en: now,
   };
   const inscriptionRow = pendingCupon
@@ -670,7 +706,7 @@ export async function handleTransbankFinish(
   const { data: existing } = await supabase
     .from("transbank_inscriptions")
     .select(
-      "usuario_id, username, email, inscription_token, tbk_user, status, next_charge_at, last_charged_at, plan"
+      "usuario_id, username, email, inscription_token, tbk_user, status, next_charge_at, last_charged_at, plan, billing_period"
     )
     .eq("inscription_token", token)
     .maybeSingle();
@@ -769,7 +805,7 @@ export async function renewDueInscriptions(
   const { data: due, error } = await supabase
     .from("transbank_inscriptions")
     .select(
-      "usuario_id, username, email, inscription_token, tbk_user, status, next_charge_at, last_charged_at, plan"
+      "usuario_id, username, email, inscription_token, tbk_user, status, next_charge_at, last_charged_at, plan, billing_period"
     )
     .eq("status", "active")
     .not("tbk_user", "is", null)

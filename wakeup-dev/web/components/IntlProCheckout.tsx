@@ -9,21 +9,27 @@ import {
   lemonCheckoutUrl,
   normalizeCuponCode,
   PLAN_INTL_USD_CENTS,
+  type BillingPeriod,
 } from "@/lib/planChile";
 import { useCuponQuote } from "@/lib/useCuponQuote";
 
 type Props = {
+  billingPeriod?: BillingPeriod;
   onQuoteChange?: (montoCents: number, valido: boolean) => void;
 };
 
-export function IntlProCheckout({ onQuoteChange }: Props) {
+export function IntlProCheckout({
+  billingPeriod = "monthly",
+  onQuoteChange,
+}: Props) {
   const { t } = useLanguage();
   const [code, setCode] = useState("");
   const { quote, checking } = useCuponQuote(code, "internacional");
   const normalized = normalizeCuponCode(code);
   const showInvalid = normalized.length >= 4 && !checking && !quote.valido;
   const href = lemonCheckoutUrl(
-    quote.valido ? quote.codigo ?? normalized : null
+    quote.valido ? quote.codigo ?? normalized : null,
+    billingPeriod
   );
 
   useEffect(() => {

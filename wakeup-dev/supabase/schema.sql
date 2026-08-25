@@ -188,6 +188,8 @@ create table if not exists public.transbank_inscriptions (
     check (status in ('pending', 'active', 'failed', 'deleted')),
   plan text not null default 'chile'
     check (plan in ('chile', 'basic')),
+  billing_period text not null default 'monthly'
+    check (billing_period in ('monthly', 'annual')),
   card_last4 text,
   next_charge_at timestamptz,
   last_charged_at timestamptz,

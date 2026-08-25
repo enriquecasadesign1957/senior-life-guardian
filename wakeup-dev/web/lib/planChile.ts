@@ -6,6 +6,10 @@ export const PLAN_BASIC_USD_CENTS = 1_000;
 export const PLAN_BASIC_CLP = 9_500;
 /** Basic plan included voice credits. */
 export const PLAN_BASIC_CREDITS = 10;
+/** Pro Chile annual Oneclick charge: 12 × $25.000 × 0.8. */
+export const PLAN_CHILE_ANNUAL_CLP = 240_000;
+/** Basic annual Oneclick charge: 12 × $9.500 × 0.8. */
+export const PLAN_BASIC_ANNUAL_CLP = 91_200;
 /** Annual billing shows 20% off the monthly list (frontend display). */
 export const ANNUAL_DISCOUNT_FACTOR = 0.8;
 
@@ -22,7 +26,13 @@ export function withBillingPeriod(
     : amount;
 }
 
-export function transbankListClp(product: TransbankProduct): number {
+export function transbankListClp(
+  product: TransbankProduct,
+  period: BillingPeriod = "monthly"
+): number {
+  if (period === "annual") {
+    return product === "basic" ? PLAN_BASIC_ANNUAL_CLP : PLAN_CHILE_ANNUAL_CLP;
+  }
   return product === "basic" ? PLAN_BASIC_CLP : PLAN_CHILE_CLP;
 }
 
@@ -46,11 +56,25 @@ export function normalizeCuponCode(raw: string): string {
   return raw.trim().toUpperCase().replace(/\s+/g, "");
 }
 
-export function lemonCheckoutUrl(discountCode?: string | null): string {
-  const raw = (
+const LEMON_CHECKOUT_MONTHLY_DEFAULT =
+  "https://wakeupdev.lemonsqueezy.com/checkout/buy/60991a0c-9735-4c5d-a877-21abf809d5bd";
+const LEMON_CHECKOUT_ANNUAL_DEFAULT =
+  "https://wakeupdev.lemonsqueezy.com/checkout/buy/23db93a7-936d-48d2-992f-c796d61c64a6";
+
+export function lemonCheckoutUrl(
+  discountCode?: string | null,
+  period: BillingPeriod = "monthly"
+): string {
+  const monthly = (
     process.env.NEXT_PUBLIC_LEMON_CHECKOUT_URL ||
-    "https://wakeupdev.lemonsqueezy.com/checkout/buy/23db93a7-936d-48d2-992f-c796d61c64a6"
+    LEMON_CHECKOUT_MONTHLY_DEFAULT
   ).trim();
+  const annual = (
+    process.env.NEXT_PUBLIC_LEMON_CHECKOUT_URL_ANNUAL ||
+    LEMON_CHECKOUT_ANNUAL_DEFAULT
+  ).trim();
+  const raw =
+    period === "annual" && annual.length > 0 ? annual : monthly;
   try {
     const url = new URL(raw);
     if (discountCode) {

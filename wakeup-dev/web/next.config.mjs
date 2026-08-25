@@ -17,6 +17,9 @@ const nextConfig = {
       : process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
     NEXT_PUBLIC_LEMON_CHECKOUT_URL:
       process.env.NEXT_PUBLIC_LEMON_CHECKOUT_URL ||
+      "https://wakeupdev.lemonsqueezy.com/checkout/buy/60991a0c-9735-4c5d-a877-21abf809d5bd",
+    NEXT_PUBLIC_LEMON_CHECKOUT_URL_ANNUAL:
+      process.env.NEXT_PUBLIC_LEMON_CHECKOUT_URL_ANNUAL ||
       "https://wakeupdev.lemonsqueezy.com/checkout/buy/23db93a7-936d-48d2-992f-c796d61c64a6",
   },
 };

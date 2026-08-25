@@ -15,6 +15,10 @@ const ONECLICK_BASE = "/rswebpaytransaction/api/oneclick/v1.2";
 export const CHILE_PLAN_CLP = 25000;
 export const BASIC_PLAN_CLP = 9500;
 export const BASIC_PLAN_CREDITS = 10;
+/** 12 × 25.000 × 0.8 */
+export const CHILE_PLAN_ANNUAL_CLP = 240_000;
+/** 12 × 9.500 × 0.8 */
+export const BASIC_PLAN_ANNUAL_CLP = 91_200;
 
 export type TransbankEnv = {
   TRANSBANK_ENVIRONMENT?: string;
