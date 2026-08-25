@@ -6,23 +6,24 @@ export const PLAN_BASIC_USD_CENTS = 1_000;
 export const PLAN_BASIC_CLP = 9_500;
 /** Basic plan included voice credits. */
 export const PLAN_BASIC_CREDITS = 10;
-/** Pro Chile annual Oneclick charge: 12 × $25.000 × 0.8. */
-export const PLAN_CHILE_ANNUAL_CLP = 240_000;
-/** Basic annual Oneclick charge: 12 × $9.500 × 0.8. */
-export const PLAN_BASIC_ANNUAL_CLP = 91_200;
-/** Annual billing shows 20% off the monthly list (frontend display). */
-export const ANNUAL_DISCOUNT_FACTOR = 0.8;
+/** Annual prepaid months (pay 10, get 12). */
+export const ANNUAL_BILLED_MONTHS = 10;
+/** Pro Chile annual Oneclick charge: 10 × $25.000. */
+export const PLAN_CHILE_ANNUAL_CLP = PLAN_CHILE_CLP * ANNUAL_BILLED_MONTHS;
+/** Basic annual Oneclick charge: 10 × $9.500. */
+export const PLAN_BASIC_ANNUAL_CLP = PLAN_BASIC_CLP * ANNUAL_BILLED_MONTHS;
 
 export type CuponPlan = "chile" | "internacional";
 export type BillingPeriod = "monthly" | "annual";
 export type TransbankProduct = "chile" | "basic";
 
+/** Monthly-equivalent display when annual is selected (amount × 10 / 12). */
 export function withBillingPeriod(
   amount: number,
   period: BillingPeriod
 ): number {
   return period === "annual"
-    ? Math.round(amount * ANNUAL_DISCOUNT_FACTOR)
+    ? Math.round((amount * ANNUAL_BILLED_MONTHS) / 12)
     : amount;
 }
 
