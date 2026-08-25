@@ -59,20 +59,27 @@ function cleanSecret(value?: string): string {
 export function getOneclickMallConfig(env: TransbankEnv): OneclickMallConfig {
   const raw = (env.TRANSBANK_ENVIRONMENT ?? "").trim().toLowerCase();
   const isProd = raw === "production" || raw === "prod";
-  const mall =
-    cleanSecret(env.TRANSBANK_ONECLICK_MALL_CC) ||
-    (isProd ? "" : ONECLICK_SANDBOX_MALL_CC);
-  const store =
-    cleanSecret(env.TRANSBANK_ONECLICK_STORE_CC) ||
-    (isProd ? "" : ONECLICK_SANDBOX_STORE_CC);
+
+  if (!isProd) {
+    return {
+      environment: "sandbox",
+      apiHost: SANDBOX_HOST,
+      mallCommerceCode: ONECLICK_SANDBOX_MALL_CC,
+      storeCommerceCode: ONECLICK_SANDBOX_STORE_CC,
+      apiKey: TRANSBANK_SANDBOX_API_KEY,
+    };
+  }
+
+  const mall = cleanSecret(env.TRANSBANK_ONECLICK_MALL_CC) || "";
+  const store = cleanSecret(env.TRANSBANK_ONECLICK_STORE_CC) || "";
   const apiKey =
     cleanSecret(env.TRANSBANK_ONECLICK_API_KEY) ||
     cleanSecret(env.TRANSBANK_API_KEY) ||
-    (isProd ? "" : TRANSBANK_SANDBOX_API_KEY);
+    "";
 
   return {
-    environment: isProd ? "production" : "sandbox",
-    apiHost: isProd ? PRODUCTION_HOST : SANDBOX_HOST,
+    environment: "production",
+    apiHost: PRODUCTION_HOST,
     mallCommerceCode: mall,
     storeCommerceCode: store,
     apiKey,
