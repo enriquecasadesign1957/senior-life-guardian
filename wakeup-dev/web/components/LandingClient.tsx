@@ -488,6 +488,21 @@ export function LandingClient({
             <p className="mt-3 max-w-sm text-xs leading-relaxed text-zinc-500">
               {t("footerTagline")}
             </p>
+            <a
+              href="https://launchbuff.com/products/wakeup-dev-ugijq1"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Featured on LaunchBuff"
+              className="mt-4 inline-block"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="https://launchbuff.com/badge-featured-dark.svg"
+                alt="Featured on LaunchBuff"
+                width={256}
+                height={80}
+              />
+            </a>
           </div>
           <ul className="flex flex-col gap-2 text-sm text-zinc-400">
             {FOOTER_LINKS.map((link) => (
