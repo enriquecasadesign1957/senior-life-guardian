@@ -11,17 +11,19 @@ import { useLanguage } from "@/components/LanguageProvider";
 import {
   formatClp,
   formatUsdFromCents,
+  PLAN_BASIC_CLP,
+  PLAN_BASIC_USD_CENTS,
   PLAN_CHILE_CLP,
   PLAN_INTL_USD_CENTS,
+  withBillingPeriod,
+  type BillingPeriod,
 } from "@/lib/planChile";
 import type { MsgKey } from "@/lib/i18n";
 import {
-  Building2,
   Check,
   CreditCard,
   Globe,
   Mail,
-  PhoneCall,
   Users,
 } from "lucide-react";
 
@@ -89,11 +91,22 @@ export function LandingClient({
   why,
   hint,
 }: LandingQuery) {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
+  const [billingPeriod, setBillingPeriod] =
+    useState<BillingPeriod>("monthly");
   const [chileMonto, setChileMonto] = useState(PLAN_CHILE_CLP);
   const [chileOff, setChileOff] = useState(false);
   const [intlMonto, setIntlMonto] = useState(PLAN_INTL_USD_CENTS);
   const [intlOff, setIntlOff] = useState(false);
+  const isAnnual = billingPeriod === "annual";
+  const basicInClp = locale === "es";
+  const basicListAmount = basicInClp ? PLAN_BASIC_CLP : PLAN_BASIC_USD_CENTS;
+  const basicDisplayAmount = withBillingPeriod(
+    basicListAmount,
+    billingPeriod
+  );
+  const chileDisplayPrice = withBillingPeriod(chileMonto, billingPeriod);
+  const intlDisplayPrice = withBillingPeriod(intlMonto, billingPeriod);
   const onChileQuote = useCallback((monto: number, valido: boolean) => {
     setChileMonto(monto);
     setChileOff(valido);
@@ -290,7 +303,39 @@ export function LandingClient({
             {t("pricingSubtitle")}
           </p>
 
-          <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          <div
+            className="mx-auto mt-8 flex w-fit items-center rounded-lg border border-zinc-800 bg-zinc-900/60 p-1"
+            role="group"
+            aria-label={`${t("billingMonthly")} / ${t("billingAnnual")}`}
+          >
+            <button
+              type="button"
+              onClick={() => setBillingPeriod("monthly")}
+              className={
+                billingPeriod === "monthly"
+                  ? "rounded-md bg-zinc-50 px-4 py-2 text-sm font-semibold text-zinc-950"
+                  : "rounded-md px-4 py-2 text-sm font-medium text-zinc-400 transition hover:text-zinc-200"
+              }
+            >
+              {t("billingMonthly")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setBillingPeriod("annual")}
+              className={
+                billingPeriod === "annual"
+                  ? "rounded-md bg-zinc-50 px-4 py-2 text-sm font-semibold text-zinc-950"
+                  : "rounded-md px-4 py-2 text-sm font-medium text-zinc-400 transition hover:text-zinc-200"
+              }
+            >
+              {t("billingAnnual")}
+              <span className="ml-1.5 text-xs font-semibold text-accent">
+                ({t("billingAnnualSave")})
+              </span>
+            </button>
+          </div>
+
+          <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-4">
             <article className="flex flex-col rounded-xl border border-zinc-800 bg-zinc-950 p-6">
               <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">
                 {t("planTrial")}
@@ -318,10 +363,68 @@ export function LandingClient({
                   {t("planTrialFeat3")}
                 </li>
               </ul>
-              <div className="mt-8">
+              <div className="mt-8 space-y-3">
                 <GitHubLoginButton
                   className="h-11 w-full rounded-md bg-zinc-50 text-zinc-950 hover:bg-white"
-                  label={t("startWithGithub")}
+                  label={t("tryFreeTrial")}
+                />
+                <p className="rounded-md border border-accent/30 bg-accent/5 px-3 py-2 text-xs leading-relaxed text-accent">
+                  {t("planTrialHook")}
+                </p>
+              </div>
+            </article>
+
+            <article className="flex flex-col rounded-xl border border-zinc-800 bg-zinc-950 p-6">
+              <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">
+                {t("planBasic")}
+              </p>
+              <p className="mt-4 text-4xl font-semibold tabular-nums tracking-tight">
+                {isAnnual ? (
+                  <>
+                    <span className="mr-2 text-2xl font-normal text-zinc-600 line-through">
+                      {basicInClp
+                        ? formatClp(PLAN_BASIC_CLP)
+                        : formatUsdFromCents(PLAN_BASIC_USD_CENTS)}
+                    </span>
+                    {basicInClp
+                      ? formatClp(basicDisplayAmount)
+                      : formatUsdFromCents(basicDisplayAmount)}
+                  </>
+                ) : basicInClp ? (
+                  formatClp(PLAN_BASIC_CLP)
+                ) : (
+                  formatUsdFromCents(PLAN_BASIC_USD_CENTS)
+                )}
+                <span className="ml-1 text-base font-normal text-zinc-500">
+                  {t("planBasicPer")}
+                </span>
+              </p>
+              {isAnnual ? (
+                <p className="mt-1 text-xs text-zinc-500">
+                  {t("billingBilledAnnually")}
+                </p>
+              ) : null}
+              <p className="mt-2 text-sm leading-relaxed text-zinc-500">
+                {t("planBasicBody")}
+              </p>
+              <ul className="mt-6 flex-1 space-y-2.5 text-sm text-zinc-300">
+                <li className="flex gap-2">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                  {t("planBasicFeat1")}
+                </li>
+                <li className="flex gap-2">
+                  <Users className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                  {t("planBasicFeat2")}
+                </li>
+                <li className="flex gap-2">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                  {t("planBasicFeat3")}
+                </li>
+              </ul>
+              <div className="mt-8">
+                <GitHubLoginButton
+                  className="h-11 w-full rounded-md bg-accent text-black hover:bg-accent-dim"
+                  label={t("planBasicCta")}
                 />
               </div>
             </article>
@@ -331,12 +434,12 @@ export function LandingClient({
                 {t("planChile")}
               </p>
               <p className="mt-4 text-4xl font-semibold tabular-nums tracking-tight">
-                {chileOff ? (
+                {chileOff || isAnnual ? (
                   <>
                     <span className="mr-2 text-2xl font-normal text-zinc-600 line-through">
                       {formatClp(PLAN_CHILE_CLP)}
                     </span>
-                    {formatClp(chileMonto)}
+                    {formatClp(chileDisplayPrice)}
                   </>
                 ) : (
                   formatClp(PLAN_CHILE_CLP)
@@ -345,6 +448,11 @@ export function LandingClient({
                   {t("planChilePer")}
                 </span>
               </p>
+              {isAnnual ? (
+                <p className="mt-1 text-xs text-zinc-500">
+                  {t("billingBilledAnnually")}
+                </p>
+              ) : null}
               <p className="mt-2 text-sm leading-relaxed text-zinc-500">
                 {t("planChileBody")}
               </p>
@@ -379,12 +487,12 @@ export function LandingClient({
                 {t("planIntl")}
               </p>
               <p className="mt-4 text-4xl font-semibold tabular-nums tracking-tight">
-                {intlOff ? (
+                {intlOff || isAnnual ? (
                   <>
                     <span className="mr-2 text-2xl font-normal text-zinc-600 line-through">
                       {formatUsdFromCents(PLAN_INTL_USD_CENTS)}
                     </span>
-                    {formatUsdFromCents(intlMonto)}
+                    {formatUsdFromCents(intlDisplayPrice)}
                   </>
                 ) : (
                   formatUsdFromCents(PLAN_INTL_USD_CENTS)
@@ -393,6 +501,11 @@ export function LandingClient({
                   {t("planIntlPer")}
                 </span>
               </p>
+              {isAnnual ? (
+                <p className="mt-1 text-xs text-zinc-500">
+                  {t("billingBilledAnnually")}
+                </p>
+              ) : null}
               <p className="mt-2 text-sm leading-relaxed text-zinc-500">
                 {t("planIntlBody")}
               </p>
@@ -416,44 +529,28 @@ export function LandingClient({
               </ul>
               <IntlProCheckout onQuoteChange={onIntlQuote} />
             </article>
+          </div>
 
-            <article className="flex flex-col rounded-xl border border-zinc-800 bg-zinc-950 p-6">
+          <article className="mt-5 flex flex-col rounded-xl border border-zinc-800 bg-zinc-950 p-6 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
+            <div>
               <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">
                 {t("planEnt")}
               </p>
-              <p className="mt-4 text-4xl font-semibold tracking-tight text-zinc-50">
+              <p className="mt-2 text-2xl font-semibold tracking-tight text-zinc-50">
                 {t("planEntPrice")}
               </p>
-              <p className="mt-2 text-sm leading-relaxed text-zinc-500">
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-500">
                 {t("planEntBody")}
               </p>
-              <ul className="mt-6 flex-1 space-y-2.5 text-sm text-zinc-300">
-                <li className="flex gap-2">
-                  <PhoneCall className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-                  {t("planEntFeat1")}
-                </li>
-                <li className="flex gap-2">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-                  {t("planEntFeat2")}
-                </li>
-                <li className="flex gap-2">
-                  <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-                  {t("planEntFeat3")}
-                </li>
-                <li className="flex gap-2">
-                  <Users className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-                  {t("planEntFeat4")}
-                </li>
-              </ul>
-              <a
-                href={ENTERPRISE_MAILTO}
-                className="mt-8 inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-zinc-700 bg-zinc-900 px-5 text-sm font-semibold text-zinc-50 transition hover:border-zinc-500 hover:bg-zinc-800"
-              >
-                {t("contactSales")}
-                <Mail className="h-4 w-4" />
-              </a>
-            </article>
-          </div>
+            </div>
+            <a
+              href={ENTERPRISE_MAILTO}
+              className="mt-6 inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-md border border-zinc-700 bg-zinc-900 px-5 text-sm font-semibold text-zinc-50 transition hover:border-zinc-500 hover:bg-zinc-800 sm:mt-0"
+            >
+              {t("contactSales")}
+              <Mail className="h-4 w-4" />
+            </a>
+          </article>
 
           <p className="mx-auto mt-8 max-w-xl text-center text-xs leading-relaxed text-zinc-600">
             {t("pricingFoot")}

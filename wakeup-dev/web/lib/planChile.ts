@@ -1,6 +1,23 @@
 export const PLAN_CHILE_CLP = 25_000;
 export const PLAN_INTL_USD_CENTS = 2_900;
+/** Basic plan list price in USD cents ($10.00). */
+export const PLAN_BASIC_USD_CENTS = 1_000;
+/** Basic plan list price in CLP when locale is Spanish. */
+export const PLAN_BASIC_CLP = 9_500;
+/** Annual billing shows 20% off the monthly list (frontend display). */
+export const ANNUAL_DISCOUNT_FACTOR = 0.8;
+
 export type CuponPlan = "chile" | "internacional";
+export type BillingPeriod = "monthly" | "annual";
+
+export function withBillingPeriod(
+  amount: number,
+  period: BillingPeriod
+): number {
+  return period === "annual"
+    ? Math.round(amount * ANNUAL_DISCOUNT_FACTOR)
+    : amount;
+}
 
 export function formatClp(amount: number): string {
   return new Intl.NumberFormat("es-CL", {
