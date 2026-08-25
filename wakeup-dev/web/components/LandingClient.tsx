@@ -490,17 +490,14 @@ export function LandingClient({
             </p>
             <a
               href="https://launchbuff.com/products/wakeup-dev-ugijq1"
-              target="_blank"
-              rel="noopener noreferrer"
               title="Featured on LaunchBuff"
               className="mt-4 inline-block"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="https://launchbuff.com/badge-featured-dark.svg"
+                src="https://launchbuff.com/badge-featured-light.svg"
                 alt="Featured on LaunchBuff"
-                width={256}
-                height={80}
+                width={160}
               />
             </a>
           </div>
