@@ -13,12 +13,12 @@ const PRODUCTION_HOST = "https://webpay3g.transbank.cl";
 const ONECLICK_BASE = "/rswebpaytransaction/api/oneclick/v1.2";
 
 export const CHILE_PLAN_CLP = 25000;
-export const BASIC_PLAN_CLP = 9500;
+export const BASIC_PLAN_CLP = 12000;
 export const BASIC_PLAN_CREDITS = 10;
 /** Pay 10 months upfront (10 × 25.000). */
 export const CHILE_PLAN_ANNUAL_CLP = 250_000;
-/** Pay 10 months upfront (10 × 9.500). */
-export const BASIC_PLAN_ANNUAL_CLP = 95_000;
+/** Pay 10 months upfront (10 × 12.000). */
+export const BASIC_PLAN_ANNUAL_CLP = 120_000;
 
 export type TransbankEnv = {
   TRANSBANK_ENVIRONMENT?: string;

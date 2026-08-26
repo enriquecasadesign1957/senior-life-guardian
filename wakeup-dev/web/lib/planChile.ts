@@ -1,16 +1,16 @@
 export const PLAN_CHILE_CLP = 25_000;
 export const PLAN_INTL_USD_CENTS = 2_900;
-/** Basic plan list price in USD cents ($10.00). */
-export const PLAN_BASIC_USD_CENTS = 1_000;
+/** Basic plan list price in USD cents ($15.00). */
+export const PLAN_BASIC_USD_CENTS = 1_500;
 /** Basic plan list price in CLP (Transbank Chile). */
-export const PLAN_BASIC_CLP = 9_500;
+export const PLAN_BASIC_CLP = 12_000;
 /** Basic plan included voice credits. */
 export const PLAN_BASIC_CREDITS = 10;
 /** Annual prepaid months (pay 10, get 12). */
 export const ANNUAL_BILLED_MONTHS = 10;
 /** Pro Chile annual Oneclick charge: 10 × $25.000. */
 export const PLAN_CHILE_ANNUAL_CLP = PLAN_CHILE_CLP * ANNUAL_BILLED_MONTHS;
-/** Basic annual Oneclick charge: 10 × $9.500. */
+/** Basic annual Oneclick charge: 10 × $12.000. */
 export const PLAN_BASIC_ANNUAL_CLP = PLAN_BASIC_CLP * ANNUAL_BILLED_MONTHS;
 
 export type CuponPlan = "chile" | "internacional";
