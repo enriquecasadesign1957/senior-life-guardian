@@ -24,6 +24,7 @@ import {
   CreditCard,
   Globe,
   Mail,
+  Quote,
   Users,
 } from "lucide-react";
 
@@ -292,6 +293,33 @@ export function LandingClient({
               ))}
             </ul>
           </div>
+        </div>
+      </section>
+
+      <section
+        aria-label="Viberank"
+        className="relative z-10 bg-zinc-950 pb-4 pt-8"
+      >
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <figure className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-8 shadow-[0_0_48px_-16px_rgba(34,197,94,0.35)] sm:p-10">
+            <p className="inline-flex items-center rounded-md border border-accent/30 bg-accent/10 px-2.5 py-1 font-mono text-[11px] font-semibold uppercase tracking-[0.22em] text-accent">
+              {t("viberankBadge")}
+            </p>
+            <blockquote className="relative mt-6">
+              <Quote
+                aria-hidden
+                className="absolute -left-1 -top-1 h-8 w-8 text-accent/25"
+              />
+              <p className="pl-8 text-base leading-relaxed text-zinc-200 sm:text-lg">
+                {t("viberankQuote")}
+              </p>
+            </blockquote>
+            <figcaption className="mt-6 pl-8 text-sm text-zinc-400">
+              <span className="font-medium text-zinc-200">
+                {t("viberankAttribution")}
+              </span>
+            </figcaption>
+          </figure>
         </div>
       </section>
 
@@ -591,18 +619,36 @@ export function LandingClient({
             <p className="mt-3 max-w-sm text-xs leading-relaxed text-zinc-500">
               {t("footerTagline")}
             </p>
-            <a
-              href="https://launchbuff.com/products/wakeup-dev-ugijq1"
-              title="Featured on LaunchBuff"
-              className="mt-4 inline-block"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="https://launchbuff.com/badge-featured-light.svg"
-                alt="Featured on LaunchBuff"
-                width={160}
-              />
-            </a>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <a
+                href="https://launchbuff.com/products/wakeup-dev-ugijq1"
+                title="Featured on LaunchBuff"
+                className="inline-block"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="https://launchbuff.com/badge-featured-light.svg"
+                  alt="Featured on LaunchBuff"
+                  width={160}
+                />
+              </a>
+              <a
+                href="https://fazier.com/launches/wakeupdev.com"
+                title="Fazier"
+                className="inline-block"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="https://fazier.com/api/v1/public/badges/launch_badges.svg?badge_type=launched&theme=light"
+                  width={120}
+                  alt="Fazier badge"
+                />
+              </a>
+            </div>
           </div>
           <ul className="flex flex-col gap-2 text-sm text-zinc-400">
             {FOOTER_LINKS.map((link) => (
@@ -617,8 +663,8 @@ export function LandingClient({
             ))}
           </ul>
         </div>
-        <p className="mx-auto mt-8 max-w-6xl px-4 text-center text-xs text-zinc-600 sm:px-6">
-          © {new Date().getFullYear()} WakeUp Dev
+        <p className="mx-auto mt-10 max-w-6xl border-t border-zinc-700 bg-zinc-900 px-4 py-5 text-center text-sm leading-relaxed text-zinc-300 sm:px-6">
+          {t("footerLegal")}
         </p>
       </footer>
     </main>
