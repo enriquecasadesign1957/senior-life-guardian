@@ -33,7 +33,7 @@ export const metadata = buildPageMetadata({
   path: "/",
 });
 
-const PROMO_UNTIL = "2026-09-10T23:59:59Z";
+const PROMO_UNTIL = "2026-11-30T23:59:59-03:00";
 
 const softwareApplicationLd = {
   "@context": "https://schema.org",

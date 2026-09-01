@@ -75,6 +75,8 @@ create trigger on_auth_user_created
 
 -- =========================================================
 -- Consumo atómico de 1 crédito
+-- La versión con lotes de regalo FIFO (WAKEUP-HUNTER) está en
+-- supabase/migrations/20260828210000_cupon_wakeup_hunter.sql
 -- =========================================================
 create or replace function public.consumir_credito(p_usuario_id uuid)
 returns integer
@@ -302,5 +304,6 @@ create trigger trigger_proteccion_creditos
 -- Equipo on-call: ver supabase/migrations/20260819160000_oncall_miembros.sql
 -- Turnos semanales: ver supabase/migrations/20260819170000_oncall_turnos.sql
 -- Cascada ACK: ver supabase/migrations/20260819180000_oncall_alertas.sql
--- Cupones PH10OFF (Chile) y PRODUCTHUNT20 (International): ver supabase/migrations/20260820180000_oncall_cupones.sql y 20260822120000_cupon_producthunt20.sql
+-- Cupones PH10OFF (Chile, hasta 2026-09-10) y PRODUCTHUNT20 (International, hasta 2026-11-30): ver supabase/migrations/20260820180000_oncall_cupones.sql, 20260822120000_cupon_producthunt20.sql y 20260830220000_extend_producthunt20.sql
+-- Cupón WAKEUP-HUNTER (+50 créditos, caducan a 180 días, canje hasta 2026-09-10): ver supabase/migrations/20260828210000_cupon_wakeup_hunter.sql
 

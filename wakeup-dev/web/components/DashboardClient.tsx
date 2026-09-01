@@ -11,6 +11,7 @@ import {
   Phone,
   PhoneCall,
   RefreshCw,
+  Ticket,
   Zap,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
@@ -61,6 +62,13 @@ type Alerta = {
   creado_en: string;
 };
 
+export type GiftLot = {
+  codigo: string;
+  creditos_restantes: number;
+  expira_en: string;
+  expirado_en: string | null;
+};
+
 type Props = {
   user: User;
   userId: string;
@@ -70,6 +78,7 @@ type Props = {
   billingAlready?: boolean;
   initialMembers?: OncallMember[];
   initialShifts?: OncallShift[];
+  initialGiftLots?: GiftLot[];
 };
 
 function maskSecret(value: string) {
@@ -86,6 +95,7 @@ export function DashboardClient({
   billingAlready = false,
   initialMembers = [],
   initialShifts = [],
+  initialGiftLots = [],
 }: Props) {
   const { t, locale } = useLanguage();
   const supabase = useMemo(() => createClient(), []);
@@ -108,6 +118,11 @@ export function DashboardClient({
   const [testBusy, setTestBusy] = useState(false);
   const [testMsg, setTestMsg] = useState<string | null>(null);
   const [testOk, setTestOk] = useState(false);
+  const [giftLots, setGiftLots] = useState(initialGiftLots);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponBusy, setCouponBusy] = useState(false);
+  const [couponMsg, setCouponMsg] = useState<string | null>(null);
+  const [couponOk, setCouponOk] = useState(false);
 
   const refreshAlertas = useCallback(async () => {
     const { data } = await supabase
@@ -297,6 +312,18 @@ export function DashboardClient({
       setUsuario((prev) =>
         prev ? { ...prev, creditos_disponibles: remaining } : prev
       );
+      setGiftLots((prev) => {
+        const idx = prev.findIndex((lot) => lot.creditos_restantes > 0);
+        if (idx < 0) return prev;
+        const next = [...prev];
+        const remainingGift = next[idx].creditos_restantes - 1;
+        if (remainingGift <= 0) {
+          next.splice(idx, 1);
+        } else {
+          next[idx] = { ...next[idx], creditos_restantes: remainingGift };
+        }
+        return next;
+      });
       setTestOk(true);
       setTestMsg(t("testAccepted"));
       await refreshAlertas();
@@ -304,6 +331,86 @@ export function DashboardClient({
       setTestMsg(t("apiUnreachable"));
     } finally {
       setTestBusy(false);
+    }
+  }
+
+  async function redeemGiftCoupon() {
+    const codigo = couponCode.trim();
+    if (!codigo) return;
+
+    setCouponBusy(true);
+    setCouponMsg(null);
+    setCouponOk(false);
+
+    try {
+      const response = await fetch("/cupon/redeem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ codigo }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as {
+        ok?: boolean;
+        motivo?: string;
+        creditos_agregados?: number;
+        creditos_disponibles?: number;
+        expira_en?: string | null;
+        codigo?: string;
+        error?: string;
+      };
+
+      if (typeof payload.creditos_disponibles === "number") {
+        setUsuario((prev) =>
+          prev
+            ? { ...prev, creditos_disponibles: payload.creditos_disponibles! }
+            : prev
+        );
+      }
+
+      if (response.status >= 500) {
+        setCouponMsg(t("giftCouponError"));
+        return;
+      }
+
+      if (payload.ok) {
+        const added =
+          typeof payload.creditos_agregados === "number"
+            ? payload.creditos_agregados
+            : 50;
+        const expires = payload.expira_en
+          ? formatDate(payload.expira_en, locale)
+          : "";
+        setCouponOk(true);
+        setCouponMsg(t("giftCouponOk", { n: added, date: expires }));
+        setCouponCode("");
+        if (payload.expira_en && payload.codigo) {
+          setGiftLots((prev) => {
+            const next: GiftLot = {
+              codigo: payload.codigo as string,
+              creditos_restantes: added,
+              expira_en: payload.expira_en as string,
+              expirado_en: null,
+            };
+            const without = prev.filter((lot) => lot.codigo !== next.codigo);
+            return [...without, next];
+          });
+        }
+        return;
+      }
+
+      const motivo = payload.motivo ?? payload.error;
+      if (motivo === "ya_canjeado") {
+        setCouponMsg(t("giftCouponAlready"));
+        return;
+      }
+      if (motivo === "no_vigente" || motivo === "inactivo" || motivo === "agotado") {
+        setCouponMsg(t("giftCouponExpired"));
+        return;
+      }
+      setCouponMsg(t("giftCouponInvalid"));
+    } catch {
+      setCouponMsg(t("giftCouponError"));
+    } finally {
+      setCouponBusy(false);
     }
   }
 
@@ -365,6 +472,61 @@ export function DashboardClient({
             {credits}
           </p>
           <p className="mt-2 text-sm text-zinc-500">{t("creditsAvailable")}</p>
+          {giftLots.filter((lot) => lot.creditos_restantes > 0).map((lot) => (
+            <p
+              key={lot.codigo}
+              className="mt-2 font-mono text-xs text-zinc-500"
+            >
+              {t("giftCreditsExpire", {
+                n: lot.creditos_restantes,
+                date: formatDate(lot.expira_en, locale),
+              })}
+            </p>
+          ))}
+          <form
+            className="mt-5"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void redeemGiftCoupon();
+            }}
+          >
+            <label
+              htmlFor="gift-coupon"
+              className="flex items-center gap-2 text-xs font-medium text-zinc-400"
+            >
+              <Ticket className="h-3.5 w-3.5 text-accent" />
+              {t("giftCouponPrompt")}
+            </label>
+            <div className="mt-2 flex gap-2">
+              <input
+                id="gift-coupon"
+                type="text"
+                autoComplete="off"
+                spellCheck={false}
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value)}
+                placeholder={t("giftCouponPlaceholder")}
+                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 font-mono text-sm uppercase tracking-wide text-zinc-50 outline-none ring-accent placeholder:normal-case placeholder:tracking-normal placeholder:text-zinc-600 focus:ring-1"
+              />
+              <button
+                type="submit"
+                disabled={couponBusy || !couponCode.trim()}
+                className="shrink-0 rounded-md border border-zinc-700 px-3 py-2 text-sm font-semibold text-zinc-200 transition hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {couponBusy ? t("giftCouponRedeeming") : t("giftCouponRedeem")}
+              </button>
+            </div>
+            {couponMsg && (
+              <p
+                className={cn(
+                  "mt-2 text-xs",
+                  couponOk ? "text-accent" : "text-zinc-400"
+                )}
+              >
+                {couponMsg}
+              </p>
+            )}
+          </form>
           <div className="mt-6">
             <ProChileCheckout variant="dashboard" />
           </div>
