@@ -55,8 +55,9 @@ export function MarketingFooter() {
           ))}
         </ul>
       </div>
-      <p className="mx-auto mt-8 max-w-6xl px-4 text-center text-xs text-zinc-600 sm:px-6">
-        © {new Date().getFullYear()} WakeUp Dev
+      <p className="mx-auto mt-10 max-w-6xl border-t border-zinc-700 bg-zinc-900 px-4 py-5 text-center text-sm leading-relaxed text-zinc-300 sm:px-6">
+        WakeUp Dev is a registered trademark. Powered by Inversiones Aviva SpA
+        © 2026. All rights reserved.
       </p>
     </footer>
   );
