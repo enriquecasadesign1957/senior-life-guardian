@@ -200,5 +200,6 @@
   "footerGrafanaPhoneAlerts": "Grafana Phone Alerts",
   "footerUptimeRobotPhoneAlerts": "UptimeRobot Phone Alerts",
   "footerFaq": "FAQ",
+  "footerBlog": "Blog",
   "footerTagline": "WakeUp Dev — pay per alert, not per seat."
 }

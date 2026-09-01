@@ -200,5 +200,6 @@
   "footerGrafanaPhoneAlerts": "Alertas Grafana al teléfono",
   "footerUptimeRobotPhoneAlerts": "Alertas UptimeRobot al teléfono",
   "footerFaq": "FAQ",
+  "footerBlog": "Blog",
   "footerTagline": "WakeUp Dev — cobro por alerta, no por licencia."
 }

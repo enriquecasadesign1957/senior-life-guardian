@@ -10,6 +10,7 @@ const FOOTER_LINKS = [
   { href: "/grafana-phone-alerts", label: "Grafana Phone Alerts" },
   { href: "/uptimerobot-phone-alerts", label: "UptimeRobot Phone Alerts" },
   { href: "/faq", label: "FAQ" },
+  { href: "/blog", label: "Blog" },
 ] as const;
 
 export function MarketingNav() {

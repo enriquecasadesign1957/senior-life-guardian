@@ -46,6 +46,7 @@ const FOOTER_LINKS: { href: string; labelKey: MsgKey }[] = [
   { href: "/grafana-phone-alerts", labelKey: "footerGrafanaPhoneAlerts" },
   { href: "/uptimerobot-phone-alerts", labelKey: "footerUptimeRobotPhoneAlerts" },
   { href: "/faq", labelKey: "footerFaq" },
+  { href: "/blog", labelKey: "footerBlog" },
 ];
 
 const COMPARISON: { ours: MsgKey; theirs: MsgKey }[] = [
