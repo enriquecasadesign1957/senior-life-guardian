@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { DashboardClient } from "@/components/DashboardClient";
+import { DashboardClient, type GiftLot } from "@/components/DashboardClient";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import { createClient } from "@/lib/supabaseServer";
 import type { OncallMember } from "@/components/OncallMembersPanel";
@@ -26,6 +26,7 @@ export default async function DashboardPage({
     { data: keys },
     membersRes,
     shiftsRes,
+    lotsRes,
   ] =
     await Promise.all([
       supabase
@@ -60,6 +61,13 @@ export default async function DashboardPage({
         .eq("usuario_id", user.id)
         .order("dia_semana", { ascending: true })
         .order("hora_inicio", { ascending: true }),
+      supabase
+        .from("oncall_credito_lotes")
+        .select("codigo, creditos_restantes, expira_en, expirado_en")
+        .eq("usuario_id", user.id)
+        .gt("creditos_restantes", 0)
+        .is("expirado_en", null)
+        .order("expira_en", { ascending: true }),
     ]);
   const initialMembers = (membersRes.error ? [] : membersRes.data) as
     | OncallMember[]
@@ -67,6 +75,9 @@ export default async function DashboardPage({
   const initialShifts: OncallShift[] = shiftsRes.error
     ? []
     : flattenShifts(shiftsRes.data);
+  const initialGiftLots = (lotsRes.error ? [] : lotsRes.data) as
+    | GiftLot[]
+    | null;
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-zinc-950 text-zinc-50">
@@ -80,6 +91,7 @@ export default async function DashboardPage({
           hasApiKey={(keys?.length ?? 0) > 0}
           initialMembers={initialMembers ?? []}
           initialShifts={initialShifts}
+          initialGiftLots={initialGiftLots ?? []}
           billingAlready={billing === "already"}
         />
       </LanguageProvider>

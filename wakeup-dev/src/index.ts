@@ -14,6 +14,7 @@ import {
   handleStatusCallback,
 } from "./oncall-cascade";
 import { handleInternalNotify } from "./admin-notify";
+import { expireGiftCredits, handleCuponRedeem } from "./cupon-creditos";
 
 export interface Env {
   SUPABASE_URL: string;
@@ -503,6 +504,13 @@ export default {
       return handleInternalNotify(request, env, createServiceClient(env));
     }
 
+    if (url.pathname === "/v1/cupon/redeem") {
+      if (request.method !== "POST") {
+        return jsonResponse({ error: "Method not allowed" }, 405, {});
+      }
+      return handleCuponRedeem(request, env);
+    }
+
     if (url.pathname === "/v1/voice/repeat") {
       if (request.method !== "POST" && request.method !== "GET") {
         return jsonResponse({ error: "Method not allowed" }, 405, {});
@@ -794,15 +802,26 @@ export default {
     ctx: ExecutionContext
   ): Promise<void> {
     ctx.waitUntil(
-      renewDueInscriptions(env)
-        .then((result) => {
-          console.info("transbank_renew_done", result);
-        })
-        .catch((err) => {
-          console.error("transbank_renew_unhandled", {
-            message: err instanceof Error ? err.message : String(err),
-          });
-        })
+      Promise.all([
+        renewDueInscriptions(env)
+          .then((result) => {
+            console.info("transbank_renew_done", result);
+          })
+          .catch((err) => {
+            console.error("transbank_renew_unhandled", {
+              message: err instanceof Error ? err.message : String(err),
+            });
+          }),
+        expireGiftCredits(env)
+          .then((result) => {
+            console.info("cupon_expire_done", result);
+          })
+          .catch((err) => {
+            console.error("cupon_expire_unhandled", {
+              message: err instanceof Error ? err.message : String(err),
+            });
+          }),
+      ])
     );
   },
 };
