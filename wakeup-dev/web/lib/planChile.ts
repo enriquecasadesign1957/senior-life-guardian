@@ -57,6 +57,13 @@ export function normalizeCuponCode(raw: string): string {
   return raw.trim().toUpperCase().replace(/\s+/g, "");
 }
 
+/** Lemon Squeezy rejects hyphens; map our Chile code to the published Lemon code. */
+export function lemonDiscountCode(code: string): string {
+  const normalized = normalizeCuponCode(code);
+  if (normalized === "WAKEUP-PEER") return "WAKEUPPEER50";
+  return normalized;
+}
+
 const LEMON_CHECKOUT_MONTHLY_DEFAULT =
   "https://wakeupdev.lemonsqueezy.com/checkout/buy/60991a0c-9735-4c5d-a877-21abf809d5bd";
 const LEMON_CHECKOUT_ANNUAL_DEFAULT =

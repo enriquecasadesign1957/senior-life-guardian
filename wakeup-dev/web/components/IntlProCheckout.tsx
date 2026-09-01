@@ -7,6 +7,7 @@ import { useLanguage } from "@/components/LanguageProvider";
 import {
   formatUsdFromCents,
   lemonCheckoutUrl,
+  lemonDiscountCode,
   normalizeCuponCode,
   PLAN_INTL_USD_CENTS,
   type BillingPeriod,
@@ -28,7 +29,9 @@ export function IntlProCheckout({
   const normalized = normalizeCuponCode(code);
   const showInvalid = normalized.length >= 4 && !checking && !quote.valido;
   const href = lemonCheckoutUrl(
-    quote.valido ? quote.codigo ?? normalized : null,
+    quote.valido
+      ? lemonDiscountCode(quote.codigo ?? normalized)
+      : null,
     billingPeriod
   );
 

@@ -304,6 +304,6 @@ create trigger trigger_proteccion_creditos
 -- Equipo on-call: ver supabase/migrations/20260819160000_oncall_miembros.sql
 -- Turnos semanales: ver supabase/migrations/20260819170000_oncall_turnos.sql
 -- Cascada ACK: ver supabase/migrations/20260819180000_oncall_alertas.sql
--- Cupones PH10OFF (Chile, hasta 2026-09-10), PRODUCTHUNT20 (International, hasta 2026-11-30) y WAKEUP-PEER (50% Chile + Intl, hasta 2026-11-30): ver supabase/migrations/20260820180000_oncall_cupones.sql, 20260822120000_cupon_producthunt20.sql, 20260830220000_extend_producthunt20.sql y 20260901140000_cupon_wakeup_peer.sql
+-- Cupones PH10OFF (Chile, hasta 2026-09-10), PRODUCTHUNT20 (International, hasta 2026-11-30) y WAKEUP-PEER / WAKEUPPEER50 (50% Chile + Intl, hasta 2026-11-30): ver supabase/migrations/20260820180000_oncall_cupones.sql, 20260822120000_cupon_producthunt20.sql, 20260830220000_extend_producthunt20.sql, 20260901140000_cupon_wakeup_peer.sql y 20260901150000_cupon_wakeuppeer50.sql
 -- Cupón WAKEUP-HUNTER (+50 créditos, caducan a 180 días, canje hasta 2026-09-10): ver supabase/migrations/20260828210000_cupon_wakeup_hunter.sql
 
