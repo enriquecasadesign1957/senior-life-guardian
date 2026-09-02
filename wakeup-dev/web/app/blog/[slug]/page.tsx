@@ -12,7 +12,9 @@ import { buildPageMetadata, pageUrl } from "@/lib/seo";
 
 type Params = { slug: string };
 
-export const dynamicParams = false;
+/** Cloudflare Worker has no R2 incremental cache; render from bundled JSON. */
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
 
 export function generateStaticParams() {
   return generatedPosts
