@@ -6,5 +6,5 @@ import post_reducing_alert_fatigue_voice_ack_grafana_webhooks from "../../conten
  * (Markdown sibling: post-*.md). Do not add Express/ACK routes here.
  */
 export const generatedPosts: GeneratedPost[] = [
-  post_reducing_alert_fatigue_voice_ack_grafana_webhooks,
+  post_reducing_alert_fatigue_voice_ack_grafana_webhooks as GeneratedPost,
 ];
