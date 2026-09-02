@@ -476,6 +476,18 @@ export default {
       return jsonResponse({ ok: true, service: "wakeup-dev" }, 200, {});
     }
 
+    if (request.method === "GET" && url.pathname === "/robots.txt") {
+      return new Response(
+        "User-agent: *\nDisallow: /v1/\nAllow: /robots.txt\n",
+        {
+          status: 200,
+          headers: {
+            "Content-Type": "text/plain; charset=utf-8",
+          },
+        }
+      );
+    }
+
     if (url.pathname === "/v1/billing/webhook") {
       if (request.method !== "POST") {
         return jsonResponse({ error: "Method not allowed" }, 405, {});

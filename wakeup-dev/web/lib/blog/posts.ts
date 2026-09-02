@@ -36,6 +36,7 @@ export function blogPostingJsonLd(
     dateIso: string;
     author: string;
     keywords?: readonly string[];
+    coverImage?: string;
   },
   canonical: string,
 ) {
@@ -61,6 +62,7 @@ export function blogPostingJsonLd(
     },
     keywords: (post.keywords ?? []).join(", "),
     url: canonical,
+    ...(post.coverImage ? { image: post.coverImage } : {}),
   };
 }
 

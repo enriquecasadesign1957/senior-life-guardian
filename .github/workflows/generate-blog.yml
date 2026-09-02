@@ -1,0 +1,82 @@
+name: Generate WakeUp Dev blog post
+
+# Tuesday 09:00 America/Santiago ≈ 12:00 UTC (CLT). GitHub cron is UTC-only.
+# Also runnable from Actions > Generate WakeUp Dev blog post > Run workflow.
+#
+# Repo settings (Settings > Actions > General > Workflow permissions):
+#   - Read and write permissions
+#   - Allow GitHub Actions to create and approve pull requests
+# Secret (exact name): GROQ_API_KEY
+
+on:
+  schedule:
+    - cron: "0 12 * * 2"
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: "Optional topic angle (leave empty for Groq to pick)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: wakeup-dev/web/package-lock.json
+
+      - name: Install dependencies
+        working-directory: wakeup-dev/web
+        run: npm ci
+
+      - name: Generate Markdown post
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          if [ -z "$GROQ_API_KEY" ]; then
+            echo "Missing repository secret GROQ_API_KEY"
+            echo "Add it under Settings > Secrets and variables > Actions"
+            exit 1
+          fi
+          TOPIC="${{ github.event.inputs.topic }}"
+          if [ -n "$TOPIC" ]; then
+            node wakeup-dev/scripts/generate-post.mjs --topic "$TOPIC"
+          else
+            node wakeup-dev/scripts/generate-post.mjs
+          fi
+
+      - name: Open pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: main
+          branch: blog/auto-${{ github.run_id }}
+          delete-branch: true
+          commit-message: "blog: add Groq-generated engineering post"
+          title: "Blog: generated engineering post"
+          body: |
+            Weekly Groq draft for WakeUp Dev.
+
+            Review title, code samples, and the Unsplash cover URL before merge.
+            After merge, deploy `wakeup-dev/web` so `/blog/<slug>` and sitemap pick up `generated.ts`.
+          add-paths: |
+            wakeup-dev/web/content/blog
+            wakeup-dev/web/lib/blog/generated.ts

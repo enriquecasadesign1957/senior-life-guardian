@@ -22,6 +22,7 @@ export type GeneratedPost = {
   title: string;
   description: string;
   keywords: string[];
+  coverImage?: string;
   dateIso: string;
   dateLabel: string;
   author: string;

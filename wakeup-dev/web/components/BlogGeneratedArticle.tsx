@@ -92,6 +92,16 @@ export function BlogGeneratedArticle({ post }: { post: GeneratedPost }) {
         <h1 className="mt-4 text-3xl font-semibold tracking-tight text-zinc-50 sm:text-4xl">
           {post.title}
         </h1>
+        {post.coverImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={post.coverImage}
+            alt={post.title}
+            width={1600}
+            height={900}
+            className="mt-8 aspect-[16/9] w-full rounded-2xl object-cover"
+          />
+        ) : null}
         <p className="mt-6 text-lg leading-relaxed text-zinc-300">
           {post.description}
         </p>

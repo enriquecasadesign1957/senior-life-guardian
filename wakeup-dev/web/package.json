@@ -10,7 +10,7 @@
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && wrangler deploy --config wrangler.jsonc",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
-    "generate-blog": "node scripts/generate-blog-post.mjs"
+    "generate-blog": "node ../scripts/generate-post.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",

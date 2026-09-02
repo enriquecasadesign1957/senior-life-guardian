@@ -36,6 +36,10 @@ export async function generateMetadata({
     path,
   });
 
+  const cover = post.coverImage
+    ? [{ url: post.coverImage, width: 1600, height: 900, alt: post.title }]
+    : base.openGraph?.images;
+
   return {
     ...base,
     keywords: post.keywords,
@@ -45,6 +49,11 @@ export async function generateMetadata({
       type: "article",
       publishedTime: post.dateIso,
       authors: [post.author],
+      images: cover,
+    },
+    twitter: {
+      ...base.twitter,
+      images: post.coverImage ? [post.coverImage] : base.twitter?.images,
     },
   };
 }
