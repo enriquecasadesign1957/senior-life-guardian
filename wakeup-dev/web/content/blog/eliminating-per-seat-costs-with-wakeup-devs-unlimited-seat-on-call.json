@@ -1,0 +1,93 @@
+{
+  "slug": "eliminating-per-seat-costs-with-wakeup-devs-unlimited-seat-on-call",
+  "title": "Eliminating Per-Seat Costs with WakeUp Dev's Unlimited-Seat On-Call",
+  "description": "Learn how WakeUp Dev's unlimited-seat on‑call and pay‑per‑voice alerts cut on‑call costs while keeping teams focused.",
+  "keywords": [
+    "on-call",
+    "cost",
+    "unlimited-seats",
+    "voice-alerts",
+    "grafana"
+  ],
+  "coverImage": "https://source.unsplash.com/1600x900/?cloudflare-workers,voice-alert,grafana-dashboard",
+  "dateIso": "2026-09-02",
+  "dateLabel": "September 2, 2026",
+  "author": "Enrique Drack",
+  "topic": "Eliminating Per-Seat Costs with WakeUp Dev's Unlimited-Seat On-Call",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Pay‑Per‑Voice Alerts Cut Your On‑Call Budget"
+    },
+    {
+      "type": "p",
+      "text": "WakeUp Dev eliminates the classic per‑seat billing model. Every alert you send costs only the voice minutes you consume, and you can add or remove team members without a price bump."
+    },
+    {
+      "type": "h3",
+      "text": "How It Works"
+    },
+    {
+      "type": "p",
+      "text": "1. **Grafana or UptimeRobot** fires a webhook when a metric crosses a threshold. 2. The webhook posts to https://api.wakeupdev.com/v1/alert with your API key. 3. WakeUp Dev routes a single‑digit ACK call to the first available on‑call engineer. 4. The engineer presses **1** to acknowledge; the call ends and the alert is marked resolved."
+    },
+    {
+      "type": "h3",
+      "text": "Example Grafana Webhook"
+    },
+    {
+      "type": "code",
+      "code": "url: \"https://api.wakeupdev.com/v1/alert\"\nmethod: POST\nheaders:\n  x-api-key: \"YOUR_API_KEY\"\n  Content-Type: application/json\npayload:\n  title: \"CPU > 90% on prod\"\n  description: \"CPU usage on prod‑app‑1 exceeded 90% for 5 minutes\"\n  severity: \"critical\"\n  tags:\n    - \"prod\"\n    - \"cpu\""
+    },
+    {
+      "type": "h3",
+      "text": "WakeUp Dev POST /v1/alert"
+    },
+    {
+      "type": "code",
+      "code": "POST https://api.wakeupdev.com/v1/alert\nx-api-key: YOUR_API_KEY\nContent-Type: application/json\n\n{\n  \"title\": \"Disk space low on db01\",\n  \"description\": \"Available space < 10%\",\n  \"severity\": \"warning\",\n  \"tags\": [\"database\", \"storage\"]\n}"
+    },
+    {
+      "type": "h3",
+      "text": "TwiML Gather for Digit‑1 ACK"
+    },
+    {
+      "type": "code",
+      "code": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Response>\n  <Say voice=\"alice\">You have an alert: Disk space low on db01. Press 1 to acknowledge.</Say>\n  <Gather numDigits=\"1\" action=\"/acknowledge\" method=\"POST\">\n    <Say>Press 1 to acknowledge.</Say>\n  </Gather>\n  <Say>We didn't receive a valid input. Goodbye.</Say>\n</Response>"
+    },
+    {
+      "type": "h3",
+      "text": "Benefits of Unlimited Seats"
+    },
+    {
+      "type": "ul",
+      "items": [
+        "**Zero per‑seat cost**: Add new on‑call members without changing your bill.",
+        "**Pay only for voice**: Each alert consumes a few seconds of voice minutes.",
+        "**Scalable on‑call rotation**: The same webhook can target any number of engineers.",
+        "**Reduced alert fatigue**: A single ACK call keeps the alert loop short and focused."
+      ]
+    },
+    {
+      "type": "h3",
+      "text": "Quick Checklist"
+    },
+    {
+      "type": "ul",
+      "items": [
+        "[ ] Configure your monitoring tool to POST to WakeUp Dev.",
+        "[ ] Store your API key securely (e.g., Cloudflare Workers KV).",
+        "[ ] Verify the TwiML gather works in a test call.",
+        "[ ] Monitor voice minutes in your WakeUp Dev dashboard."
+      ]
+    },
+    {
+      "type": "h2",
+      "text": "Peer Question"
+    },
+    {
+      "type": "discussion",
+      "text": "What strategies have you used to balance cost and alert fatigue in your on‑call rotation?"
+    }
+  ]
+}
