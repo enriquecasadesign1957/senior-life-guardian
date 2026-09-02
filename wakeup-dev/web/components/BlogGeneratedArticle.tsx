@@ -99,7 +99,8 @@ export function BlogGeneratedArticle({ post }: { post: GeneratedPost }) {
             alt={post.title}
             width={1600}
             height={900}
-            className="mt-8 aspect-[16/9] w-full rounded-2xl object-cover"
+            referrerPolicy="no-referrer"
+            className="mt-8 aspect-[16/9] w-full rounded-2xl object-cover bg-zinc-800"
           />
         ) : null}
         <p className="mt-6 text-lg leading-relaxed text-zinc-300">

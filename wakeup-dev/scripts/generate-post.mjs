@@ -227,14 +227,34 @@ function sanitizeKeywords(value, max = 8) {
   ].slice(0, max);
 }
 
+/** source.unsplash.com was sunset and now 503s. Pin real images.unsplash.com photos. */
+const COVER_PHOTOS = [
+  {
+    keys: ["grafana", "dashboard", "monitor", "metric", "alert"],
+    id: "1551288049-bebda4e38f71",
+  },
+  {
+    keys: ["voice", "phone", "call", "ack", "twilio"],
+    id: "1511707171634-5f897ff02aa9",
+  },
+  {
+    keys: ["cost", "seat", "billing", "money", "price"],
+    id: "1554224155-8d04cb21cd6c",
+  },
+  {
+    keys: ["datacenter", "server", "cloudflare", "worker", "edge"],
+    id: "1558494949-ef010cbdcc31",
+  },
+];
+const COVER_FALLBACK_ID = "1558494949-ef010cbdcc31";
+
 function unsplashCoverUrl(keywords) {
-  const query = keywords
-    .slice(0, 3)
-    .map((word) => word.replace(/\s+/g, "-").toLowerCase())
-    .filter(Boolean)
-    .join(",");
-  const fallback = "server-room,monitoring";
-  return `https://source.unsplash.com/1600x900/?${encodeURI(query || fallback)}`;
+  const haystack = keywords.join(" ").toLowerCase();
+  const match = COVER_PHOTOS.find((photo) =>
+    photo.keys.some((key) => haystack.includes(key)),
+  );
+  const id = match?.id || COVER_FALLBACK_ID;
+  return `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=1600&h=900&q=80`;
 }
 
 function yamlScalar(value) {
