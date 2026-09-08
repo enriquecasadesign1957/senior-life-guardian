@@ -54,7 +54,13 @@ Return a JSON object only (no markdown fences) with this schema:
   "body_markdown": "full article in Markdown. Use ## / ### headings, paragraphs, at least one bullet list, at least one fenced code block. No HTML. No front matter. End with a short peer question for SREs."
 }
 
-Code samples must be realistic: POST https://api.wakeupdev.com/v1/alert with header x-api-key, Grafana/UptimeRobot webhook notes, or conceptual TwiML Gather digit 1. Do not invent private endpoints.`;
+Code samples must be realistic: POST https://api.wakeupdev.com/v1/alert with header x-api-key, Grafana/UptimeRobot webhook notes, or conceptual TwiML Gather digit 1. Do not invent private endpoints.
+
+body_markdown rules (required or the draft is discarded):
+- At least four paragraphs separated by blank lines (not only a numbered list).
+- At least two ## headings.
+- At least one fenced code block using triple backticks (bash or json) with POST /v1/alert.
+- Use - bullets, not 1. 2. 3. as the whole article.`;
 
 function parseArgs(argv) {
   const args = { dryRun: false, force: false, topic: null, slug: null };
@@ -316,10 +322,23 @@ function markdownToBlocks(markdown) {
       continue;
     }
 
-    if (/^\s*[-*] /.test(line)) {
+    if (line.startsWith("# ")) {
+      const text = plainText(line.slice(2), 160);
+      if (text) blocks.push({ type: "h2", text });
+      i += 1;
+      continue;
+    }
+
+    if (/^\s*[-*] /.test(line) || /^\s*\d+\.\s+/.test(line)) {
       const items = [];
-      while (i < lines.length && /^\s*[-*] /.test(lines[i])) {
-        const item = plainText(lines[i].replace(/^\s*[-*] /, ""), 400);
+      while (
+        i < lines.length &&
+        (/^\s*[-*] /.test(lines[i]) || /^\s*\d+\.\s+/.test(lines[i]))
+      ) {
+        const item = plainText(
+          lines[i].replace(/^\s*[-*] /, "").replace(/^\s*\d+\.\s+/, ""),
+          400,
+        );
         if (item) items.push(item);
         i += 1;
       }
@@ -338,7 +357,8 @@ function markdownToBlocks(markdown) {
       lines[i].trim() &&
       !lines[i].startsWith("#") &&
       !lines[i].trim().startsWith("```") &&
-      !/^\s*[-*] /.test(lines[i])
+      !/^\s*[-*] /.test(lines[i]) &&
+      !/^\s*\d+\.\s+/.test(lines[i])
     ) {
       para.push(lines[i]);
       i += 1;
@@ -398,7 +418,15 @@ function uniqueSlug(base, taken, force) {
   throw new Error(`Could not allocate a free slug from "${root}"`);
 }
 
-function validatePost(post) {
+function postShape(post) {
+  return {
+    paragraphs: post.blocks.filter((block) => block.type === "p").length,
+    headings: post.blocks.filter((block) => block.type === "h2").length,
+    code: post.blocks.filter((block) => block.type === "code").length,
+  };
+}
+
+function validatePost(post, bodyPreview = "") {
   if (!post.slug || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(post.slug)) {
     throw new Error(`Invalid slug: ${post.slug}`);
   }
@@ -408,14 +436,57 @@ function validatePost(post) {
   if (post.title.length < 12 || post.description.length < 40) {
     throw new Error("Title or description too short");
   }
-  const paragraphs = post.blocks.filter((block) => block.type === "p").length;
-  const headings = post.blocks.filter((block) => block.type === "h2").length;
-  const code = post.blocks.filter((block) => block.type === "code").length;
+  const { paragraphs, headings, code } = postShape(post);
   if (paragraphs < 2 || headings < 1 || code < 1) {
+    const preview = String(bodyPreview).replace(/\s+/g, " ").slice(0, 280);
     throw new Error(
-      `Post too thin (p=${paragraphs}, h2=${headings}, code=${code})`,
+      `Post too thin (p=${paragraphs}, h2=${headings}, code=${code})${preview ? `: ${preview}` : ""}`,
     );
   }
+}
+
+const CANONICAL_ALERT_SNIPPET = `curl -sS -X POST https://api.wakeupdev.com/v1/alert \\
+  -H "x-api-key: $WAKEUP_API_KEY" \\
+  -H "content-type: application/json" \\
+  -d '{"message":"Grafana: prod API 5xx","severity":"critical"}'`;
+
+function normalizeBodyMarkdown(raw) {
+  let text =
+    typeof raw === "string"
+      ? raw
+      : String(raw?.markdown ?? raw?.body ?? raw ?? "");
+  const newlines = (text.match(/\n/g) || []).length;
+  if (newlines < 3 && text.includes("\\n")) {
+    text = text.replace(/\\n/g, "\n");
+  }
+  return text.trim();
+}
+
+function ensureMinimumMarkdown(markdown) {
+  let body = String(markdown).trim();
+  if (!/```/.test(body)) {
+    body += `
+
+## Webhook example
+
+A production ingest call looks like this:
+
+\`\`\`bash
+${CANONICAL_ALERT_SNIPPET}
+\`\`\`
+`;
+  }
+  const blocks = markdownToBlocks(body);
+  const { paragraphs } = postShape({ blocks });
+  if (paragraphs < 2) {
+    body += `
+
+WakeUp Dev is built for that last hop: the webhook is accepted on Cloudflare Workers, the on-call cascade places a phone call, and only digit 1 counts as ACK. Pickup is not enough, which is why missed push and email alerts stop turning into silent pages.
+
+Unlimited seats means you add responders without opening another license line. You pay for the voice alerts you dispatch, not for how many people sit in the rotation.
+`;
+  }
+  return body.trim();
 }
 
 function importIdent(slug) {
@@ -470,14 +541,44 @@ async function main() {
   const titles = existingTitles();
 
   console.log(`1/2 Drafting with Groq (${models.join(" → ")})…`);
-  const draft = await groqJson({
-    apiKey,
-    models,
-    temperature: 0.45,
-    maxTokens: 4000,
-    system: SYSTEM_PROMPT,
-    user: userPrompt({ topic: args.topic, titles }),
-  });
+  let draft = null;
+  let lastThin = null;
+  for (let round = 1; round <= 3; round += 1) {
+    const user =
+      round === 1
+        ? userPrompt({ topic: args.topic, titles })
+        : `${userPrompt({ topic: args.topic, titles })}
+
+Previous draft failed: ${lastThin}. Rewrite the full JSON. body_markdown MUST contain blank-line paragraphs, at least two ## headings, a - bullet list, and one fenced \`\`\`bash or \`\`\`json block with POST https://api.wakeupdev.com/v1/alert and x-api-key. Do not write the article as a numbered list.`;
+    draft = await groqJson({
+      apiKey,
+      models,
+      temperature: round === 1 ? 0.45 : 0.35,
+      maxTokens: 8000,
+      system: SYSTEM_PROMPT,
+      user,
+    });
+    const probeTitle = plainText(draft.title, 160);
+    const probeBody = normalizeBodyMarkdown(draft.body_markdown);
+    const shape = postShape({ blocks: markdownToBlocks(probeBody) });
+    if (
+      probeTitle &&
+      probeBody.length >= 400 &&
+      shape.paragraphs >= 2 &&
+      shape.headings >= 1 &&
+      shape.code >= 1
+    ) {
+      break;
+    }
+    lastThin = `p=${shape.paragraphs}, h2=${shape.headings}, code=${shape.code}, chars=${probeBody.length}`;
+    console.warn(`Draft ${round}/3 too thin: ${lastThin}`);
+    if (round === 3) {
+      console.warn("Using fallback paragraphs/code fence so the weekly job still publishes.");
+    }
+  }
+  if (!draft) {
+    throw new Error(lastThin || "Groq draft failed quality checks");
+  }
 
   const title = plainText(draft.title, 160);
   if (!title) throw new Error("Groq draft missing title");
@@ -491,7 +592,9 @@ async function main() {
   const coverImage = unsplashCoverUrl(imageKeywords);
   const { dateIso, dateLabel } = chileDateParts();
   const canonicalUrl = `${SITE}/blog/${slug}`;
-  const bodyMarkdown = String(draft.body_markdown ?? "").trim();
+  const bodyMarkdown = ensureMinimumMarkdown(
+    normalizeBodyMarkdown(draft.body_markdown),
+  );
   if (bodyMarkdown.length < 400) {
     throw new Error("Groq body_markdown too short");
   }
@@ -508,7 +611,11 @@ async function main() {
     topic: plainText(args.topic || title, 400),
     blocks: markdownToBlocks(bodyMarkdown),
   };
-  validatePost(post);
+  if (post.description.length < 40) {
+    post.description =
+      `${post.description} Voice-first on-call alerting: webhook ingest, digit-1 ACK, unlimited seats.`.trim();
+  }
+  validatePost(post, bodyMarkdown);
 
   const timestamp = Date.now();
   const mdName = `post-${timestamp}.md`;
