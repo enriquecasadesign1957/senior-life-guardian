@@ -464,8 +464,7 @@ function normalizeBodyMarkdown(raw) {
 
 function ensureMinimumMarkdown(markdown) {
   let body = String(markdown).trim();
-  if (!/```/.test(body)) {
-    body += `
+  const codePad = `
 
 ## Webhook example
 
@@ -475,16 +474,26 @@ A production ingest call looks like this:
 ${CANONICAL_ALERT_SNIPPET}
 \`\`\`
 `;
-  }
-  const blocks = markdownToBlocks(body);
-  const { paragraphs } = postShape({ blocks });
-  if (paragraphs < 2) {
-    body += `
+  const headingPad = `
+
+## Voice ACK on the last hop
+`;
+  const paragraphPad = `
 
 WakeUp Dev is built for that last hop: the webhook is accepted on Cloudflare Workers, the on-call cascade places a phone call, and only digit 1 counts as ACK. Pickup is not enough, which is why missed push and email alerts stop turning into silent pages.
 
 Unlimited seats means you add responders without opening another license line. You pay for the voice alerts you dispatch, not for how many people sit in the rotation.
 `;
+
+  // Pad from parsed blocks, not raw backticks — inline `code` is not a fence.
+  for (let i = 0; i < 3; i += 1) {
+    const { paragraphs, headings, code } = postShape({
+      blocks: markdownToBlocks(body),
+    });
+    if (paragraphs >= 2 && headings >= 1 && code >= 1) break;
+    if (code < 1) body += codePad;
+    else if (headings < 1) body += headingPad;
+    else if (paragraphs < 2) body += paragraphPad;
   }
   return body.trim();
 }
