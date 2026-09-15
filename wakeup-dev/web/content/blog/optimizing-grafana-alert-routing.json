@@ -1,0 +1,75 @@
+{
+  "slug": "optimizing-grafana-alert-routing",
+  "title": "Optimizing Grafana Alert Routing to Reduce On‑Call Overhead",
+  "description": "Learn how to route Grafana alerts to WakeUp Dev, use voice ACKs, and eliminate per‑seat costs with unlimited seats.",
+  "keywords": [
+    "grafana",
+    "oncall",
+    "voice",
+    "cost",
+    "alerting"
+  ],
+  "coverImage": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1600&h=900&q=80",
+  "dateIso": "2026-09-15",
+  "dateLabel": "September 15, 2026",
+  "author": "Enrique Drack",
+  "topic": "Optimizing Grafana Alert Routing to Reduce On‑Call Overhead",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Grafana to WakeUp Dev Webhook"
+    },
+    {
+      "type": "p",
+      "text": "When Grafana triggers an alert, the webhook payload lands on a Cloudflare Worker that forwards it to WakeUp Dev. The worker strips Grafana’s verbose metadata and sends only the essential fields to the WakeUp Dev API."
+    },
+    {
+      "type": "h3",
+      "text": "Example Cloudflare Worker"
+    },
+    {
+      "type": "code",
+      "code": "addEventListener('fetch', event => {\n  event.respondWith(handleRequest(event.request))\n})\n\nasync function handleRequest(request) {\n  const payload = await request.json()\n  const alert = {\n    title: payload.title,\n    description: payload.text,\n    severity: payload.severity\n  }\n  const res = await fetch(\"https://api.wakeupdev.com/v1/alert\", {\n    method: 'POST',\n    headers: {\n      'Content-Type': 'application/json',\n      'x-api-key': 'YOUR_API_KEY'\n    },\n    body: JSON.stringify(alert)\n  })\n  return new Response('Alert forwarded', { status: 200 })\n}"
+    },
+    {
+      "type": "h3",
+      "text": "Voice ACK and Unlimited Seats"
+    },
+    {
+      "type": "p",
+      "text": "WakeUp Dev routes the alert to the on‑call engineer’s phone. The engineer hears a short prompt and presses *1 to ACK*. The ACK is sent back to WakeUp Dev via a TwiML and is recorded as a resolved alert, eliminating the need for a second call or a ticket."
+    },
+    {
+      "type": "ul",
+      "items": [
+        "No per‑seat licensing; each engineer gets a virtual seat for free.",
+        "Unlimited seats mean you can add new team members without extra cost.",
+        "Pay only for the voice alerts you actually make."
+      ]
+    },
+    {
+      "type": "h3",
+      "text": "Cost Savings"
+    },
+    {
+      "type": "p",
+      "text": "Traditional on‑call solutions charge per seat and per alert. With WakeUp Dev, you pay a flat rate per voice alert and get unlimited seats. In a 10‑engineer team, that’s a 70% reduction in licensing fees compared to most SaaS tools."
+    },
+    {
+      "type": "h2",
+      "text": "Best Practices"
+    },
+    {
+      "type": "ul",
+      "items": [
+        "Keep the webhook payload minimal; only forward fields that the team cares about.",
+        "Use the severity field to map to different phone numbers or escalation groups.",
+        "Test the TwiML flow in a sandbox before deploying."
+      ]
+    },
+    {
+      "type": "discussion",
+      "text": "What’s your biggest challenge when integrating Grafana alerts into a voice‑first on‑call workflow?"
+    }
+  ]
+}
