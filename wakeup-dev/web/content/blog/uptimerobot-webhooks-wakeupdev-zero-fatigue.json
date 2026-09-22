@@ -1,0 +1,80 @@
+{
+  "slug": "uptimerobot-webhooks-wakeupdev-zero-fatigue",
+  "title": "Streamlining UptimeRobot Webhooks into WakeUp Dev for Zero‑Fatigue On‑Call",
+  "description": "Integrate UptimeRobot webhooks with WakeUp Dev’s voice‑first alerts, using POST /v1/alert and unlimited seats to cut noise and keep on‑call teams focused.",
+  "keywords": [
+    "monitoring",
+    "webhooks",
+    "oncall",
+    "voice",
+    "cost"
+  ],
+  "coverImage": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1600&h=900&q=80",
+  "dateIso": "2026-09-22",
+  "dateLabel": "September 22, 2026",
+  "author": "Enrique Drack",
+  "topic": "Streamlining UptimeRobot Webhooks into WakeUp Dev for Zero‑Fatigue On‑Call",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Integrating UptimeRobot Webhooks with WakeUp Dev"
+    },
+    {
+      "type": "p",
+      "text": "UptimeRobot gives you a simple HTTP callback whenever a monitored endpoint changes state. By sending that payload straight to WakeUp Dev’s /v1/alert endpoint you can turn a generic uptime check into a voice‑first on‑call alert without any extra plumbing."
+    },
+    {
+      "type": "h3",
+      "text": "How the Flow Works"
+    },
+    {
+      "type": "ul",
+      "items": [
+        "UptimeRobot posts a JSON payload to a Cloudflare Worker.",
+        "The Worker validates the payload, extracts the check name and status, and forwards a minimal alert to WakeUp Dev.",
+        "WakeUp Dev routes the alert to all on‑call seats (unlimited seats, no per‑seat cost) and plays a short prompt: “UptimeRobot reports a failure on . Press 1 to acknowledge.”",
+        "The first staff member who presses 1 sends a digit‑1 ACK back to WakeUp Dev, which marks the alert as resolved."
+      ]
+    },
+    {
+      "type": "h3",
+      "text": "Sample Cloudflare Worker"
+    },
+    {
+      "type": "code",
+      "code": "addEventListener('fetch', event => {\n  event.respondWith(handleRequest(event.request))\n})\n\nasync function handleRequest(request) {\n  if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 })\n\n  const body = await request.json()\n  // Basic validation\n  if (!body.check || !body.status) return new Response('Bad Request', { status: 400 })\n\n  const alert = {\n    message: `UptimeRobot: ${body.check} is ${body.status}`,\n    severity: body.status === 'down' ? 'critical' : 'warning',\n    source: 'uptimerobot'\n  }\n\n  const wakeupResponse = await fetch('https://api.wakeupdev.com/v1/alert', {\n    method: 'POST',\n    headers: {\n      'x-api-key': 'YOUR_API_KEY',\n      'Content-Type': 'application/json'\n    },\n    body: JSON.stringify(alert)\n  })\n\n  return new Response('Alert forwarded', { status: wakeupResponse.status })\n}"
+    },
+    {
+      "type": "h3",
+      "text": "Cost‑Effective, Unlimited Seats"
+    },
+    {
+      "type": "p",
+      "text": "Because WakeUp Dev’s pricing is pay‑per‑alert, you pay only for the voice calls that actually reach your team. Unlimited seats mean every on‑call engineer receives the same voice prompt, but only one ACK is required to resolve the alert, keeping the noise down."
+    },
+    {
+      "type": "h3",
+      "text": "Reducing Noise with Filtering"
+    },
+    {
+      "type": "ul",
+      "items": [
+        "Use UptimeRobot’s “Only notify on status change” to avoid duplicate alerts.",
+        "In the Worker, drop checks that are marked as “warning” if your team only cares about critical failures.",
+        "Add a simple rate‑limit header to the Worker to prevent accidental spam."
+      ]
+    },
+    {
+      "type": "p",
+      "text": "By keeping the webhook payload small and the alert payload minimal, the entire round‑trip stays under 100 ms, which is fast enough for real‑time on‑call escalation."
+    },
+    {
+      "type": "p",
+      "text": "---"
+    },
+    {
+      "type": "discussion",
+      "text": "**Peer Question:** How do you currently filter non‑critical alerts before they hit your on‑call system?"
+    }
+  ]
+}
