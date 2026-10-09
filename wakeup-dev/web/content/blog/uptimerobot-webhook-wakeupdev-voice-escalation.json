@@ -1,0 +1,84 @@
+{
+  "slug": "uptimerobot-webhook-wakeupdev-voice-escalation",
+  "title": "Streamlining UptimeRobot Webhook Ingestion with WakeUp Dev Voice Escalation",
+  "description": "Learn how to ingest UptimeRobot webhooks into WakeUp Dev, trigger voice alerts, and ACK with digit‑1 for efficient on‑call escalation.",
+  "keywords": [
+    "oncall",
+    "uptimerobot",
+    "webhooks",
+    "voice",
+    "alerting"
+  ],
+  "coverImage": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1600&h=900&q=80",
+  "dateIso": "2026-10-06",
+  "dateLabel": "October 6, 2026",
+  "author": "Enrique Drack",
+  "topic": "Streamlining UptimeRobot Webhook Ingestion with WakeUp Dev Voice Escalation",
+  "blocks": [
+    {
+      "type": "p",
+      "text": "WakeUp Dev’s webhook‑first architecture makes it trivial to hook into any monitoring system that can emit an HTTP POST. UptimeRobot is a popular uptime monitoring service that sends a JSON payload to a configured URL whenever a check changes state. By routing that payload straight into WakeUp Dev, teams can eliminate the need for an intermediate alert‑manager or custom code."
+    },
+    {
+      "type": "h2",
+      "text": "Ingesting UptimeRobot Webhooks"
+    },
+    {
+      "type": "ul",
+      "items": [
+        "In UptimeRobot, create or edit a check and add a webhook under *Notifications > Webhooks*.",
+        "Point the webhook URL to https://api.wakeupdev.com/v1/alert.",
+        "Add the header x-api-key: YOUR_API_KEY to authenticate.",
+        "UptimeRobot will POST a payload that looks like this:"
+      ]
+    },
+    {
+      "type": "code",
+      "code": "{\n  \"hostname\": \"db-prod-01\",\n  \"status\": \"down\",\n  \"checkName\": \"PostgreSQL DB\",\n  \"lastCheck\": 1710000000\n}"
+    },
+    {
+      "type": "p",
+      "text": "WakeUp Dev accepts the payload as-is, mapping the status field to an alert severity and the hostname to the target. The service then triggers a voice call to the on‑call roster."
+    },
+    {
+      "type": "h2",
+      "text": "Voice ACK Flow"
+    },
+    {
+      "type": "p",
+      "text": "To keep alert fatigue low, WakeUp Dev uses a simple Twilio Gather that listens for a single digit. The TwiML looks like this:"
+    },
+    {
+      "type": "code",
+      "code": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Response>\n  <Gather numDigits=\"1\" action=\"https://api.wakeupdev.com/v1/ack\" method=\"POST\">\n    <Say voice=\"alice\">Alert: PostgreSQL DB is down. Press 1 to acknowledge.</Say>\n  </Gather>\n  <Say>We didn’t receive an ACK. Please call back.</Say>\n  <Hangup/>\n</Response>"
+    },
+    {
+      "type": "p",
+      "text": "When the on‑caller presses **1**, the action URL receives the digit and marks the alert as acknowledged. Because WakeUp Dev is seat‑agnostic, every team member can receive the call without additional licensing costs."
+    },
+    {
+      "type": "h2",
+      "text": "Pay‑Per‑Alert and Unlimited Seats"
+    },
+    {
+      "type": "p",
+      "text": "Unlike traditional on‑call platforms that bill per seat, WakeUp Dev charges only for the voice minutes used. A single alert that lasts 30 seconds costs a fraction of a cent, regardless of how many users are on the roster. This model scales naturally when adding new teams or rotating schedules."
+    },
+    {
+      "type": "code",
+      "code": "curl -X POST https://api.wakeupdev.com/v1/alert \\\n  -H \"Content-Type: application/json\" \\\n  -H \"x-api-key: YOUR_API_KEY\" \\\n  -d '{\n        \"hostname\": \"web-prod-02\",\n        \"status\": \"up\",\n        \"checkName\": \"Frontend\",\n        \"lastCheck\": 1710001234\n      }'"
+    },
+    {
+      "type": "p",
+      "text": "The response includes an alertId that can be used for programmatic ACKs or status queries."
+    },
+    {
+      "type": "p",
+      "text": "WakeUp Dev’s webhook‑centric design, combined with voice ACKs and a pay‑per‑alert model, gives SREs a lean, cost‑effective way to keep on‑call teams focused on real incidents."
+    },
+    {
+      "type": "discussion",
+      "text": "**Peer question:** How would you modify the Twilio Gather to support a multi‑digit confirmation code for high‑severity alerts?"
+    }
+  ]
+}

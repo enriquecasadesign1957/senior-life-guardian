@@ -1,0 +1,80 @@
+{
+  "slug": "uptimerobot-webhooks-to-wakeup-dev-zero-downtime-alerting",
+  "title": "UptimeRobot Webhooks to WakeUp Dev: Zero‑Downtime Alerting",
+  "description": "Learn how to wire UptimeRobot webhooks to WakeUp Dev’s POST /v1/alert, leveraging unlimited seats and pay‑per‑voice to keep on‑call teams focused.",
+  "keywords": [
+    "monitoring",
+    "webhooks",
+    "on-call",
+    "cost-efficiency",
+    "voice-alerts"
+  ],
+  "coverImage": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1600&h=900&q=80",
+  "dateIso": "2026-09-29",
+  "dateLabel": "September 29, 2026",
+  "author": "Enrique Drack",
+  "topic": "UptimeRobot Webhooks to WakeUp Dev: Zero‑Downtime Alerting",
+  "blocks": [
+    {
+      "type": "p",
+      "text": "WakeUp Dev’s voice‑first on‑call platform is built to ingest alerts from any webhook source, including UptimeRobot. By sending a single JSON payload to POST https://api.wakeupdev.com/v1/alert with your x‑api‑key, you can trigger a digit‑1 ACK call that routes the alert to the appropriate on‑call engineer without the overhead of per‑seat licensing."
+    },
+    {
+      "type": "h2",
+      "text": "Configuring UptimeRobot Webhooks"
+    },
+    {
+      "type": "p",
+      "text": "UptimeRobot supports a simple HTTP POST webhook that fires whenever a monitored URL goes down or comes back up. In the UptimeRobot dashboard:"
+    },
+    {
+      "type": "ul",
+      "items": [
+        "Create a new monitor or edit an existing one.",
+        "Under “Alert Contacts” add a new contact type “Webhook”.",
+        "Paste the WakeUp Dev webhook URL: https://api.wakeupdev.com/v1/alert.",
+        "Enable the “Send JSON” option so the payload contains status, hostname, and other metadata."
+      ]
+    },
+    {
+      "type": "p",
+      "text": "The webhook payload looks like this:"
+    },
+    {
+      "type": "code",
+      "code": "{\n  \"hostname\":\"app.example.com\",\n  \"status\":\"down\",\n  \"time\":\"2026-09-29T12:34:56Z\",\n  \"message\":\"HTTP 500\"\n}"
+    },
+    {
+      "type": "h2",
+      "text": "Sending Alerts to WakeUp Dev"
+    },
+    {
+      "type": "p",
+      "text": "WakeUp Dev expects a minimal JSON body with the fields title, description, and an optional metadata map. The following cURL example shows how to forward the UptimeRobot payload:"
+    },
+    {
+      "type": "code",
+      "code": "curl -X POST https://api.wakeupdev.com/v1/alert \\\n  -H \"Content-Type: application/json\" \\\n  -H \"x-api-key: YOUR_API_KEY\" \\\n  -d '{\n    \"title\": \"UptimeRobot: app.example.com is down\",\n    \"description\": \"HTTP 500 from UptimeRobot monitor\",\n    \"metadata\": {\n      \"hostname\": \"app.example.com\",\n      \"status\": \"down\",\n      \"time\": \"2026-09-29T12:34:56Z\"\n    }\n  }'"
+    },
+    {
+      "type": "p",
+      "text": "WakeUp Dev will immediately place a voice call to the on‑call engineer. The engineer presses 1 to ACK, and the call ends, eliminating the need for a live operator or a separate ticketing system."
+    },
+    {
+      "type": "h2",
+      "text": "Cost Advantages"
+    },
+    {
+      "type": "p",
+      "text": "Because WakeUp Dev charges per voice alert rather than per seat, you can add as many engineers as you need without incurring extra licensing fees. The pay‑per‑alert model scales with actual incidents, not with the number of team members. In a typical 30‑engineer squad, the cost savings compared to a per‑seat SaaS can reach 70% or more."
+    },
+    {
+      "type": "p",
+      "text": "By combining UptimeRobot’s free monitoring tier with WakeUp Dev’s unlimited‑seat, pay‑per‑voice architecture, you get a low‑cost, high‑reliability alerting pipeline that keeps on‑call fatigue to a minimum."
+    },
+    {
+      "type": "discussion",
+      "text": "What strategies do you use to keep alerting costs under control while maintaining rapid incident response?"
+    }
+  ]
+}
