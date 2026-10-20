@@ -21,6 +21,9 @@ create index if not exists idx_oncall_turnos_lookup
 
 alter table public.oncall_turnos enable row level security;
 
+grant select, insert, update, delete on table public.oncall_turnos to authenticated;
+grant select, insert, update, delete on table public.oncall_turnos to service_role;
+
 drop policy if exists "oncall_turnos_select_own" on public.oncall_turnos;
 create policy "oncall_turnos_select_own"
   on public.oncall_turnos for select

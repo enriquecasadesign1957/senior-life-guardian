@@ -32,6 +32,9 @@ create index if not exists idx_oncall_alertas_usuario_creada
 
 alter table public.oncall_alertas enable row level security;
 
+grant select on table public.oncall_alertas to authenticated;
+grant select, insert, update, delete on table public.oncall_alertas to service_role;
+
 drop policy if exists "oncall_alertas_select_own" on public.oncall_alertas;
 create policy "oncall_alertas_select_own"
   on public.oncall_alertas for select

@@ -33,6 +33,9 @@ CREATE INDEX IF NOT EXISTS oneclick_tx_store_buy_order_idx ON public.oneclick_tr
 
 ALTER TABLE public.oneclick_transactions ENABLE ROW LEVEL SECURITY;
 
+GRANT ALL ON public.oneclick_transactions TO service_role;
+GRANT ALL ON public.oneclick_transactions TO postgres;
+
 DROP POLICY IF EXISTS "Service role manages oneclick tx" ON public.oneclick_transactions;
 CREATE POLICY "Service role manages oneclick tx"
   ON public.oneclick_transactions

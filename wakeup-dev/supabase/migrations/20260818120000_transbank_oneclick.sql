@@ -47,3 +47,6 @@ create index if not exists idx_transbank_transactions_usuario
 
 alter table public.transbank_inscriptions enable row level security;
 alter table public.transbank_transactions enable row level security;
+
+grant select, insert, update, delete on table public.transbank_inscriptions to service_role;
+grant select, insert, update, delete on table public.transbank_transactions to service_role;

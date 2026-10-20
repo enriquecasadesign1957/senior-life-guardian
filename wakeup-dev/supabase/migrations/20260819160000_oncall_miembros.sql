@@ -19,6 +19,9 @@ create index if not exists idx_oncall_miembros_usuario_orden
 
 alter table public.oncall_miembros enable row level security;
 
+grant select, insert, update, delete on table public.oncall_miembros to authenticated;
+grant select, insert, update, delete on table public.oncall_miembros to service_role;
+
 drop policy if exists "oncall_miembros_select_own" on public.oncall_miembros;
 create policy "oncall_miembros_select_own"
   on public.oncall_miembros for select

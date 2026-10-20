@@ -42,6 +42,10 @@ create index if not exists idx_oncall_credito_lotes_expira
 alter table public.oncall_cupones_credito enable row level security;
 alter table public.oncall_credito_lotes enable row level security;
 
+grant select, insert, update, delete on table public.oncall_cupones_credito to service_role;
+grant select on table public.oncall_credito_lotes to authenticated;
+grant select, insert, update, delete on table public.oncall_credito_lotes to service_role;
+
 drop policy if exists "credito_lotes_select_own" on public.oncall_credito_lotes;
 create policy "credito_lotes_select_own"
   on public.oncall_credito_lotes for select

@@ -59,6 +59,9 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
+GRANT ALL ON public.email_send_log TO service_role;
+GRANT ALL ON public.email_send_log TO postgres;
+
 CREATE INDEX IF NOT EXISTS idx_email_send_log_created ON public.email_send_log(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_email_send_log_recipient ON public.email_send_log(recipient_email);
 
@@ -123,6 +126,9 @@ DO $$ BEGIN
     WITH CHECK (auth.role() = 'service_role');
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
+
+GRANT ALL ON public.email_send_state TO service_role;
+GRANT ALL ON public.email_send_state TO postgres;
 
 -- RPC wrappers so Edge Functions can interact with pgmq via supabase.rpc()
 -- (PostgREST only exposes functions in the public schema; pgmq functions are in the pgmq schema)
@@ -231,6 +237,9 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
+GRANT ALL ON public.suppressed_emails TO service_role;
+GRANT ALL ON public.suppressed_emails TO postgres;
+
 CREATE INDEX IF NOT EXISTS idx_suppressed_emails_email ON public.suppressed_emails(email);
 
 -- Email unsubscribe tokens table (one token per email address for unsubscribe links)
@@ -266,6 +275,9 @@ DO $$ BEGIN
     WITH CHECK (auth.role() = 'service_role');
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
+
+GRANT ALL ON public.email_unsubscribe_tokens TO service_role;
+GRANT ALL ON public.email_unsubscribe_tokens TO postgres;
 
 CREATE INDEX IF NOT EXISTS idx_unsubscribe_tokens_token ON public.email_unsubscribe_tokens(token);
 

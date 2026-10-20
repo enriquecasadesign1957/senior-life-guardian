@@ -19,6 +19,9 @@ CREATE UNIQUE INDEX trial_signups_email_unique ON public.trial_signups (lower(em
 
 ALTER TABLE public.trial_signups ENABLE ROW LEVEL SECURITY;
 
+GRANT ALL ON public.trial_signups TO service_role;
+GRANT ALL ON public.trial_signups TO postgres;
+
 CREATE POLICY "Anyone can create a trial signup"
 ON public.trial_signups
 FOR INSERT

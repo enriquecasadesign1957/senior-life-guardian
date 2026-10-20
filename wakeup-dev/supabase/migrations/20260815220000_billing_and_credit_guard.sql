@@ -22,6 +22,8 @@ create index if not exists idx_billing_events_usuario_id
 
 alter table public.billing_events enable row level security;
 
+grant select, insert, update, delete on table public.billing_events to service_role;
+
 -- =========================================================
 -- Recarga atómica + idempotente
 -- =========================================================

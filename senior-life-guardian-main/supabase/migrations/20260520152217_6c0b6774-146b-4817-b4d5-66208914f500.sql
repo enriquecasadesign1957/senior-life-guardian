@@ -37,6 +37,9 @@ CREATE INDEX IF NOT EXISTS alert_logs_event_type_idx
 
 ALTER TABLE public.alert_logs ENABLE ROW LEVEL SECURITY;
 
+GRANT ALL ON public.alert_logs TO service_role;
+GRANT ALL ON public.alert_logs TO postgres;
+
 CREATE POLICY "Service role manages alert_logs"
   ON public.alert_logs FOR ALL
   USING (auth.role() = 'service_role')
