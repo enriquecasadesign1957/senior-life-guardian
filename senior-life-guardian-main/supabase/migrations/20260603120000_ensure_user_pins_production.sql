@@ -9,6 +9,9 @@ CREATE TABLE IF NOT EXISTS public.user_pins (
 
 ALTER TABLE public.user_pins ENABLE ROW LEVEL SECURITY;
 
+GRANT ALL ON public.user_pins TO service_role;
+GRANT ALL ON public.user_pins TO postgres;
+
 DROP POLICY IF EXISTS "Service role manages user_pins" ON public.user_pins;
 CREATE POLICY "Service role manages user_pins"
   ON public.user_pins FOR ALL
@@ -28,6 +31,9 @@ CREATE TABLE IF NOT EXISTS public.emergency_contacts (
 );
 
 ALTER TABLE public.emergency_contacts ENABLE ROW LEVEL SECURITY;
+
+GRANT ALL ON public.emergency_contacts TO service_role;
+GRANT ALL ON public.emergency_contacts TO postgres;
 
 DROP POLICY IF EXISTS "Service role manages emergency_contacts" ON public.emergency_contacts;
 CREATE POLICY "Service role manages emergency_contacts"

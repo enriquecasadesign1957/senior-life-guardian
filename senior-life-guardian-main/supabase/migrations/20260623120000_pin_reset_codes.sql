@@ -15,6 +15,9 @@ CREATE INDEX IF NOT EXISTS pin_reset_codes_signup_idx
 
 ALTER TABLE public.pin_reset_codes ENABLE ROW LEVEL SECURITY;
 
+GRANT ALL ON public.pin_reset_codes TO service_role;
+GRANT ALL ON public.pin_reset_codes TO postgres;
+
 DROP POLICY IF EXISTS "service_role manages pin_reset_codes" ON public.pin_reset_codes;
 CREATE POLICY "service_role manages pin_reset_codes"
   ON public.pin_reset_codes FOR ALL

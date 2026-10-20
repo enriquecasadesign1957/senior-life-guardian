@@ -17,6 +17,10 @@ create table if not exists public.usuarios (
 
 create index if not exists idx_usuarios_email on public.usuarios (email);
 
+-- Data API: el browser solo lee; el contacto se actualiza por columnas más abajo.
+grant select on table public.usuarios to authenticated;
+grant select, insert, update, delete on table public.usuarios to service_role;
+
 -- =========================================================
 -- 2) api_keys
 -- =========================================================
@@ -30,6 +34,9 @@ create table if not exists public.api_keys (
 
 create index if not exists idx_api_keys_usuario_id on public.api_keys (usuario_id);
 create index if not exists idx_api_keys_activa on public.api_keys (activa) where activa = true;
+
+grant select, insert, update, delete on table public.api_keys to authenticated;
+grant select, insert, update, delete on table public.api_keys to service_role;
 
 -- =========================================================
 -- 3) historial_alertas
@@ -50,6 +57,9 @@ create index if not exists idx_historial_alertas_usuario_id
   on public.historial_alertas (usuario_id);
 create index if not exists idx_historial_alertas_creada_en
   on public.historial_alertas (creada_en desc);
+
+grant select on table public.historial_alertas to authenticated;
+grant select, insert, update, delete on table public.historial_alertas to service_role;
 
 -- =========================================================
 -- Trigger: fila en usuarios al registrarse en Auth
@@ -177,6 +187,8 @@ create index if not exists idx_billing_events_usuario_id
 
 alter table public.billing_events enable row level security;
 
+grant select, insert, update, delete on table public.billing_events to service_role;
+
 -- =========================================================
 -- 4b) Transbank Oneclick Mall (Chile) — tokens WK- distintos de Senior Safe
 -- =========================================================
@@ -225,6 +237,9 @@ create index if not exists idx_transbank_transactions_usuario
 
 alter table public.transbank_inscriptions enable row level security;
 alter table public.transbank_transactions enable row level security;
+
+grant select, insert, update, delete on table public.transbank_inscriptions to service_role;
+grant select, insert, update, delete on table public.transbank_transactions to service_role;
 
 -- =========================================================
 -- Recarga atómica + idempotente de créditos (solo service_role)

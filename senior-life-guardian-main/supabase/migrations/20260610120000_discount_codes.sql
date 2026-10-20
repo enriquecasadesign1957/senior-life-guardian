@@ -34,6 +34,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS discount_codes_code_unique
 
 ALTER TABLE public.discount_codes ENABLE ROW LEVEL SECURITY;
 
+GRANT ALL ON public.discount_codes TO service_role;
+GRANT ALL ON public.discount_codes TO postgres;
+
 DROP POLICY IF EXISTS "Service role manages discount_codes" ON public.discount_codes;
 CREATE POLICY "Service role manages discount_codes"
   ON public.discount_codes

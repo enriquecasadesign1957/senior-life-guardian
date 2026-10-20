@@ -15,6 +15,10 @@ CREATE UNIQUE INDEX IF NOT EXISTS user_roles_unique_idx
   ON public.user_roles (COALESCE(trial_signup_id::text,''), COALESCE(family_member_id::text,''), role);
 
 ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
+
+GRANT ALL ON public.user_roles TO service_role;
+GRANT ALL ON public.user_roles TO postgres;
+
 DROP POLICY IF EXISTS "service_role manages user_roles" ON public.user_roles;
 CREATE POLICY "service_role manages user_roles" ON public.user_roles
   FOR ALL USING (auth.role() = 'service_role') WITH CHECK (auth.role() = 'service_role');
@@ -42,6 +46,10 @@ CREATE TABLE IF NOT EXISTS public.device_status (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 ALTER TABLE public.device_status ENABLE ROW LEVEL SECURITY;
+
+GRANT ALL ON public.device_status TO service_role;
+GRANT ALL ON public.device_status TO postgres;
+
 DROP POLICY IF EXISTS "service_role manages device_status" ON public.device_status;
 CREATE POLICY "service_role manages device_status" ON public.device_status
   FOR ALL USING (auth.role() = 'service_role') WITH CHECK (auth.role() = 'service_role');
@@ -74,6 +82,10 @@ CREATE TABLE IF NOT EXISTS public.family_members (
 CREATE UNIQUE INDEX IF NOT EXISTS family_members_signup_phone_idx
   ON public.family_members (trial_signup_id, telefono);
 ALTER TABLE public.family_members ENABLE ROW LEVEL SECURITY;
+
+GRANT ALL ON public.family_members TO service_role;
+GRANT ALL ON public.family_members TO postgres;
+
 DROP POLICY IF EXISTS "service_role manages family_members" ON public.family_members;
 CREATE POLICY "service_role manages family_members" ON public.family_members
   FOR ALL USING (auth.role() = 'service_role') WITH CHECK (auth.role() = 'service_role');
@@ -91,6 +103,10 @@ CREATE TABLE IF NOT EXISTS public.family_login_codes (
 CREATE INDEX IF NOT EXISTS family_login_codes_phone_idx
   ON public.family_login_codes (telefono, created_at DESC);
 ALTER TABLE public.family_login_codes ENABLE ROW LEVEL SECURITY;
+
+GRANT ALL ON public.family_login_codes TO service_role;
+GRANT ALL ON public.family_login_codes TO postgres;
+
 DROP POLICY IF EXISTS "service_role manages family_login_codes" ON public.family_login_codes;
 CREATE POLICY "service_role manages family_login_codes" ON public.family_login_codes
   FOR ALL USING (auth.role() = 'service_role') WITH CHECK (auth.role() = 'service_role');
@@ -107,6 +123,10 @@ CREATE TABLE IF NOT EXISTS public.family_access_log (
 CREATE INDEX IF NOT EXISTS family_access_log_member_idx
   ON public.family_access_log (family_member_id, created_at DESC);
 ALTER TABLE public.family_access_log ENABLE ROW LEVEL SECURITY;
+
+GRANT ALL ON public.family_access_log TO service_role;
+GRANT ALL ON public.family_access_log TO postgres;
+
 DROP POLICY IF EXISTS "service_role manages family_access_log" ON public.family_access_log;
 CREATE POLICY "service_role manages family_access_log" ON public.family_access_log
   FOR ALL USING (auth.role() = 'service_role') WITH CHECK (auth.role() = 'service_role');

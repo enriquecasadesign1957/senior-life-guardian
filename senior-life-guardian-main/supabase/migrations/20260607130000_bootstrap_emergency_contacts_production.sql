@@ -21,6 +21,9 @@ ALTER TABLE public.emergency_contacts
 
 ALTER TABLE public.emergency_contacts ENABLE ROW LEVEL SECURITY;
 
+GRANT ALL ON public.emergency_contacts TO service_role;
+GRANT ALL ON public.emergency_contacts TO postgres;
+
 DROP POLICY IF EXISTS "Service role manages emergency_contacts" ON public.emergency_contacts;
 CREATE POLICY "Service role manages emergency_contacts"
   ON public.emergency_contacts FOR ALL

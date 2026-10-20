@@ -17,6 +17,9 @@ create index if not exists whatsapp_inbox_messages_peer_idx
 
 ALTER TABLE public.whatsapp_inbox_messages ENABLE ROW LEVEL SECURITY;
 
+GRANT ALL ON public.whatsapp_inbox_messages TO service_role;
+GRANT ALL ON public.whatsapp_inbox_messages TO postgres;
+
 DROP POLICY IF EXISTS "Service role manages whatsapp_inbox_messages" ON public.whatsapp_inbox_messages;
 CREATE POLICY "Service role manages whatsapp_inbox_messages"
   ON public.whatsapp_inbox_messages

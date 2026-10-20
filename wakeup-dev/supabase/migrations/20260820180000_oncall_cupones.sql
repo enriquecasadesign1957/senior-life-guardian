@@ -40,6 +40,9 @@ alter table public.transbank_transactions
 alter table public.oncall_cupones enable row level security;
 alter table public.oncall_cupon_redenciones enable row level security;
 
+grant select, insert, update, delete on table public.oncall_cupones to service_role;
+grant select, insert, update, delete on table public.oncall_cupon_redenciones to service_role;
+
 create or replace function public.validar_cupon_oncall(
   p_codigo text,
   p_base_clp integer default 25000

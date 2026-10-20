@@ -18,6 +18,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS family_members_signup_phone_idx
 
 ALTER TABLE public.family_members ENABLE ROW LEVEL SECURITY;
 
+GRANT ALL ON public.family_members TO service_role;
+GRANT ALL ON public.family_members TO postgres;
+
 DROP POLICY IF EXISTS "service_role manages family_members" ON public.family_members;
 CREATE POLICY "service_role manages family_members"
   ON public.family_members FOR ALL
@@ -39,6 +42,9 @@ CREATE INDEX IF NOT EXISTS family_login_codes_phone_idx
 
 ALTER TABLE public.family_login_codes ENABLE ROW LEVEL SECURITY;
 
+GRANT ALL ON public.family_login_codes TO service_role;
+GRANT ALL ON public.family_login_codes TO postgres;
+
 DROP POLICY IF EXISTS "service_role manages family_login_codes" ON public.family_login_codes;
 CREATE POLICY "service_role manages family_login_codes"
   ON public.family_login_codes FOR ALL
@@ -58,6 +64,9 @@ CREATE INDEX IF NOT EXISTS family_access_log_member_idx
   ON public.family_access_log (family_member_id, created_at DESC);
 
 ALTER TABLE public.family_access_log ENABLE ROW LEVEL SECURITY;
+
+GRANT ALL ON public.family_access_log TO service_role;
+GRANT ALL ON public.family_access_log TO postgres;
 
 DROP POLICY IF EXISTS "service_role manages family_access_log" ON public.family_access_log;
 CREATE POLICY "service_role manages family_access_log"

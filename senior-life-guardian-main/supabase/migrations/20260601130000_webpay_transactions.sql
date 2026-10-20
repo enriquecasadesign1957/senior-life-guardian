@@ -24,6 +24,9 @@ CREATE INDEX IF NOT EXISTS webpay_tx_token_idx ON public.webpay_transactions(tok
 
 ALTER TABLE public.webpay_transactions ENABLE ROW LEVEL SECURITY;
 
+GRANT ALL ON public.webpay_transactions TO service_role;
+GRANT ALL ON public.webpay_transactions TO postgres;
+
 DROP POLICY IF EXISTS "Service role manages webpay tx" ON public.webpay_transactions;
 CREATE POLICY "Service role manages webpay tx"
   ON public.webpay_transactions

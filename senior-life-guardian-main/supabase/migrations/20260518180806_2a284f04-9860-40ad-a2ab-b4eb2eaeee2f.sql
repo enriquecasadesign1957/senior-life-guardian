@@ -33,6 +33,9 @@ CREATE TABLE IF NOT EXISTS public.webpay_transactions (
 
 ALTER TABLE public.webpay_transactions ENABLE ROW LEVEL SECURITY;
 
+GRANT ALL ON public.webpay_transactions TO service_role;
+GRANT ALL ON public.webpay_transactions TO postgres;
+
 -- Only service role can read/write — no direct client access
 CREATE POLICY "Service role manages webpay tx"
   ON public.webpay_transactions

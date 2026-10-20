@@ -31,6 +31,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS contract_signups_email_unique
 
 ALTER TABLE public.contract_signups ENABLE ROW LEVEL SECURITY;
 
+GRANT ALL ON public.contract_signups TO service_role;
+GRANT ALL ON public.contract_signups TO postgres;
+
 DROP POLICY IF EXISTS "Service role manages contract_signups" ON public.contract_signups;
 CREATE POLICY "Service role manages contract_signups"
   ON public.contract_signups
