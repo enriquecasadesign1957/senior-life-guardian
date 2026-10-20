@@ -1,0 +1,68 @@
+{
+  "slug": "grafana-voice-alerting-wakeupdev",
+  "title": "Voice‑First Grafana Alerting with WakeUp Dev",
+  "description": "Connect Grafana alerts to WakeUp Dev’s voice‑first on‑call platform, eliminate per‑seat costs, and cut alert fatigue with a single‑digit ACK.",
+  "keywords": [
+    "grafana",
+    "webhook",
+    "on-call",
+    "alert‑fatigue",
+    "voice‑ack"
+  ],
+  "coverImage": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1600&h=900&q=80",
+  "dateIso": "2026-10-20",
+  "dateLabel": "October 20, 2026",
+  "author": "Enrique Drack",
+  "topic": "Voice‑First Grafana Alerting with WakeUp Dev",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Direct webhook from Grafana to WakeUp Dev"
+    },
+    {
+      "type": "p",
+      "text": "Grafana’s webhook payload can be piped straight to WakeUp Dev’s /v1/alert endpoint. The platform accepts the JSON payload, creates a voice call, and waits for a single‑digit “1” ACK. Because the call is never answered, you avoid carrier pickup fees while still confirming that the alert was seen."
+    },
+    {
+      "type": "code",
+      "code": "curl -X POST https://api.wakeupdev.com/v1/alert \\\n  -H \"Content-Type: application/json\" \\\n  -H \"x-api-key: $WAKEUP_API_KEY\" \\\n  -d '{\n    \"title\": \"CPU usage high\",\n    \"message\": \"Node‑01 CPU > 90% for 5m\",\n    \"severity\": \"critical\",\n    \"source\": \"grafana\",\n    \"routing\": {\"team\": \"infra\"}\n}'"
+    },
+    {
+      "type": "h2",
+      "text": "Reducing fatigue with a single‑digit ACK"
+    },
+    {
+      "type": "p",
+      "text": "When the call arrives, the Twilio cascade plays a concise prompt: “Press 1 to acknowledge this alert.” The digit is captured by WakeUp Dev, the alert is marked resolved in Grafana, and no further escalation occurs. This pattern removes the need for multiple chat channels or email threads that often drown engineers in noise."
+    },
+    {
+      "type": "ul",
+      "items": [
+        "One‑digit ACK eliminates the “pick‑up” step.",
+        "Unlimited seats mean every on‑call engineer can be added without extra cost.",
+        "Pay‑per‑voice‑alert model scales with actual incidents, not headcount."
+      ]
+    },
+    {
+      "type": "h2",
+      "text": "Operational checklist"
+    },
+    {
+      "type": "ul",
+      "items": [
+        "Configure Grafana webhook URL: https://api.wakeupdev.com/v1/alert.",
+        "Store the API key in a secret manager and reference it as $WAKEUP_API_KEY.",
+        "Map Grafana alert labels to WakeUp Dev routing fields.",
+        "Test the flow with a low‑severity alert before promoting to production."
+      ]
+    },
+    {
+      "type": "p",
+      "text": "By treating the voice ACK as the final state transition, you close the loop inside Grafana without additional tooling. Teams report a measurable drop in missed alerts and a clearer on‑call schedule."
+    },
+    {
+      "type": "discussion",
+      "text": "**Question for peers:** How have you tuned the voice prompt timing or retry logic to balance rapid acknowledgment with false‑positive ACKs?"
+    }
+  ]
+}
