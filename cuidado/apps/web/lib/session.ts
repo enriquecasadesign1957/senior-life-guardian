@@ -57,6 +57,18 @@ export async function currentUserId(): Promise<string> {
   return id;
 }
 
+export async function optionalUserId(): Promise<string | null> {
+  try {
+    const jar = await cookies();
+    const existing = readSigned(jar.get(COOKIE)?.value);
+    if (!existing) return null;
+    const found = await getDb().select({ id: users.id }).from(users).where(eq(users.id, existing)).limit(1);
+    return found[0]?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function requireUserId(): Promise<string> {
   const jar = await cookies();
   const existing = readSigned(jar.get(COOKIE)?.value);

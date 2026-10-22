@@ -132,6 +132,13 @@ async function finishScan(scanId: string, requestedUrl: string, userId: string, 
             text: explained.summary,
             heavyImages: metrics.heavyImages,
             renderBlocking: metrics.renderBlocking,
+            inventory: {
+              revisions: plugin.revisions,
+              expiredTransients: plugin.expiredTransients,
+              spamComments: plugin.spamComments,
+              bytes: plugin.bytes,
+              overLimit: plugin.overLimit,
+            },
           },
           expiresAt: new Date(Date.now() + DIAGNOSIS_TTL_MS),
           error: null,
@@ -216,6 +223,7 @@ async function pluginInventory(requestedUrl: string, siteId: string | undefined)
     revisions: null as number | null,
     expiredTransients: null as number | null,
     spamComments: null as number | null,
+    bytes: null as number | null,
     innodb: null as boolean | null,
     overLimit: false,
   };
@@ -230,6 +238,7 @@ async function pluginInventory(requestedUrl: string, siteId: string | undefined)
       revisions: failure.counts?.revisions ?? null,
       expiredTransients: failure.counts?.expiredTransients ?? null,
       spamComments: failure.counts?.spamComments ?? null,
+      bytes: null,
       innodb: failure.code === "INNODB_REQUIRED" ? false : failure.code === "PAYLOAD_LIMIT" ? true : null,
       overLimit: failure.code === "PAYLOAD_LIMIT",
     };
@@ -238,6 +247,7 @@ async function pluginInventory(requestedUrl: string, siteId: string | undefined)
     revisions: snapshot.counts.revisions,
     expiredTransients: snapshot.counts.expiredTransients,
     spamComments: snapshot.counts.spamComments,
+    bytes: snapshot.bytes.revisions + snapshot.bytes.expiredTransients + snapshot.bytes.spamComments,
     innodb: true,
     overLimit: false,
   };

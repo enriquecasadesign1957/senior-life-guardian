@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import { jsonError } from "@/lib/http";
 import { ApiError } from "@/lib/errors";
 import { assertPublicUrl } from "@/lib/urls";
-import { isWatchActive } from "@/lib/watch";
+import { classifyProbe, isWatchActive, nextProbeStreak } from "@/lib/watch";
 
 export const runtime = "nodejs";
 
@@ -24,6 +24,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         baseUrl: sites.baseUrl,
         plan: sites.plan,
         watchUntil: sites.watchUntil,
+        probeStreak: sites.probeStreak,
       })
       .from(sites)
       .where(
@@ -34,11 +35,11 @@ export async function POST(request: Request): Promise<NextResponse> {
       )
       .limit(50);
 
-    const checked: Array<{ id: string; active: boolean; status: number | null }> = [];
+    const checked: Array<{ id: string; active: boolean; status: number | null; streak: number | null }> = [];
     for (const site of rows) {
       const active = isWatchActive({ plan: site.plan, watchUntil: site.watchUntil }, now);
       if (!active) {
-        checked.push({ id: site.id, active: false, status: null });
+        checked.push({ id: site.id, active: false, status: null, streak: null });
         continue;
       }
       let status: number | null = null;
@@ -54,7 +55,13 @@ export async function POST(request: Request): Promise<NextResponse> {
       } finally {
         clearTimeout(timer);
       }
-      checked.push({ id: site.id, active: true, status });
+      const level = classifyProbe(status);
+      const streak = nextProbeStreak(site.probeStreak, level);
+      await db
+        .update(sites)
+        .set({ lastProbeStatus: status, lastProbeAt: now, probeStreak: streak })
+        .where(eq(sites.id, site.id));
+      checked.push({ id: site.id, active: true, status, streak });
     }
     return NextResponse.json({ checked: checked.length, sites: checked });
   } catch (error) {
