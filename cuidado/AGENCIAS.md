@@ -20,4 +20,6 @@ La caída real, dos fallos seguidos de tiempo de espera, DNS, conexión rechazad
 
 El 404 y la recuperación siguen por correo, sin llamada. Al dueño del sitio no se le llama: recibe un aviso claro. WhatsApp no reemplaza la cascada. WakeUp Dev confirma por teléfono, y un mensaje no deja constancia de que alguien tomó el incidente.
 
+Si la agencia es una sola persona y no contesta ni pulsa 1, no se le vuelve a llamar por ese mismo incidente. CuidadoWeb le envía un correo, no WakeUp Dev. El correo dice la hora de la llamada en Chile, que nadie pulsó 1, y qué sitio era. Es un solo correo por incidente. Al dueño no se le dice que la agencia no contestó.
+
 En Reparto la agencia entra en la cascada solo si va a contestar al dueño. En Alianza la llamada incluye a la persona de esa agencia que está de guardia.
