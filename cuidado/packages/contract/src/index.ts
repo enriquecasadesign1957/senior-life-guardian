@@ -32,6 +32,13 @@ export const cleanupSimulateSchema = z.object({
   siteId: z.string().uuid(),
 });
 
+export const rescueCheckoutSchema = cleanupSimulateSchema.extend({
+  returnPath: z
+    .string()
+    .regex(/^\/informe\/[0-9a-fA-F-]{36}$/)
+    .optional(),
+});
+
 export const payloadCountsSchema = z.object({
   revisions: z.number().int().nonnegative(),
   expiredTransients: z.number().int().nonnegative(),

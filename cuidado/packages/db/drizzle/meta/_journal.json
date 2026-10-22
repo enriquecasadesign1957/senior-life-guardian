@@ -15,6 +15,13 @@
       "when": 1792700988050,
       "tag": "0001_site_probe",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792711482684,
+      "tag": "0002_rescue_checkout",
+      "breakpoints": true
     }
   ]
 }

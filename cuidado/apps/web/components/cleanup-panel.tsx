@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { cleanupProjection, type CleanupPreview } from "@/lib/panel";
+import { isStripeCheckoutUrl } from "@/lib/rescue";
 
 type SimulateBody = {
   needsPayment?: boolean;
@@ -67,10 +68,17 @@ export function CleanupPanel({ siteId }: { siteId: string | null }) {
       const response = await fetch("/api/checkout/rescue", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ siteId }),
+        body: JSON.stringify({
+          siteId,
+          returnPath: /^\/informe\/[0-9a-f-]{36}$/i.test(window.location.pathname) ? window.location.pathname : undefined,
+        }),
       });
-      const body = await response.json();
-      setMessage(body?.error?.message ?? "El cobro de $29 todavía no está conectado. No se ha cobrado nada.");
+      const body = (await response.json()) as { url?: string; error?: { message?: string } };
+      if (typeof body.url === "string" && isStripeCheckoutUrl(body.url)) {
+        window.location.assign(body.url);
+        return;
+      }
+      setMessage(body?.error?.message ?? "El cobro de $29 no se abrió. No se ha cobrado nada.");
     } catch {
       setMessage("El cobro de $29 todavía no está conectado. No se ha cobrado nada.");
     } finally {

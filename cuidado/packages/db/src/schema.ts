@@ -77,6 +77,7 @@ export const sites = pgTable(
     status: siteStatus("status").default("pending").notNull(),
     plan: sitePlan("plan").default("none").notNull(),
     watchUntil: timestamp("watch_until", tz),
+    rescueCheckoutId: text("rescue_checkout_id").unique(),
     connectedAt: timestamp("connected_at", tz),
     lastProbeStatus: integer("last_probe_status"),
     lastProbeAt: timestamp("last_probe_at", tz),
