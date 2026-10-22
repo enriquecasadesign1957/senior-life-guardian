@@ -3,7 +3,7 @@ import { findings, getDb, scanRuns, sites } from "@cuidado/db";
 import { notFound } from "next/navigation";
 import { CleanupPanel } from "@/components/cleanup-panel";
 import { IncidentNotice } from "@/components/incident-notice";
-import { JunkMeter } from "@/components/junk-meter";
+import { ReliefCompare } from "@/components/relief-compare";
 import { Reassurance } from "@/components/reassurance";
 import { RevokeAccess } from "@/components/revoke-access";
 import { ScoreMeter } from "@/components/score-meter";
@@ -85,20 +85,23 @@ export default async function InformePage({ params, searchParams }: PageProps) {
 
       <section className="grid gap-4 sm:grid-cols-3">
         <article className="rounded-2xl bg-white p-4">
-          <p className="text-sm text-stone-500">LCP</p>
+          <p className="text-xs tracking-wide text-stone-400">LCP</p>
+          <p className="mt-1 text-sm text-stone-600">Lo principal tarda</p>
           <p className="text-2xl font-semibold">{seconds(scan.lcpMs)}</p>
         </article>
         <article className="rounded-2xl bg-white p-4">
-          <p className="text-sm text-stone-500">INP</p>
+          <p className="text-xs tracking-wide text-stone-400">INP</p>
+          <p className="mt-1 text-sm text-stone-600">Responde al toque</p>
           <p className="text-2xl font-semibold">{seconds(scan.inpMs)}</p>
         </article>
         <article className="rounded-2xl bg-white p-4">
-          <p className="text-sm text-stone-500">CLS</p>
+          <p className="text-xs tracking-wide text-stone-400">CLS</p>
+          <p className="mt-1 text-sm text-stone-600">Se mueve al cargar</p>
           <p className="text-2xl font-semibold">{cls(scan.clsMilli)}</p>
         </article>
       </section>
 
-      <JunkMeter revisions={summary?.inventory?.revisions ?? null} />
+      <ReliefCompare revisions={summary?.inventory?.revisions ?? null} />
 
       <p className="text-lg">{summary?.text}</p>
       {summary?.wordpress === false ? (

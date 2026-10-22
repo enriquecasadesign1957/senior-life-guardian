@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { UploadGuide } from "@/components/upload-guide";
-
 const TOKEN = /^[a-f0-9]{32}$/;
 
 export function ConnectorPanel() {
@@ -49,9 +47,9 @@ export function ConnectorPanel() {
   }
 
   return (
-    <div className="mt-8 border-t border-stone-200 pt-6">
-      <h2 className="font-display text-lg text-ink">Para limpiar o vigilar, conecta el sitio</h2>
-      <p className="mt-1 text-sm text-stone-600">El diagnóstico gratis no necesita plugin. La limpieza sí.</p>
+    <div>
+      <h2 className="font-display text-3xl tracking-tight text-ink">Para limpiar o vigilar, conecta el sitio</h2>
+      <p className="mt-2 text-sm text-stone-600">El diagnóstico gratis no necesita plugin. La limpieza sí.</p>
       <ol className="mt-5 space-y-6">
         <li>
           <Step n="1" title="Descarga el conector" />
@@ -64,8 +62,7 @@ export function ConnectorPanel() {
         </li>
         <li>
           <Step n="2" title="Súbelo en WordPress" />
-          <p className="mt-2 text-sm text-stone-600">Plugins, Añadir plugin, Subir plugin. Luego actívalo.</p>
-          <UploadGuide />
+          <p className="mt-2 text-sm text-stone-600">Como en la imagen: Plugins, Subir plugin, Instalar ahora. Luego actívalo.</p>
           {uploadHref ? (
             <a className="mt-2 inline-block text-sm underline decoration-stone-400 underline-offset-2" href={uploadHref}>
               Abrir esa pantalla en tu sitio

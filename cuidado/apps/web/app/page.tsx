@@ -10,7 +10,7 @@ const allianceMailto =
 export default function HomePage() {
   return (
     <div>
-      <section className="mx-auto grid max-w-6xl items-start gap-12 px-6 py-14 lg:grid-cols-[1.05fr_0.95fr] lg:py-20">
+      <section className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-14 lg:grid-cols-[1.05fr_0.9fr] lg:py-20">
         <div className="max-w-xl">
           <p className="text-sm font-medium tracking-wide text-pine">CuidadoWeb.com</p>
           <h1 className="mt-4 text-4xl leading-[1.08] tracking-tight sm:text-6xl">
@@ -19,13 +19,41 @@ export default function HomePage() {
           <p className="mt-6 text-lg text-stone-700">
             Sin tocar código. Sin riesgos innecesarios. Sin romper tu sitio.
           </p>
-          <p className="mt-4 text-base text-stone-600">Diagnostica gratis tu web en menos de 2 minutos.</p>
+          <ul className="mt-8 flex flex-wrap gap-x-8 gap-y-3 text-sm">
+            <li>
+              <a href="#analizar" className="font-display text-2xl text-ink">
+                Gratis
+              </a>
+              <p className="text-stone-500">el diagnóstico</p>
+            </li>
+            <li>
+              <a href="#precios" className="font-display text-2xl text-ink">
+                $29
+              </a>
+              <p className="text-stone-500">una vez</p>
+            </li>
+            <li>
+              <a href="#precios" className="font-display text-2xl text-ink">
+                $19
+              </a>
+              <p className="text-stone-500">al mes</p>
+            </li>
+          </ul>
+          <div id="analizar" className="mt-8 scroll-mt-28">
+            <AnalyzeForm inputId="url" buttonLabel="Analizar mi sitio gratis" />
+            <p className="mt-3 text-sm text-stone-500">Sin tarjeta de crédito. Sin compromisos. Sin riesgos.</p>
+          </div>
         </div>
-        <div id="analizar" className="scroll-mt-28 rounded-3xl border border-stone-200 bg-white p-5 shadow-sm sm:p-8">
-          <AnalyzeForm inputId="url" buttonLabel="Analizar mi sitio gratis" />
-          <p className="mt-3 text-sm text-stone-500">Sin tarjeta de crédito. Sin compromisos. Sin riesgos.</p>
-          <ConnectorPanel />
-        </div>
+        <figure className="mx-auto w-full max-w-sm">
+          <img
+            src="/pagina-100.jpg"
+            alt="Ejemplo de un puntaje móvil 100 con un check verde"
+            className="w-full rounded-[2rem]"
+          />
+          <figcaption className="mt-3 text-center text-sm text-stone-500">
+            Así se ve cuando queda bien. El tuyo sale al pegar la dirección.
+          </figcaption>
+        </figure>
       </section>
 
       <section className="border-y border-stone-200 bg-white">
@@ -107,6 +135,9 @@ export default function HomePage() {
                 <p className="mt-8 text-sm text-stone-500">Rescate</p>
                 <p className="font-display text-4xl">$29</p>
                 <p className="text-sm text-stone-600">pago único</p>
+                <a href="#conector" className="mt-6 inline-block text-sm font-medium text-pine underline decoration-pine/40 underline-offset-4">
+                  Ver cómo se instala el conector
+                </a>
               </div>
               <div className="space-y-6">
                 <div>
@@ -173,6 +204,22 @@ export default function HomePage() {
               </div>
             </article>
           </div>
+        </div>
+      </section>
+
+      <section id="conector" className="scroll-mt-28 border-y border-stone-200 bg-white">
+        <div className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-16 lg:grid-cols-2">
+          <figure>
+            <img
+              src="/plugin-instalado.jpg"
+              alt="Pantalla de WordPress subiendo el archivo cuidado-conector.zip"
+              className="w-full rounded-3xl border border-stone-200"
+            />
+            <figcaption className="mt-3 text-sm text-stone-500">
+              Plugins, Subir plugin, Instalar ahora. El archivo se llama cuidado-conector.zip.
+            </figcaption>
+          </figure>
+          <ConnectorPanel />
         </div>
       </section>
 
