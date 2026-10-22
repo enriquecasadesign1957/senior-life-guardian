@@ -29,7 +29,7 @@ export default async function InformePage({ params, searchParams }: PageProps) {
   const siteId = query.siteId ?? scan.siteId;
 
   return (
-    <div className="space-y-8">
+    <div className="mx-auto max-w-3xl space-y-8 px-6 py-12">
       <div>
         <p className="text-sm text-stone-500">{scan.requestedUrl}</p>
         <h1 className="mt-1 text-3xl font-semibold tracking-tight">Informe del celular</h1>

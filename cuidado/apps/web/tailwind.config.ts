@@ -9,6 +9,10 @@ const config: Config = {
         paper: "#f6f3ee",
         pine: "#1f6b45",
       },
+      fontFamily: {
+        sans: ["var(--font-sans)", "sans-serif"],
+        display: ["var(--font-display)", "Georgia", "serif"],
+      },
     },
   },
   plugins: [],
