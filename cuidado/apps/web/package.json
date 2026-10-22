@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "tsx --test lib/rules.test.ts"
+    "test": "tsx --test lib/rules.test.ts lib/email.test.ts"
   },
   "dependencies": {
     "@cuidado/contract": "0.1.0",
