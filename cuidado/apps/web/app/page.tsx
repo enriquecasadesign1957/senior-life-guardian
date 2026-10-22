@@ -10,7 +10,7 @@ const allianceMailto =
 export default function HomePage() {
   return (
     <div>
-      <section className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-14 lg:grid-cols-[1.05fr_0.9fr] lg:py-20">
+      <section className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-14 lg:grid-cols-[0.85fr_1.15fr] lg:gap-12 lg:py-20">
         <div className="max-w-xl">
           <p className="text-sm font-medium tracking-wide text-pine">CuidadoWeb.com</p>
           <h1 className="mt-4 text-4xl leading-[1.08] tracking-tight sm:text-6xl">
@@ -44,14 +44,14 @@ export default function HomePage() {
             <p className="mt-3 text-sm text-stone-500">Sin tarjeta de crédito. Sin compromisos. Sin riesgos.</p>
           </div>
         </div>
-        <figure className="mx-auto w-full max-w-sm">
+        <figure className="w-full">
           <img
-            src="/pagina-100.jpg"
-            alt="Ejemplo de un puntaje móvil 100 con un check verde"
-            className="w-full rounded-[2rem]"
+            src="/hero-saludable.jpg"
+            alt="Dueño de un sitio frente a su computador, con el panel de CuidadoWeb: el sitio está saludable, 94 de 100, plugins al día y base de datos optimizada"
+            className="w-full rounded-[2rem] shadow-sm"
           />
-          <figcaption className="mt-3 text-center text-sm text-stone-500">
-            Así se ve cuando queda bien. El tuyo sale al pegar la dirección.
+          <figcaption className="mt-3 text-sm text-stone-500">
+            Tu sitio está saludable. El informe del tuyo sale al pegar la dirección.
           </figcaption>
         </figure>
       </section>
@@ -76,6 +76,16 @@ export default function HomePage() {
               </li>
             ))}
           </ul>
+          <figure className="lg:col-span-2">
+            <img
+              src="/antes-despues.jpg"
+              alt="Comparación de un WordPress: a la izquierda puntaje 28, lento y con vulnerabilidades; a la derecha puntaje 94, rápido, sin amenazas y con plugins al día"
+              className="w-full rounded-3xl"
+            />
+            <figcaption className="mt-3 text-sm text-stone-500">
+              A la izquierda, un sitio lento y desordenado. A la derecha, el mismo WordPress cuando queda en orden.
+            </figcaption>
+          </figure>
           <div className="lg:col-span-2 max-w-3xl space-y-4 text-lg leading-relaxed text-stone-800">
             <p>La mayoría de las herramientas intentan arreglarlo todo automáticamente.</p>
             <p className="font-display text-3xl text-ink">Nosotros no.</p>
