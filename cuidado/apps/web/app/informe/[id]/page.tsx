@@ -43,7 +43,13 @@ export default async function InformePage({ params, searchParams }: PageProps) {
   const scan = (await db.select().from(scanRuns).where(eq(scanRuns.id, id)).limit(1))[0];
   if (!scan) notFound();
   const issues = await db.select().from(findings).where(eq(findings.scanRunId, scan.id));
-  const summary = scan.summary as { text?: string; wordpress?: boolean; inventory?: Inventory } | null;
+  const summary = scan.summary as {
+    text?: string;
+    wordpress?: boolean | null;
+    gate?: boolean;
+    inventory?: Inventory;
+  } | null;
+  const gate = summary?.gate === true;
   const requestedSiteId = query.siteId && /^[0-9a-f-]{36}$/i.test(query.siteId) ? query.siteId : null;
   const siteId = scan.siteId ?? requestedSiteId;
   const viewerId = await optionalUserId();
@@ -82,32 +88,44 @@ export default async function InformePage({ params, searchParams }: PageProps) {
         <h1 className="mt-1 text-4xl tracking-tight">Informe del celular</h1>
       </div>
 
-      <ScoreMeter score={scan.performanceScore} />
+      <ScoreMeter score={gate ? null : scan.performanceScore} gate={gate} />
 
-      <section className="grid gap-4 sm:grid-cols-3">
-        <article className="rounded-2xl bg-white p-4">
-          <p className="text-xs tracking-wide text-stone-400">LCP</p>
-          <p className="mt-1 text-sm text-stone-600">Lo principal tarda</p>
-          <p className="text-2xl font-semibold">{seconds(scan.lcpMs)}</p>
-        </article>
-        <article className="rounded-2xl bg-white p-4">
-          <p className="text-xs tracking-wide text-stone-400">INP</p>
-          <p className="mt-1 text-sm text-stone-600">Responde al toque</p>
-          <p className="text-2xl font-semibold">{seconds(scan.inpMs)}</p>
-        </article>
-        <article className="rounded-2xl bg-white p-4">
-          <p className="text-xs tracking-wide text-stone-400">CLS</p>
-          <p className="mt-1 text-sm text-stone-600">Se mueve al cargar</p>
-          <p className="text-2xl font-semibold">{cls(scan.clsMilli)}</p>
-        </article>
-      </section>
+      {!gate ? (
+        <section className="grid gap-4 sm:grid-cols-3">
+          <article className="rounded-2xl bg-white p-4">
+            <p className="text-xs tracking-wide text-stone-400">LCP</p>
+            <p className="mt-1 text-sm text-stone-600">Lo principal tarda</p>
+            <p className="text-2xl font-semibold">{seconds(scan.lcpMs)}</p>
+          </article>
+          <article className="rounded-2xl bg-white p-4">
+            <p className="text-xs tracking-wide text-stone-400">INP</p>
+            <p className="mt-1 text-sm text-stone-600">Responde al toque</p>
+            <p className="text-2xl font-semibold">{seconds(scan.inpMs)}</p>
+          </article>
+          <article className="rounded-2xl bg-white p-4">
+            <p className="text-xs tracking-wide text-stone-400">CLS</p>
+            <p className="mt-1 text-sm text-stone-600">Se mueve al cargar</p>
+            <p className="text-2xl font-semibold">{cls(scan.clsMilli)}</p>
+          </article>
+        </section>
+      ) : null}
 
-      <ReliefCompare revisions={summary?.inventory?.revisions ?? null} />
+      {!gate ? <ReliefCompare revisions={summary?.inventory?.revisions ?? null} /> : null}
 
       <p className="text-lg">{summary?.text}</p>
-      {summary?.wordpress === false ? (
+      {gate ? (
+        <p className="rounded-2xl bg-white p-4 text-sm">
+          En el navegador el sitio puede verse después de esa espera. CuidadoWeb y Google no pasan esa pantalla, así que no afirmamos el puntaje ni si es WordPress hasta poder leer la página real.
+        </p>
+      ) : null}
+      {!gate && summary?.wordpress === false ? (
         <p className="rounded-2xl bg-white p-4 text-sm">
           Este sitio no parece WordPress. Puedes leer el diagnóstico. La limpieza y el conector son solo para WordPress.
+        </p>
+      ) : null}
+      {!gate && summary?.wordpress === null ? (
+        <p className="rounded-2xl bg-white p-4 text-sm">
+          No pudimos confirmar si es WordPress. El diagnóstico de velocidad sí se puede leer.
         </p>
       ) : null}
 

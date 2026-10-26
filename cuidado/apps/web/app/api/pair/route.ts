@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import { encryptSecret, newSiteSecret } from "@/lib/crypto";
 import { jsonError } from "@/lib/http";
 import { ApiError } from "@/lib/errors";
-import { detectWordPress, redeemPairCode } from "@/lib/plugin-client";
+import { probeSite, redeemPairCode } from "@/lib/plugin-client";
 import { withUrlLock } from "@/lib/locks";
 import { currentUserId } from "@/lib/session";
 import { assertPublicUrl, normalizeSiteUrl } from "@/lib/urls";
@@ -23,8 +23,15 @@ export async function POST(request: Request): Promise<NextResponse> {
     const input = pairRequestSchema.parse(await request.json());
     const baseUrl = normalizeSiteUrl(input.baseUrl);
     await assertPublicUrl(baseUrl);
-    const wordpress = await detectWordPress(baseUrl);
-    if (!wordpress) {
+    const probe = await probeSite(baseUrl);
+    if (probe.gate) {
+      throw new ApiError(
+        "UNREACHABLE",
+        "El hosting mostró una pantalla de espera. No pudimos confirmar WordPress ni hablar con el conector.",
+        502,
+      );
+    }
+    if (probe.wordpress !== true) {
       throw new ApiError("NOT_WORDPRESS", "La reparación solo está disponible para WordPress.", 422);
     }
 

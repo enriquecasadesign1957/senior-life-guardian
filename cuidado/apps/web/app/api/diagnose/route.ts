@@ -8,7 +8,7 @@ import { jsonError } from "@/lib/http";
 import { ApiError } from "@/lib/errors";
 import { withUrlLock } from "@/lib/locks";
 import { polishSummary } from "@/lib/llm";
-import { detectWordPress, readSnapshot, type PluginFailure } from "@/lib/plugin-client";
+import { probeSite, readSnapshot, type PluginFailure } from "@/lib/plugin-client";
 import { fetchMobileMetrics, type MobileMetrics } from "@/lib/psi";
 import { currentUserId } from "@/lib/session";
 import { assertPublicUrl, normalizeSiteUrl } from "@/lib/urls";
@@ -50,10 +50,12 @@ async function claimScan(requestedUrl: string, userId: string): Promise<Claim> {
       .orderBy(desc(scanRuns.createdAt))
       .limit(5);
 
-    const reusable = readyRows.find((row) => canReuse(row.siteId, site?.id));
+    const reusable = readyRows.find((row) => canReuse(row.siteId, site?.id) && hasCurrentProbe(row.summary));
     if (reusable) return { mode: "ready", id: reusable.id };
 
-    const donor = readyRows.find((row) => row.performanceScore !== null);
+    const donor = readyRows.find(
+      (row) => row.performanceScore !== null && hasCurrentProbe(row.summary) && !(row.summary as { gate?: boolean } | null)?.gate,
+    );
     const staleBefore = new Date(now.getTime() - STALE_MS);
     const activeRows = await db
       .select({ id: scanRuns.id, siteId: scanRuns.siteId })
@@ -96,16 +98,16 @@ async function finishScan(scanId: string, requestedUrl: string, userId: string, 
   try {
     const db = getDb();
     const metrics = await metricsFor(donorId, requestedUrl);
-    const wordpress = await detectWordPress(requestedUrl);
+    const probe = await probeSite(requestedUrl);
     const site = await connectedSite(userId, requestedUrl);
     const plugin = await pluginInventory(requestedUrl, site?.id);
     const explained = await explainFindings(
       buildDrafts({
-        heavyImages: metrics.heavyImages,
-        renderBlocking: metrics.renderBlocking,
-        lcpMs: metrics.lcpMs,
-        inpMs: metrics.inpMs,
-        clsMilli: metrics.clsMilli,
+        heavyImages: probe.gate ? false : metrics.heavyImages,
+        renderBlocking: probe.gate ? false : metrics.renderBlocking,
+        lcpMs: probe.gate ? null : metrics.lcpMs,
+        inpMs: probe.gate ? null : metrics.inpMs,
+        clsMilli: probe.gate ? null : metrics.clsMilli,
         revisions: plugin.revisions,
         expiredTransients: plugin.expiredTransients,
         spamComments: plugin.spamComments,
@@ -114,6 +116,8 @@ async function finishScan(scanId: string, requestedUrl: string, userId: string, 
       }),
       polishSummary,
     );
+    const gateSummary =
+      "No pudimos ver la página real. El hosting mostró una pantalla de espera antes del sitio. El puntaje del celular no describe tu WordPress.";
 
     await db.transaction(async (tx) => {
       await tx
@@ -121,17 +125,18 @@ async function finishScan(scanId: string, requestedUrl: string, userId: string, 
         .set({
           siteId: site?.id ?? null,
           status: "ready",
-          performanceScore: metrics.performanceScore,
-          lcpMs: metrics.lcpMs,
-          inpMs: metrics.inpMs,
-          clsMilli: metrics.clsMilli,
+          performanceScore: probe.gate ? null : metrics.performanceScore,
+          lcpMs: probe.gate ? null : metrics.lcpMs,
+          inpMs: probe.gate ? null : metrics.inpMs,
+          clsMilli: probe.gate ? null : metrics.clsMilli,
           summary: {
-            wordpress,
+            wordpress: probe.wordpress,
+            gate: probe.gate,
             innodb: plugin.innodb,
             overLimit: plugin.overLimit,
-            text: explained.summary,
-            heavyImages: metrics.heavyImages,
-            renderBlocking: metrics.renderBlocking,
+            text: probe.gate ? gateSummary : explained.summary,
+            heavyImages: probe.gate ? false : metrics.heavyImages,
+            renderBlocking: probe.gate ? false : metrics.renderBlocking,
             inventory: {
               revisions: plugin.revisions,
               expiredTransients: plugin.expiredTransients,
@@ -144,7 +149,7 @@ async function finishScan(scanId: string, requestedUrl: string, userId: string, 
           error: null,
         })
         .where(eq(scanRuns.id, scanId));
-      if (explained.issues.length > 0) {
+      if (!probe.gate && explained.issues.length > 0) {
         await tx.insert(findings).values(
           explained.issues.map((issue) => ({
             scanRunId: scanId,
@@ -216,6 +221,10 @@ async function connectedSite(userId: string, requestedUrl: string) {
 function canReuse(scanSiteId: string | null, connectedId: string | undefined): boolean {
   if (scanSiteId) return connectedId === scanSiteId;
   return connectedId === undefined;
+}
+
+function hasCurrentProbe(summary: unknown): boolean {
+  return Boolean(summary && typeof summary === "object" && "gate" in summary);
 }
 
 async function pluginInventory(requestedUrl: string, siteId: string | undefined) {
