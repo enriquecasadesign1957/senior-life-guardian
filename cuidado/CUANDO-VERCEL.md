@@ -2,7 +2,7 @@
 
 No publicar CuidadoWeb en el Pages `senior-life-guardian.pages.dev`. No tocar los Workers de `alarmaseniorsafe.cl`, `alarmaseniorsafe.com`, `wakeupdev.com` ni `api.wakeupdev.com`.
 
-El archivo `apps/web/vercel.json` ya instala desde `cuidado/` y programa `/api/watch` cada 15 minutos. Ese cron solo despliega en el plan Pro.
+La raíz del repositorio tiene un `vercel.json` que publica un solo servicio, `cuidadoweb`, desde `cuidado/apps/web`. Todo el tráfico público entra por `/`. El cron de `/api/watch` cada 15 minutos está en ese mismo archivo y solo despliega en el plan Pro. `senior-life-guardian-main` y `wakeup-dev/web` no forman parte de este proyecto.
 
 ## 1. Neon
 
@@ -39,10 +39,11 @@ Stripe puede esperar. Sin `STRIPE_SECRET_KEY` el botón de $29 no cobra.
 1. La cuenta tiene que estar en Pro. Hobby rechaza el cron de 15 minutos y no cubre un sitio que cobra.
 2. En Spend Management, deja el gasto extra en $0.
 3. Importa el repositorio `enriquecasadesign1957/senior-life-guardian`.
-4. Directorio raíz: `cuidado/apps/web`.
-5. Rama de producción: `cursor/cuidado-backend-5a2b` hasta que ese pull request se fusione en `main`. Después vuelve a `main`.
-6. Pega las variables del paso 2 en Production.
-7. Deploy.
+4. Si la pantalla deja el directorio raíz en `./` y no deja escribir, no lo cambies y no importes los servicios que Vercel detecta. El `vercel.json` de la raíz ya elige solo CuidadoWeb.
+5. Rama de producción: `cursor/cuidado-backend-5a2b` hasta que ese pull request se fusione en `main`. Después vuelve a `main`. `main` todavía no tiene este archivo.
+6. Nombre del proyecto: `cuidadoweb`.
+7. Pega las variables del paso 2 en Production.
+8. Deploy.
 
 ## 5. Tablas
 
