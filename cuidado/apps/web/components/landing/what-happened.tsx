@@ -1,3 +1,6 @@
+const specialistMailto =
+  "mailto:hola@cuidadoweb.com?subject=Problema%20grave%20en%20mi%20WordPress";
+
 const paths = [
   {
     title: "Está lento",
@@ -18,10 +21,10 @@ const paths = [
     action: "Ver la vigilancia",
   },
   {
-    title: "Pantalla blanca, hackeo o el hosting lo suspendió",
-    body: "Tampoco reparamos un bucle de redirección, correos que no salen ni un editor que no guarda. No tocamos el tema ni functions.php. Si un técnico lo revisa, para un hackeo sirven Wordfence, Sucuri y MalCare. CuidadoWeb no las instala.",
-    href: "#limites",
-    action: "Ver lo que no automatizamos",
+    title: "Problemas graves",
+    body: "En problemas graves de posibles archivos infectados, hackeo, pantalla blanca o un hosting suspendido, te derivamos con especialistas.",
+    href: specialistMailto,
+    action: "Pedir la derivación",
   },
 ];
 

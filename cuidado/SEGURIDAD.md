@@ -6,14 +6,6 @@ Si existe un parche de seguridad conocido, avisa y, con confirmación, actualiza
 
 Más adelante el conector puede marcar un archivo como sospechoso y mostrar su nombre. No lo borra ni lo reescribe. Confirmar que es un virus, y quitarlo, queda en manos del dueño.
 
-## Herramientas que se pueden recomendar
+## Derivación
 
-Cuando exista esa marca, el informe nombra estas herramientas y se detiene:
-
-- Wordfence
-- Sucuri
-- MalCare
-
-El texto dice que CuidadoWeb no limpia el hackeo y que esas herramientas sirven para revisarlo. El dueño las instala y las usa en su WordPress. CuidadoWeb no las instala, no las configura y no ejecuta su limpieza.
-
-El informe ya nombra Wordfence, Sucuri y MalCare y dice que CuidadoWeb no limpia el hackeo. El nombre de un archivo sospechoso se agrega cuando el conector lo marque. Hoy no lo marca.
+En problemas graves de posibles archivos infectados, hackeo, pantalla blanca o un hosting suspendido, la portada y el informe dicen que derivamos con especialistas. El enlace escribe a hola@cuidadoweb.com. CuidadoWeb no limpia el sitio.
