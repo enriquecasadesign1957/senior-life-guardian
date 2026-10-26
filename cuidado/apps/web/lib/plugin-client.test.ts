@@ -11,12 +11,16 @@ test("detecta WordPress en el HTML del sitio", () => {
   assert.equal(htmlLooksLikeWordPress('<script src="/wp-includes/js/jquery.min.js"></script>'), true);
   assert.equal(htmlLooksLikeWordPress('<meta name="generator" content="WordPress 6.7">'), true);
   assert.equal(htmlLooksLikeWordPress("<title>One moment, please...</title>"), false);
+  assert.equal(
+    htmlLooksLikeWordPress("M='https%3A%2F%2Fwww.casadesign.cl%2Fwp-json%2F',X='/z0f76a1d'"),
+    false,
+  );
 });
 
 test("detecta la pantalla de espera del hosting", () => {
   assert.equal(htmlLooksLikeWaitingGate("<title>One moment, please...</title>"), true);
   assert.equal(htmlLooksLikeWaitingGate("Checking if the site connection is secure"), true);
-  assert.equal(htmlLooksLikeWaitingGate('<html><body class="home wp-content">hola</body></html>'), false);
+  assert.equal(htmlLooksLikeWaitingGate('<html><body class="home">hola</body></html>'), false);
 });
 
 test("detecta WordPress en cabeceras Link", () => {

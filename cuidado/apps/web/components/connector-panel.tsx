@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 const TOKEN = /^[a-f0-9]{32}$/;
 
 export function ConnectorPanel() {
@@ -8,15 +8,49 @@ export function ConnectorPanel() {
   const [pairCode, setPairCode] = useState("");
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
+  const [awaitingSiteId, setAwaitingSiteId] = useState<string | null>(null);
   const uploadHref = uploadLink(url);
   const tokenReady = TOKEN.test(pairCode);
   const tokenDirty = pairCode.length > 0;
+
+  useEffect(() => {
+    if (!awaitingSiteId) return;
+    let cancelled = false;
+    const timer = window.setInterval(async () => {
+      try {
+        const response = await fetch(`/api/sites/${awaitingSiteId}/status`);
+        if (!response.ok) return;
+        const body = (await response.json()) as { status?: string };
+        if (cancelled || body.status !== "connected") return;
+        window.clearInterval(timer);
+        setMessage("Sitio conectado. Abriendo el informe…");
+        const diagnosed = await fetch("/api/diagnose", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
+        const scan = await diagnosed.json();
+        if (diagnosed.ok && scan.scanId) {
+          window.location.href = `/informe/${scan.scanId}?siteId=${awaitingSiteId}`;
+          return;
+        }
+        window.location.href = `/informe/${scan.scanId ?? ""}?siteId=${awaitingSiteId}`;
+      } catch {
+        // keep waiting
+      }
+    }, 3000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [awaitingSiteId, url]);
 
   async function pair(event: FormEvent) {
     event.preventDefault();
     if (!tokenReady) return;
     setPending(true);
     setMessage("");
+    setAwaitingSiteId(null);
     try {
       const response = await fetch("/api/pair", {
         method: "POST",
@@ -26,6 +60,14 @@ export function ConnectorPanel() {
       const body = await response.json();
       if (!response.ok) {
         setMessage(body?.error?.message ?? "No pudimos conectar el sitio.");
+        return;
+      }
+      if (body.status === "awaiting_plugin") {
+        setAwaitingSiteId(body.siteId);
+        setMessage(
+          body.message ??
+            "En WordPress abre Ajustes → Cuidado Conector y pulsa Completar conexión.",
+        );
         return;
       }
       const diagnosed = await fetch("/api/diagnose", {
@@ -120,9 +162,12 @@ export function ConnectorPanel() {
         </li>
       </ol>
       {message ? (
-        <p className="mt-3 text-sm text-red-800" role="alert">
+        <p className={`mt-3 text-sm ${awaitingSiteId ? "text-stone-700" : "text-red-800"}`} role="alert">
           {message}
         </p>
+      ) : null}
+      {awaitingSiteId ? (
+        <p className="mt-2 text-sm text-stone-500">Esperando a que pulses Completar conexión en WordPress…</p>
       ) : null}
     </div>
   );

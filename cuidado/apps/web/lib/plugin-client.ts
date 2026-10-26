@@ -119,13 +119,13 @@ const GATE_MARKERS = [
 
 export function htmlLooksLikeWordPress(html: string): boolean {
   const low = html.toLowerCase();
+  // Do not match bare "wp-json": waiting gates echo the requested URL in their script.
   return (
     low.includes("wp-content") ||
     low.includes("wp-includes") ||
-    low.includes("wp-json") ||
-    low.includes("wordpress") ||
     /name=["']generator["'][^>]*wordpress/i.test(html) ||
-    /wordpress\s+\d/i.test(html)
+    /<(?:link|script|img|a)\b[^>]*(?:wp-content|wp-includes)/i.test(html) ||
+    /\bwordpress\b/i.test(html)
   );
 }
 
@@ -177,18 +177,26 @@ function mergeProbe(current: SiteProbe, next: SiteProbe): SiteProbe {
 }
 
 function probeFromResponse(response: Response, body: string): SiteProbe {
-  if (headersLookLikeWordPress(response.headers) || htmlLooksLikeWordPress(body)) {
-    return { wordpress: true, gate: false };
-  }
   if (htmlLooksLikeWaitingGate(body)) {
     return { wordpress: null, gate: true };
+  }
+  if (headersLookLikeWordPress(response.headers) || htmlLooksLikeWordPress(body)) {
+    return { wordpress: true, gate: false };
   }
   const type = response.headers.get("content-type") ?? "";
   if (/application\/json/i.test(type)) {
     try {
-      const data = JSON.parse(body) as { namespaces?: unknown; name?: unknown; description?: unknown };
-      if (Array.isArray(data.namespaces) || typeof data.name === "string" || typeof data.description === "string") {
-        if (/wordpress/i.test(JSON.stringify(data))) return { wordpress: true, gate: false };
+      const data = JSON.parse(body) as {
+        namespaces?: unknown;
+        name?: unknown;
+        description?: unknown;
+        routes?: unknown;
+      };
+      if (Array.isArray(data.namespaces) && data.namespaces.includes("wp/v2")) {
+        return { wordpress: true, gate: false };
+      }
+      if (data.routes && typeof data.routes === "object" && "/wp/v2" in (data.routes as object)) {
+        return { wordpress: true, gate: false };
       }
     } catch {
       // ignore malformed JSON

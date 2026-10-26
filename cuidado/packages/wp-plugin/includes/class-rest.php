@@ -52,7 +52,7 @@ final class Rest {
 		return new \WP_REST_Response(
 			array(
 				'ok'      => true,
-				'version' => '0.1.0',
+				'version' => '0.2.0',
 			),
 			200
 		);
@@ -127,7 +127,10 @@ final class Rest {
 		);
 	}
 
-	public static function snapshot(): \WP_REST_Response|\WP_Error {
+	/**
+	 * @return array<string,mixed>|\WP_Error
+	 */
+	public static function snapshot_payload() {
 		$engine = self::posts_engine();
 		if ( 0 !== strcasecmp( $engine, 'InnoDB' ) ) {
 			return new \WP_Error(
@@ -137,7 +140,7 @@ final class Rest {
 			);
 		}
 
-		$revisions = self::capped_revisions();
+		$revisions  = self::capped_revisions();
 		$transients = self::capped_transients();
 		$spam       = self::capped_spam();
 		if ( $revisions instanceof \WP_Error ) {
@@ -150,12 +153,12 @@ final class Rest {
 			return $spam;
 		}
 
-		$counts = array(
+		$counts          = array(
 			'revisions'         => $revisions,
 			'expiredTransients' => $transients,
 			'spamComments'      => $spam,
 		);
-		$revision_bytes = $revisions > MAX_ROWS ? MAX_BYTES + 1 : self::revision_bytes();
+		$revision_bytes  = $revisions > MAX_ROWS ? MAX_BYTES + 1 : self::revision_bytes();
 		$transient_bytes = $transients > MAX_ROWS ? MAX_BYTES + 1 : self::transient_bytes();
 		$spam_bytes      = $spam > MAX_ROWS ? MAX_BYTES + 1 : self::spam_bytes();
 		foreach ( array( $revision_bytes, $transient_bytes, $spam_bytes ) as $measured ) {
@@ -188,19 +191,24 @@ final class Rest {
 			);
 		}
 
-		return new \WP_REST_Response(
-			array(
-				'siteName'   => get_bloginfo( 'name' ),
-				'homeUrl'    => home_url(),
-				'wpVersion'  => get_bloginfo( 'version' ),
-				'phpVersion' => PHP_VERSION,
-				'engine'     => 'InnoDB',
-				'innodb'     => true,
-				'counts'     => $counts,
-				'bytes'      => $bytes,
-			),
-			200
+		return array(
+			'siteName'   => get_bloginfo( 'name' ),
+			'homeUrl'    => home_url(),
+			'wpVersion'  => get_bloginfo( 'version' ),
+			'phpVersion' => PHP_VERSION,
+			'engine'     => 'InnoDB',
+			'innodb'     => true,
+			'counts'     => $counts,
+			'bytes'      => $bytes,
 		);
+	}
+
+	public static function snapshot(): \WP_REST_Response|\WP_Error {
+		$payload = self::snapshot_payload();
+		if ( $payload instanceof \WP_Error ) {
+			return $payload;
+		}
+		return new \WP_REST_Response( $payload, 200 );
 	}
 
 	private static function bearer(): string {
