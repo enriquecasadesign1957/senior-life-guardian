@@ -1,7 +1,6 @@
-const specialistMailto =
-  "mailto:hola@cuidadoweb.com?subject=Problema%20grave%20en%20mi%20WordPress";
+import { specialistAction, specialistDisclosure, specialistHref } from "@/lib/specialist-referral";
 
-const paths = [
+const paths: Array<{ title: string; body: string; href: string; action: string; note?: string }> = [
   {
     title: "Está lento",
     body: "El diagnóstico gratis mide cómo se siente en el celular y lo explica en español.",
@@ -21,10 +20,11 @@ const paths = [
     action: "Ver la vigilancia",
   },
   {
-    title: "Problemas graves",
-    body: "En problemas graves de posibles archivos infectados, hackeo, pantalla blanca o un hosting suspendido, te derivamos con especialistas.",
-    href: specialistMailto,
-    action: "Pedir la derivación",
+    title: "¿Tu sitio ya está caído o suspendido?",
+    body: "Si tu WordPress muestra una pantalla en blanco, sufrió un hackeo o tu hosting lo suspendió por virus, el conector no puede entrar. En estos casos te derivamos con especialistas en desinfección manual.",
+    href: specialistHref,
+    action: specialistAction,
+    note: specialistDisclosure,
   },
 ];
 
@@ -45,6 +45,7 @@ export function WhatHappened() {
               >
                 {path.action}
               </a>
+              {path.note ? <p className="mt-2 text-xs leading-5 text-stone-500">{path.note}</p> : null}
             </article>
           ))}
         </div>
