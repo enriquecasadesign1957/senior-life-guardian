@@ -4,7 +4,8 @@
     "cuidadoweb": {
       "root": "cuidado/apps/web",
       "framework": "nextjs",
-      "installCommand": "npm install --prefix ../.."
+      "installCommand": "npm install --prefix ../..",
+      "buildCommand": "npm run build --prefix ../.. --workspace @cuidado/web"
     }
   },
   "rewrites": [
