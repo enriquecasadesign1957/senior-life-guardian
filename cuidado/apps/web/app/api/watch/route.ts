@@ -9,6 +9,10 @@ import { classifyProbe, isWatchActive, nextProbeStreak } from "@/lib/watch";
 
 export const runtime = "nodejs";
 
+export function GET(request: Request): Promise<NextResponse> {
+  return POST(request);
+}
+
 export async function POST(request: Request): Promise<NextResponse> {
   try {
     const secret = process.env.CRON_SECRET;

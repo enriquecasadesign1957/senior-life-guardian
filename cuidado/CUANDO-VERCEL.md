@@ -1,6 +1,8 @@
-# Cuando haya cuenta de Vercel
+# Levantar cuidadoweb.com
 
-Dejar esto quieto hasta tener la cuenta. No publicar CuidadoWeb en el Pages `senior-life-guardian.pages.dev`.
+El repo ya trae `apps/web/vercel.json`: instala desde `cuidado/` y llama a `/api/watch` cada 15 minutos. No publicar CuidadoWeb en el Pages `senior-life-guardian.pages.dev`.
+
+Esta máquina no tiene sesión de Vercel ni de Neon. Los clics que faltan son estos.
 
 ## Vercel
 

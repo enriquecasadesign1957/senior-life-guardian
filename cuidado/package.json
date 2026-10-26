@@ -10,6 +10,7 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspace @cuidado/web",
     "plugin:zip": "node scripts/zip-plugin.mjs",
-    "db:generate": "npm run generate --workspace @cuidado/db"
+    "db:generate": "npm run generate --workspace @cuidado/db",
+    "db:migrate": "npm run migrate --workspace @cuidado/db"
   }
 }
