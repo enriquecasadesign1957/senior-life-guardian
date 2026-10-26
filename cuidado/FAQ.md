@@ -8,4 +8,4 @@ Puede incluir el nombre del archivo marcado como sospechoso, el plugin que tiene
 
 La reparación la hace el técnico o la agencia en el WordPress del cliente. CuidadoWeb no escribe los pasos para borrar el código infectado ni los ejecuta. Tampoco instala ni configura esas herramientas.
 
-Hoy este aviso no está en el informe: el conector todavía no marca archivos sospechosos.
+El informe ya dice que esos casos no los reparamos y nombra Wordfence, Sucuri y MalCare. El nombre de un archivo sospechoso se muestra solo cuando el conector lo marque. Hoy no lo marca.

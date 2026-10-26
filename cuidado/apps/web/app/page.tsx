@@ -1,6 +1,7 @@
 import { AnalyzeForm } from "@/components/analyze-form";
 import { ConnectorPanel } from "@/components/connector-panel";
 import { Checks, Limits } from "@/components/landing/marks";
+import { WhatHappened } from "@/components/landing/what-happened";
 
 const partnerMailto =
   "mailto:hola@cuidadoweb.com?subject=Programa%20de%20Reparto%20CuidadoWeb";
@@ -94,6 +95,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <WhatHappened />
 
       <section id="funciona" className="scroll-mt-28">
         <div className="mx-auto max-w-6xl px-6 py-16">
@@ -312,7 +315,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-16">
+      <section id="limites" className="mx-auto max-w-6xl scroll-mt-28 px-6 py-16">
         <div className="max-w-3xl">
           <h2 className="text-3xl tracking-tight sm:text-4xl">Lo que nunca haremos</h2>
           <p className="mt-3 text-stone-700">Porque la mejor automatización es la que sabe cuándo detenerse.</p>

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { CleanupPanel } from "@/components/cleanup-panel";
 import { IncidentNotice } from "@/components/incident-notice";
 import { ReliefCompare } from "@/components/relief-compare";
+import { OutsideRepair } from "@/components/outside-repair";
 import { Reassurance } from "@/components/reassurance";
 import { RevokeAccess } from "@/components/revoke-access";
 import { ScoreMeter } from "@/components/score-meter";
@@ -121,6 +122,7 @@ export default async function InformePage({ params, searchParams }: PageProps) {
       </section>
 
       <Reassurance />
+      <OutsideRepair />
       <CleanupPanel siteId={ownedId} />
       {ownedId ? <RevokeAccess siteId={ownedId} /> : null}
     </div>

@@ -16,4 +16,4 @@ Cuando exista esa marca, el informe nombra estas herramientas y se detiene:
 
 El texto dice que CuidadoWeb no limpia el hackeo y que esas herramientas sirven para revisarlo. El dueño las instala y las usa en su WordPress. CuidadoWeb no las instala, no las configura y no ejecuta su limpieza.
 
-Hoy ese aviso no está en el informe: el conector todavía no marca archivos sospechosos.
+El informe ya nombra Wordfence, Sucuri y MalCare y dice que CuidadoWeb no limpia el hackeo. El nombre de un archivo sospechoso se agrega cuando el conector lo marque. Hoy no lo marca.
