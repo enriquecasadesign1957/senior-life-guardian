@@ -31,6 +31,27 @@ const GRAPHICS = [
   },
 ] as const;
 
+const PLANTILLA = [
+  {
+    src: "/convenio-las-condes/tv-feed-1.png",
+    title: "Lámina 1",
+    detail: "Feed 1080 × 1350",
+    href: "/convenio-las-condes/tv-feed-1.png",
+  },
+  {
+    src: "/convenio-las-condes/tv-feed-2.png",
+    title: "Lámina 2",
+    detail: "Feed 1080 × 1350",
+    href: "/convenio-las-condes/tv-feed-2.png",
+  },
+  {
+    src: "/convenio-las-condes/tv-historia.png",
+    title: "Historia",
+    detail: "1080 × 1920",
+    href: "/convenio-las-condes/tv-historia.png",
+  },
+] as const;
+
 const INSTAGRAM = [
   {
     src: "/convenio-las-condes/ig-anuncio.png",
@@ -135,7 +156,16 @@ function LasCondesPage() {
           <p className="mt-3 text-muted-foreground max-w-2xl">
             Estas piezas se pueden enviar a la Municipalidad de Las Condes y usar en la web. El enlace público es {CONVENIO_LAS_CONDES_URL}.
           </p>
-          <h3 className="mt-8 text-lg font-bold">Instagram</h3>
+          <h3 className="mt-8 text-lg font-bold">Plantilla oficial Tarjeta Vecino</h3>
+          <p className="mt-2 text-sm text-muted-foreground max-w-2xl">
+            Categoría Salud. Lámina 1, lámina 2 e historia, listas para la Municipalidad.
+          </p>
+          <div className="mt-4 grid md:grid-cols-3 gap-6">
+            {PLANTILLA.map((item) => (
+              <GraphicCard key={item.src} item={item} />
+            ))}
+          </div>
+          <h3 className="mt-10 text-lg font-bold">Instagram</h3>
           <div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {INSTAGRAM.map((item) => (
               <GraphicCard key={item.src} item={item} />
