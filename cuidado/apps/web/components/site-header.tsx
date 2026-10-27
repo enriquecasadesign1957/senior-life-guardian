@@ -1,3 +1,5 @@
+import { BrandLogo } from "@/components/brand-logo";
+
 const links = [
   ["/#que-paso", "Qué te pasó"],
   ["/#funciona", "Cómo funciona"],
@@ -9,8 +11,8 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-20 border-b border-stone-200/80 bg-paper/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
-        <a href="/" className="font-display text-xl tracking-tight">
-          CuidadoWeb
+        <a href="/" className="inline-flex items-center" aria-label="CuidadoWeb">
+          <BrandLogo className="h-8 w-auto sm:h-9" priority />
         </a>
         <nav className="hidden items-center gap-6 text-sm text-stone-600 sm:flex">
           {links.map(([href, label]) => (

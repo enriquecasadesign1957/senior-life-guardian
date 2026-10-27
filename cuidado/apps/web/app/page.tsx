@@ -1,4 +1,5 @@
 import { AnalyzeForm } from "@/components/analyze-form";
+import { BrandLogo } from "@/components/brand-logo";
 import { ConnectorPanel } from "@/components/connector-panel";
 import { Checks, Limits } from "@/components/landing/marks";
 import { WhatHappened } from "@/components/landing/what-happened";
@@ -13,8 +14,8 @@ export default function HomePage() {
     <div>
       <section className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-14 lg:grid-cols-[0.85fr_1.15fr] lg:gap-12 lg:py-20">
         <div className="max-w-xl">
-          <p className="text-sm font-medium tracking-wide text-pine">CuidadoWeb.com</p>
-          <h1 className="mt-4 text-4xl leading-[1.08] tracking-tight sm:text-6xl">
+          <BrandLogo className="h-10 w-auto sm:h-12" priority />
+          <h1 className="mt-5 text-4xl leading-[1.08] tracking-tight sm:text-6xl">
             Tu WordPress limpio, vigilado y protegido
           </h1>
           <p className="mt-6 text-lg text-stone-700">

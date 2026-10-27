@@ -24,6 +24,10 @@ export const metadata: Metadata = {
   },
   description:
     "Diagnostica gratis tu WordPress en menos de 2 minutos. Sin tocar código y sin cambios que no se puedan deshacer.",
+  icons: {
+    icon: "/logo-cuidadoweb.png",
+    apple: "/logo-cuidadoweb.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
