@@ -165,6 +165,32 @@ function LasCondesPage() {
               <GraphicCard key={item.src} item={item} />
             ))}
           </div>
+          <h3 className="mt-10 text-lg font-bold">Reel</h3>
+          <p className="mt-2 text-sm text-muted-foreground max-w-2xl">
+            1080 × 1920, unos 20 segundos. Anuncia el convenio. La música se agrega al publicarlo.
+          </p>
+          <figure className="mt-4 max-w-sm">
+            <video
+              src="/convenio-las-condes/tv-reel.mp4"
+              poster="/convenio-las-condes/tv-reel-poster.jpg"
+              controls
+              playsInline
+              preload="metadata"
+              className="w-full rounded-3xl bg-black"
+            />
+            <figcaption className="mt-3">
+              <div className="font-bold">Convenio Tarjeta Vecino</div>
+              <div className="text-sm text-muted-foreground">1080 × 1920</div>
+              <a
+                href="/convenio-las-condes/tv-reel.mp4"
+                download
+                className="inline-block mt-3 text-sm font-semibold underline"
+                style={{ color: "var(--brand-petrol-deep)" }}
+              >
+                Descargar
+              </a>
+            </figcaption>
+          </figure>
           <h3 className="mt-10 text-lg font-bold">Instagram</h3>
           <div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {INSTAGRAM.map((item) => (
