@@ -1,9 +1,15 @@
 import { JunkMeter } from "@/components/junk-meter";
 import { formatCount } from "@/lib/explain";
 
-export function ReliefCompare({ revisions }: { revisions: number | null }) {
+export function ReliefCompare({
+  revisions,
+  innodb = null,
+}: {
+  revisions: number | null;
+  innodb?: boolean | null;
+}) {
   if (revisions === null || !Number.isInteger(revisions) || revisions <= 0) {
-    return <JunkMeter revisions={revisions === 0 ? 0 : null} />;
+    return <JunkMeter revisions={revisions === 0 ? 0 : null} innodb={innodb} />;
   }
 
   return (

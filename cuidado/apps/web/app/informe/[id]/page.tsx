@@ -47,6 +47,7 @@ export default async function InformePage({ params, searchParams }: PageProps) {
     text?: string;
     wordpress?: boolean | null;
     gate?: boolean;
+    innodb?: boolean | null;
     inventory?: Inventory;
   } | null;
   const gate = summary?.gate === true;
@@ -110,7 +111,12 @@ export default async function InformePage({ params, searchParams }: PageProps) {
         </section>
       ) : null}
 
-      {!gate ? <ReliefCompare revisions={summary?.inventory?.revisions ?? null} /> : null}
+      {!gate ? (
+        <ReliefCompare
+          revisions={summary?.inventory?.revisions ?? null}
+          innodb={summary?.innodb ?? null}
+        />
+      ) : null}
 
       <p className="text-lg">{summary?.text}</p>
       {gate ? (

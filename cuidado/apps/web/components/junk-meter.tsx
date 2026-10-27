@@ -28,7 +28,13 @@ const copy = {
   },
 } as const;
 
-export function JunkMeter({ revisions }: { revisions: number | null }) {
+export function JunkMeter({
+  revisions,
+  innodb = null,
+}: {
+  revisions: number | null;
+  innodb?: boolean | null;
+}) {
   const state = junkState(revisions);
   const tone = copy[state];
   const width = state === "unknown" || revisions === null ? 0 : junkBarPercent(revisions);
@@ -48,7 +54,11 @@ export function JunkMeter({ revisions }: { revisions: number | null }) {
         <div className={`h-full ${tone.bar}`} style={{ width: `${width}%` }} />
       </div>
       {state === "unknown" ? (
-        <p className="mt-3 text-sm text-stone-600">Conecta el sitio para ver si la base está saturada o limpia.</p>
+        <p className="mt-3 text-sm text-stone-600">
+          {innodb === false
+            ? "La base no usa InnoDB. Por eso no contamos las copias ni ofrecemos la limpieza."
+            : "Conecta el sitio para ver si la base está saturada o limpia."}
+        </p>
       ) : null}
     </article>
   );
