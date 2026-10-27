@@ -17,6 +17,7 @@ import { Route as SimuladorRouteImport } from './routes/simulador'
 import { Route as PrivacidadRouteImport } from './routes/privacidad'
 import { Route as PlanesRouteImport } from './routes/planes'
 import { Route as NativeRouteImport } from './routes/native'
+import { Route as LasCondesRouteImport } from './routes/las-condes'
 import { Route as InstalarAppRouteImport } from './routes/instalar-app'
 import { Route as GuiaRouteImport } from './routes/guia'
 import { Route as FlujoRouteImport } from './routes/flujo'
@@ -130,6 +131,11 @@ const PlanesRoute = PlanesRouteImport.update({
 const NativeRoute = NativeRouteImport.update({
   id: '/native',
   path: '/native',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LasCondesRoute = LasCondesRouteImport.update({
+  id: '/las-condes',
+  path: '/las-condes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InstalarAppRoute = InstalarAppRouteImport.update({
@@ -543,6 +549,7 @@ export interface FileRoutesByFullPath {
   '/flujo': typeof FlujoRoute
   '/guia': typeof GuiaRoute
   '/instalar-app': typeof InstalarAppRoute
+  '/las-condes': typeof LasCondesRoute
   '/native': typeof NativeRoute
   '/planes': typeof PlanesRoute
   '/privacidad': typeof PrivacidadRoute
@@ -625,6 +632,7 @@ export interface FileRoutesByTo {
   '/flujo': typeof FlujoRoute
   '/guia': typeof GuiaRoute
   '/instalar-app': typeof InstalarAppRoute
+  '/las-condes': typeof LasCondesRoute
   '/native': typeof NativeRoute
   '/planes': typeof PlanesRoute
   '/privacidad': typeof PrivacidadRoute
@@ -710,6 +718,7 @@ export interface FileRoutesById {
   '/flujo': typeof FlujoRoute
   '/guia': typeof GuiaRoute
   '/instalar-app': typeof InstalarAppRoute
+  '/las-condes': typeof LasCondesRoute
   '/native': typeof NativeRoute
   '/planes': typeof PlanesRoute
   '/privacidad': typeof PrivacidadRoute
@@ -796,6 +805,7 @@ export interface FileRouteTypes {
     | '/flujo'
     | '/guia'
     | '/instalar-app'
+    | '/las-condes'
     | '/native'
     | '/planes'
     | '/privacidad'
@@ -878,6 +888,7 @@ export interface FileRouteTypes {
     | '/flujo'
     | '/guia'
     | '/instalar-app'
+    | '/las-condes'
     | '/native'
     | '/planes'
     | '/privacidad'
@@ -962,6 +973,7 @@ export interface FileRouteTypes {
     | '/flujo'
     | '/guia'
     | '/instalar-app'
+    | '/las-condes'
     | '/native'
     | '/planes'
     | '/privacidad'
@@ -1047,6 +1059,7 @@ export interface RootRouteChildren {
   FlujoRoute: typeof FlujoRoute
   GuiaRoute: typeof GuiaRoute
   InstalarAppRoute: typeof InstalarAppRoute
+  LasCondesRoute: typeof LasCondesRoute
   NativeRoute: typeof NativeRoute
   PlanesRoute: typeof PlanesRoute
   PrivacidadRoute: typeof PrivacidadRoute
@@ -1152,6 +1165,13 @@ declare module '@tanstack/react-router' {
       path: '/native'
       fullPath: '/native'
       preLoaderRoute: typeof NativeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/las-condes': {
+      id: '/las-condes'
+      path: '/las-condes'
+      fullPath: '/las-condes'
+      preLoaderRoute: typeof LasCondesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/instalar-app': {
@@ -1765,6 +1785,7 @@ const rootRouteChildren: RootRouteChildren = {
   FlujoRoute: FlujoRoute,
   GuiaRoute: GuiaRoute,
   InstalarAppRoute: InstalarAppRoute,
+  LasCondesRoute: LasCondesRoute,
   NativeRoute: NativeRoute,
   PlanesRoute: PlanesRoute,
   PrivacidadRoute: PrivacidadRoute,

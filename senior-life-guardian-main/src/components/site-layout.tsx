@@ -110,6 +110,7 @@ export function SiteFooter() {
             <li><Link to="/como-funciona" className="text-white/85 hover:text-white">Cómo funciona</Link></li>
             <li><a href="/#planes" className="text-white/85 hover:text-white">Planes</a></li>
             <li><Link to="/guia" className="text-white/85 hover:text-white">Guía de instalación</Link></li>
+            <li><Link to="/las-condes" className="text-white/85 hover:text-white">Convenio Las Condes</Link></li>
             <li><Link to="/blog" className="text-white/85 hover:text-white">Blog</Link></li>
             <li>
               <a
