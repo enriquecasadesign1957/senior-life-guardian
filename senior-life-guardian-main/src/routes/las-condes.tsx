@@ -31,6 +31,33 @@ const GRAPHICS = [
   },
 ] as const;
 
+const INSTAGRAM = [
+  {
+    src: "/convenio-las-condes/ig-anuncio.png",
+    title: "Anuncio",
+    detail: "Feed 1080 × 1350",
+    href: "/convenio-las-condes/ig-anuncio.png",
+  },
+  {
+    src: "/convenio-las-condes/ig-precios.png",
+    title: "Precios",
+    detail: "Feed 1080 × 1350",
+    href: "/convenio-las-condes/ig-precios.png",
+  },
+  {
+    src: "/convenio-las-condes/ig-como.png",
+    title: "Qué es",
+    detail: "Feed 1080 × 1350",
+    href: "/convenio-las-condes/ig-como.png",
+  },
+  {
+    src: "/convenio-las-condes/ig-historia.png",
+    title: "Historia",
+    detail: "1080 × 1920",
+    href: "/convenio-las-condes/ig-historia.png",
+  },
+] as const;
+
 export const Route = createFileRoute("/las-condes")({
   head: () =>
     buildPublicPageMeta({
@@ -108,18 +135,16 @@ function LasCondesPage() {
           <p className="mt-3 text-muted-foreground max-w-2xl">
             Estas piezas se pueden enviar a la Municipalidad de Las Condes y usar en la web. El enlace público es {CONVENIO_LAS_CONDES_URL}.
           </p>
-          <div className="mt-8 grid md:grid-cols-3 gap-6">
+          <h3 className="mt-8 text-lg font-bold">Instagram</h3>
+          <div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {INSTAGRAM.map((item) => (
+              <GraphicCard key={item.src} item={item} />
+            ))}
+          </div>
+          <h3 className="mt-10 text-lg font-bold">Municipalidad y web</h3>
+          <div className="mt-4 grid md:grid-cols-3 gap-6">
             {GRAPHICS.map((item) => (
-              <figure key={item.src} className="rounded-3xl border border-border overflow-hidden bg-card shadow-sm">
-                <img src={item.src} alt={item.title} className="w-full h-auto bg-[#0d4f5c]" />
-                <figcaption className="p-4">
-                  <div className="font-bold">{item.title}</div>
-                  <div className="text-sm text-muted-foreground">{item.detail}</div>
-                  <a href={item.href} download className="inline-block mt-3 text-sm font-semibold underline" style={{ color: "var(--brand-petrol-deep)" }}>
-                    Descargar
-                  </a>
-                </figcaption>
-              </figure>
+              <GraphicCard key={item.src} item={item} />
             ))}
           </div>
         </section>
@@ -184,6 +209,21 @@ function OfferCard({
         alarmaseniorsafe.cl{convenioCheckoutPath(code, "mensual")}
       </p>
     </article>
+  );
+}
+
+function GraphicCard({ item }: { item: { src: string; title: string; detail: string; href: string } }) {
+  return (
+    <figure className="rounded-3xl border border-border overflow-hidden bg-card shadow-sm">
+      <img src={item.src} alt={item.title} className="w-full h-auto bg-[#0d4f5c]" />
+      <figcaption className="p-4">
+        <div className="font-bold">{item.title}</div>
+        <div className="text-sm text-muted-foreground">{item.detail}</div>
+        <a href={item.href} download className="inline-block mt-3 text-sm font-semibold underline" style={{ color: "var(--brand-petrol-deep)" }}>
+          Descargar
+        </a>
+      </figcaption>
+    </figure>
   );
 }
 
