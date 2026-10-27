@@ -81,6 +81,7 @@ import { Route as ApiPublicPinResetVerifyRouteImport } from './routes/api/public
 import { Route as ApiPublicPinResetRequestRouteImport } from './routes/api/public/pin-reset-request'
 import { Route as ApiPublicLookupAccountRouteImport } from './routes/api/public/lookup-account'
 import { Route as ApiPublicFamilyRouteImport } from './routes/api/public/family'
+import { Route as ApiPublicConsultarTarjetaVecinoRouteImport } from './routes/api/public/consultar-tarjeta-vecino'
 import { Route as ApiCronResendInstallInstructionsRouteImport } from './routes/api/cron/resend-install-instructions'
 import { Route as ApiCronProcessSubscriptionRenewalsRouteImport } from './routes/api/cron/process-subscription-renewals'
 import { Route as ATokenCRouteImport } from './routes/a.$token.c'
@@ -468,6 +469,12 @@ const ApiPublicFamilyRoute = ApiPublicFamilyRouteImport.update({
   path: '/api/public/family',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicConsultarTarjetaVecinoRoute =
+  ApiPublicConsultarTarjetaVecinoRouteImport.update({
+    id: '/api/public/consultar-tarjeta-vecino',
+    path: '/api/public/consultar-tarjeta-vecino',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiCronResendInstallInstructionsRoute =
   ApiCronResendInstallInstructionsRouteImport.update({
     id: '/api/cron/resend-install-instructions',
@@ -580,6 +587,7 @@ export interface FileRoutesByFullPath {
   '/a/$token/c': typeof ATokenCRoute
   '/api/cron/process-subscription-renewals': typeof ApiCronProcessSubscriptionRenewalsRoute
   '/api/cron/resend-install-instructions': typeof ApiCronResendInstallInstructionsRoute
+  '/api/public/consultar-tarjeta-vecino': typeof ApiPublicConsultarTarjetaVecinoRoute
   '/api/public/family': typeof ApiPublicFamilyRoute
   '/api/public/lookup-account': typeof ApiPublicLookupAccountRoute
   '/api/public/pin-reset-request': typeof ApiPublicPinResetRequestRoute
@@ -661,6 +669,7 @@ export interface FileRoutesByTo {
   '/a/$token/c': typeof ATokenCRoute
   '/api/cron/process-subscription-renewals': typeof ApiCronProcessSubscriptionRenewalsRoute
   '/api/cron/resend-install-instructions': typeof ApiCronResendInstallInstructionsRoute
+  '/api/public/consultar-tarjeta-vecino': typeof ApiPublicConsultarTarjetaVecinoRoute
   '/api/public/family': typeof ApiPublicFamilyRoute
   '/api/public/lookup-account': typeof ApiPublicLookupAccountRoute
   '/api/public/pin-reset-request': typeof ApiPublicPinResetRequestRoute
@@ -745,6 +754,7 @@ export interface FileRoutesById {
   '/a/$token/c': typeof ATokenCRoute
   '/api/cron/process-subscription-renewals': typeof ApiCronProcessSubscriptionRenewalsRoute
   '/api/cron/resend-install-instructions': typeof ApiCronResendInstallInstructionsRoute
+  '/api/public/consultar-tarjeta-vecino': typeof ApiPublicConsultarTarjetaVecinoRoute
   '/api/public/family': typeof ApiPublicFamilyRoute
   '/api/public/lookup-account': typeof ApiPublicLookupAccountRoute
   '/api/public/pin-reset-request': typeof ApiPublicPinResetRequestRoute
@@ -830,6 +840,7 @@ export interface FileRouteTypes {
     | '/a/$token/c'
     | '/api/cron/process-subscription-renewals'
     | '/api/cron/resend-install-instructions'
+    | '/api/public/consultar-tarjeta-vecino'
     | '/api/public/family'
     | '/api/public/lookup-account'
     | '/api/public/pin-reset-request'
@@ -911,6 +922,7 @@ export interface FileRouteTypes {
     | '/a/$token/c'
     | '/api/cron/process-subscription-renewals'
     | '/api/cron/resend-install-instructions'
+    | '/api/public/consultar-tarjeta-vecino'
     | '/api/public/family'
     | '/api/public/lookup-account'
     | '/api/public/pin-reset-request'
@@ -994,6 +1006,7 @@ export interface FileRouteTypes {
     | '/a/$token/c'
     | '/api/cron/process-subscription-renewals'
     | '/api/cron/resend-install-instructions'
+    | '/api/public/consultar-tarjeta-vecino'
     | '/api/public/family'
     | '/api/public/lookup-account'
     | '/api/public/pin-reset-request'
@@ -1059,6 +1072,7 @@ export interface RootRouteChildren {
   AAlertIdAckTokenRoute: typeof AAlertIdAckTokenRoute
   ApiCronProcessSubscriptionRenewalsRoute: typeof ApiCronProcessSubscriptionRenewalsRoute
   ApiCronResendInstallInstructionsRoute: typeof ApiCronResendInstallInstructionsRoute
+  ApiPublicConsultarTarjetaVecinoRoute: typeof ApiPublicConsultarTarjetaVecinoRoute
   ApiPublicFamilyRoute: typeof ApiPublicFamilyRoute
   ApiPublicLookupAccountRoute: typeof ApiPublicLookupAccountRoute
   ApiPublicPinResetRequestRoute: typeof ApiPublicPinResetRequestRoute
@@ -1581,6 +1595,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicLookupAccountRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/consultar-tarjeta-vecino': {
+      id: '/api/public/consultar-tarjeta-vecino'
+      path: '/api/public/consultar-tarjeta-vecino'
+      fullPath: '/api/public/consultar-tarjeta-vecino'
+      preLoaderRoute: typeof ApiPublicConsultarTarjetaVecinoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/family': {
       id: '/api/public/family'
       path: '/api/public/family'
@@ -1774,6 +1795,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCronProcessSubscriptionRenewalsRoute:
     ApiCronProcessSubscriptionRenewalsRoute,
   ApiCronResendInstallInstructionsRoute: ApiCronResendInstallInstructionsRoute,
+  ApiPublicConsultarTarjetaVecinoRoute: ApiPublicConsultarTarjetaVecinoRoute,
   ApiPublicFamilyRoute: ApiPublicFamilyRoute,
   ApiPublicLookupAccountRoute: ApiPublicLookupAccountRoute,
   ApiPublicPinResetRequestRoute: ApiPublicPinResetRequestRoute,
