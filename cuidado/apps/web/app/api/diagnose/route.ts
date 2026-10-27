@@ -224,7 +224,12 @@ function canReuse(scanSiteId: string | null, connectedId: string | undefined): b
 }
 
 function hasCurrentProbe(summary: unknown): boolean {
-  return Boolean(summary && typeof summary === "object" && "gate" in summary);
+  if (!summary || typeof summary !== "object") return false;
+  const row = summary as { gate?: unknown; innodb?: boolean | null };
+  if (!("gate" in row)) return false;
+  // A previous InnoDB block must not stick for 24h after the host converts the table.
+  if (row.innodb === false) return false;
+  return true;
 }
 
 async function pluginInventory(requestedUrl: string, siteId: string | undefined) {
