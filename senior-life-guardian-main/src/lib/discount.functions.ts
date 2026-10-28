@@ -95,7 +95,9 @@ export async function resolveDiscountForCheckout(
   assertDiscountCodeUsable(row, periodo);
 
   if (row.one_per_customer && opts.signupAlreadyPaid) {
-    throw new Error("Esta promoción aplica solo al primer pago. Las renovaciones usan el precio regular.");
+    throw new Error(
+      "Esta promoción aplica solo al primer pago. Las renovaciones usan el precio regular.",
+    );
   }
 
   if (row.one_per_customer) {
@@ -152,8 +154,11 @@ export async function resolveChargeAmountForSignup(
       },
     );
     return resolved.finalPrice;
-  } catch {
-    return listPrice;
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : "código no disponible";
+    throw new Error(
+      `No iniciamos el cobro: el convenio no se pudo aplicar (${reason}). No cobramos el precio de lista en su lugar.`,
+    );
   }
 }
 

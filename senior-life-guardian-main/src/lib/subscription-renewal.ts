@@ -73,9 +73,7 @@ function sameRenewalCycle(a: string | null, renewalDate: string): boolean {
 
 function hasRecurringAutoBilling(row: SignupBillingRow): boolean {
   return Boolean(
-    row.recurring_billing_consented_at &&
-      row.oneclick_username &&
-      row.oneclick_tbk_user,
+    row.recurring_billing_consented_at && row.oneclick_username && row.oneclick_tbk_user,
   );
 }
 
@@ -93,7 +91,10 @@ async function sendRenewalEmail(
   await sendBillingEmailViaZoho({ to, subject, textBody, htmlBody });
 }
 
-async function suspendSignup(row: SignupBillingRow, result: SubscriptionRenewalJobResult): Promise<void> {
+async function suspendSignup(
+  row: SignupBillingRow,
+  result: SubscriptionRenewalJobResult,
+): Promise<void> {
   const now = new Date().toISOString();
   await supabaseAdmin
     .from(CONTRACT_SIGNUPS_TABLE)
@@ -163,14 +164,16 @@ export async function runSubscriptionRenewalJob(): Promise<SubscriptionRenewalJo
           ) {
             result.autoChargesAttempted += 1;
             const charge = await attemptOneclickRecurringCharge(row.id);
-            await supabaseAdmin
-              .from(CONTRACT_SIGNUPS_TABLE)
-              .update({ recurring_billing_charge_for: row.renewal_date } as never)
-              .eq("id", row.id);
 
             if (charge.skipped) {
-              result.errors.push(`${row.email}: cobro automático omitido (${charge.reason ?? "desconocido"})`);
+              result.errors.push(
+                `${row.email}: cobro automático omitido (${charge.reason ?? "desconocido"})`,
+              );
             } else if (charge.ok) {
+              await supabaseAdmin
+                .from(CONTRACT_SIGNUPS_TABLE)
+                .update({ recurring_billing_charge_for: row.renewal_date } as never)
+                .eq("id", row.id);
               result.autoChargesSucceeded += 1;
               continue;
             } else {
