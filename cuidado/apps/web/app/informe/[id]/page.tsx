@@ -87,6 +87,10 @@ export default async function InformePage({ params, searchParams }: PageProps) {
       <div>
         <p className="text-sm text-stone-500">{scan.requestedUrl}</p>
         <h1 className="mt-1 text-4xl tracking-tight">Informe del celular</h1>
+        <p className="mt-3 text-sm leading-6 text-stone-600">
+          El puntaje es del celular, que es donde más se nota si el sitio va lento. En un computador no hay otro
+          puntaje: el mismo WordPress suele sentirse más holgado y no se mide ni se cobra aparte.
+        </p>
       </div>
 
       <ScoreMeter score={gate ? null : scan.performanceScore} gate={gate} />

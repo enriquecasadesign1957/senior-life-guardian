@@ -111,7 +111,9 @@ export default function HomePage() {
                   Recibe un informe claro en español sobre el estado de tu WordPress.
                 </p>
                 <p className="mt-6 font-display text-4xl">Gratis</p>
-                <p className="mt-2 text-sm text-stone-600">1 análisis cada 24 horas por dominio.</p>
+                <p className="mt-2 text-sm text-stone-600">
+                  Un informe cada 24 horas por dominio. Si pides otro antes, te mostramos el que ya está.
+                </p>
                 <a href="#analizar" className="mt-6 inline-block rounded-full bg-pine px-5 py-3 text-sm font-medium text-white">
                   Probar análisis gratuito
                 </a>
@@ -166,6 +168,10 @@ export default function HomePage() {
                   <p className="text-sm font-medium text-stone-500">Además</p>
                   <div className="mt-3">
                     <Checks items={["Restauración disponible durante 7 días", "Historial completo de cambios"]} />
+                  <p className="mt-3 text-sm text-stone-600">
+                    Esos 7 días sirven para volver a dejar la basura como estaba. Después, lo borrado no vuelve. Las
+                    páginas publicadas, los pedidos y el tema no entran en esa limpieza.
+                  </p>
                   </div>
                 </div>
               </div>
@@ -186,6 +192,10 @@ export default function HomePage() {
                 />
               </div>
               <p className="mt-6 text-sm text-stone-600">Nada se actualiza automáticamente sin autorización.</p>
+              <p className="mt-2 text-sm text-stone-600">
+                Es un solo plugin porque actualizar varios a la vez es lo que suele romper un WordPress. Si ese parche
+                falla, se sabe cuál fue.
+              </p>
             </article>
 
             <article className="grid gap-8 rounded-3xl bg-ink p-6 text-white sm:p-8 lg:grid-cols-[1fr_0.7fr] lg:items-end">
