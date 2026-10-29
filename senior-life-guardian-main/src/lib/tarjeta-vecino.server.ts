@@ -1,23 +1,25 @@
 import {
   decideLasCondesDiscount,
+  mapOficialTarjetaVecino,
   type LasCondesDecision,
   type LasCondesTier,
+  type OficialTarjetaVecino,
 } from "@/lib/tarjeta-vecino";
 
-const PORTAL_URL = "https://portalvecino.lascondes.cl/api/public/comercio/consultar";
-const PORTAL_TIMEOUT_MS = 8_000;
-
-type PortalPayload = {
-  found?: boolean;
-  estado?: string;
-  tipo_vecino?: string;
-};
+const TARJETA_API_URL = "https://api.lascondes.cl/maestros/vecinos/tarjeta";
+const TARJETA_API_TIMEOUT_MS = 8_000;
 
 export class TarjetaVecinoPortalError extends Error {
-  constructor(message = "No pudimos consultar el portal de Tarjeta Vecino. Intenta nuevamente en unos minutos.") {
+  constructor(
+    message = "No pudimos consultar la Tarjeta Vecino. Intenta nuevamente en unos minutos.",
+  ) {
     super(message);
     this.name = "TarjetaVecinoPortalError";
   }
+}
+
+function rutSinPuntos(formattedRut: string): string {
+  return formattedRut.replace(/\./g, "").replace(/\s+/g, "");
 }
 
 export async function consultarTarjetaVecino(
@@ -25,38 +27,57 @@ export async function consultarTarjetaVecino(
   tier: LasCondesTier,
   periodo: "mensual" | "anual",
 ): Promise<LasCondesDecision> {
+  const token = process.env.LAS_CONDES_TARJETA_API_TOKEN?.trim();
+  if (!token) {
+    throw new TarjetaVecinoPortalError(
+      "La consulta de Tarjeta Vecino no está configurada en el servidor.",
+    );
+  }
+
+  const rut = rutSinPuntos(formattedRut);
+  if (!/^\d{7,8}-[0-9K]$/i.test(rut)) {
+    throw new TarjetaVecinoPortalError("Ingresa un RUT chileno válido, con dígito verificador.");
+  }
+
+  const url = new URL(TARJETA_API_URL);
+  url.searchParams.set("rut", rut.toUpperCase());
+
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), PORTAL_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), TARJETA_API_TIMEOUT_MS);
 
   try {
-    const res = await fetch(PORTAL_URL, {
-      method: "POST",
+    const res = await fetch(url, {
+      method: "GET",
       headers: {
         Accept: "application/json",
-        "Content-Type": "application/json",
-        "X-Requested-With": "XMLHttpRequest",
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ rut: formattedRut }),
       signal: controller.signal,
     });
 
+    if (res.status === 401 || res.status === 403) {
+      throw new TarjetaVecinoPortalError(
+        "La municipalidad rechazó la credencial de consulta de Tarjeta Vecino.",
+      );
+    }
     if (!res.ok) {
       throw new TarjetaVecinoPortalError();
     }
 
-    let payload: PortalPayload;
+    let payload: { vecino?: OficialTarjetaVecino | null };
     try {
-      payload = (await res.json()) as PortalPayload;
+      payload = (await res.json()) as { vecino?: OficialTarjetaVecino | null };
     } catch {
       throw new TarjetaVecinoPortalError();
     }
 
+    const mapped = mapOficialTarjetaVecino(payload.vecino);
     return decideLasCondesDiscount({
       tier,
       periodo,
-      found: payload.found === true,
-      estado: typeof payload.estado === "string" ? payload.estado : "",
-      tipo: typeof payload.tipo_vecino === "string" ? payload.tipo_vecino : "",
+      found: mapped.found,
+      estado: mapped.estado,
+      tipo: mapped.tipo,
     });
   } catch (err) {
     if (err instanceof TarjetaVecinoPortalError) throw err;

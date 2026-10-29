@@ -1,7 +1,8 @@
 /**
  * Convenio Tarjeta Vecino (Las Condes).
- * El portal público devuelve estado y tipo_vecino a partir del RUT.
- * El tipo no demuestra que la tarjeta esté activa: sin tarjeta también puede venir "RESIDENTE".
+ * La consulta oficial es GET /maestros/vecinos/tarjeta (Authorization: Bearer).
+ * El tipo no demuestra vigencia: una tarjeta no vigente puede venir sin tipo,
+ * y una vigente puede ser RESIDENTE o Adulto Mayor.
  */
 
 export const LAS_CONDES_CODE = "VECINO-LASCONDES";
@@ -25,6 +26,9 @@ const INACTIVE_ESTADOS = new Set([
   "VENCIDO_PERIODO",
   "SIN_TARJETA",
   "ELIMINADO",
+  "NO_VIGENTE",
+  "NO_EXISTE",
+  "INACTIVO",
 ]);
 
 export function normalizeDiscountCode(raw: string): string {
@@ -107,6 +111,41 @@ export function isAdultoMayorTipo(tipoRaw: string): boolean {
   if (compact.includes("SENIOR")) return true;
   const parts = token.split("_").filter(Boolean);
   return parts.includes("AM");
+}
+
+export type OficialTarjetaVecino = {
+  estado?: unknown;
+  estado_interno?: unknown;
+  tipo_vecino?: unknown;
+};
+
+function asText(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+/**
+ * Reduce la respuesta de api.lascondes.cl a estado y tipo.
+ * No copia nombre, dirección ni código de tarjeta.
+ * found queda en false: solo un estado explícitamente vigente habilita el descuento.
+ * Si estado_interno está bloqueado, ese valor gana sobre estado.
+ */
+export function mapOficialTarjetaVecino(vecino: OficialTarjetaVecino | null | undefined): {
+  found: boolean;
+  estado: string;
+  tipo: string;
+} {
+  if (!vecino) {
+    return { found: false, estado: "", tipo: "" };
+  }
+  const estado = asText(vecino.estado);
+  const interno = asText(vecino.estado_interno);
+  const tipo = asText(vecino.tipo_vecino);
+  const internoBloquea = Boolean(interno) && !isTarjetaVecinoActiva(false, interno);
+  return {
+    found: false,
+    estado: internoBloquea ? interno : estado,
+    tipo,
+  };
 }
 
 export function lasCondesCheckoutPath(code: string, periodo: "mensual" | "anual"): string {
