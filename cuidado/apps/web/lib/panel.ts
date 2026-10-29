@@ -95,7 +95,8 @@ export function cleanupProjection(input: {
   return {
     blocked: false,
     headline,
-    detail: "No tocamos pedidos, clientes, el tema ni functions.php. Cuando la limpieza se aplique, se puede deshacer durante 7 días.",
+    detail:
+      "No tocamos pedidos, clientes, el tema ni functions.php. Cuando la limpieza se aplique, se puede deshacer durante 7 días. Pasado ese plazo, lo borrado no vuelve. Las páginas publicadas siguen como estaban.",
   };
 }
 

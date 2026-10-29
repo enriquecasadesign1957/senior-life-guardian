@@ -9,7 +9,7 @@ const paths: Array<{ title: string; body: string; href: string; action: string; 
   },
   {
     title: "La base está llena",
-    body: "Copias viejas, transitorios vencidos y spam. Antes de quitar nada ves la lista. El pago único es de $29 y se puede deshacer durante 7 días.",
+    body: "Copias viejas, transitorios vencidos y spam. Antes de quitar nada ves la lista. El pago único es de $29. Durante 7 días se puede deshacer. Después, lo borrado no vuelve. Las páginas publicadas no entran en esa limpieza.",
     href: "#precios",
     action: "Ver el Rescate",
   },

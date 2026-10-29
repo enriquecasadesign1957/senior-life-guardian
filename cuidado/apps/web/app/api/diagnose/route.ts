@@ -18,7 +18,7 @@ export const runtime = "nodejs";
 const STALE_MS = 70_000;
 
 type Claim =
-  | { mode: "ready"; id: string }
+  | { mode: "ready"; id: string; againAt: Date }
   | { mode: "wait"; id: string }
   | { mode: "mine"; id: string; donorId: string | null };
 
@@ -30,7 +30,15 @@ export async function POST(request: Request): Promise<NextResponse> {
     const userId = await currentUserId();
     const claim = await claimScan(requestedUrl, userId);
     const scanId = claim.mode === "ready" ? claim.id : claim.mode === "wait" ? await waitForScan(claim.id) : await finishScan(claim.id, requestedUrl, userId, claim.donorId);
-    return NextResponse.json({ scanId, url: requestedUrl });
+    if (claim.mode === "ready") {
+      return NextResponse.json({
+        scanId,
+        url: requestedUrl,
+        reused: true,
+        againAt: claim.againAt.toISOString(),
+      });
+    }
+    return NextResponse.json({ scanId, url: requestedUrl, reused: false });
   } catch (error) {
     return jsonError(error);
   }
@@ -51,7 +59,7 @@ async function claimScan(requestedUrl: string, userId: string): Promise<Claim> {
       .limit(5);
 
     const reusable = readyRows.find((row) => canReuse(row.siteId, site?.id) && hasCurrentProbe(row.summary));
-    if (reusable) return { mode: "ready", id: reusable.id };
+    if (reusable) return { mode: "ready", id: reusable.id, againAt: reusable.expiresAt };
 
     const donor = readyRows.find(
       (row) => row.performanceScore !== null && hasCurrentProbe(row.summary) && !(row.summary as { gate?: boolean } | null)?.gate,
