@@ -1,13 +1,8 @@
 import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
 import test from "node:test";
-import {
-  buildLemonCheckoutUrl,
-  isLemonCheckoutUrl,
-  readPaidLemonOrder,
-  verifyLemonSignature,
-  type LemonOrderFacts,
-} from "./lemon.ts";
+import { buildLemonCheckoutUrl, isLemonCheckoutUrl } from "./lemon-checkout.ts";
+import { readPaidLemonOrder, verifyLemonSignature, type LemonOrderFacts } from "./lemon.ts";
 
 const siteId = "11111111-1111-4111-8111-111111111111";
 const userId = "22222222-2222-4222-8222-222222222222";

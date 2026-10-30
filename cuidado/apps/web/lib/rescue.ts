@@ -1,4 +1,4 @@
-import { isLemonCheckoutUrl } from "./lemon";
+import { isLemonCheckoutUrl } from "./lemon-checkout";
 
 export const RESCUE_AMOUNT_CENTS = 2900;
 export const RESCUE_CURRENCY = "usd";

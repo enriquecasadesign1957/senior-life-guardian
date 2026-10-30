@@ -4,7 +4,7 @@ import { getDb, sites, users } from "@cuidado/db";
 import { NextResponse } from "next/server";
 import { jsonError } from "@/lib/http";
 import { ApiError } from "@/lib/errors";
-import { buildLemonCheckoutUrl } from "@/lib/lemon";
+import { buildLemonCheckoutUrl } from "@/lib/lemon-checkout";
 import { requireUserId } from "@/lib/session";
 
 export const runtime = "nodejs";
