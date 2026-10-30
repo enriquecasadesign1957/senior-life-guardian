@@ -36,7 +36,13 @@ import {
 } from "@/lib/recurring-billing-consent";
 import { normalizeDiscountCodeInput, type PublicDiscountPreview } from "@/lib/discount-codes";
 import { consultarTarjetaVecinoViaApi } from "@/lib/consultar-tarjeta-vecino-api";
-import { lasCondesCheckoutPath, lasCondesTier, parseChileanRut } from "@/lib/tarjeta-vecino";
+import {
+  LAS_CONDES_AM_CODE,
+  LAS_CONDES_CODE,
+  lasCondesCheckoutPath,
+  lasCondesTier,
+  parseChileanRut,
+} from "@/lib/tarjeta-vecino";
 import { getServerErrorMessage } from "@/lib/server-error-message";
 import { buildPrivatePageMeta } from "@/lib/seo";
 
@@ -213,6 +219,9 @@ function CheckoutPage() {
   }, [form.email, appliedDiscount]);
 
   const vecinoTier = appliedDiscount ? lasCondesTier(appliedDiscount.code) : null;
+  const onConvenioCheckout = Boolean(
+    vecinoTier || lasCondesTier(normalizeDiscountCodeInput(search.codigo ?? "")),
+  );
   const parsedVecinoRut = parseChileanRut(vecinoRut);
   const vecinoVerified =
     !!vecinoTier &&
@@ -495,6 +504,38 @@ function CheckoutPage() {
                     </button>
                   </div>
                 </div>
+
+                {!onConvenioCheckout && (
+                  <div
+                    className="rounded-2xl border p-4 md:p-5"
+                    style={{
+                      borderColor: "color-mix(in oklab, var(--brand-petrol) 22%, white)",
+                      background: "color-mix(in oklab, var(--brand-petrol) 6%, white)",
+                    }}
+                  >
+                    <div className="text-sm font-bold text-foreground">¿Tienes Tarjeta Vecino de Las Condes?</div>
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                      Aquí se cobra el precio de lista. El descuento del convenio se aplica en el enlace
+                      correspondiente, después de verificar el RUT del titular.
+                    </p>
+                    <div className="mt-3 flex flex-col sm:flex-row gap-2">
+                      <a
+                        href={lasCondesCheckoutPath(LAS_CONDES_CODE, periodo)}
+                        className="inline-flex items-center justify-center px-4 py-2.5 rounded-full text-sm font-semibold text-white"
+                        style={{ background: DEEP }}
+                      >
+                        Tarjeta Vecino · 15%
+                      </a>
+                      <a
+                        href={lasCondesCheckoutPath(LAS_CONDES_AM_CODE, periodo)}
+                        className="inline-flex items-center justify-center px-4 py-2.5 rounded-full text-sm font-semibold border"
+                        style={{ borderColor: DEEP, color: DEEP }}
+                      >
+                        Adulto Mayor · 20%
+                      </a>
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <label className="text-sm font-bold text-foreground mb-1 block">3. Datos para pagar e instalar</label>
