@@ -3,6 +3,7 @@ import { findings, getDb, scanRuns, sites } from "@cuidado/db";
 import { notFound } from "next/navigation";
 import { CleanupPanel } from "@/components/cleanup-panel";
 import { IncidentNotice } from "@/components/incident-notice";
+import { PlanPanel } from "@/components/plan-panel";
 import { ReliefCompare } from "@/components/relief-compare";
 import { OutsideRepair } from "@/components/outside-repair";
 import { Reassurance } from "@/components/reassurance";
@@ -152,6 +153,7 @@ export default async function InformePage({ params, searchParams }: PageProps) {
       <Reassurance />
       <OutsideRepair />
       <CleanupPanel siteId={ownedId} />
+      {ownedId && site && site.plan !== "cuidado" ? <PlanPanel siteId={ownedId} /> : null}
       {ownedId ? <RevokeAccess siteId={ownedId} /> : null}
     </div>
   );

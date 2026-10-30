@@ -18,18 +18,12 @@ function formatUntil(until: Date): string {
   }).format(until);
 }
 
-async function confirm(sessionId: string | undefined): Promise<{ title: string; body: string }> {
-  if (!sessionId || !sessionId.startsWith("cs_")) {
-    return {
-      title: "No llegó un pago",
-      body: "No se ha cobrado nada. Vuelve al informe y pulsa el botón de $29 cuando quieras.",
-    };
-  }
+async function confirmStripe(sessionId: string): Promise<{ title: string; body: string }> {
   const stripe = getStripe();
   if (!stripe) {
     return {
-      title: "Stripe no está configurado",
-      body: "No podemos confirmar el cobro desde aquí. Si Stripe te cobró, escríbenos a hola@cuidadoweb.com y no pagues otra vez.",
+      title: "No podemos confirmar Stripe aquí",
+      body: "Si Lemon o Stripe te cobró, la vigilancia se activa con el aviso de pago. La limpieza todavía no se ejecuta sola. Escríbenos a hola@cuidadoweb.com si no ves el plan activo.",
     };
   }
 
@@ -51,19 +45,29 @@ async function confirm(sessionId: string | undefined): Promise<{ title: string; 
   if (granted.status === "rejected") {
     return {
       title: "El sitio ya no está conectado",
-      body: "Stripe cobró, pero no activamos el Rescate porque el sitio no está conectado. Escríbenos a hola@cuidadoweb.com y no pagues otra vez.",
+      body: "Se cobró, pero no activamos el Rescate porque el sitio no está conectado. Escríbenos a hola@cuidadoweb.com y no pagues otra vez.",
     };
   }
   if (granted.status === "duplicate") {
     const until = granted.watchUntil ? ` La vigilancia que ya tenías sigue hasta el ${formatUntil(granted.watchUntil)}.` : "";
     return {
       title: "Este sitio ya tenía un plan",
-      body: `No abrimos otro periodo de 30 días.${until} Si Stripe cobró de nuevo, escríbenos a hola@cuidadoweb.com.`,
+      body: `No abrimos otro periodo de 30 días.${until} Si te cobraron de nuevo, escríbenos a hola@cuidadoweb.com.`,
     };
   }
   return {
     title: "Pago recibido",
     body: `La vigilancia del Rescate queda activa hasta el ${formatUntil(granted.watchUntil)}. La limpieza de la base todavía no se ejecuta sola.`,
+  };
+}
+
+async function confirm(sessionId: string | undefined): Promise<{ title: string; body: string }> {
+  if (sessionId?.startsWith("cs_")) {
+    return confirmStripe(sessionId);
+  }
+  return {
+    title: "Pago recibido",
+    body: "Si acabas de pagar el Rescate en Lemon Squeezy, la vigilancia se activa en unos segundos. La limpieza de la base todavía no se ejecuta sola. Si no pagaste, vuelve al informe y no se ha cobrado nada.",
   };
 }
 

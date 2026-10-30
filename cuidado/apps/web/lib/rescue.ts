@@ -1,3 +1,5 @@
+import { isLemonCheckoutUrl } from "./lemon-checkout";
+
 export const RESCUE_AMOUNT_CENTS = 2900;
 export const RESCUE_CURRENCY = "usd";
 
@@ -29,6 +31,10 @@ export function isStripeCheckoutUrl(value: string): boolean {
   } catch {
     return false;
   }
+}
+
+export function isAllowedCheckoutUrl(value: string): boolean {
+  return isLemonCheckoutUrl(value) || isStripeCheckoutUrl(value);
 }
 
 export function readPaidRescue(session: RescueCheckoutFacts): PaidRescue | null {
