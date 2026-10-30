@@ -66,14 +66,29 @@ test("un order_created de $29 activa el rescate", () => {
           id: 99,
           attributes: {
             status: "paid",
-            total_usd: 1900,
-            first_order_item: { variant_id: 2318074 },
+            total_usd: 2900,
+            first_order_item: { variant_id: 2318074, price: 1900 },
           },
         },
       }),
     ),
     null,
   );
+});
+
+test("un cobro con impuesto sigue activando el rescate", () => {
+  const withTax = paidOrder({
+    data: {
+      id: 101,
+      attributes: {
+        status: "paid",
+        total_usd: 3509,
+        created_at: "2026-10-30T18:00:00.000Z",
+        first_order_item: { variant_id: 2318074, product_name: "Rescate CuidadoWeb", price: 2900 },
+      },
+    },
+  });
+  assert.equal(readPaidLemonOrder(withTax)?.checkoutId, "ls_order_101");
 });
 
 test("un order_created de $19 activa el plan", () => {

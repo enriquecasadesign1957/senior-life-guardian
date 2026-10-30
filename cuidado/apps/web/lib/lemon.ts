@@ -112,12 +112,13 @@ export function readPaidLemonOrder(payload: LemonOrderFacts): PaidLemonOrder | n
   const userId = custom?.user_id ?? "";
   if (!UUID.test(siteId) || !UUID.test(userId)) return null;
 
+  // total_usd includes tax (Lemon is MoR). Validate the line item price, not the taxed total.
   const expectedCents = purpose === "rescue" ? 2900 : 1900;
-  const total = attrs.total_usd;
-  if (typeof total === "number" && total !== expectedCents) return null;
+  const itemPrice = attrs.first_order_item?.price;
+  if (typeof itemPrice === "number" && itemPrice !== expectedCents) return null;
 
   const variant = String(attrs.first_order_item?.variant_id ?? "");
-  if (variant && variant !== lemonVariantId(purpose)) return null;
+  if (!variant || variant !== lemonVariantId(purpose)) return null;
 
   const orderId = payload.data?.id;
   if (orderId === undefined || orderId === null || orderId === "") return null;
