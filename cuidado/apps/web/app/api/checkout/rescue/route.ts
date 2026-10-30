@@ -1,12 +1,11 @@
 import { and, eq } from "drizzle-orm";
 import { rescueCheckoutSchema } from "@cuidado/contract";
-import { getDb, sites } from "@cuidado/db";
+import { getDb, sites, users } from "@cuidado/db";
 import { NextResponse } from "next/server";
 import { jsonError } from "@/lib/http";
 import { ApiError } from "@/lib/errors";
-import { RESCUE_AMOUNT_CENTS, RESCUE_CURRENCY } from "@/lib/rescue";
+import { buildLemonCheckoutUrl } from "@/lib/lemon";
 import { requireUserId } from "@/lib/session";
-import { appOrigin, getStripe } from "@/lib/stripe";
 
 export const runtime = "nodejs";
 
@@ -27,44 +26,24 @@ export async function POST(request: Request): Promise<NextResponse> {
     if (site.plan !== "none") {
       throw new ApiError("ALREADY_COVERED", "Este sitio ya tiene un plan. No hace falta el pago de $29.", 409);
     }
-    const stripe = getStripe();
-    if (!stripe) {
+
+    const user = (
+      await getDb().select({ email: users.email }).from(users).where(eq(users.id, userId)).limit(1)
+    )[0];
+    const url = buildLemonCheckoutUrl({
+      purpose: "rescue",
+      siteId: site.id,
+      userId,
+      email: user?.email,
+    });
+    if (!url) {
       throw new ApiError(
         "CHECKOUT_UNAVAILABLE",
-        "Falta la clave de Stripe. Todavía no se ha cobrado nada.",
+        "Falta el enlace de Lemon Squeezy. Todavía no se ha cobrado nada.",
         501,
       );
     }
-
-    const origin = appOrigin(request);
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      client_reference_id: site.id,
-      success_url: `${origin}/pago/rescate?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}${input.returnPath ?? "/"}`,
-      line_items: [
-        {
-          quantity: 1,
-          price_data: {
-            currency: RESCUE_CURRENCY,
-            unit_amount: RESCUE_AMOUNT_CENTS,
-            product_data: {
-              name: "Rescate CuidadoWeb",
-              description: "Limpieza única de la base de datos y vigilancia por 30 días.",
-            },
-          },
-        },
-      ],
-      metadata: {
-        purpose: "rescue",
-        siteId: site.id,
-        userId,
-      },
-    });
-    if (!session.url) {
-      throw new ApiError("CHECKOUT_UNAVAILABLE", "Stripe no abrió el cobro. No se ha cobrado nada.", 502);
-    }
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({ url });
   } catch (error) {
     return jsonError(error);
   }

@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+<<<<<<< HEAD
     "test": "tsx --test lib/rules.test.ts lib/email.test.ts lib/panel.test.ts lib/rescue.test.ts lib/plugin-client.test.ts lib/reuse-notice.test.ts"
+=======
+    "test": "tsx --test lib/rules.test.ts lib/email.test.ts lib/panel.test.ts lib/rescue.test.ts lib/lemon.test.ts lib/plugin-client.test.ts"
+>>>>>>> 32080a0 (Conectar Lemon Squeezy al Rescate y al Plan Cuidado)
   },
   "dependencies": {
     "@cuidado/contract": "0.1.0",

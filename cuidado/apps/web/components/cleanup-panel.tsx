@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { cleanupProjection, type CleanupPreview } from "@/lib/panel";
-import { isStripeCheckoutUrl } from "@/lib/rescue";
+import { isAllowedCheckoutUrl } from "@/lib/rescue";
 
 type SimulateBody = {
   needsPayment?: boolean;
@@ -74,7 +74,7 @@ export function CleanupPanel({ siteId }: { siteId: string | null }) {
         }),
       });
       const body = (await response.json()) as { url?: string; error?: { message?: string } };
-      if (typeof body.url === "string" && isStripeCheckoutUrl(body.url)) {
+      if (typeof body.url === "string" && isAllowedCheckoutUrl(body.url)) {
         window.location.assign(body.url);
         return;
       }
