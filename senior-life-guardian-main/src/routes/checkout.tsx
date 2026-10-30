@@ -35,6 +35,14 @@ import {
   SENIOR_SAFE_TERMS_CANCELLATION_URL,
 } from "@/lib/recurring-billing-consent";
 import { normalizeDiscountCodeInput, type PublicDiscountPreview } from "@/lib/discount-codes";
+import { consultarTarjetaVecinoViaApi } from "@/lib/consultar-tarjeta-vecino-api";
+import {
+  LAS_CONDES_AM_CODE,
+  LAS_CONDES_CODE,
+  lasCondesCheckoutPath,
+  lasCondesTier,
+  parseChileanRut,
+} from "@/lib/tarjeta-vecino";
 import { getServerErrorMessage } from "@/lib/server-error-message";
 import { buildPrivatePageMeta } from "@/lib/seo";
 
@@ -128,6 +136,11 @@ function CheckoutPage() {
   const [appliedDiscount, setAppliedDiscount] = useState<PublicDiscountPreview | null>(null);
   const [discountError, setDiscountError] = useState<string | null>(null);
   const [discountLoading, setDiscountLoading] = useState(false);
+  const [vecinoRut, setVecinoRut] = useState("");
+  const [vecinoCheck, setVecinoCheck] = useState<{ code: string; rut: string; message: string; alternateCode?: string } | null>(null);
+  const [vecinoError, setVecinoError] = useState<string | null>(null);
+  const [vecinoAlternateCode, setVecinoAlternateCode] = useState<string | null>(null);
+  const [vecinoLoading, setVecinoLoading] = useState(false);
   const discountRequestRef = useRef(0);
   const urlCodigoAppliedRef = useRef(false);
   const discountEmailRef = useRef("");
@@ -147,6 +160,8 @@ function CheckoutPage() {
     if (!code) {
       setAppliedDiscount(null);
       setDiscountError(null);
+      setVecinoCheck(null);
+      setVecinoError(null);
       return;
     }
 
@@ -167,6 +182,7 @@ function CheckoutPage() {
     } catch (err) {
       if (requestId !== discountRequestRef.current) return;
       setAppliedDiscount(null);
+      setVecinoCheck(null);
       setDiscountError(getServerErrorMessage(err, "No pudimos validar el código."));
     } finally {
       if (requestId === discountRequestRef.current) {
@@ -198,8 +214,59 @@ function CheckoutPage() {
     if (email === discountEmailRef.current) return;
     if (!z.string().email().safeParse(email).success) return;
     setAppliedDiscount(null);
+    setVecinoCheck(null);
     setDiscountError("Cambiaste tu correo. Vuelve a aplicar el código promocional.");
   }, [form.email, appliedDiscount]);
+
+  const vecinoTier = appliedDiscount ? lasCondesTier(appliedDiscount.code) : null;
+  const onConvenioCheckout = Boolean(
+    vecinoTier || lasCondesTier(normalizeDiscountCodeInput(search.codigo ?? "")),
+  );
+  const parsedVecinoRut = parseChileanRut(vecinoRut);
+  const vecinoVerified =
+    !!vecinoTier &&
+    !!parsedVecinoRut &&
+    vecinoCheck?.code === appliedDiscount?.code &&
+    vecinoCheck.rut === parsedVecinoRut.formatted;
+
+  const verifyTarjetaVecino = async () => {
+    if (!appliedDiscount || !vecinoTier) return false;
+    const parsed = parseChileanRut(vecinoRut);
+    if (!parsed) {
+      setVecinoCheck(null);
+      setVecinoError("Ingresa un RUT chileno válido, con dígito verificador.");
+      return false;
+    }
+    setVecinoLoading(true);
+    setVecinoError(null);
+    setVecinoAlternateCode(null);
+    try {
+      const result = await consultarTarjetaVecinoViaApi({
+        rut: parsed.formatted,
+        code: appliedDiscount.code,
+        periodo,
+      });
+      if (!result.eligible) {
+        setVecinoCheck(null);
+        setVecinoAlternateCode(result.alternateCode ?? null);
+        setVecinoError(result.message);
+        return false;
+      }
+      setVecinoCheck({
+        code: appliedDiscount.code,
+        rut: parsed.formatted,
+        message: result.message,
+        alternateCode: result.alternateCode,
+      });
+      return true;
+    } catch (err) {
+      setVecinoCheck(null);
+      setVecinoError(getServerErrorMessage(err, "No pudimos consultar la Tarjeta Vecino."));
+      return false;
+    } finally {
+      setVecinoLoading(false);
+    }
+  };
 
   const setBillingPeriod = (nextYearly: boolean) => {
     setYearly(nextYearly);
@@ -229,6 +296,7 @@ function CheckoutPage() {
         plan: planKey,
         periodo,
         discountCode: appliedDiscount?.code ?? "",
+        tarjetaVecinoRut: parsedVecinoRut?.formatted ?? "",
         recurringBillingConsent: true,
       } });
 
@@ -275,6 +343,10 @@ function CheckoutPage() {
       setErrors(errs);
       return;
     }
+    if (vecinoTier && !vecinoVerified) {
+      setSubmitError("Verifica la Tarjeta Vecino antes de pagar.");
+      return;
+    }
     setErrors({});
     setLoading(true);
 
@@ -286,6 +358,7 @@ function CheckoutPage() {
       plan: planKey,
       periodo,
       discountCode: appliedDiscount?.code ?? "",
+      tarjetaVecinoRut: vecinoVerified ? parsedVecinoRut?.formatted ?? "" : "",
       recurringBillingConsent: true,
     };
 
@@ -432,10 +505,42 @@ function CheckoutPage() {
                   </div>
                 </div>
 
+                {!onConvenioCheckout && (
+                  <div
+                    className="rounded-2xl border p-4 md:p-5"
+                    style={{
+                      borderColor: "color-mix(in oklab, var(--brand-petrol) 22%, white)",
+                      background: "color-mix(in oklab, var(--brand-petrol) 6%, white)",
+                    }}
+                  >
+                    <div className="text-sm font-bold text-foreground">¿Tienes Tarjeta Vecino de Las Condes?</div>
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                      Aquí se cobra el precio de lista. El descuento del convenio se aplica en el enlace
+                      correspondiente, después de verificar el RUT del titular.
+                    </p>
+                    <div className="mt-3 flex flex-col sm:flex-row gap-2">
+                      <a
+                        href={lasCondesCheckoutPath(LAS_CONDES_CODE, periodo)}
+                        className="inline-flex items-center justify-center px-4 py-2.5 rounded-full text-sm font-semibold text-white"
+                        style={{ background: DEEP }}
+                      >
+                        Tarjeta Vecino · 15%
+                      </a>
+                      <a
+                        href={lasCondesCheckoutPath(LAS_CONDES_AM_CODE, periodo)}
+                        className="inline-flex items-center justify-center px-4 py-2.5 rounded-full text-sm font-semibold border"
+                        style={{ borderColor: DEEP, color: DEEP }}
+                      >
+                        Adulto Mayor · 20%
+                      </a>
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <label className="text-sm font-bold text-foreground mb-1 block">3. Datos para pagar e instalar</label>
                   <p className="text-xs text-muted-foreground mb-3">
-                    Solo 3 datos. Guardián, dirección y código institucional se completan después del pago (menos de 1 minuto).
+                    Solo 3 datos. Guardián y dirección se completan después del pago (menos de 1 minuto).
                   </p>
                   <div className="space-y-4">
                     <Field
@@ -479,6 +584,64 @@ function CheckoutPage() {
                       <div className="text-muted-foreground mt-1">
                         {appliedDiscount.percentOff}% de descuento · Ahorras ${fmt(appliedDiscount.discountAmount)}
                       </div>
+                    </div>
+                  )}
+                  {vecinoTier && (
+                    <div className="mt-4 p-4 rounded-2xl border border-border bg-background space-y-3">
+                      <div>
+                        <div className="text-sm font-bold text-foreground">
+                          {vecinoTier === "adulto_mayor" ? "Tarjeta Vecino Adulto Mayor" : "Tarjeta Vecino"}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Ingresa el RUT del titular. Antes de cobrar consultamos si la tarjeta está activa en el portal de Las Condes.
+                        </p>
+                      </div>
+                      <Field
+                        label="RUT del titular"
+                        name="rut"
+                        value={vecinoRut}
+                        onChange={(v) => {
+                          setVecinoRut(v);
+                          setVecinoError(null);
+                        }}
+                        placeholder="12.345.678-5"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => void verifyTarjetaVecino()}
+                        disabled={vecinoLoading || loading}
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold text-white disabled:opacity-70"
+                        style={{ background: DEEP }}
+                      >
+                        {vecinoLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                        {vecinoLoading ? "Consultando portal…" : "Verificar tarjeta"}
+                      </button>
+                      {vecinoVerified && vecinoCheck && (
+                        <p className="text-xs leading-relaxed" style={{ color: GREEN }}>
+                          {vecinoCheck.message}
+                          {vecinoCheck.alternateCode && (
+                            <>
+                              {" "}
+                              <a href={lasCondesCheckoutPath(vecinoCheck.alternateCode, periodo)} className="font-semibold underline">
+                                Abrir el otro convenio
+                              </a>
+                            </>
+                          )}
+                        </p>
+                      )}
+                      {vecinoError && (
+                        <p className="text-xs text-destructive leading-relaxed">
+                          {vecinoError}
+                          {vecinoAlternateCode && (
+                            <>
+                              {" "}
+                              <a href={lasCondesCheckoutPath(vecinoAlternateCode, periodo)} className="font-semibold underline">
+                                Ir al convenio de 15%
+                              </a>
+                            </>
+                          )}
+                        </p>
+                      )}
                     </div>
                   )}
                   {discountLoading && (
@@ -541,7 +704,7 @@ function CheckoutPage() {
 
                 <button
                   type="submit"
-                  disabled={loading || redirecting}
+                  disabled={loading || redirecting || vecinoLoading || (!!vecinoTier && !vecinoVerified)}
                   className="w-full inline-flex items-center justify-center gap-3 px-6 py-5 rounded-full text-white font-bold text-base hover:scale-[1.01] transition shadow-xl disabled:opacity-80 disabled:cursor-wait disabled:hover:scale-100"
                   style={{ background: GREEN }}
                 >
@@ -557,6 +720,12 @@ function CheckoutPage() {
                     </>
                   )}
                 </button>
+
+                {vecinoTier && !vecinoVerified && (
+                  <p className="text-center text-xs text-muted-foreground -mt-2">
+                    Verifica la Tarjeta Vecino para habilitar el pago con este convenio.
+                  </p>
+                )}
 
                 <p className="text-center text-xs text-muted-foreground -mt-2">
                   Al continuar aceptas los <Link to="/terminos" className="underline">Términos</Link> y la <Link to="/privacidad" className="underline">Política de privacidad</Link>.
@@ -579,7 +748,7 @@ function CheckoutPage() {
                     <button
                       type="button"
                       onClick={handleMockApprove}
-                      disabled={mockLoading || loading}
+                      disabled={mockLoading || loading || vecinoLoading || (!!vecinoTier && !vecinoVerified)}
                       className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full border-2 font-semibold text-sm disabled:opacity-60"
                       style={{ borderColor: GREEN, color: GREEN, background: "color-mix(in oklab, #16a34a 6%, white)" }}
                     >

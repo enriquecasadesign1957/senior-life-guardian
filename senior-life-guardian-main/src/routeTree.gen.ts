@@ -17,6 +17,7 @@ import { Route as SimuladorRouteImport } from './routes/simulador'
 import { Route as PrivacidadRouteImport } from './routes/privacidad'
 import { Route as PlanesRouteImport } from './routes/planes'
 import { Route as NativeRouteImport } from './routes/native'
+import { Route as LasCondesRouteImport } from './routes/las-condes'
 import { Route as InstalarAppRouteImport } from './routes/instalar-app'
 import { Route as GuiaRouteImport } from './routes/guia'
 import { Route as FlujoRouteImport } from './routes/flujo'
@@ -81,6 +82,7 @@ import { Route as ApiPublicPinResetVerifyRouteImport } from './routes/api/public
 import { Route as ApiPublicPinResetRequestRouteImport } from './routes/api/public/pin-reset-request'
 import { Route as ApiPublicLookupAccountRouteImport } from './routes/api/public/lookup-account'
 import { Route as ApiPublicFamilyRouteImport } from './routes/api/public/family'
+import { Route as ApiPublicConsultarTarjetaVecinoRouteImport } from './routes/api/public/consultar-tarjeta-vecino'
 import { Route as ApiCronResendInstallInstructionsRouteImport } from './routes/api/cron/resend-install-instructions'
 import { Route as ApiCronProcessSubscriptionRenewalsRouteImport } from './routes/api/cron/process-subscription-renewals'
 import { Route as ATokenCRouteImport } from './routes/a.$token.c'
@@ -129,6 +131,11 @@ const PlanesRoute = PlanesRouteImport.update({
 const NativeRoute = NativeRouteImport.update({
   id: '/native',
   path: '/native',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LasCondesRoute = LasCondesRouteImport.update({
+  id: '/las-condes',
+  path: '/las-condes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InstalarAppRoute = InstalarAppRouteImport.update({
@@ -468,6 +475,12 @@ const ApiPublicFamilyRoute = ApiPublicFamilyRouteImport.update({
   path: '/api/public/family',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicConsultarTarjetaVecinoRoute =
+  ApiPublicConsultarTarjetaVecinoRouteImport.update({
+    id: '/api/public/consultar-tarjeta-vecino',
+    path: '/api/public/consultar-tarjeta-vecino',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiCronResendInstallInstructionsRoute =
   ApiCronResendInstallInstructionsRouteImport.update({
     id: '/api/cron/resend-install-instructions',
@@ -536,6 +549,7 @@ export interface FileRoutesByFullPath {
   '/flujo': typeof FlujoRoute
   '/guia': typeof GuiaRoute
   '/instalar-app': typeof InstalarAppRoute
+  '/las-condes': typeof LasCondesRoute
   '/native': typeof NativeRoute
   '/planes': typeof PlanesRoute
   '/privacidad': typeof PrivacidadRoute
@@ -580,6 +594,7 @@ export interface FileRoutesByFullPath {
   '/a/$token/c': typeof ATokenCRoute
   '/api/cron/process-subscription-renewals': typeof ApiCronProcessSubscriptionRenewalsRoute
   '/api/cron/resend-install-instructions': typeof ApiCronResendInstallInstructionsRoute
+  '/api/public/consultar-tarjeta-vecino': typeof ApiPublicConsultarTarjetaVecinoRoute
   '/api/public/family': typeof ApiPublicFamilyRoute
   '/api/public/lookup-account': typeof ApiPublicLookupAccountRoute
   '/api/public/pin-reset-request': typeof ApiPublicPinResetRequestRoute
@@ -617,6 +632,7 @@ export interface FileRoutesByTo {
   '/flujo': typeof FlujoRoute
   '/guia': typeof GuiaRoute
   '/instalar-app': typeof InstalarAppRoute
+  '/las-condes': typeof LasCondesRoute
   '/native': typeof NativeRoute
   '/planes': typeof PlanesRoute
   '/privacidad': typeof PrivacidadRoute
@@ -661,6 +677,7 @@ export interface FileRoutesByTo {
   '/a/$token/c': typeof ATokenCRoute
   '/api/cron/process-subscription-renewals': typeof ApiCronProcessSubscriptionRenewalsRoute
   '/api/cron/resend-install-instructions': typeof ApiCronResendInstallInstructionsRoute
+  '/api/public/consultar-tarjeta-vecino': typeof ApiPublicConsultarTarjetaVecinoRoute
   '/api/public/family': typeof ApiPublicFamilyRoute
   '/api/public/lookup-account': typeof ApiPublicLookupAccountRoute
   '/api/public/pin-reset-request': typeof ApiPublicPinResetRequestRoute
@@ -701,6 +718,7 @@ export interface FileRoutesById {
   '/flujo': typeof FlujoRoute
   '/guia': typeof GuiaRoute
   '/instalar-app': typeof InstalarAppRoute
+  '/las-condes': typeof LasCondesRoute
   '/native': typeof NativeRoute
   '/planes': typeof PlanesRoute
   '/privacidad': typeof PrivacidadRoute
@@ -745,6 +763,7 @@ export interface FileRoutesById {
   '/a/$token/c': typeof ATokenCRoute
   '/api/cron/process-subscription-renewals': typeof ApiCronProcessSubscriptionRenewalsRoute
   '/api/cron/resend-install-instructions': typeof ApiCronResendInstallInstructionsRoute
+  '/api/public/consultar-tarjeta-vecino': typeof ApiPublicConsultarTarjetaVecinoRoute
   '/api/public/family': typeof ApiPublicFamilyRoute
   '/api/public/lookup-account': typeof ApiPublicLookupAccountRoute
   '/api/public/pin-reset-request': typeof ApiPublicPinResetRequestRoute
@@ -786,6 +805,7 @@ export interface FileRouteTypes {
     | '/flujo'
     | '/guia'
     | '/instalar-app'
+    | '/las-condes'
     | '/native'
     | '/planes'
     | '/privacidad'
@@ -830,6 +850,7 @@ export interface FileRouteTypes {
     | '/a/$token/c'
     | '/api/cron/process-subscription-renewals'
     | '/api/cron/resend-install-instructions'
+    | '/api/public/consultar-tarjeta-vecino'
     | '/api/public/family'
     | '/api/public/lookup-account'
     | '/api/public/pin-reset-request'
@@ -867,6 +888,7 @@ export interface FileRouteTypes {
     | '/flujo'
     | '/guia'
     | '/instalar-app'
+    | '/las-condes'
     | '/native'
     | '/planes'
     | '/privacidad'
@@ -911,6 +933,7 @@ export interface FileRouteTypes {
     | '/a/$token/c'
     | '/api/cron/process-subscription-renewals'
     | '/api/cron/resend-install-instructions'
+    | '/api/public/consultar-tarjeta-vecino'
     | '/api/public/family'
     | '/api/public/lookup-account'
     | '/api/public/pin-reset-request'
@@ -950,6 +973,7 @@ export interface FileRouteTypes {
     | '/flujo'
     | '/guia'
     | '/instalar-app'
+    | '/las-condes'
     | '/native'
     | '/planes'
     | '/privacidad'
@@ -994,6 +1018,7 @@ export interface FileRouteTypes {
     | '/a/$token/c'
     | '/api/cron/process-subscription-renewals'
     | '/api/cron/resend-install-instructions'
+    | '/api/public/consultar-tarjeta-vecino'
     | '/api/public/family'
     | '/api/public/lookup-account'
     | '/api/public/pin-reset-request'
@@ -1034,6 +1059,7 @@ export interface RootRouteChildren {
   FlujoRoute: typeof FlujoRoute
   GuiaRoute: typeof GuiaRoute
   InstalarAppRoute: typeof InstalarAppRoute
+  LasCondesRoute: typeof LasCondesRoute
   NativeRoute: typeof NativeRoute
   PlanesRoute: typeof PlanesRoute
   PrivacidadRoute: typeof PrivacidadRoute
@@ -1059,6 +1085,7 @@ export interface RootRouteChildren {
   AAlertIdAckTokenRoute: typeof AAlertIdAckTokenRoute
   ApiCronProcessSubscriptionRenewalsRoute: typeof ApiCronProcessSubscriptionRenewalsRoute
   ApiCronResendInstallInstructionsRoute: typeof ApiCronResendInstallInstructionsRoute
+  ApiPublicConsultarTarjetaVecinoRoute: typeof ApiPublicConsultarTarjetaVecinoRoute
   ApiPublicFamilyRoute: typeof ApiPublicFamilyRoute
   ApiPublicLookupAccountRoute: typeof ApiPublicLookupAccountRoute
   ApiPublicPinResetRequestRoute: typeof ApiPublicPinResetRequestRoute
@@ -1138,6 +1165,13 @@ declare module '@tanstack/react-router' {
       path: '/native'
       fullPath: '/native'
       preLoaderRoute: typeof NativeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/las-condes': {
+      id: '/las-condes'
+      path: '/las-condes'
+      fullPath: '/las-condes'
+      preLoaderRoute: typeof LasCondesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/instalar-app': {
@@ -1581,6 +1615,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicLookupAccountRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/consultar-tarjeta-vecino': {
+      id: '/api/public/consultar-tarjeta-vecino'
+      path: '/api/public/consultar-tarjeta-vecino'
+      fullPath: '/api/public/consultar-tarjeta-vecino'
+      preLoaderRoute: typeof ApiPublicConsultarTarjetaVecinoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/family': {
       id: '/api/public/family'
       path: '/api/public/family'
@@ -1744,6 +1785,7 @@ const rootRouteChildren: RootRouteChildren = {
   FlujoRoute: FlujoRoute,
   GuiaRoute: GuiaRoute,
   InstalarAppRoute: InstalarAppRoute,
+  LasCondesRoute: LasCondesRoute,
   NativeRoute: NativeRoute,
   PlanesRoute: PlanesRoute,
   PrivacidadRoute: PrivacidadRoute,
@@ -1774,6 +1816,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCronProcessSubscriptionRenewalsRoute:
     ApiCronProcessSubscriptionRenewalsRoute,
   ApiCronResendInstallInstructionsRoute: ApiCronResendInstallInstructionsRoute,
+  ApiPublicConsultarTarjetaVecinoRoute: ApiPublicConsultarTarjetaVecinoRoute,
   ApiPublicFamilyRoute: ApiPublicFamilyRoute,
   ApiPublicLookupAccountRoute: ApiPublicLookupAccountRoute,
   ApiPublicPinResetRequestRoute: ApiPublicPinResetRequestRoute,

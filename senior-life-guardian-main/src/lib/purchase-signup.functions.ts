@@ -18,6 +18,28 @@ import {
   isSignupPaidAndActive,
 } from "@/lib/signups-db";
 import { RECURRING_BILLING_CONSENT_VERSION } from "@/lib/recurring-billing-consent";
+import { consultarTarjetaVecino } from "@/lib/tarjeta-vecino.server";
+import { lasCondesTier, parseChileanRut } from "@/lib/tarjeta-vecino";
+import type { Database } from "@/integrations/supabase/types";
+
+type SignupInsert = Database["public"]["Tables"]["contract_signups"]["Insert"];
+type SignupUpdate = Database["public"]["Tables"]["contract_signups"]["Update"];
+
+type TarjetaVecinoEvidence = {
+  tarjeta_vecino_rut: string;
+  tarjeta_vecino_estado: string;
+  tarjeta_vecino_tipo: string;
+  tarjeta_vecino_checked_at: string;
+};
+
+function isMissingTarjetaVecinoColumn(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes("tarjeta_vecino") ||
+    normalized.includes("schema cache") ||
+    normalized.includes("42703")
+  );
+}
 
 /**
  * Crea un registro de contratación directa (Plan Único) antes de iniciar Webpay/Oneclick.
@@ -35,6 +57,7 @@ export const createPurchaseSignup = createServerFn({ method: "POST" })
         plan: planKeySchema.transform(normalizePlanKey),
         periodo: periodoSchema,
         discountCode: z.string().trim().max(64).optional().or(z.literal("")),
+        tarjetaVecinoRut: z.string().trim().max(16).optional().or(z.literal("")),
         recurringBillingConsent: z.boolean().optional().default(true),
         firstGuardian: z
           .object({
@@ -58,8 +81,26 @@ export const createPurchaseSignup = createServerFn({ method: "POST" })
     });
 
     let discountFields = clearDiscountSignupFields();
+    let tarjetaVecino: TarjetaVecinoEvidence | null = null;
     const rawCode = data.discountCode?.trim();
     if (rawCode) {
+      const tier = lasCondesTier(rawCode);
+      if (tier) {
+        const rut = parseChileanRut(data.tarjetaVecinoRut ?? "");
+        if (!rut) {
+          throw new Error("Ingresa el RUT del titular para verificar la Tarjeta Vecino.");
+        }
+        const decision = await consultarTarjetaVecino(rut.formatted, tier, data.periodo);
+        if (!decision.eligible) {
+          throw new Error(decision.message);
+        }
+        tarjetaVecino = {
+          tarjeta_vecino_rut: rut.formatted,
+          tarjeta_vecino_estado: decision.estado.slice(0, 80),
+          tarjeta_vecino_tipo: decision.tipo.slice(0, 80),
+          tarjeta_vecino_checked_at: new Date().toISOString(),
+        };
+      }
       const resolved = await resolveDiscountForCheckout(rawCode, data.plan, data.periodo, {
         email,
       });
@@ -108,13 +149,7 @@ export const createPurchaseSignup = createServerFn({ method: "POST" })
           }
         : payload;
 
-      const { data: updated, error: updErr } = await supabaseAdmin
-        .from(CONTRACT_SIGNUPS_TABLE)
-        .update(updatePayload)
-        .eq("id", existing.id)
-        .select(CONTRACT_SIGNUP_SELECT)
-        .maybeSingle();
-      if (updErr) throw updErr;
+      const updated = await writeSignup("update", existing.id, updatePayload, tarjetaVecino);
       const signup = updated ?? existing;
       if (data.firstGuardian) {
         await savePendingFirstGuardian(signup.id, data.firstGuardian as PendingFirstGuardian);
@@ -122,13 +157,7 @@ export const createPurchaseSignup = createServerFn({ method: "POST" })
       return { signup, created: false, alreadyPaid };
     }
 
-    const { data: inserted, error: insertError } = await supabaseAdmin
-      .from(CONTRACT_SIGNUPS_TABLE)
-      .insert(payload)
-      .select(CONTRACT_SIGNUP_SELECT)
-      .maybeSingle();
-
-    if (insertError) throw insertError;
+    const inserted = await writeSignup("insert", null, payload, tarjetaVecino);
     if (!inserted) throw new Error("No pudimos crear la orden de compra.");
 
     if (data.firstGuardian) {
@@ -137,3 +166,37 @@ export const createPurchaseSignup = createServerFn({ method: "POST" })
 
     return { signup: inserted, created: true };
   });
+
+async function writeSignup(
+  mode: "insert" | "update",
+  id: string | null,
+  payload: SignupUpdate,
+  tarjetaVecino: TarjetaVecinoEvidence | null,
+) {
+  const withEvidence: SignupUpdate = tarjetaVecino ? { ...payload, ...tarjetaVecino } : payload;
+
+  const run = (body: SignupUpdate) => {
+    if (mode === "insert") {
+      return supabaseAdmin
+        .from(CONTRACT_SIGNUPS_TABLE)
+        .insert(body as SignupInsert)
+        .select(CONTRACT_SIGNUP_SELECT)
+        .maybeSingle();
+    }
+    return supabaseAdmin
+      .from(CONTRACT_SIGNUPS_TABLE)
+      .update(body)
+      .eq("id", id ?? "")
+      .select(CONTRACT_SIGNUP_SELECT)
+      .maybeSingle();
+  };
+
+  const first = await run(withEvidence);
+  if (first.error && tarjetaVecino && isMissingTarjetaVecinoColumn(first.error.message ?? "")) {
+    const retry = await run(payload);
+    if (retry.error) throw retry.error;
+    return retry.data;
+  }
+  if (first.error) throw first.error;
+  return first.data;
+}
