@@ -77,12 +77,37 @@ export default async function InformePage({ params, searchParams }: PageProps) {
       <UndoBanner undoUntil={null} />
       {site?.lastProbeAt ? <IncidentNotice status={site.lastProbeStatus} streak={site.probeStreak} /> : null}
       {watchDays !== null && watchDays > 0 ? (
-        <p className="text-sm text-stone-600">
-          Vigilancia activa por {watchDays} {watchDays === 1 ? "día" : "días"} más. Después puedes seguir con el plan Cuidado, a $19 al mes.
-        </p>
+        <div className="rounded-3xl bg-pine px-6 py-8 text-white">
+          <p className="font-display text-3xl tracking-tight sm:text-4xl">
+            Felicitaciones: tu vigilancia está activa
+          </p>
+          <p className="mt-3 text-base leading-relaxed text-white/90">
+            Quedan {watchDays} {watchDays === 1 ? "día" : "días"} del Rescate. Abajo puedes aceptar lo que se va a
+            quitar.
+          </p>
+          <a
+            href="#limpieza"
+            className="mt-5 inline-flex rounded-full bg-white px-5 py-3 text-sm font-medium text-pine"
+          >
+            Ver qué se va a quitar
+          </a>
+        </div>
       ) : null}
       {site && site.plan === "cuidado" && isWatchActive(site, now) ? (
-        <p className="text-sm text-stone-600">Vigilancia activa con el plan Cuidado.</p>
+        <div className="rounded-3xl bg-pine px-6 py-8 text-white">
+          <p className="font-display text-3xl tracking-tight sm:text-4xl">
+            Felicitaciones: tu vigilancia está activa con el Plan Cuidado
+          </p>
+          <p className="mt-3 text-base leading-relaxed text-white/90">
+            Acepta abajo lo que se va a quitar. Todavía no se borra nada. Se puede deshacer durante 7 días.
+          </p>
+          <a
+            href="#limpieza"
+            className="mt-5 inline-flex rounded-full bg-white px-5 py-3 text-sm font-medium text-pine"
+          >
+            Ver qué se va a quitar
+          </a>
+        </div>
       ) : null}
 
       <div>
