@@ -35,6 +35,19 @@ function cls(value: number | null): string {
   return (value / 1000).toLocaleString("es-CL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function isUrgentCleanup(code: string, severity: string): boolean {
+  if (
+    code === "post_revisions" ||
+    code === "expired_transients" ||
+    code === "spam_comments" ||
+    code === "innodb_unavailable" ||
+    code === "payload_limit"
+  ) {
+    return true;
+  }
+  return severity === "high";
+}
+
 export default async function InformePage({ params, searchParams }: PageProps) {
   const { id } = await params;
   const query = await searchParams;
@@ -166,13 +179,28 @@ export default async function InformePage({ params, searchParams }: PageProps) {
       ) : null}
 
       <section className="space-y-3">
-        {issues.map((issue) => (
-          <article key={issue.id} className="rounded-2xl bg-white p-5">
-            <h2 className="text-xl">{issue.plainTitle}</h2>
-            <p className="mt-2 text-sm text-stone-700">{issue.whatItMeans}</p>
-            <p className="mt-2 text-sm text-stone-500">{issue.ifIgnored}</p>
-          </article>
-        ))}
+        {issues.map((issue) => {
+          const urgent = isUrgentCleanup(issue.code, issue.severity);
+          return (
+            <article
+              key={issue.id}
+              className={
+                urgent
+                  ? "rounded-2xl border-2 border-[#d36b76] bg-[#fde8e8] p-5"
+                  : "rounded-2xl bg-white p-5"
+              }
+            >
+              {urgent ? (
+                <p className="text-xs font-medium uppercase tracking-wide text-[#9f3a45]">Limpieza urgente</p>
+              ) : null}
+              <h2 className={`text-xl ${urgent ? "mt-1 text-[#9f3a45]" : ""}`}>{issue.plainTitle}</h2>
+              <p className={`mt-2 text-sm ${urgent ? "text-[#9f3a45]" : "text-stone-700"}`}>{issue.whatItMeans}</p>
+              <p className={`mt-2 text-sm ${urgent ? "font-medium text-[#9f3a45]" : "text-stone-500"}`}>
+                {issue.ifIgnored}
+              </p>
+            </article>
+          );
+        })}
       </section>
 
       <Reassurance />

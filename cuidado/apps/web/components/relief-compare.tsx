@@ -15,8 +15,10 @@ export function ReliefCompare({
   return (
     <section className="grid gap-4 sm:grid-cols-2">
       <div>
-        <p className="mb-2 text-sm font-medium text-stone-500">Así está hoy</p>
-        <JunkMeter revisions={revisions} />
+        <p className="mb-2 text-sm font-medium text-[#9f3a45]">Así está hoy — basura urgente</p>
+        <div className="rounded-2xl border-2 border-[#d36b76]">
+          <JunkMeter revisions={revisions} />
+        </div>
       </div>
       <div>
         <p className="mb-2 text-sm font-medium text-pine">Así quedaría tras la limpieza</p>

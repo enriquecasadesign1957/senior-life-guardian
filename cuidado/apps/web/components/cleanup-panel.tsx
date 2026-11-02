@@ -95,9 +95,11 @@ export function CleanupPanel({ siteId }: { siteId: string | null }) {
           <h2 className="font-display text-3xl tracking-tight text-ink">Esto es lo que vamos a limpiar</h2>
           <p className="text-xl leading-relaxed text-pine">{preview.headline}</p>
           {preview.steps.length > 0 ? (
-            <div>
-              <p className="text-sm font-medium text-stone-500">Hasta el detalle más chico del lote</p>
-              <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-stone-700">
+            <div className="rounded-2xl border-2 border-[#d36b76] bg-[#fde8e8] p-5">
+              <p className="text-sm font-medium uppercase tracking-wide text-[#9f3a45]">
+                Limpieza más importante — detalle del lote
+              </p>
+              <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-[#9f3a45]">
                 {preview.steps.map((step) => (
                   <li key={step}>{step}</li>
                 ))}
@@ -105,9 +107,9 @@ export function CleanupPanel({ siteId }: { siteId: string | null }) {
             </div>
           ) : null}
           {preview.wins.length > 0 ? (
-            <div className="rounded-2xl bg-[#e7f3ec] p-5">
-              <p className="font-display text-2xl text-pine">Lo que ganas al sacar esa basura</p>
-              <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-pine">
+            <div className="rounded-2xl border-2 border-[#d36b76] bg-[#fde8e8] p-5">
+              <p className="font-display text-2xl text-[#9f3a45]">Mejoras más importantes al sacar esa basura</p>
+              <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-[#9f3a45]">
                 {preview.wins.map((win) => (
                   <li key={win}>{win}</li>
                 ))}
