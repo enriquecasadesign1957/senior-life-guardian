@@ -14,6 +14,8 @@ export function SiteFooter() {
           <a href="/#funciona">Cómo funciona</a>
           <a href="/#precios">Precios</a>
           <a href="/#agencias">Agencias</a>
+          <a href="/mis-sitios">Mis sitios</a>
+          <a href="/admin/codigos">Códigos</a>
           <a href="/#analizar">Analizar</a>
         </nav>
       </div>

@@ -43,6 +43,13 @@
       "when": 1793740000000,
       "tag": "0005_agency_account",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793750000000,
+      "tag": "0006_agency_code_note",
+      "breakpoints": true
     }
   ]
 }

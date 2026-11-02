@@ -26,12 +26,9 @@ En Vercel van estas variables. `AUTH_SECRET`, `TOKEN_ENCRYPTION_KEY` y `CRON_SEC
 
 Lemon Squeezy ya tiene los productos. En Vercel basta con `LEMON_SQUEEZY_WEBHOOK_SECRET` (los buy URL y variant id tienen valor por defecto). En Lemon: Settings → Webhooks → URL `https://cuidadoweb.com/api/lemon/webhook`, eventos `order_created`, signing secret = esa variable.
 
-Los códigos de prueba de agencia viven en Neon (`agency_invite_codes`). Cada fila tiene `max_uses` (por defecto 1: un solo uso). La migración `0004` inserta `CW-AGENCIA-5` una vez. Para otra agencia:
+- `ADMIN_SECRET` (opcional): clave del panel `/admin/codigos` para generar códigos de agencia. Si no se define, el valor por defecto es `CwAdminPanel2026`. Cámbialo en Production.
 
-```sql
-INSERT INTO agency_invite_codes (code, seats, max_uses)
-VALUES ('CW-AGENCIA-NUEVA', 5, 1);
-```
+Los códigos de prueba se crean en **Códigos** (`/admin/codigos`): Generar código y copiar. Cada código tiene un solo uso y 5 sitios. Ya no hace falta insertarlos a mano en Neon.
 
 ## 3. PageSpeed
 
@@ -59,7 +56,7 @@ En tu máquina, dentro de `cuidado`, con la misma `DATABASE_URL` directa:
 npm run db:migrate
 ```
 
-Eso aplica `0000_init.sql`, `0001_site_probe.sql`, `0002_rescue_checkout.sql`, `0003_cleanup_batches.sql`, `0004_agency_trial.sql` y `0005_agency_account.sql`.
+Eso aplica hasta `0006_agency_code_note.sql` (nota opcional en códigos de agencia).
 
 ## 6. Dominio
 
