@@ -157,6 +157,7 @@ const LOOP_SENDERS = [
 
 const OUR_ADDRESSES = [
   "hola@alarmaseniorsafe.cl",
+  "administrador@alarmaseniorsafe.cl",
   "enriquecasadesign@gmail.com",
 ];
 

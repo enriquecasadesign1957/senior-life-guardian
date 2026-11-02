@@ -1,0 +1,115 @@
+import { c as createServerRpc } from "./createServerRpc-ChaSCZOg.mjs";
+import { j as createServerFn } from "./createServerFn-CqTdkD5n.mjs";
+import { s as supabaseAdmin } from "./client.server-U_pH-Evd.mjs";
+import { d as discountSignupFields, c as clearDiscountSignupFields } from "./discount-codes-BbIma2Cq.mjs";
+import { r as resolveDiscountForCheckout } from "./discount.functions-CbzrjeJP.mjs";
+import { s as savePendingFirstGuardian, c as createFirstGuardianAfterPayment } from "./first-guardian-checkout-BEB7AGrd.mjs";
+import { C as CONTRACT_SIGNUPS_TABLE, a as CONTRACT_SIGNUP_SELECT } from "./signups-db-JWUtXpaW.mjs";
+
+import "./index.mjs";
+import { s as stringType, o as objectType, l as literalType, Z as ZodIssueCode } from "../_libs/zod.mjs";
+import "../_libs/tanstack__router-core.mjs";
+import "../_libs/tanstack__history.mjs";
+import "../_libs/cookie-es.mjs";
+import "../_libs/seroval.mjs";
+import "../_libs/unenv.mjs";
+
+
+
+import "../_libs/seroval-plugins.mjs";
+
+
+import "../_libs/supabase__supabase-js.mjs";
+import "../_libs/supabase__postgrest-js.mjs";
+import "../_libs/supabase__realtime-js.mjs";
+import "../_libs/supabase__phoenix.mjs";
+import "../_libs/supabase__storage-js.mjs";
+import "../_libs/iceberg-js.mjs";
+import "../_libs/supabase__auth-js.mjs";
+import "../_libs/tslib.mjs";
+import "../_libs/supabase__functions-js.mjs";
+import "./plans-BJeLFmLc.mjs";
+import "./createSsrRpc-14pD3De2.mjs";
+import "./contacts-storage-DdsYD-uQ.mjs";
+import "./phone-utils-D7EH6fht.mjs";
+import "./guardians.functions-BA585btN.mjs";
+import "./twilio-DNHuHEFY.mjs";
+import "./senior-access-auth-Bmk7iyGS.mjs";
+import "../_libs/h3-v2.mjs";
+import "../_libs/rou3.mjs";
+import "../_libs/srvx.mjs";
+
+
+
+
+const phoneField = stringType().trim().min(8, "Ingresa un teléfono válido").max(40).regex(/^[0-9+\s-]+$/, "Solo números");
+const completeCheckoutProfile_createServerFn_handler = createServerRpc({
+  id: "746d37c9d4e786a9e375410df0f2051ad7b4dff5079870f21a5d73c9b4833ce6",
+  name: "completeCheckoutProfile",
+  filename: "src/lib/complete-checkout-profile.functions.ts"
+}, (opts) => completeCheckoutProfile.__executeServer(opts));
+const completeCheckoutProfile = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  signupId: stringType().uuid(),
+  direccion: stringType().trim().max(255).optional().or(literalType("")),
+  discountCode: stringType().trim().max(64).optional().or(literalType("")),
+  guardianName: stringType().trim().min(2).max(100),
+  guardianPhone: phoneField,
+  guardianRelation: stringType().trim().min(2).max(40),
+  seniorPhone: phoneField.optional()
+}).superRefine((data, ctx) => {
+  if (!data.seniorPhone) return;
+  const senior = data.seniorPhone.replace(/\D/g, "").slice(-9);
+  const guardian = data.guardianPhone.replace(/\D/g, "").slice(-9);
+  if (senior.length >= 8 && senior === guardian) {
+    ctx.addIssue({
+      code: ZodIssueCode.custom,
+      message: "El guardián debe ser otra persona (teléfono distinto).",
+      path: ["guardianPhone"]
+    });
+  }
+}).parse(input)).handler(completeCheckoutProfile_createServerFn_handler, async ({
+  data
+}) => {
+  const {
+    data: signup,
+    error
+  } = await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE).select(CONTRACT_SIGNUP_SELECT).eq("id", data.signupId).maybeSingle();
+  if (error) throw error;
+  if (!signup) throw new Error("No encontramos tu suscripción.");
+  const patch = {};
+  const address = data.direccion?.trim();
+  if (address) patch.direccion = address;
+  const rawCode = data.discountCode?.trim();
+  if (rawCode && !signup.discount_code) {
+    try {
+      const resolved = await resolveDiscountForCheckout(rawCode, signup.plan, signup.periodo === "anual" ? "anual" : "mensual", {
+        email: signup.email
+      });
+      Object.assign(patch, discountSignupFields(resolved));
+    } catch {
+      Object.assign(patch, clearDiscountSignupFields());
+      throw new Error("No pudimos validar el código institucional.");
+    }
+  }
+  if (Object.keys(patch).length > 0) {
+    const {
+      error: updErr
+    } = await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE).update(patch).eq("id", data.signupId);
+    if (updErr) throw updErr;
+  }
+  await savePendingFirstGuardian(data.signupId, {
+    nombre: data.guardianName,
+    telefono: data.guardianPhone,
+    parentesco: data.guardianRelation
+  });
+  const guardianResult = await createFirstGuardianAfterPayment(data.signupId);
+  return {
+    ok: true,
+    guardian: guardianResult
+  };
+});
+export {
+  completeCheckoutProfile_createServerFn_handler
+};

@@ -1,0 +1,206 @@
+import { j as jsxRuntimeExports, r as reactExports } from "../_libs/react.mjs";
+import { f as useLocation, O as Outlet, L as Link } from "../_libs/tanstack__react-router.mjs";
+import { u as useServerFn } from "./useServerFn-DL2oePlL.mjs";
+import { t as toast } from "../_libs/sonner.mjs";
+import { B as Button } from "./button-BC9oXVxV.mjs";
+import { I as Input } from "./input-C0QjszdI.mjs";
+import { L as Label } from "./label-JU3yqRBo.mjs";
+import { r as requestFamilyCode, v as verifyFamilyCode } from "./family-portal.functions-cokhooLA.mjs";
+import { r as readFamilyPortalSession, w as writeFamilyPortalSession } from "./family-session-DoAl0Qru.mjs";
+import { e as Route$15 } from "./router-FK5WbXyp.mjs";
+
+import "./index.mjs";
+
+
+import { L as LoaderCircle, A as ArrowLeft, S as Shield } from "../_libs/lucide-react.mjs";
+
+import "../_libs/tanstack__router-core.mjs";
+import "../_libs/tanstack__history.mjs";
+import "../_libs/cookie-es.mjs";
+import "../_libs/seroval.mjs";
+import "../_libs/unenv.mjs";
+
+
+import "../_libs/seroval-plugins.mjs";
+
+
+import "../_libs/react-dom.mjs";
+import "../_libs/isbot.mjs";
+import "../_libs/radix-ui__react-slot.mjs";
+import "../_libs/radix-ui__react-compose-refs.mjs";
+import "../_libs/class-variance-authority.mjs";
+import "../_libs/clsx.mjs";
+import "./utils-H80jjgLf.mjs";
+import "../_libs/tailwind-merge.mjs";
+import "../_libs/radix-ui__react-label.mjs";
+import "../_libs/radix-ui__react-primitive.mjs";
+import "./createSsrRpc-14pD3De2.mjs";
+import "./createServerFn-CqTdkD5n.mjs";
+import "./senior-access-auth-Bmk7iyGS.mjs";
+import "../_libs/zod.mjs";
+import "../_libs/tanstack__query-core.mjs";
+import "../_libs/tanstack__react-query.mjs";
+import "./plans-BJeLFmLc.mjs";
+import "./maps-BhXedqc-.mjs";
+import "./transbank-oneclick-mall-CC5wwzFZ.mjs";
+import "../_libs/h3-v2.mjs";
+import "../_libs/rou3.mjs";
+import "../_libs/srvx.mjs";
+
+
+
+
+import "./ack-alert-hZc0eMx8.mjs";
+import "./client.server-U_pH-Evd.mjs";
+import "../_libs/supabase__supabase-js.mjs";
+import "../_libs/supabase__postgrest-js.mjs";
+import "../_libs/supabase__realtime-js.mjs";
+import "../_libs/supabase__phoenix.mjs";
+import "../_libs/supabase__storage-js.mjs";
+import "../_libs/iceberg-js.mjs";
+import "../_libs/supabase__auth-js.mjs";
+import "../_libs/tslib.mjs";
+import "../_libs/supabase__functions-js.mjs";
+import "./twilio-DNHuHEFY.mjs";
+import "./zoho-smtp-lj0bCuK6.mjs";
+import "./install-step-sync-65QKjQIB.mjs";
+import "./signups-db-JWUtXpaW.mjs";
+import "./twilio-inbound-_C02bj0d.mjs";
+import "./account-lookup-CBKDZ0Aw.mjs";
+import "./contacts-storage-DdsYD-uQ.mjs";
+import "./phone-utils-D7EH6fht.mjs";
+import "./discount-codes-BbIma2Cq.mjs";
+import "./discount.functions-CbzrjeJP.mjs";
+import "./whatsapp-inbox-CZiWC44X.mjs";
+import "./admin-auth-5OIH6Qjw.mjs";
+import "./post-payment-install-notify-6plkg_BS.mjs";
+import "./transactional-email-html-C_kx3NhX.mjs";
+import "./emergency-cascade-continuation-BhQV3eMZ.mjs";
+import "./pin-reset-B5nhyHPX.mjs";
+import "./subscription-renewal-CVyJ9Wsj.mjs";
+import "./oneclick-renewal-charge-XKyXWH2D.mjs";
+import "../_libs/react-email__render.mjs";
+import "../_libs/prettier.mjs";
+import "../_libs/deepmerge.mjs";
+import "../_libs/react-email__html.mjs";
+import "../_libs/react-email__head.mjs";
+import "../_libs/react-email__preview.mjs";
+import "../_libs/react-email__body.mjs";
+import "../_libs/react-email__container.mjs";
+import "../_libs/react-email__section.mjs";
+import "../_libs/react-email__heading.mjs";
+import "../_libs/react-email__text.mjs";
+import "../_libs/react-email__button.mjs";
+import "../_libs/react-email__link.mjs";
+import "../_libs/react-email__hr.mjs";
+const DEEP = "var(--brand-petrol-deep)";
+function safeFamilyRedirect(redirect) {
+  if (!redirect || redirect === "/familia" || redirect.startsWith("/familia?")) return "/familia/dashboard";
+  if (!redirect.startsWith("/familia")) return "/familia/dashboard";
+  if (redirect.startsWith("/familia/dashboard") || redirect.startsWith("/familia/guardianes") || redirect.startsWith("/familia/ack/")) return redirect;
+  return "/familia/dashboard";
+}
+function errorMessage(error, fallback) {
+  return error instanceof Error ? error.message : fallback;
+}
+function FamiliaShell() {
+  const location = useLocation();
+  const isLoginRoute = location.pathname === "/familia" || location.pathname === "/familia/";
+  if (!isLoginRoute) return /* @__PURE__ */ jsxRuntimeExports.jsx(Outlet, {});
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(FamiliaLogin, {});
+}
+function FamiliaLogin() {
+  const search = Route$15.useSearch();
+  const reqCode = useServerFn(requestFamilyCode);
+  const verifyCode = useServerFn(verifyFamilyCode);
+  const redirectingRef = reactExports.useRef(false);
+  const [step, setStep] = reactExports.useState("phone");
+  const [telefono, setTelefono] = reactExports.useState("");
+  const [code, setCode] = reactExports.useState("");
+  const [busy, setBusy] = reactExports.useState(false);
+  const [sessionChecked, setSessionChecked] = reactExports.useState(false);
+  const [redirecting, setRedirecting] = reactExports.useState(false);
+  const safeRedirect = safeFamilyRedirect(search.redirect);
+  const goToDestination = () => {
+    if (redirectingRef.current) return;
+    redirectingRef.current = true;
+    setRedirecting(true);
+    try {
+      window.location.replace(safeRedirect);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  reactExports.useEffect(() => {
+    const existing = readFamilyPortalSession();
+    if (existing) goToDestination();
+    else setSessionChecked(true);
+  }, []);
+  const handleRequest = async () => {
+    if (!telefono.trim()) return toast.error("Ingresa tu teléfono.");
+    setBusy(true);
+    try {
+      await reqCode({
+        data: {
+          telefono
+        }
+      });
+      toast.success("Te enviamos un código por WhatsApp/SMS.");
+      setStep("code");
+    } catch (e) {
+      toast.error(errorMessage(e, "No pudimos enviar el código."));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const handleVerify = async () => {
+    if (!/^\d{6}$/.test(code)) return toast.error("Ingresa los 6 dígitos.");
+    setBusy(true);
+    try {
+      const res = await verifyCode({
+        data: {
+          telefono,
+          code
+        }
+      });
+      const session = writeFamilyPortalSession(res.session);
+      toast.success(`Bienvenido${session.nombre ? `, ${session.nombre}` : ""}`);
+      goToDestination();
+    } catch (e) {
+      toast.error(errorMessage(e, "No pudimos verificar el código."));
+      setBusy(false);
+    }
+  };
+  if (!sessionChecked || redirecting) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "min-h-dvh flex items-center justify-center p-6 text-white", style: {
+      background: `linear-gradient(135deg, ${DEEP}, #0a3540)`
+    }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-10 h-10 animate-spin" }) });
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-h-dvh flex flex-col items-center justify-center p-6 text-white", style: {
+    background: `linear-gradient(135deg, ${DEEP}, #0a3540)`
+  }, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(Link, { to: "/", className: "self-start mb-4 inline-flex items-center gap-1 text-white/80 hover:text-white text-sm", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-4 h-4" }),
+      " Volver al inicio"
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-20 h-20 rounded-3xl bg-white/15 flex items-center justify-center mb-6 backdrop-blur-sm", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Shield, { className: "w-10 h-10" }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-3xl font-extrabold mb-1", children: "Portal Familia" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-white/80 text-center mb-8 max-w-xs", children: "Accede para ver el estado de tu ser querido." }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-full max-w-sm space-y-3", children: step === "phone" ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Label, { htmlFor: "tel", className: "text-white/90", children: "Tu teléfono" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Input, { id: "tel", type: "tel", inputMode: "tel", autoComplete: "tel", value: telefono, onChange: (e) => setTelefono(e.target.value), placeholder: "+56 9 1234 5678", className: "h-14 text-base bg-white text-foreground" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: handleRequest, disabled: busy, className: "w-full h-14 text-lg font-bold", children: busy ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-5 h-5 animate-spin" }) : "Enviarme código" })
+    ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Label, { htmlFor: "code", className: "text-white/90", children: "Código recibido (6 dígitos)" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Input, { id: "code", inputMode: "numeric", maxLength: 6, value: code, onChange: (e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6)), placeholder: "123456", className: "h-14 text-center text-2xl tracking-[0.5em] bg-white text-foreground" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: handleVerify, disabled: busy, className: "w-full h-14 text-lg font-bold", children: busy ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-5 h-5 animate-spin" }) : "Entrar" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { type: "button", onClick: () => {
+        setStep("phone");
+        setCode("");
+      }, className: "w-full text-sm text-white/70 underline mt-2", children: "Cambiar teléfono" })
+    ] }) })
+  ] });
+}
+export {
+  FamiliaShell as component
+};

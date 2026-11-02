@@ -1,0 +1,25 @@
+{
+  "result": [
+    {
+      "id": "1b85a123a9514c2ea1ce52daf861d274",
+      "pattern": "demo.alarmaseniorsafe.cl/*",
+      "script": "senior-life-guardian-demo",
+      "request_limit_fail_open": false
+    },
+    {
+      "id": "1c6ace72dd324676ae7728d929b2cf4f",
+      "pattern": "www.alarmaseniorsafe.cl/*",
+      "script": "senior-life-guardian",
+      "request_limit_fail_open": false
+    },
+    {
+      "id": "cbd589fc5b07438bb2df03eab9180384",
+      "pattern": "alarmaseniorsafe.cl/*",
+      "script": "senior-life-guardian",
+      "request_limit_fail_open": false
+    }
+  ],
+  "success": true,
+  "errors": [],
+  "messages": []
+}

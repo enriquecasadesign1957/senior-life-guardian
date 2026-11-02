@@ -1,0 +1,78 @@
+import { c as createSsrRpc } from "./createSsrRpc-D8pBWdiG.mjs";
+import { j as createServerFn } from "./createServerFn-Bu17PEW9.mjs";
+import { p as periodoSchema, a as planKeySchema } from "./discount-codes-BOatiw_p.mjs";
+import { o as objectType, s as stringType, n as numberType } from "../_libs/zod.mjs";
+const initOneclickCheckout = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  signupId: stringType().uuid(),
+  plan: planKeySchema,
+  periodo: periodoSchema
+}).parse(input)).handler(createSsrRpc("9f0bc305f67a379686dfa7394fe92636a04e95954ddc34794fd5412a093ee47a"));
+const finishOneclickCheckout = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  token: stringType().min(8).max(128)
+}).parse(input)).handler(createSsrRpc("f4d059838c989cd4572bfdf2329a53b5e410421910102400a47e62ae60dcb21d"));
+const authorizeOneclickApprovedValidation = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  email: stringType().email().optional(),
+  pin: stringType().min(1).max(64)
+}).parse(input)).handler(createSsrRpc("3297861ceaad3995a5fa72b5ae7ebe8452c9e70a4a568f4dc02ddd1c91ea0a85"));
+const authorizeOneclickTenMillionRejectValidation = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  email: stringType().email().optional(),
+  pin: stringType().min(1).max(64)
+}).parse(input)).handler(createSsrRpc("e0e302b84550931ff22a29cf053486bd1e43f94e1dce4281a6e7f9aa0a849097"));
+const authorizeOneclickRenewal = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  signupId: stringType().uuid(),
+  pin: stringType().min(1).max(64)
+}).parse(input)).handler(createSsrRpc("1b61e5c471372895d51371378250c3b8042b7aef7b4f5ca3433aaeac3267a6c2"));
+const statusOneclickPayment = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  mallBuyOrder: stringType().min(4).max(26),
+  pin: stringType().min(1).max(64)
+}).parse(input)).handler(createSsrRpc("669236d887219b5cba67ca1a69b26075024f75fb112aad36be6ad52c85fac831"));
+const refundOneclickPayment = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  mallBuyOrder: stringType().min(4).max(26),
+  storeBuyOrder: stringType().min(4).max(26),
+  amount: numberType().int().positive(),
+  pin: stringType().min(1).max(64)
+}).parse(input)).handler(createSsrRpc("3725fe32019aefc7583b0808c5418d39b799abd8e00f5589265e4634db8e3292"));
+const removeOneclickInscription = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  signupId: stringType().uuid(),
+  pin: stringType().min(1).max(64)
+}).parse(input)).handler(createSsrRpc("e37c3104c6c2c3d44962c62afa5fa685f16eae22ee3cbde32bf4ba9c2cfe106c"));
+const getOneclickValidationInfo = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  pin: stringType().min(1).max(64)
+}).parse(input)).handler(createSsrRpc("e13cfa5b8a1823d3e3716ef861d913c0c2859713724944d73df9cc5f9ba0d80b"));
+const lookupOneclickSignup = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  email: stringType().email().optional(),
+  signupId: stringType().uuid().optional(),
+  pin: stringType().min(1).max(64)
+}).refine((v) => v.email || v.signupId, "Indica email o signupId").parse(input)).handler(createSsrRpc("032b3464796390af0ed85c62b85863d9e5257492e374885cb54ce2ca8b2870ad"));
+export {
+  authorizeOneclickRenewal as a,
+  removeOneclickInscription as b,
+  authorizeOneclickTenMillionRejectValidation as c,
+  authorizeOneclickApprovedValidation as d,
+  finishOneclickCheckout as f,
+  getOneclickValidationInfo as g,
+  initOneclickCheckout as i,
+  lookupOneclickSignup as l,
+  refundOneclickPayment as r,
+  statusOneclickPayment as s
+};

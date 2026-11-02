@@ -1,0 +1,540 @@
+import { c as createServerRpc } from "./createServerRpc-ChaSCZOg.mjs";
+import { j as createServerFn } from "./createServerFn-CqTdkD5n.mjs";
+import { s as supabaseAdmin } from "./client.server-U_pH-Evd.mjs";
+import { C as CONTRACT_SIGNUPS_TABLE } from "./signups-db-JWUtXpaW.mjs";
+import { n as normalizePhoneE164, p as phoneLookupCandidates, b as buildPhoneColumnOrFilter } from "./phone-utils-D7EH6fht.mjs";
+import { c as sendTwilioWhatsAppWithSmsFallback } from "./twilio-DNHuHEFY.mjs";
+import { a as acknowledgeAlertByToken } from "./ack-alert-hZc0eMx8.mjs";
+import { s as syncDeviceStatus } from "./device-status-sync-CbTBoYX6.mjs";
+import { i as issueFamilySessionToken, s as seniorAccessTokenSchema, a as assertSeniorAccess, b as assertFamilySession } from "./senior-access-auth-Bmk7iyGS.mjs";
+
+import "./index.mjs";
+import { o as objectType, s as stringType } from "../_libs/zod.mjs";
+import "../_libs/tanstack__router-core.mjs";
+import "../_libs/tanstack__history.mjs";
+import "../_libs/cookie-es.mjs";
+import "../_libs/seroval.mjs";
+import "../_libs/unenv.mjs";
+
+
+
+import "../_libs/seroval-plugins.mjs";
+
+
+import "../_libs/supabase__supabase-js.mjs";
+import "../_libs/supabase__postgrest-js.mjs";
+import "../_libs/supabase__realtime-js.mjs";
+import "../_libs/supabase__phoenix.mjs";
+import "../_libs/supabase__storage-js.mjs";
+import "../_libs/iceberg-js.mjs";
+import "../_libs/supabase__auth-js.mjs";
+import "../_libs/tslib.mjs";
+import "../_libs/supabase__functions-js.mjs";
+import "../_libs/h3-v2.mjs";
+import "../_libs/rou3.mjs";
+import "../_libs/srvx.mjs";
+
+
+
+
+const LIVE_HEARTBEAT_MS = 5 * 60 * 1e3;
+const RECENT_ACTIVITY_MS = 24 * 60 * 60 * 1e3;
+const DISCONNECTED_MS = 48 * 60 * 60 * 1e3;
+function msSince(iso) {
+  if (!iso) return Infinity;
+  return Date.now() - new Date(iso).getTime();
+}
+function maxIso(a, b) {
+  if (!a) return b ?? null;
+  if (!b) return a;
+  return new Date(a).getTime() >= new Date(b).getTime() ? a : b;
+}
+function buildFamilyDeviceView(deviceRow, lastAlert, isActiveAlert) {
+  const heartbeatAt = maxIso(deviceRow?.last_seen_at, deviceRow?.updated_at);
+  const alertAt = lastAlert?.created_at ?? null;
+  const heartbeatMs = msSince(heartbeatAt);
+  const alertMs = msSince(alertAt);
+  const hasHeartbeat = heartbeatAt != null;
+  const hasAlert = alertAt != null;
+  const isLiveConnected = hasHeartbeat && heartbeatMs <= LIVE_HEARTBEAT_MS;
+  let lastActivitySource = null;
+  if (isLiveConnected) {
+    lastActivitySource = "heartbeat";
+  } else if (hasAlert && (!hasHeartbeat || alertMs <= heartbeatMs)) {
+    lastActivitySource = "alert";
+  } else if (hasHeartbeat) {
+    lastActivitySource = "heartbeat";
+  }
+  const lastActivityAt = maxIso(heartbeatAt, alertAt);
+  let device = deviceRow;
+  if (!device && lastAlert && lastActivityAt) {
+    device = {
+      last_seen_at: lastActivityAt,
+      battery_level: null,
+      gps_enabled: lastAlert.gps_lat != null && lastAlert.gps_lng != null,
+      internet_connected: null,
+      app_version: null,
+      last_lat: lastAlert.gps_lat ?? null,
+      last_lng: lastAlert.gps_lng ?? null
+    };
+  } else if (device && lastActivityAt && device.last_seen_at !== lastActivityAt) {
+    device = {
+      ...device,
+      last_seen_at: lastActivityAt,
+      gps_enabled: device.gps_enabled ?? (lastAlert?.gps_lat != null && lastAlert?.gps_lng != null ? true : null),
+      last_lat: device.last_lat ?? lastAlert?.gps_lat ?? null,
+      last_lng: device.last_lng ?? lastAlert?.gps_lng ?? null
+    };
+  }
+  const activityMs = msSince(lastActivityAt);
+  const neverReported = !lastActivityAt;
+  let visualStatus;
+  if (isActiveAlert) {
+    visualStatus = "alert";
+  } else if (neverReported) {
+    visualStatus = "no_data";
+  } else if (isLiveConnected || activityMs <= RECENT_ACTIVITY_MS) {
+    visualStatus = device?.gps_enabled === false ? "no_gps" : "ok";
+  } else if (activityMs <= DISCONNECTED_MS) {
+    visualStatus = "inactive";
+  } else {
+    visualStatus = "disconnected";
+  }
+  return {
+    device,
+    visualStatus,
+    isLiveConnected,
+    lastActivityAt,
+    lastActivitySource
+  };
+}
+const CODE_TTL_MIN = 10;
+const MAX_ATTEMPTS = 3;
+const RESEND_COOLDOWN_S = 60;
+async function sha256(text) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+function randomCode6() {
+  const a = new Uint32Array(1);
+  crypto.getRandomValues(a);
+  return String(a[0] % 1e6).padStart(6, "0");
+}
+async function logAccess(family_member_id, contract_signup_id, action, metadata) {
+  try {
+    await supabaseAdmin.from("family_access_log").insert({
+      family_member_id,
+      contract_signup_id,
+      action,
+      metadata: metadata ?? null
+    });
+  } catch {
+  }
+}
+async function pickPreferredSignupId(signupIds) {
+  const unique = [...new Set(signupIds.filter(Boolean))];
+  if (unique.length === 0) return null;
+  if (unique.length === 1) return unique[0];
+  const [{
+    data: signups
+  }, {
+    data: devices
+  }] = await Promise.all([supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE).select("id, subscription_status, payment_status, updated_at, created_at").in("id", unique).order("updated_at", {
+    ascending: false
+  }), supabaseAdmin.from("device_status").select("contract_signup_id, last_seen_at, updated_at").in("contract_signup_id", unique).order("last_seen_at", {
+    ascending: false
+  })]);
+  const existing = signups ?? [];
+  if (existing.length === 0) return null;
+  const existingIds = new Set(existing.map((s) => s.id));
+  const liveDevice = (devices ?? []).find((d) => d.contract_signup_id && existingIds.has(d.contract_signup_id) && d.last_seen_at && Date.now() - new Date(d.last_seen_at).getTime() <= 48 * 60 * 60 * 1e3);
+  if (liveDevice?.contract_signup_id) return liveDevice.contract_signup_id;
+  const {
+    data: recentAlerts
+  } = await supabaseAdmin.from("alert_logs").select("contract_signup_id, created_at").in("contract_signup_id", [...existingIds]).order("created_at", {
+    ascending: false
+  }).limit(1).maybeSingle();
+  if (recentAlerts?.contract_signup_id && existingIds.has(recentAlerts.contract_signup_id) && Date.now() - new Date(recentAlerts.created_at).getTime() <= 7 * 24 * 60 * 60 * 1e3) {
+    return recentAlerts.contract_signup_id;
+  }
+  const activePaid = existing.find((s) => s.subscription_status === "active" && s.payment_status === "paid");
+  return activePaid?.id ?? existing[0]?.id ?? unique.find((id) => existingIds.has(id)) ?? null;
+}
+async function findAllEmergencyContactSignupIds(tel) {
+  const candidates = phoneLookupCandidates(tel);
+  if (candidates.length === 0) return [];
+  const {
+    data,
+    error
+  } = await supabaseAdmin.from("emergency_contacts").select("contract_signup_id").or(buildPhoneColumnOrFilter(["telefono", "whatsapp"], candidates)).eq("activo", true);
+  if (error) {
+    console.error("[family-portal] findAllEmergencyContactSignupIds", error.message);
+    return [];
+  }
+  return [...new Set((data ?? []).map((r) => r.contract_signup_id).filter(Boolean))];
+}
+async function findFamilyMemberByPhone(tel) {
+  const candidates = phoneLookupCandidates(tel);
+  if (candidates.length === 0) return null;
+  const {
+    data,
+    error
+  } = await supabaseAdmin.from("family_members").select("id, contract_signup_id, nombre, activo, telefono, created_at").in("telefono", candidates).order("created_at", {
+    ascending: false
+  }).limit(10);
+  if (error) {
+    console.error("[family-portal] findFamilyMemberByPhone", error.message);
+    return null;
+  }
+  const rows = data ?? [];
+  if (rows.length === 0) return null;
+  const {
+    data: existingSignups
+  } = await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE).select("id").in("id", rows.map((r) => r.contract_signup_id));
+  const validSignupIds = new Set((existingSignups ?? []).map((s) => s.id));
+  const activeRows = rows.filter((r) => validSignupIds.has(r.contract_signup_id));
+  const pool = activeRows.length > 0 ? activeRows : rows;
+  if (pool.length === 1) return reconcileFamilyMemberSignup(pool[0]);
+  const preferredSignupId = await pickPreferredSignupId(pool.map((r) => r.contract_signup_id));
+  const picked = pool.find((r) => r.contract_signup_id === preferredSignupId) ?? pool[0];
+  return reconcileFamilyMemberSignup(picked);
+}
+async function findEmergencyContactByPhone(tel) {
+  const candidates = phoneLookupCandidates(tel);
+  if (candidates.length === 0) return null;
+  const {
+    data,
+    error
+  } = await supabaseAdmin.from("emergency_contacts").select("contract_signup_id, nombre, parentesco, created_at").or(buildPhoneColumnOrFilter(["telefono", "whatsapp"], candidates)).eq("activo", true).order("created_at", {
+    ascending: false
+  }).limit(10);
+  if (error) {
+    console.error("[family-portal] findEmergencyContactByPhone", error.message);
+    return null;
+  }
+  const rows = data ?? [];
+  if (rows.length === 0) return null;
+  if (rows.length === 1) return rows[0];
+  const preferredSignupId = await pickPreferredSignupId(rows.map((r) => r.contract_signup_id));
+  return rows.find((r) => r.contract_signup_id === preferredSignupId) ?? rows[0];
+}
+async function reactivateFamilyMember(member, canonicalTel) {
+  const {
+    error
+  } = await supabaseAdmin.from("family_members").update({
+    activo: true,
+    telefono: canonicalTel,
+    updated_at: (/* @__PURE__ */ new Date()).toISOString()
+  }).eq("id", member.id);
+  if (error) throw error;
+}
+async function reconcileFamilyMemberSignup(member) {
+  const ecIds = await findAllEmergencyContactSignupIds(member.telefono);
+  const candidateIds = [member.contract_signup_id, ...ecIds];
+  const {
+    data: currentSignup
+  } = await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE).select("id").eq("id", member.contract_signup_id).maybeSingle();
+  const idsForPick = currentSignup || ecIds.length === 0 ? candidateIds : ecIds;
+  const preferred = await pickPreferredSignupId(idsForPick);
+  if (!preferred || preferred === member.contract_signup_id) return member;
+  const {
+    data: signup
+  } = await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE).select("id").eq("id", preferred).maybeSingle();
+  if (!signup) return member;
+  const {
+    error
+  } = await supabaseAdmin.from("family_members").update({
+    contract_signup_id: preferred,
+    updated_at: (/* @__PURE__ */ new Date()).toISOString()
+  }).eq("id", member.id);
+  if (error) {
+    console.error("[family-portal] reconcile signup", error.message);
+    return member;
+  }
+  await logAccess(member.id, preferred, "signup_reconciled", {
+    from: member.contract_signup_id,
+    telefono: member.telefono
+  });
+  return {
+    ...member,
+    contract_signup_id: preferred
+  };
+}
+async function ensureFamilyMemberForLogin(tel) {
+  const existing = await findFamilyMemberByPhone(tel);
+  if (existing?.activo) return reconcileFamilyMemberSignup(existing);
+  if (existing && !existing.activo) {
+    await reactivateFamilyMember(existing, tel);
+    return {
+      ...existing,
+      activo: true,
+      telefono: tel
+    };
+  }
+  const ec = await findEmergencyContactByPhone(tel);
+  if (!ec) {
+    await logAccess(null, null, "code_request_unknown", {
+      telefono: tel
+    });
+    throw new Error("Este número no está registrado como familiar.");
+  }
+  const {
+    data: created,
+    error: insertErr
+  } = await supabaseAdmin.from("family_members").insert({
+    contract_signup_id: ec.contract_signup_id,
+    nombre: ec.nombre,
+    telefono: tel,
+    parentesco: ec.parentesco
+  }).select("id, contract_signup_id, nombre, activo, telefono").single();
+  if (!insertErr && created) {
+    return reconcileFamilyMemberSignup(created);
+  }
+  if (insertErr?.code === "23505") {
+    const conflict = await findFamilyMemberByPhone(tel);
+    if (conflict) {
+      if (!conflict.activo) await reactivateFamilyMember(conflict, tel);
+      return reconcileFamilyMemberSignup({
+        ...conflict,
+        activo: true,
+        telefono: tel
+      });
+    }
+    const {
+      data: bySignup
+    } = await supabaseAdmin.from("family_members").select("id, contract_signup_id, nombre, activo, telefono").eq("contract_signup_id", ec.contract_signup_id).in("telefono", phoneLookupCandidates(tel)).order("created_at", {
+      ascending: false
+    }).limit(1);
+    const row = bySignup?.[0];
+    if (row) {
+      if (!row.activo) await reactivateFamilyMember(row, tel);
+      return reconcileFamilyMemberSignup({
+        ...row,
+        activo: true,
+        telefono: tel
+      });
+    }
+  }
+  console.error("[family-portal] ensureFamilyMemberForLogin", insertErr?.message ?? "unknown");
+  throw new Error("No pudimos registrar tu acceso.");
+}
+const requestFamilyCode_createServerFn_handler = createServerRpc({
+  id: "59cf47dfae0d7055f2567c51206e3f0457c054d7b0dee31000b52891a5c191bc",
+  name: "requestFamilyCode",
+  filename: "src/lib/family-portal.functions.ts"
+}, (opts) => requestFamilyCode.__executeServer(opts));
+const requestFamilyCode = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  telefono: stringType().min(4).max(40)
+}).parse(input)).handler(requestFamilyCode_createServerFn_handler, async ({
+  data
+}) => {
+  const tel = normalizePhoneE164(data.telefono);
+  if (!tel) throw new Error("Teléfono inválido.");
+  const member = await ensureFamilyMemberForLogin(tel);
+  return await sendCode(member.id, tel);
+});
+async function sendCode(memberId, tel) {
+  const {
+    data: recent
+  } = await supabaseAdmin.from("family_login_codes").select("created_at").eq("telefono", tel).order("created_at", {
+    ascending: false
+  }).limit(1).maybeSingle();
+  if (recent) {
+    const ageSec = (Date.now() - new Date(recent.created_at).getTime()) / 1e3;
+    if (ageSec < RESEND_COOLDOWN_S) {
+      throw new Error(`Espera ${Math.ceil(RESEND_COOLDOWN_S - ageSec)}s antes de reintentar.`);
+    }
+  }
+  const code = randomCode6();
+  const hash = await sha256(code);
+  const expires = new Date(Date.now() + CODE_TTL_MIN * 60 * 1e3).toISOString();
+  const {
+    error
+  } = await supabaseAdmin.from("family_login_codes").insert({
+    telefono: tel,
+    code_hash: hash,
+    expires_at: expires
+  });
+  if (error) throw error;
+  const body = `Senior Safe — tu código es ${code}. Expira en ${CODE_TTL_MIN} minutos.`;
+  const {
+    whatsappOk,
+    smsOk
+  } = await sendTwilioWhatsAppWithSmsFallback(tel, body);
+  await logAccess(memberId, null, "code_sent", {
+    telefono: tel,
+    whatsapp_ok: whatsappOk,
+    sms_ok: smsOk
+  });
+  return {
+    ok: true,
+    ttl_minutes: CODE_TTL_MIN
+  };
+}
+const verifyFamilyCode_createServerFn_handler = createServerRpc({
+  id: "deecda74f761541032cc7e293870367b07f97fbfe4a2e51c2765350c8af2b5ce",
+  name: "verifyFamilyCode",
+  filename: "src/lib/family-portal.functions.ts"
+}, (opts) => verifyFamilyCode.__executeServer(opts));
+const verifyFamilyCode = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  telefono: stringType().min(4).max(40),
+  code: stringType().regex(/^\d{6}$/)
+}).parse(input)).handler(verifyFamilyCode_createServerFn_handler, async ({
+  data
+}) => {
+  const tel = normalizePhoneE164(data.telefono);
+  if (!tel) throw new Error("Teléfono inválido.");
+  const {
+    data: row
+  } = await supabaseAdmin.from("family_login_codes").select("id, code_hash, expires_at, attempts, consumed_at").eq("telefono", tel).is("consumed_at", null).order("created_at", {
+    ascending: false
+  }).limit(1).maybeSingle();
+  if (!row) throw new Error("Solicita un nuevo código.");
+  if (new Date(row.expires_at).getTime() < Date.now()) throw new Error("El código expiró.");
+  if (row.attempts >= MAX_ATTEMPTS) throw new Error("Demasiados intentos. Solicita otro código.");
+  const hash = await sha256(data.code);
+  if (hash !== row.code_hash) {
+    await supabaseAdmin.from("family_login_codes").update({
+      attempts: row.attempts + 1
+    }).eq("id", row.id);
+    throw new Error("Código incorrecto.");
+  }
+  await supabaseAdmin.from("family_login_codes").update({
+    consumed_at: (/* @__PURE__ */ new Date()).toISOString()
+  }).eq("id", row.id);
+  const member = await ensureFamilyMemberForLogin(tel);
+  const token = await issueFamilySessionToken(member.id, member.contract_signup_id);
+  await logAccess(member.id, member.contract_signup_id, "login_success", {
+    telefono: tel
+  });
+  return {
+    ok: true,
+    session: {
+      family_member_id: member.id,
+      contract_signup_id: member.contract_signup_id,
+      nombre: member.nombre,
+      token
+    }
+  };
+});
+const sessionSchema = objectType({
+  family_member_id: stringType().uuid(),
+  contract_signup_id: stringType().uuid(),
+  session_token: seniorAccessTokenSchema
+});
+async function assertSession(familyMemberId, signupId, sessionToken) {
+  await assertFamilySession(familyMemberId, signupId, sessionToken);
+  const {
+    data
+  } = await supabaseAdmin.from("family_members").select("id, contract_signup_id, nombre, activo, telefono").eq("id", familyMemberId).maybeSingle();
+  if (!data || !data.activo) {
+    throw new Error("Sesión inválida.");
+  }
+  return reconcileFamilyMemberSignup(data);
+}
+const getFamilyDashboard_createServerFn_handler = createServerRpc({
+  id: "8e226ea55e96811ba5254acae56d8c9f16fd4522a02c63de440fa788d9d8d003",
+  name: "getFamilyDashboard",
+  filename: "src/lib/family-portal.functions.ts"
+}, (opts) => getFamilyDashboard.__executeServer(opts));
+const getFamilyDashboard = createServerFn({
+  method: "POST"
+}).inputValidator((input) => sessionSchema.parse(input)).handler(getFamilyDashboard_createServerFn_handler, async ({
+  data
+}) => {
+  const member = await assertSession(data.family_member_id, data.contract_signup_id, data.session_token);
+  const signupId = member.contract_signup_id;
+  const [{
+    data: senior
+  }, {
+    data: deviceRowInitial
+  }, {
+    data: alerts
+  }] = await Promise.all([supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE).select("id, nombre, telefono").eq("id", signupId).maybeSingle(), supabaseAdmin.from("device_status").select("last_seen_at, battery_level, gps_enabled, internet_connected, app_version, last_lat, last_lng, updated_at").eq("contract_signup_id", signupId).maybeSingle(), supabaseAdmin.from("alert_logs").select("id, created_at, event_type, status, gps_lat, gps_lng, acknowledged_at, acknowledgement_by_name, metadata").eq("contract_signup_id", signupId).order("created_at", {
+    ascending: false
+  }).limit(20)]);
+  const lastAlert = alerts?.[0];
+  let deviceRow = deviceRowInitial;
+  const isActiveAlert = Boolean(lastAlert && ["pending", "partial", "delivered", "failed"].includes(lastAlert.status) && !lastAlert.acknowledged_at && Date.now() - new Date(lastAlert.created_at).getTime() < 30 * 60 * 1e3);
+  if (!deviceRow?.last_seen_at && lastAlert) {
+    try {
+      await syncDeviceStatus({
+        contractSignupId: signupId,
+        last_seen_at: lastAlert.created_at,
+        gps_enabled: lastAlert.gps_lat != null && lastAlert.gps_lng != null,
+        last_lat: lastAlert.gps_lat ?? null,
+        last_lng: lastAlert.gps_lng ?? null,
+        internet_connected: true
+      });
+      const {
+        data: refreshed
+      } = await supabaseAdmin.from("device_status").select("last_seen_at, battery_level, gps_enabled, internet_connected, app_version, last_lat, last_lng, updated_at").eq("contract_signup_id", signupId).maybeSingle();
+      if (refreshed) deviceRow = refreshed;
+    } catch (e) {
+      console.error("[family-dashboard] device_status backfill failed:", e);
+    }
+  }
+  const deviceView = buildFamilyDeviceView(deviceRow, lastAlert ?? null, isActiveAlert);
+  await logAccess(data.family_member_id, signupId, "dashboard_view");
+  const sessionRefresh = signupId !== data.contract_signup_id ? {
+    token: await issueFamilySessionToken(member.id, signupId)
+  } : void 0;
+  return {
+    contract_signup_id: signupId,
+    session: sessionRefresh,
+    senior,
+    device: deviceView.device,
+    alerts: alerts ?? [],
+    visualStatus: deviceView.visualStatus,
+    isLiveConnected: deviceView.isLiveConnected,
+    lastActivityAt: deviceView.lastActivityAt,
+    lastActivitySource: deviceView.lastActivitySource
+  };
+});
+const ackAlertByToken_createServerFn_handler = createServerRpc({
+  id: "ea9e4068ab84a430a3cca3fc91b7eb8019aee8b419ca7a5a85c557a842cf8692",
+  name: "ackAlertByToken",
+  filename: "src/lib/family-portal.functions.ts"
+}, (opts) => ackAlertByToken.__executeServer(opts));
+const ackAlertByToken = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  token: stringType().min(16).max(128),
+  nombre: stringType().max(120).optional()
+}).parse(input)).handler(ackAlertByToken_createServerFn_handler, async ({
+  data
+}) => acknowledgeAlertByToken(data.token, data.nombre));
+const checkLastAlertAck_createServerFn_handler = createServerRpc({
+  id: "1ea406a33b201149b7a61f13a2d5fcdf1ac6e42bcc5209a63310d0cf935b3b87",
+  name: "checkLastAlertAck",
+  filename: "src/lib/family-portal.functions.ts"
+}, (opts) => checkLastAlertAck.__executeServer(opts));
+const checkLastAlertAck = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  signupId: stringType().uuid(),
+  accessToken: seniorAccessTokenSchema
+}).parse(input)).handler(checkLastAlertAck_createServerFn_handler, async ({
+  data
+}) => {
+  await assertSeniorAccess(data.signupId, data.accessToken);
+  const {
+    data: row
+  } = await supabaseAdmin.from("alert_logs").select("id, created_at, acknowledged_at, acknowledgement_by_name").eq("contract_signup_id", data.signupId).order("created_at", {
+    ascending: false
+  }).limit(1).maybeSingle();
+  return {
+    alert: row ?? null
+  };
+});
+export {
+  ackAlertByToken_createServerFn_handler,
+  checkLastAlertAck_createServerFn_handler,
+  getFamilyDashboard_createServerFn_handler,
+  requestFamilyCode_createServerFn_handler,
+  verifyFamilyCode_createServerFn_handler
+};

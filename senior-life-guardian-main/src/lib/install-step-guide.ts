@@ -1,3 +1,4 @@
+import { SUPPORT_EMAIL } from "@/lib/market";
 import { buildPostPaymentInstallUrl } from "@/lib/post-payment-install-notify";
 import { PRODUCTION_SITE_URL } from "@/lib/app-url";
 import type { InstallStep } from "@/lib/install-step";
@@ -56,7 +57,7 @@ export function whatsAppGuideForStep(step: InstallStep, signupId: string, firstN
         `Hola ${firstName}, tu plan está activo.\n\n` +
         `1) Instala la app en el celular del adulto mayor:\n${installUrl}\n\n` +
         `2) Responde cualquier mensaje por aquí para vincular alertas.\n\n` +
-        `Ayuda: hola@alarmaseniorsafe.cl`
+        `Ayuda: ${SUPPORT_EMAIL}`
       );
     case "whatsapp_linked":
       return (

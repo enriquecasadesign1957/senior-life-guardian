@@ -1,0 +1,140 @@
+import { c as createServerRpc } from "./createServerRpc-Bn6pI9Hf.mjs";
+import { j as createServerFn } from "./createServerFn-Bu17PEW9.mjs";
+import { s as supabaseAdmin } from "./client.server-U_pH-Evd.mjs";
+import { l as locationShareUrl } from "./maps-BhXedqc-.mjs";
+import { C as CONTRACT_SIGNUPS_TABLE } from "./signups-db-JWUtXpaW.mjs";
+import { s as sendTwilioChannelMessage } from "./twilio-DNHuHEFY.mjs";
+import { s as syncDeviceStatus } from "./device-status-sync-CbTBoYX6.mjs";
+import { s as seniorAccessTokenSchema, a as assertSeniorAccess } from "./senior-access-auth-Bmk7iyGS.mjs";
+
+import { o as objectType, n as numberType, s as stringType } from "../_libs/zod.mjs";
+import "../_libs/tanstack__router-core.mjs";
+import "../_libs/tanstack__history.mjs";
+import "../_libs/cookie-es.mjs";
+import "../_libs/seroval.mjs";
+import "../_libs/unenv.mjs";
+
+
+
+import "../_libs/seroval-plugins.mjs";
+
+
+import "../_libs/supabase__supabase-js.mjs";
+import "../_libs/supabase__postgrest-js.mjs";
+import "../_libs/supabase__realtime-js.mjs";
+import "../_libs/supabase__phoenix.mjs";
+import "../_libs/supabase__storage-js.mjs";
+import "../_libs/iceberg-js.mjs";
+import "../_libs/supabase__auth-js.mjs";
+import "../_libs/tslib.mjs";
+import "../_libs/supabase__functions-js.mjs";
+const Schema = objectType({
+  signupId: stringType().uuid(),
+  accessToken: seniorAccessTokenSchema,
+  gps: objectType({
+    lat: numberType(),
+    lng: numberType(),
+    accuracy: numberType().optional()
+  }).nullable().optional()
+});
+function normalizePhone(raw) {
+  const trimmed = (raw ?? "").replace(/[^\d+]/g, "");
+  if (!trimmed) return null;
+  if (trimmed.startsWith("+")) return trimmed;
+  if (/^\d{8,9}$/.test(trimmed)) return `+56${trimmed}`;
+  return `+${trimmed}`;
+}
+const sendWellnessNotice_createServerFn_handler = createServerRpc({
+  id: "00855e84a1941c0fbefa0c12aa60776792e2bcc046c2ea9242c2bc9934a75923",
+  name: "sendWellnessNotice",
+  filename: "src/lib/wellness.functions.ts"
+}, (opts) => sendWellnessNotice.__executeServer(opts));
+const sendWellnessNotice = createServerFn({
+  method: "POST"
+}).inputValidator((input) => Schema.parse(input)).handler(sendWellnessNotice_createServerFn_handler, async ({
+  data
+}) => {
+  await assertSeniorAccess(data.signupId, data.accessToken);
+  const {
+    data: user
+  } = await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE).select("id, nombre").eq("id", data.signupId).maybeSingle();
+  if (!user) return {
+    ok: false,
+    error: "user_not_found",
+    recipients: 0
+  };
+  const {
+    data: contacts
+  } = await supabaseAdmin.from("emergency_contacts").select("id, nombre, telefono, parentesco, activo").eq("contract_signup_id", user.id);
+  const recipients = (contacts ?? []).filter((c) => c.activo !== false).map((c) => ({
+    ...c,
+    phone: normalizePhone(c.telefono)
+  })).filter((c) => c.phone);
+  const timestamp = (/* @__PURE__ */ new Date()).toLocaleString("es-CL", {
+    timeZone: "America/Santiago"
+  });
+  const mapsLink = data.gps ? `
+Ubicación: ${locationShareUrl(data.gps.lat, data.gps.lng, user.nombre)}` : "";
+  const body = `${user.nombre} informa que se encuentra bien ✅
+No se requiere acción.
+
+Hora: ${timestamp}${mapsLink}`;
+  const results = [];
+  for (const r of recipients) {
+    const wa = await sendTwilioChannelMessage(r.phone, body, "whatsapp");
+    results.push({
+      to: r.phone,
+      channel: "whatsapp",
+      status: wa.ok ? "sent" : "failed",
+      error: wa.error
+    });
+    const sms = await sendTwilioChannelMessage(r.phone, body, "sms");
+    results.push({
+      to: r.phone,
+      channel: "sms",
+      status: sms.ok ? "sent" : "failed",
+      error: sms.error
+    });
+  }
+  try {
+    await supabaseAdmin.from("alert_logs").insert({
+      contract_signup_id: user.id,
+      event_type: "wellness_ok",
+      status: results.some((r) => r.status === "sent") ? "delivered" : "no_recipients",
+      gps_lat: data.gps?.lat ?? null,
+      gps_lng: data.gps?.lng ?? null,
+      gps_accuracy: data.gps?.accuracy ?? null,
+      recipients: recipients.map((r) => ({
+        id: r.id,
+        nombre: r.nombre,
+        telefono: r.phone
+      })),
+      metadata: {
+        kind: "wellness_ok",
+        timestamp,
+        results
+      }
+    });
+  } catch {
+  }
+  try {
+    await syncDeviceStatus({
+      contractSignupId: user.id,
+      gps_enabled: data.gps != null,
+      last_lat: data.gps?.lat ?? null,
+      last_lng: data.gps?.lng ?? null,
+      internet_connected: true,
+      app_version: "native-wellness"
+    });
+  } catch (e) {
+    console.error("[wellness] device_status sync failed:", e);
+  }
+  return {
+    ok: true,
+    recipients: recipients.length,
+    results
+  };
+});
+export {
+  sendWellnessNotice_createServerFn_handler
+};

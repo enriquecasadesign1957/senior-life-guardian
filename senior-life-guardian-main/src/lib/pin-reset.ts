@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { SUPPORT_EMAIL } from "@/lib/market";
 import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
 import { sendBillingEmailViaZoho, wrapSupportHtmlReply } from "@/lib/zoho-smtp";
 
@@ -186,7 +187,7 @@ export function pinResetErrorMessage(error?: string): string {
   }
   switch (error) {
     case "no_email":
-      return "Tu cuenta no tiene correo registrado. Escríbenos a hola@alarmaseniorsafe.cl";
+      return `Tu cuenta no tiene correo registrado. Escríbenos a ${SUPPORT_EMAIL}`;
     case "email_failed":
       return "No pudimos enviar el correo. Inténtalo más tarde o contacta soporte.";
     case "table_missing":

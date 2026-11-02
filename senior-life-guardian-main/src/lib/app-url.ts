@@ -1,5 +1,7 @@
-/** Dominio público oficial (producción). */
-export const PRODUCTION_SITE_URL = "https://alarmaseniorsafe.cl";
+import { SITE_ORIGIN } from "@/lib/market";
+
+/** Dominio público oficial (producción). Chile o el sitio internacional. */
+export const PRODUCTION_SITE_URL = SITE_ORIGIN;
 
 /** Package ID Android (Capacitor / Google Play). */
 export const SENIOR_SAFE_ANDROID_PACKAGE_ID = "cl.alarmaseniorsafe.app";

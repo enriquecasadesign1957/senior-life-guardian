@@ -1,0 +1,412 @@
+import { r as reactExports, j as jsxRuntimeExports } from "../_libs/react.mjs";
+import { L as Link, g as getRouteApi } from "../_libs/tanstack__react-router.mjs";
+import { e as DEMO_NAV_SECTIONS, c as DEMO_SENIORS, d as DEMO_GUARDIANS } from "./demo-data-CXO5wtMy.mjs";
+import { u as useDemo } from "./demo-context-qctLjgP3.mjs";
+import { s as EMERGENCY_CATEGORIES, f as emergencyCategoryMessageLine, y as CASCADE_ACK_HINT } from "./emergency-cascade-continuation-BhQV3eMZ.mjs";
+import { D as DemoPhoneFrame } from "./demo-phone-frame-DskwpBik.mjs";
+import { D as DemoMapVisual } from "./demo-map-visual-_ZekioTk.mjs";
+import { B as Button } from "./button-BC9oXVxV.mjs";
+import "./index.mjs";
+
+import { aj as Pause, Y as Play, ak as ChevronLeft, n as ChevronRight, M as MapPin, $ as Navigation, E as ExternalLink, B as Bell, S as Shield, T as TriangleAlert, H as Heart } from "../_libs/lucide-react.mjs";
+
+import "../_libs/tanstack__router-core.mjs";
+import "../_libs/tanstack__history.mjs";
+import "../_libs/cookie-es.mjs";
+import "../_libs/seroval.mjs";
+import "../_libs/unenv.mjs";
+
+
+import "../_libs/seroval-plugins.mjs";
+
+
+import "../_libs/react-dom.mjs";
+import "../_libs/isbot.mjs";
+import "./demo-config-D1XL_8ap.mjs";
+import "./client.server-U_pH-Evd.mjs";
+import "../_libs/supabase__supabase-js.mjs";
+import "../_libs/supabase__postgrest-js.mjs";
+import "../_libs/supabase__realtime-js.mjs";
+import "../_libs/supabase__phoenix.mjs";
+import "../_libs/supabase__storage-js.mjs";
+import "../_libs/iceberg-js.mjs";
+import "../_libs/supabase__auth-js.mjs";
+import "../_libs/tslib.mjs";
+import "../_libs/supabase__functions-js.mjs";
+import "./signups-db-JWUtXpaW.mjs";
+import "./contacts-storage-DdsYD-uQ.mjs";
+import "./phone-utils-D7EH6fht.mjs";
+import "./twilio-DNHuHEFY.mjs";
+import "../_libs/zod.mjs";
+import "../_libs/radix-ui__react-slot.mjs";
+import "../_libs/radix-ui__react-compose-refs.mjs";
+import "../_libs/class-variance-authority.mjs";
+import "../_libs/clsx.mjs";
+import "./utils-H80jjgLf.mjs";
+import "../_libs/tailwind-merge.mjs";
+import "../_libs/h3-v2.mjs";
+import "../_libs/rou3.mjs";
+import "../_libs/srvx.mjs";
+
+
+
+
+const DEMO_FLOW_GPS = {
+  lat: -33.4172,
+  lng: -70.6062,
+  accuracy: 12,
+  label: "Av. Apoquindo 4500 · Las Condes",
+  mapsLink: "https://maps.google.com/?q=-33.4172,-70.6062"
+};
+function buildDemoGuardianAlertMessage(category = "salud") {
+  const senior = DEMO_SENIORS[0];
+  const { mapsLink } = DEMO_FLOW_GPS;
+  const timestamp = (/* @__PURE__ */ new Date()).toLocaleString("es-CL", { timeZone: "America/Santiago" });
+  const ackUrl = "https://demo.alarmaseniorsafe.cl/a/demo-alert/ejemplo-token";
+  const categoryBlock = `🏷️ Tipo de emergencia:
+${emergencyCategoryMessageLine(category)}`;
+  const locationBlock = `📍 Ubicación (GPS preciso):
+${mapsLink}`;
+  const confirmBlock = `✅ CONFIRMA QUE RECIBISTE ESTA ALERTA
+Toca este enlace (${CASCADE_ACK_HINT}):
+` + ackUrl;
+  const details = [categoryBlock, locationBlock, `⏰ Hora:
+${timestamp}`].join("\n\n");
+  return `🚨 URGENTE ALERTA SENIOR
+
+${senior.nombre} necesita ayuda.
+
+${confirmBlock}
+
+────────────────────
+Detalle
+
+${details}
+
+Contacta de inmediato al usuario.`;
+}
+function demoGuardianRecipient() {
+  return DEMO_GUARDIANS[0];
+}
+function demoSeniorName() {
+  return DEMO_SENIORS[0].nombre;
+}
+const RED = "#dc2626";
+const CATEGORY_ICONS = {
+  salud: Heart,
+  accidente: TriangleAlert,
+  delincuencia: Shield
+};
+function DemoFlowEmergencyButtonScreen() {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(DemoPhoneFrame, { accent: RED, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-center w-full", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-4", children: "Pantalla del adulto mayor" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { type: "button", className: "relative mx-auto block focus:outline-none", "aria-label": "Botón de emergencia", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "span",
+        {
+          className: "absolute inset-0 rounded-full animate-ping",
+          style: { background: "rgba(220,38,38,0.25)" },
+          "aria-hidden": "true"
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "span",
+        {
+          className: "absolute -inset-2 rounded-full",
+          style: { background: "rgba(220,38,38,0.10)" },
+          "aria-hidden": "true"
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "span",
+        {
+          className: "relative flex flex-col items-center justify-center w-40 h-40 rounded-full text-white font-bold shadow-[0_20px_50px_-15px_rgba(220,38,38,0.7)]",
+          style: { background: `radial-gradient(circle at 30% 25%, #ef4444, ${RED} 60%, #991b1b)` },
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Bell, { className: "w-12 h-12 mb-1.5", strokeWidth: 2.5, "aria-hidden": "true" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-lg tracking-wide", children: "EMERGENCIA" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[10px] font-semibold text-white/85", children: "Toca para pedir ayuda" })
+          ]
+        }
+      )
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-4 text-[11px] text-muted-foreground leading-snug px-2", children: [
+      "Avisaremos a ",
+      /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { className: "text-foreground", children: "3 guardianes" }),
+      " (SMS, WhatsApp y llamada escalonada)."
+    ] })
+  ] }) });
+}
+function DemoFlowCategoryScreen({ selected, onSelect }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(DemoPhoneFrame, { accent: RED, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full text-center", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative w-14 h-14 mx-auto mb-3", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "span",
+        {
+          className: "absolute inset-0 rounded-full animate-ping",
+          style: { background: "rgba(220,38,38,0.25)" },
+          "aria-hidden": "true"
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "div",
+        {
+          className: "relative w-14 h-14 rounded-full flex items-center justify-center text-white shadow-lg",
+          style: { background: RED },
+          children: /* @__PURE__ */ jsxRuntimeExports.jsx(Bell, { className: "w-7 h-7", "aria-hidden": "true" })
+        }
+      )
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "text-sm font-bold text-foreground leading-tight", children: "¿Qué tipo de ayuda necesitas?" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1.5 text-[10px] text-muted-foreground mb-3", children: "Toca una opción y avisaremos a tu familia al instante." }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-1.5", children: EMERGENCY_CATEGORIES.map((category) => {
+      const Icon = CATEGORY_ICONS[category.id];
+      const active = selected === category.id;
+      return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "button",
+        {
+          type: "button",
+          onClick: () => onSelect?.(category.id),
+          className: `w-full py-2.5 px-2.5 rounded-xl text-white text-left font-bold shadow-md flex items-center gap-2 transition ring-2 ${active ? "ring-white scale-[1.02]" : "ring-transparent"}`,
+          style: { background: category.color },
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Icon, { className: "w-4 h-4", "aria-hidden": "true" }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "block text-xs leading-tight", children: category.label }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "block text-[9px] font-medium text-white/90", children: category.subtitle })
+            ] })
+          ]
+        },
+        category.id
+      );
+    }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-2 w-full py-2 rounded-xl bg-muted text-muted-foreground font-semibold text-[10px]", children: "Cancelar — estoy bien" })
+  ] }) });
+}
+function DemoFlowGuardianMessageScreen({
+  category = "salud",
+  channel = "whatsapp"
+}) {
+  const guardian = demoGuardianRecipient();
+  const body = buildDemoGuardianAlertMessage(category);
+  const isWa = channel === "whatsapp";
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(DemoPhoneFrame, { flush: true, accent: isWa ? "#16a34a" : "#64748b", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col h-full pt-8", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "div",
+      {
+        className: "px-3 py-2.5 flex items-center gap-2 border-b border-border shrink-0",
+        style: { background: isWa ? "#075e54" : "#f1f5f9" },
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "div",
+            {
+              className: "w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0",
+              style: { background: isWa ? "#128c7e" : "#64748b" },
+              children: "SS"
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `text-xs font-bold truncate ${isWa ? "text-white" : "text-foreground"}`, children: "Senior Safe" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `text-[10px] truncate ${isWa ? "text-white/75" : "text-muted-foreground"}`, children: [
+              "Para: ",
+              guardian.nombre,
+              " (",
+              guardian.parentesco,
+              ")"
+            ] })
+          ] })
+        ]
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "div",
+      {
+        className: "flex-1 overflow-y-auto p-3 space-y-2",
+        style: { background: isWa ? "#ece5dd" : "#ffffff" },
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-[9px] text-center text-muted-foreground", children: [
+            "Ahora · ",
+            isWa ? "WhatsApp" : "SMS"
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "div",
+            {
+              className: `max-w-[92%] rounded-2xl px-3 py-2 text-[10px] leading-relaxed whitespace-pre-wrap shadow-sm ${isWa ? "bg-white text-foreground rounded-tl-none" : "bg-slate-100 text-foreground ml-auto rounded-tr-none"}`,
+              children: body
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[9px] text-muted-foreground text-center", children: "El guardián puede confirmar con el enlace o respondiendo por WhatsApp." })
+        ]
+      }
+    )
+  ] }) });
+}
+function DemoFlowGeolocationScreen() {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(DemoPhoneFrame, { flush: true, accent: "#4285f4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col h-full pt-8", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "px-3 py-2 bg-white border-b border-border flex items-center gap-2 shrink-0", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-white", children: /* @__PURE__ */ jsxRuntimeExports.jsx(MapPin, { className: "w-3.5 h-3.5" }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0 flex-1", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-[10px] font-bold text-foreground truncate", children: [
+          "Ubicación de ",
+          demoSeniorName()
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[9px] text-muted-foreground truncate", children: DEMO_FLOW_GPS.label })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex-1 relative min-h-0", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      DemoMapVisual,
+      {
+        label: `${demoSeniorName()} · SOS`,
+        lat: DEMO_FLOW_GPS.lat,
+        lng: DEMO_FLOW_GPS.lng,
+        alertMode: true,
+        showGeofence: false,
+        className: "absolute inset-0 h-full w-full aspect-auto rounded-none border-0"
+      }
+    ) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-white border-t border-border p-3 shrink-0 space-y-2", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-2", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Navigation, { className: "w-4 h-4 text-red-600 shrink-0 mt-0.5" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[11px] font-bold text-foreground", children: DEMO_FLOW_GPS.label }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-[9px] text-muted-foreground", children: [
+            "GPS ±",
+            DEMO_FLOW_GPS.accuracy,
+            " m · ",
+            DEMO_FLOW_GPS.lat.toFixed(4),
+            ", ",
+            DEMO_FLOW_GPS.lng.toFixed(4)
+          ] })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "a",
+        {
+          href: DEMO_FLOW_GPS.mapsLink,
+          target: "_blank",
+          rel: "noopener noreferrer",
+          className: "flex items-center justify-center gap-1.5 w-full py-2 rounded-xl text-white text-[11px] font-bold",
+          style: { background: "#4285f4" },
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(ExternalLink, { className: "w-3.5 h-3.5" }),
+            "Abrir en Google Maps"
+          ]
+        }
+      )
+    ] })
+  ] }) });
+}
+const demoRouteApi = getRouteApi("/demo");
+const FLUJO_SLIDES = [{
+  flujo: "sos",
+  title: "1. Botón de emergencia",
+  body: "Pantalla del adulto mayor: botón rojo visible con pulso. Un toque inicia el protocolo."
+}, {
+  flujo: "tipo",
+  title: "2. ¿Qué tipo de ayuda?",
+  body: "Salud, accidente o delincuencia — la familia recibe el contexto antes de actuar."
+}, {
+  flujo: "guardian",
+  title: "3. Mensaje al guardián",
+  body: "SMS y WhatsApp con enlace de confirmación, tipo de emergencia y ubicación GPS."
+}, {
+  flujo: "mapa",
+  title: "4. Geolocalización",
+  body: "El familiar abre el mapa y puede ir en camino con Google Maps."
+}];
+const SLIDES = [{
+  title: "Senior Safe",
+  body: "Protección inteligente para adultos mayores con alertas multicanal a la familia."
+}, ...FLUJO_SLIDES, ...DEMO_NAV_SECTIONS.filter((s) => s.to !== "/demo/presentacion" && s.to !== "/demo/flujo").map((s) => ({
+  title: s.label,
+  body: s.desc,
+  link: s.to
+})), {
+  title: "Simular emergencia",
+  body: "Demostración en vivo de la cascada SOS (SMS → WhatsApp → confirmación) sin afectar producción.",
+  action: "sos"
+}];
+function FlujoScreen({
+  flujo
+}) {
+  switch (flujo) {
+    case "sos":
+      return /* @__PURE__ */ jsxRuntimeExports.jsx(DemoFlowEmergencyButtonScreen, {});
+    case "tipo":
+      return /* @__PURE__ */ jsxRuntimeExports.jsx(DemoFlowCategoryScreen, { selected: "salud" });
+    case "guardian":
+      return /* @__PURE__ */ jsxRuntimeExports.jsx(DemoFlowGuardianMessageScreen, { category: "salud", channel: "whatsapp" });
+    case "mapa":
+      return /* @__PURE__ */ jsxRuntimeExports.jsx(DemoFlowGeolocationScreen, {});
+  }
+}
+function DemoPresentacionPage() {
+  const [idx, setIdx] = reactExports.useState(0);
+  const [auto, setAuto] = reactExports.useState(false);
+  const {
+    institucion
+  } = demoRouteApi.useSearch();
+  const {
+    setPresentationMode,
+    simulateEmergency
+  } = useDemo();
+  reactExports.useEffect(() => {
+    setPresentationMode(true);
+    return () => setPresentationMode(false);
+  }, [setPresentationMode]);
+  reactExports.useEffect(() => {
+    if (!auto) return;
+    const t = setInterval(() => setIdx((i) => (i + 1) % SLIDES.length), 8e3);
+    return () => clearInterval(t);
+  }, [auto]);
+  const slide = SLIDES[idx];
+  const link = "link" in slide ? slide.link : void 0;
+  const flujo = "flujo" in slide ? slide.flujo : void 0;
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-h-[70vh] flex flex-col", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between mb-6", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-xl font-bold", children: "Modo Presentación" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(Button, { variant: "outline", size: "sm", onClick: () => setAuto((a) => !a), className: "gap-2", children: [
+        auto ? /* @__PURE__ */ jsxRuntimeExports.jsx(Pause, { className: "w-4 h-4" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Play, { className: "w-4 h-4" }),
+        auto ? "Pausar tour" : "Tour automático"
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `flex-1 rounded-3xl p-8 md:p-12 text-white transition-all duration-500 ${flujo ? "lg:p-10" : "p-10 md:p-16"}`, style: {
+      background: "linear-gradient(145deg, var(--brand-petrol-deep), #0e7490)"
+    }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: flujo ? "grid lg:grid-cols-[1fr_auto] gap-8 items-center" : "", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: flujo ? "min-w-0" : "flex flex-col justify-center", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-white/60 text-sm mb-2", children: [
+          "Paso ",
+          idx + 1,
+          " / ",
+          SLIDES.length
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight animate-in fade-in slide-in-from-bottom-4 duration-500", children: slide.title }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-4 text-lg text-white/85 max-w-xl animate-in fade-in duration-700", children: slide.body }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-8 flex flex-wrap gap-3", children: [
+          link && /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { asChild: true, variant: "secondary", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: link, search: {
+            institucion
+          }, children: "Abrir módulo" }) }),
+          flujo && /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { asChild: true, variant: "secondary", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/demo/flujo", search: {
+            institucion
+          }, children: "Ver flujo interactivo" }) }),
+          "action" in slide && slide.action === "sos" && /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "secondary", onClick: () => void simulateEmergency(), children: "Simular SOS ahora" })
+        ] })
+      ] }),
+      flujo && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex justify-center lg:justify-end animate-in fade-in zoom-in-95 duration-700", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "scale-[0.92] md:scale-100 origin-center drop-shadow-2xl", children: /* @__PURE__ */ jsxRuntimeExports.jsx(FlujoScreen, { flujo }) }) })
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center mt-6", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(Button, { variant: "ghost", disabled: idx === 0, onClick: () => setIdx((i) => i - 1), children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronLeft, { className: "w-4 h-4 mr-1" }),
+        " Anterior"
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex gap-1 max-w-[50vw] overflow-x-auto", children: SLIDES.map((_, i) => /* @__PURE__ */ jsxRuntimeExports.jsx("button", { type: "button", "aria-label": `Slide ${i + 1}`, onClick: () => setIdx(i), className: `w-2 h-2 rounded-full shrink-0 transition ${i === idx ? "bg-primary w-6" : "bg-muted-foreground/30"}` }, i)) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(Button, { variant: "ghost", disabled: idx === SLIDES.length - 1, onClick: () => setIdx((i) => i + 1), children: [
+        "Siguiente ",
+        /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronRight, { className: "w-4 h-4 ml-1" })
+      ] })
+    ] })
+  ] });
+}
+export {
+  DemoPresentacionPage as component
+};

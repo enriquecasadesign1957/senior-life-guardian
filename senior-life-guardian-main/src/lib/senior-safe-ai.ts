@@ -8,6 +8,8 @@ import {
   SENIOR_SAFE_PLAY_STORE_URL,
   SENIOR_SAFE_SOS_SIMULATOR_URL,
 } from "@/lib/app-url";
+import { isInternational, SUPPORT_EMAIL } from "@/lib/market";
+import { PLAN, formatPlanPrice } from "@/lib/plans";
 import { SENIOR_SAFE_CHECKOUT_URL } from "@/lib/whatsapp-commercial-activation";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { normalizeTwilioPhone } from "@/lib/twilio-inbound";
@@ -17,7 +19,7 @@ import {
   SENIOR_SAFE_TERMS_CANCELLATION_URL,
 } from "@/lib/subscription-cancellation-policy";
 
-export const SENIOR_SAFE_SUPPORT_EMAIL = "hola@alarmaseniorsafe.cl";
+export const SENIOR_SAFE_SUPPORT_EMAIL = SUPPORT_EMAIL;
 export const SENIOR_SAFE_COMMERCIAL_EMAIL = SENIOR_SAFE_SUPPORT_EMAIL;
 export const TRIGGER_TECHNICAL_EMAIL_REDIRECT = "TRIGGER_TECHNICAL_EMAIL_REDIRECT";
 
@@ -31,7 +33,9 @@ export const GEO_WHATSAPP_DEFINITIONS = {
   caidas:
     "La detección de caídas de Senior Safe es un protocolo automático del smartphone: el acelerómetro registra un impacto, valida 3 segundos de inmovilidad y da 30 segundos para cancelar antes de alertar a la familia. Nota: El teléfono debe ser portado por la persona, tiene límites físicos de hardware y no es un dispositivo médico certificado por el ISP.",
   precio:
-    "Senior Safe cuesta $6.900 al mes; una alarma médica tradicional con central de monitoreo, pulsera y permanencia cuesta entre $30.000 y $80.000 al mes. Ofrecemos planes anuales, teleasistencia 100% móvil, sin contratos de amarre y pago seguro mediante Webpay.",
+    isInternational
+      ? `Senior Safe cuesta $${formatPlanPrice(PLAN.monthly)} USD al mes; una alarma médica tradicional con central de monitoreo, pulsera y permanencia cuesta entre US$30 y US$80 al mes. Ofrecemos planes anuales, teleasistencia 100% móvil, sin contratos de amarre y pago seguro mediante Lemon Squeezy.`
+      : "Senior Safe cuesta $6.900 al mes; una alarma médica tradicional con central de monitoreo, pulsera y permanencia cuesta entre $30.000 y $80.000 al mes. Ofrecemos planes anuales, teleasistencia 100% móvil, sin contratos de amarre y pago seguro mediante Webpay.",
 } as const;
 
 export type GeoWhatsAppIntent = keyof typeof GEO_WHATSAPP_DEFINITIONS;
@@ -40,7 +44,7 @@ export const SENIOR_SAFE_OFFICIAL_CONTEXT = `
 RESUMEN
 Senior Safe no es un dispositivo físico adicional: es un ecosistema de protección inteligente basado en una aplicación para smartphone. Usa IA, los sensores del teléfono y comunicación redundante para alertar a la familia de inmediato ante caídas o emergencias. Conecta directamente al usuario con hasta 3 guardianes familiares priorizados. No hay call-center ni intermediarios humanos en las alertas.
 
-Contratación: ${SENIOR_SAFE_CHECKOUT_URL} — pago seguro con Transbank Oneclick (crédito o débito).
+Contratación: ${SENIOR_SAFE_CHECKOUT_URL} — ${isInternational ? "pago seguro con Lemon Squeezy, en dólares." : "pago seguro con Transbank Oneclick (crédito o débito)."}
 Tras pagar en checkout: la pantalla de confirmación muestra ACTIVAR para enviar por WhatsApp comercial (+56 9 7140 4580). Solo entonces se vincula la cuenta.
 No hay días de prueba gratis; sí hay simulacro de entrenamiento tras contratar.
 
@@ -107,7 +111,7 @@ P: ¿Qué pasa si cancelo el plan mensual o anual?
 R: Misma respuesta: derivar a ${SENIOR_SAFE_TERMS_CANCELLATION_URL} (Términos y Condiciones, sección Cancelación y reembolsos).
 
 P: ¿Medios de pago?
-R: 100% en línea con Transbank Oneclick: tarjetas de crédito o débito.
+R: ${isInternational ? "100% en línea con Lemon Squeezy, en dólares, con tarjeta internacional." : "100% en línea con Transbank Oneclick: tarjetas de crédito o débito."}
 
 FAQ — SOPORTE
 
@@ -372,7 +376,7 @@ function appDownloadStoreFallbackReply(audience: WhatsAppCommercialAudience): st
       base +
       "Hola! En Android ya puede descargar Senior Safe desde Google Play. 🙂\n\n" +
       `• Google Play: ${SENIOR_SAFE_PLAY_STORE_URL}\n` +
-      `• Primero contrate el plan ($6.900/mes) aquí: ${SENIOR_SAFE_CHECKOUT_URL}\n` +
+      `• Primero contrate el plan (${isInternational ? `$${formatPlanPrice(PLAN.monthly)} USD/mes` : "$6.900/mes"}) aquí: ${SENIOR_SAFE_CHECKOUT_URL}\n` +
       "• Luego abra la app e inicie sesión con su correo.\n" +
       `• iPhone: aún no está en App Store; guía: ${SENIOR_SAFE_INSTALL_GUIDE_URL}\n` +
       `• Simulador antes de contratar: ${SENIOR_SAFE_SOS_SIMULATOR_URL}\n\n` +
@@ -383,7 +387,7 @@ function appDownloadStoreFallbackReply(audience: WhatsAppCommercialAudience): st
     base +
     "Hola! Senior Safe ya está en Google Play (Android). 🛡️\n\n" +
     `• Descargar: ${SENIOR_SAFE_PLAY_STORE_URL}\n` +
-    `• Contratar primero ($6.900/mes): ${SENIOR_SAFE_CHECKOUT_URL}\n` +
+    `• Contratar primero (${isInternational ? `$${formatPlanPrice(PLAN.monthly)} USD/mes` : "$6.900/mes"}): ${SENIOR_SAFE_CHECKOUT_URL}\n` +
     "• Después: instalar e iniciar sesión con el correo de la cuenta.\n" +
     `• iPhone: aún no en App Store — guía: ${SENIOR_SAFE_INSTALL_GUIDE_URL}\n` +
     `• Simulador: ${SENIOR_SAFE_SOS_SIMULATOR_URL}\n\n` +
@@ -616,12 +620,16 @@ function fallbackReply(userMessage: string, audience: WhatsAppCommercialAudience
     if (audience === "senior") {
       return (
         base +
-        "El plan cuesta $6.900 al mes, sin contrato 🙂\nPuede cancelar cuando quiera.\n¿Le gustaría que le explique el botón de emergencia o prefiere el link para contratar?"
+        (isInternational
+          ? `El plan cuesta $${formatPlanPrice(PLAN.monthly)} USD al mes, sin contrato 🙂\nPuede cancelar cuando quiera.\n¿Le gustaría que le explique el botón de emergencia o prefiere el link para contratar?`
+          : "El plan cuesta $6.900 al mes, sin contrato 🙂\nPuede cancelar cuando quiera.\n¿Le gustaría que le explique el botón de emergencia o prefiere el link para contratar?")
       );
     }
     return (
       base +
-      "Perfecto. El Plan Único cuesta $6.900 al mes o $69.000 al año (ahorras 2 meses). Pagas seguro con Oneclick en " +
+      (isInternational
+        ? `Perfecto. El Plan Único cuesta $${formatPlanPrice(PLAN.monthly)} USD al mes o $${formatPlanPrice(PLAN.yearly)} USD al año (ahorras 2 meses). Pagas seguro con Lemon Squeezy en `
+        : "Perfecto. El Plan Único cuesta $6.900 al mes o $69.000 al año (ahorras 2 meses). Pagas seguro con Oneclick en ") +
       SENIOR_SAFE_CHECKOUT_URL +
       " 💙"
     );

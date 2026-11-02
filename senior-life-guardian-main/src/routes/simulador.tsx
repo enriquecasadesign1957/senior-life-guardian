@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { isInternational } from "@/lib/market";
 import { EmergencySimulator } from "@/components/sales-demo/emergency-simulator";
 import { ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/simulador")({
   head: () => ({
     meta: [
-      { title: "Simulador S.O.S — Senior Safe Chile" },
+      { title: isInternational ? "Simulador S.O.S — Senior Safe" : "Simulador S.O.S — Senior Safe Chile" },
       {
         name: "description",
         content:

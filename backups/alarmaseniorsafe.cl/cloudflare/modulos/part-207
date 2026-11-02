@@ -1,0 +1,425 @@
+import { c as createServerRpc } from "./createServerRpc-Bn6pI9Hf.mjs";
+import { j as createServerFn } from "./createServerFn-Bu17PEW9.mjs";
+import { p as periodoSchema, a as planKeySchema, n as normalizePlanKey } from "./discount-codes-BOatiw_p.mjs";
+import { a as resolveChargeAmountForSignup, b as recordDiscountRedemption } from "./discount.functions-D1O_Tm2i.mjs";
+import { C as CONTRACT_SIGNUPS_TABLE, i as isSignupPaidAndActive } from "./signups-db-JWUtXpaW.mjs";
+import { k as getTransbankConfig, l as generateWebpayBuyOrder, m as generateWebpaySessionId, n as buildWebpayReturnUrl, o as createWebpayPlusTransaction, p as confirmWebpayPlusTransaction, j as deleteOneclickMallInscription } from "./transbank-oneclick-mall-CC5wwzFZ.mjs";
+import { s as supabaseAdmin } from "./client.server-U_pH-Evd.mjs";
+import { c as clearRenewalNoticeFlags } from "./transactional-email-html-WTtLAqil.mjs";
+import { s as sendPostPaymentInstallNotifications } from "./post-payment-install-notify-nTNOSfzd.mjs";
+import { e as ensureFirstGuardianAfterPayment } from "./first-guardian-checkout-K3kbvdWw.mjs";
+import { b as markInstallPaid } from "./install-step-sync-snfezerQ.mjs";
+
+import "./index.mjs";
+
+import { o as objectType, s as stringType, e as enumType } from "../_libs/zod.mjs";
+import "../_libs/tanstack__router-core.mjs";
+import "../_libs/tanstack__history.mjs";
+import "../_libs/cookie-es.mjs";
+import "../_libs/seroval.mjs";
+import "../_libs/unenv.mjs";
+
+
+
+import "../_libs/seroval-plugins.mjs";
+
+
+import "./createSsrRpc-D8pBWdiG.mjs";
+import "../_libs/supabase__supabase-js.mjs";
+import "../_libs/supabase__postgrest-js.mjs";
+import "../_libs/supabase__realtime-js.mjs";
+import "../_libs/supabase__phoenix.mjs";
+import "../_libs/supabase__storage-js.mjs";
+import "../_libs/iceberg-js.mjs";
+import "../_libs/supabase__auth-js.mjs";
+import "../_libs/tslib.mjs";
+import "../_libs/supabase__functions-js.mjs";
+import "./zoho-smtp-DBq11U6O.mjs";
+import "./twilio-inbound-_C02bj0d.mjs";
+import "./twilio-DNHuHEFY.mjs";
+import "./contacts-storage-DdsYD-uQ.mjs";
+import "./phone-utils-D7EH6fht.mjs";
+import "./guardians.functions-ClKIrtbt.mjs";
+import "./senior-access-auth-Bmk7iyGS.mjs";
+import "../_libs/h3-v2.mjs";
+import "../_libs/rou3.mjs";
+import "../_libs/srvx.mjs";
+
+
+
+
+function toSupabaseJson(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+const initWebpayTransaction_createServerFn_handler = createServerRpc({
+  id: "dd46ac90a05be68c498e3572c702ea9c0bd77cc517a307b88b22786e8f5b4891",
+  name: "initWebpayTransaction",
+  filename: "src/lib/webpay.functions.ts"
+}, (opts) => initWebpayTransaction.__executeServer(opts));
+const initWebpayTransaction = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  signupId: stringType().uuid(),
+  plan: planKeySchema,
+  periodo: periodoSchema
+}).parse(input)).handler(initWebpayTransaction_createServerFn_handler, async ({
+  data
+}) => {
+  const cfg = getTransbankConfig();
+  const {
+    data: signup,
+    error: signupErr
+  } = await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE).select("id,email,plan,periodo,discount_code,discount_code_id,discount_percent,list_price,payment_status").eq("id", data.signupId).maybeSingle();
+  if (signupErr) throw signupErr;
+  if (!signup) {
+    throw new Error("No encontramos tu registro de contratación. Vuelve a completar el checkout.");
+  }
+  const periodo = signup.periodo || data.periodo;
+  const plan = normalizePlanKey(signup.plan || data.plan);
+  let amount = await resolveChargeAmountForSignup(signup, plan, periodo);
+  const buyOrder = generateWebpayBuyOrder();
+  const sessionId = generateWebpaySessionId(data.signupId);
+  const returnUrl = buildWebpayReturnUrl();
+  const {
+    error: txInsertErr
+  } = await supabaseAdmin.from("webpay_transactions").insert({
+    contract_signup_id: data.signupId,
+    buy_order: buyOrder,
+    session_id: sessionId,
+    amount,
+    status: "INITIATED",
+    environment: cfg.environment
+  });
+  if (txInsertErr) {
+    console.error("[webpay] error webpay_transactions insert:", txInsertErr);
+    throw new Error(`No se pudo registrar la orden de pago: ${txInsertErr.message}`);
+  }
+  const {
+    error: signupUpdErr
+  } = await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE).update({
+    purchase_mode: "contratar",
+    payment_status: "pending",
+    subscription_status: "pending_payment",
+    webpay_buy_order: buyOrder,
+    webpay_session_id: sessionId,
+    webpay_amount: amount,
+    webpay_environment: cfg.environment
+  }).eq("id", data.signupId);
+  if (signupUpdErr) {
+    console.error("[webpay] error contract_signups update:", signupUpdErr);
+    throw new Error(`No se pudo actualizar la contratación: ${signupUpdErr.message}`);
+  }
+  const tb = await createWebpayPlusTransaction({
+    buyOrder,
+    sessionId,
+    amount,
+    returnUrl
+  });
+  const {
+    error: txTokenErr
+  } = await supabaseAdmin.from("webpay_transactions").update({
+    token: tb.token,
+    status: "TOKEN_ISSUED",
+    raw_response: toSupabaseJson(tb.raw)
+  }).eq("buy_order", buyOrder);
+  if (txTokenErr) {
+    console.error("[webpay] error al guardar el token:", txTokenErr);
+  }
+  await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE).update({
+    webpay_token: tb.token
+  }).eq("id", data.signupId);
+  return {
+    ok: true,
+    token: tb.token,
+    url: tb.url,
+    token_ws: tb.token,
+    buyOrder: tb.buyOrder,
+    amount: tb.amount,
+    environment: cfg.environment,
+    returnUrl
+  };
+});
+const confirmWebpayTransaction_createServerFn_handler = createServerRpc({
+  id: "30b4e1248a8269f53655ec205add83efa511f6c0264e59a0d741975db00cd817",
+  name: "confirmWebpayTransaction",
+  filename: "src/lib/webpay.functions.ts"
+}, (opts) => confirmWebpayTransaction.__executeServer(opts));
+const confirmWebpayTransaction = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  token: stringType().min(8).max(128)
+}).parse(input)).handler(confirmWebpayTransaction_createServerFn_handler, async ({
+  data
+}) => {
+  const result = await confirmWebpayPlusTransaction(data.token);
+  const {
+    data: tx
+  } = await supabaseAdmin.from("webpay_transactions").select("id, contract_signup_id, buy_order").eq("token", data.token).maybeSingle();
+  await supabaseAdmin.from("webpay_transactions").update({
+    status: result.ok ? "AUTHORIZED" : result.status || "REJECTED",
+    response_code: result.responseCode,
+    authorization_code: result.authorizationCode,
+    card_last4: result.cardLast4,
+    payment_type_code: typeof result.raw.payment_type_code === "string" ? result.raw.payment_type_code : null,
+    raw_response: toSupabaseJson(result.raw)
+  }).eq("token", data.token);
+  let installNotify;
+  if (tx?.contract_signup_id) {
+    const {
+      data: signup
+    } = await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE).select("periodo,payment_status,subscription_status,discount_code_id,webpay_authorization_code").eq("id", tx.contract_signup_id).maybeSingle();
+    const alreadyActive = signup ? isSignupPaidAndActive(signup) : false;
+    if (alreadyActive) {
+      await ensureFirstGuardianAfterPayment(tx.contract_signup_id).catch((e) => {
+        console.error("[webpay] first guardian (alreadyActive):", e);
+      });
+      return {
+        ok: true,
+        status: result.status || "AUTHORIZED",
+        responseCode: result.responseCode ?? signup?.webpay_response_code ?? 0,
+        authorizationCode: result.authorizationCode ?? signup?.webpay_authorization_code ?? null,
+        amount: result.amount,
+        buyOrder: result.buyOrder ?? tx?.buy_order ?? null,
+        cardLast4: result.cardLast4,
+        signupId: tx.contract_signup_id,
+        alreadyConfirmed: true
+      };
+    }
+    if (result.ok) {
+      await recordDiscountRedemption({
+        discount_code_id: signup?.discount_code_id ?? null,
+        payment_status: signup?.payment_status ?? null
+      });
+      const periodo = signup?.periodo || "mensual";
+      const now = /* @__PURE__ */ new Date();
+      const renewal = new Date(now);
+      if (periodo === "anual") renewal.setFullYear(renewal.getFullYear() + 1);
+      else renewal.setMonth(renewal.getMonth() + 1);
+      await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE).update({
+        payment_status: "paid",
+        subscription_status: "active",
+        renewal_date: renewal.toISOString(),
+        last_payment_at: now.toISOString(),
+        webpay_authorization_code: result.authorizationCode,
+        webpay_response_code: result.responseCode
+      }).eq("id", tx.contract_signup_id);
+      await markInstallPaid(tx.contract_signup_id).catch((e) => {
+        console.warn("[webpay] install_step paid", e);
+      });
+      await clearRenewalNoticeFlags(tx.contract_signup_id);
+      await ensureFirstGuardianAfterPayment(tx.contract_signup_id).catch((e) => {
+        console.error("[webpay] first guardian:", e);
+      });
+      installNotify = await sendPostPaymentInstallNotifications(tx.contract_signup_id).catch((e) => {
+        console.error("[webpay] install notify:", e);
+        return {
+          sent: false,
+          emailSent: false,
+          whatsappSent: false,
+          smsSent: false,
+          skippedReason: "error"
+        };
+      });
+    } else {
+      await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE).update({
+        payment_status: "failed",
+        subscription_status: "payment_failed",
+        webpay_response_code: result.responseCode
+      }).eq("id", tx.contract_signup_id);
+    }
+  }
+  return {
+    ok: result.ok,
+    status: result.status,
+    responseCode: result.responseCode,
+    authorizationCode: result.authorizationCode,
+    amount: result.amount,
+    buyOrder: result.buyOrder ?? tx?.buy_order ?? null,
+    cardLast4: result.cardLast4,
+    signupId: tx?.contract_signup_id ?? null,
+    installNotify
+  };
+});
+const mockApproveWebpay_createServerFn_handler = createServerRpc({
+  id: "3d83c7437c1ae898c4413cae576a77123c8756291e4eb33d1700f77b23f26cb5",
+  name: "mockApproveWebpay",
+  filename: "src/lib/webpay.functions.ts"
+}, (opts) => mockApproveWebpay.__executeServer(opts));
+const mockApproveWebpay = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  signupId: stringType().uuid().optional(),
+  token: stringType().min(4).max(128).optional()
+}).parse(input)).handler(mockApproveWebpay_createServerFn_handler, async ({
+  data
+}) => {
+  const cfg = getTransbankConfig();
+  if (cfg.environment === "production") {
+    throw new Error("Mock approval no está disponible en producción.");
+  }
+  if (!data.signupId && !data.token) {
+    throw new Error("Se requiere signupId o token.");
+  }
+  let tx = null;
+  if (data.token) {
+    const {
+      data: row
+    } = await supabaseAdmin.from("webpay_transactions").select("id, contract_signup_id, buy_order, amount").eq("token", data.token).maybeSingle();
+    tx = row ?? null;
+  }
+  if (!tx && data.signupId) {
+    const {
+      data: row
+    } = await supabaseAdmin.from("webpay_transactions").select("id, contract_signup_id, buy_order, amount").eq("contract_signup_id", data.signupId).order("created_at", {
+      ascending: false
+    }).limit(1).maybeSingle();
+    tx = row ?? null;
+  }
+  const signupId = data.signupId ?? tx?.contract_signup_id ?? null;
+  if (!signupId) throw new Error("No se encontró la suscripción a aprobar.");
+  const authCode = `MOCK${Date.now().toString().slice(-6)}`;
+  const buyOrder = tx?.buy_order ?? generateWebpayBuyOrder();
+  if (tx?.id) {
+    await supabaseAdmin.from("webpay_transactions").update({
+      status: "AUTHORIZED",
+      response_code: 0,
+      authorization_code: authCode,
+      card_last4: "6623",
+      payment_type_code: "VN",
+      raw_response: {
+        mock: true,
+        approved_at: (/* @__PURE__ */ new Date()).toISOString()
+      }
+    }).eq("id", tx.id);
+  } else {
+    await supabaseAdmin.from("webpay_transactions").insert({
+      contract_signup_id: signupId,
+      buy_order: buyOrder,
+      amount: 0,
+      status: "AUTHORIZED",
+      environment: cfg.environment,
+      response_code: 0,
+      authorization_code: authCode,
+      card_last4: "6623",
+      payment_type_code: "VN",
+      raw_response: {
+        mock: true,
+        approved_at: (/* @__PURE__ */ new Date()).toISOString()
+      }
+    });
+  }
+  const {
+    data: signup
+  } = await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE).select("periodo").eq("id", signupId).maybeSingle();
+  const periodo = signup?.periodo || "mensual";
+  const now = /* @__PURE__ */ new Date();
+  const renewal = new Date(now);
+  if (periodo === "anual") renewal.setFullYear(renewal.getFullYear() + 1);
+  else renewal.setMonth(renewal.getMonth() + 1);
+  await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE).update({
+    payment_status: "paid",
+    subscription_status: "active",
+    renewal_date: renewal.toISOString(),
+    last_payment_at: now.toISOString(),
+    webpay_authorization_code: authCode,
+    webpay_response_code: 0
+  }).eq("id", signupId);
+  await clearRenewalNoticeFlags(signupId);
+  await ensureFirstGuardianAfterPayment(signupId).catch((e) => {
+    console.error("[webpay/mock] first guardian:", e);
+  });
+  const installNotify = await sendPostPaymentInstallNotifications(signupId).catch((e) => {
+    console.error("[webpay/mock] install notify:", e);
+    return {
+      sent: false,
+      emailSent: false,
+      whatsappSent: false,
+      smsSent: false,
+      skippedReason: "error"
+    };
+  });
+  return {
+    ok: true,
+    mock: true,
+    status: "AUTHORIZED",
+    authorizationCode: authCode,
+    buyOrder,
+    signupId,
+    installNotify
+  };
+});
+const activateSubscription_createServerFn_handler = createServerRpc({
+  id: "b3bd8a8169294987fd3f3dd9e5528b7d6d11ebfdeba8937c444f9613d6a27cf5",
+  name: "activateSubscription",
+  filename: "src/lib/webpay.functions.ts"
+}, (opts) => activateSubscription.__executeServer(opts));
+const activateSubscription = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  signupId: stringType().uuid(),
+  periodo: enumType(["mensual", "anual"]),
+  authorizationCode: stringType().max(64).optional()
+}).parse(input)).handler(activateSubscription_createServerFn_handler, async ({
+  data
+}) => {
+  const now = /* @__PURE__ */ new Date();
+  const renewal = new Date(now);
+  if (data.periodo === "anual") renewal.setFullYear(renewal.getFullYear() + 1);
+  else renewal.setMonth(renewal.getMonth() + 1);
+  const {
+    error
+  } = await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE).update({
+    payment_status: "paid",
+    subscription_status: "active",
+    renewal_date: renewal.toISOString(),
+    last_payment_at: now.toISOString(),
+    webpay_authorization_code: data.authorizationCode ?? null
+  }).eq("id", data.signupId);
+  if (error) throw error;
+  await clearRenewalNoticeFlags(data.signupId);
+  return {
+    ok: true,
+    renewalDate: renewal.toISOString()
+  };
+});
+const cancelSubscription_createServerFn_handler = createServerRpc({
+  id: "2220038786157b3a399966ebefb2c64d16c76a2ce1601e8a35bd4573f9d67886",
+  name: "cancelSubscription",
+  filename: "src/lib/webpay.functions.ts"
+}, (opts) => cancelSubscription.__executeServer(opts));
+const cancelSubscription = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  signupId: stringType().uuid()
+}).parse(input)).handler(cancelSubscription_createServerFn_handler, async ({
+  data
+}) => {
+  const {
+    data: signup
+  } = await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE).select("oneclick_username,oneclick_tbk_user,payment_provider").eq("id", data.signupId).maybeSingle();
+  if (signup?.payment_provider === "oneclick_mall" && signup.oneclick_username && signup.oneclick_tbk_user) {
+    try {
+      await deleteOneclickMallInscription(signup.oneclick_tbk_user, signup.oneclick_username);
+    } catch (err) {
+      console.error("[oneclick] delete inscription on cancel failed", err);
+    }
+  }
+  const {
+    error
+  } = await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE).update({
+    subscription_status: "cancelled",
+    oneclick_inscription_status: "deleted",
+    oneclick_tbk_user: null
+  }).eq("id", data.signupId);
+  if (error) throw error;
+  return {
+    ok: true
+  };
+});
+export {
+  activateSubscription_createServerFn_handler,
+  cancelSubscription_createServerFn_handler,
+  confirmWebpayTransaction_createServerFn_handler,
+  initWebpayTransaction_createServerFn_handler,
+  mockApproveWebpay_createServerFn_handler
+};

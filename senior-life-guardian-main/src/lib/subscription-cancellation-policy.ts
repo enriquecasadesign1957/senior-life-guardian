@@ -1,4 +1,5 @@
 /** Política de cancelación y reembolsos — Senior Safe (texto legal acordado). */
+import { SUPPORT_EMAIL } from "@/lib/market";
 
 export const CANCELLATION_POLICY_GENERAL =
   "En caso de cancelación de los planes no existe reembolso proporcional.";
@@ -24,7 +25,7 @@ export const CANCELLATION_POLICY_FAQ_ANSWER =
   CANCELLATION_POLICY_MONTHLY +
   " " +
   CANCELLATION_POLICY_ANNUAL +
-  " Para dar de baja escribe a hola@alarmaseniorsafe.cl.";
+  ` Para dar de baja escribe a ${SUPPORT_EMAIL}.`;
 
 /** Enlace al apartado legal de cancelación (Términos y Condiciones). */
 export const SENIOR_SAFE_TERMS_CANCELLATION_URL = "https://alarmaseniorsafe.cl/terminos#cancelacion";

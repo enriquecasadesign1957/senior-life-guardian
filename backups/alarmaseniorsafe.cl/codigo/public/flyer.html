@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flyer — Senior Safe</title>
+  <meta property="og:title" content="Senior Safe — Protección familiar 24/7" />
+  <meta property="og:description" content="Alertas WhatsApp, SMS y llamada. GPS y detección de caídas. Desde $6.900/mes." />
+  <meta property="og:url" content="https://alarmaseniorsafe.cl/flyer.html" />
+  <style>
+    :root {
+      --petrol-deep: #0d4f5c;
+      --petrol: #0f6b7c;
+      --green: #16a34a;
+      --red: #dc2626;
+      --ink: #0f172a;
+      --muted: #475569;
+      --line: #e2e8f0;
+      --soft: #f0f7f9;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      color: var(--ink);
+      background: #94a3b8;
+      line-height: 1.35;
+    }
+
+    img { display: block; max-width: 100%; }
+
+    .flyer {
+      width: 210mm;
+      height: 297mm;
+      margin: 10px auto;
+      background: #fff;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      box-shadow: 0 12px 40px rgba(15, 23, 42, 0.18);
+    }
+
+    .hero {
+      position: relative;
+      background: linear-gradient(135deg, var(--petrol-deep), var(--petrol));
+      color: #fff;
+      padding: 10mm 12mm 8mm;
+    }
+
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      border-radius: 12px;
+      padding: 6px 10px;
+    }
+    .logo img { height: 32px; width: auto; }
+    .logo span { font-weight: 900; color: var(--petrol-deep); font-size: 15px; }
+
+    .tag {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+    }
+
+    .hero h1 {
+      font-size: 26px;
+      line-height: 1.05;
+      font-weight: 900;
+      max-width: 95%;
+    }
+    .hero h1 em { font-style: normal; color: #ffd66b; }
+
+    .hero-sub {
+      margin-top: 6px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.92);
+      max-width: 92%;
+    }
+
+    .price-pill {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-top: 10px;
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 12px;
+      padding: 8px 12px;
+    }
+    .price-pill .amount { font-size: 28px; font-weight: 900; }
+    .price-pill .amount small { font-size: 13px; font-weight: 700; opacity: 0.9; }
+    .price-pill .note { font-size: 10px; opacity: 0.85; }
+
+    .main {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 0;
+      min-height: 0;
+    }
+
+    .content {
+      padding: 8mm 10mm 6mm 12mm;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .feat {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 7px 8px;
+      background: var(--soft);
+    }
+    .feat strong {
+      display: block;
+      font-size: 10.5px;
+      color: var(--petrol-deep);
+      margin-bottom: 2px;
+    }
+    .feat span { font-size: 9.5px; color: var(--muted); }
+
+    .cascade {
+      border-radius: 10px;
+      border: 1px solid #fecaca;
+      background: #fff7f7;
+      padding: 8px 10px;
+    }
+    .cascade h2 {
+      font-size: 11px;
+      color: var(--red);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 5px;
+    }
+    .cascade-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      text-align: center;
+      font-size: 9px;
+      color: var(--muted);
+    }
+    .cascade-row b { display: block; color: var(--ink); font-size: 10px; }
+
+    .bullets {
+      font-size: 10px;
+      color: var(--muted);
+      padding-left: 14px;
+    }
+    .bullets li { margin-bottom: 3px; }
+
+    .photo-col {
+      background: var(--soft);
+      border-left: 1px solid var(--line);
+      display: grid;
+      grid-template-rows: 1fr auto;
+      min-height: 0;
+    }
+
+    .phone-shot {
+      padding: 8mm 8mm 4mm;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+    }
+    .phone-shot img {
+      width: 100%;
+      max-height: 155mm;
+      object-fit: contain;
+      border-radius: 16px;
+      border: 2px solid var(--line);
+      box-shadow: 0 8px 24px rgba(13, 79, 92, 0.15);
+    }
+
+    .mini-screens {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      padding: 0 8mm 8mm;
+    }
+    .mini-screens img {
+      width: 100%;
+      height: 52px;
+      object-fit: cover;
+      object-position: top;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+    }
+
+    .footer {
+      background: var(--petrol-deep);
+      color: #fff;
+      padding: 7mm 12mm;
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .footer-cta h2 { font-size: 14px; font-weight: 900; }
+    .footer-cta p { font-size: 10px; opacity: 0.88; margin-top: 2px; }
+    .footer-cta a {
+      display: inline-block;
+      margin-top: 6px;
+      background: var(--green);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 11px;
+      padding: 7px 12px;
+      border-radius: 999px;
+    }
+
+    .footer-contact { font-size: 9.5px; line-height: 1.5; opacity: 0.92; }
+    .footer-contact b { display: block; font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.7; }
+
+    .qr { text-align: center; }
+    .qr img {
+      width: 72px;
+      height: 72px;
+      background: #fff;
+      border-radius: 8px;
+      padding: 4px;
+    }
+    .qr span { display: block; font-size: 8px; margin-top: 4px; opacity: 0.85; }
+
+    .toolbar {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 99;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      font-size: 12px;
+    }
+    .toolbar button {
+      background: var(--petrol-deep);
+      color: #fff;
+      border: 0;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-right: 6px;
+    }
+    .toolbar a {
+      color: var(--petrol-deep);
+      font-weight: 700;
+      text-decoration: none;
+      font-size: 11px;
+    }
+
+    @media print {
+      body { background: #fff; }
+      .flyer { margin: 0; box-shadow: none; }
+      .no-print { display: none !important; }
+      img { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+
+    @media (max-width: 800px) {
+      .flyer {
+        width: 100%;
+        height: auto;
+        min-height: 100dvh;
+        margin: 0;
+      }
+      .main { grid-template-columns: 1fr; }
+      .photo-col { border-left: 0; border-top: 1px solid var(--line); }
+      .phone-shot img { max-height: 360px; }
+      .footer { grid-template-columns: 1fr; text-align: center; }
+      .qr { justify-self: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="toolbar no-print">
+    <button type="button" onclick="window.print()">PDF / Imprimir</button>
+    <a href="/brochure.html">Ver brochure completo</a>
+  </div>
+
+  <article class="flyer">
+    <header class="hero">
+      <div class="hero-top">
+        <div class="logo">
+          <img src="/brochure/logo-senior-safe.png" alt="Senior Safe" />
+          <span>Senior Safe</span>
+        </div>
+        <span class="tag">Chile · Plan Único</span>
+      </div>
+      <h1>Protección familiar <em>24/7</em> en tu bolsillo</h1>
+      <p class="hero-sub">
+        Botón de emergencia, GPS en vivo y detección de caídas.
+        Tu familia recibe WhatsApp, SMS y llamada automática.
+      </p>
+      <div class="price-pill">
+        <span class="amount">$6.900<small>/mes</small></span>
+        <span class="note">Sin permanencia · Webpay Plus</span>
+      </div>
+    </header>
+
+    <div class="main">
+      <section class="content">
+        <div class="features">
+          <div class="feat"><strong>Botón de emergencia</strong><span>Un toque grande. Cuenta regresiva y confirmación.</span></div>
+          <div class="feat"><strong>GPS en vivo</strong><span>Ubicación exacta en cada alerta a Google Maps.</span></div>
+          <div class="feat"><strong>Detección de caídas</strong><span>Sensor del teléfono + 30 s para cancelar.</span></div>
+          <div class="feat"><strong>App instalable (WAM)</strong><span>Ícono en pantalla de inicio. Fácil para adultos mayores.</span></div>
+        </div>
+
+        <div class="cascade">
+          <h2>Alerta automática en cascada</h2>
+          <div class="cascade-row">
+            <div><b>T + 0 s</b>SMS inmediato</div>
+            <div><b>T + 10 s</b>WhatsApp + GPS</div>
+            <div><b>T + 20 s</b>Llamada si no hay respuesta</div>
+          </div>
+        </div>
+
+        <ul class="bullets">
+          <li>Hasta varios guardianes familiares conectados</li>
+          <li>Modo entrenamiento sin alertas reales</li>
+          <li>Botón «Estoy bien» para avisos informativos</li>
+          <li>Soporte prioritario · Hecho en Chile</li>
+        </ul>
+
+        <p style="font-size:9px;color:var(--muted);margin-top:auto;">
+          Senior Safe complementa, no reemplaza, servicios de emergencia oficiales (131 / 133).
+        </p>
+      </section>
+
+      <aside class="photo-col">
+        <figure class="phone-shot">
+          <img src="/brochure/emergency-button.jpg" alt="Senior Safe — botón de emergencia" />
+        </figure>
+        <div class="mini-screens" aria-hidden="true">
+          <img src="/brochure/screen-red-proteccion.png" alt="" />
+          <img src="/brochure/screen-ubicacion-gps.png" alt="" />
+          <img src="/brochure/screen-alerta-multicanal.png" alt="" />
+          <img src="/brochure/screen-modo-familiar.png" alt="" />
+        </div>
+      </aside>
+    </div>
+
+    <footer class="footer">
+      <div class="footer-cta">
+        <h2>Activa tu protección hoy</h2>
+        <p>Contrata en 2 minutos · Instala la app · Configura tu familia</p>
+        <a href="https://alarmaseniorsafe.cl/checkout?mode=contratar&plan=unico&periodo=mensual">alarmaseniorsafe.cl</a>
+      </div>
+      <div class="footer-contact">
+        <div><b>Email</b> hola@alarmaseniorsafe.cl</div>
+        <div><b>WhatsApp</b> +56 9 7140 4580</div>
+      </div>
+      <div class="qr">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https%3A%2F%2Falarmaseniorsafe.cl%2Fcheckout%3Fmode%3Dcontratar%26plan%3Dunico%26periodo%3Dmensual" alt="QR contratar Senior Safe" />
+        <span>Escanea y contrata</span>
+      </div>
+    </footer>
+  </article>
+
+</body>
+</html>

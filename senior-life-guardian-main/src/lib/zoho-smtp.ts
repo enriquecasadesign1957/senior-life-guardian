@@ -2,6 +2,7 @@
  * Envío de correo vía SMTP de Zoho Mail (sin dependencias externas).
  */
 import tls from "node:tls";
+import { SITE_ORIGIN } from "@/lib/market";
 import { SENIOR_SAFE_SUPPORT_EMAIL } from "@/lib/senior-safe-ai";
 
 export const ZOHO_SUPPORT_AUDIT_BCC = "enriquecasadesign@gmail.com";
@@ -266,7 +267,7 @@ export function wrapSupportHtmlReply(bodyText: string, customerName?: string): s
         ${paragraphs}
         <p style="margin:20px 0 0;font-size:14px;color:#64748b;">Atentamente,<br/><strong style="color:#0f766e;">Equipo de Soporte — Senior Safe</strong><br/>
         <a href="mailto:${SENIOR_SAFE_SUPPORT_EMAIL}" style="color:#0f766e;">${SENIOR_SAFE_SUPPORT_EMAIL}</a> ·
-        <a href="https://alarmaseniorsafe.cl" style="color:#0f766e;">alarmaseniorsafe.cl</a></p>
+        <a href="${SITE_ORIGIN}" style="color:#0f766e;">${SITE_ORIGIN.replace("https://", "")}</a></p>
       </td>
     </tr>
     <tr>

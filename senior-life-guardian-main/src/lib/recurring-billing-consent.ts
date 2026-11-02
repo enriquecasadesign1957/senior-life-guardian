@@ -1,9 +1,10 @@
+import { SUPPORT_EMAIL } from "@/lib/market";
 import { SENIOR_SAFE_TERMS_CANCELLATION_URL } from "@/lib/subscription-cancellation-policy";
 
 /** Versión del texto de autorización (auditoría). */
 export const RECURRING_BILLING_CONSENT_VERSION = "2026-06";
 
-export const RECURRING_BILLING_SUPPORT_EMAIL = "hola@alarmaseniorsafe.cl";
+export const RECURRING_BILLING_SUPPORT_EMAIL = SUPPORT_EMAIL;
 
 export const RECURRING_BILLING_CONSENT_CHECKBOX_LABEL =
   "Opcional: autorizo los cargos recurrentes automáticos en mi tarjeta inscrita, según el detalle indicado abajo.";

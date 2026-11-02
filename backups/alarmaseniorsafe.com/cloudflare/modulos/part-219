@@ -1,0 +1,96 @@
+import { r as reactExports, j as jsxRuntimeExports } from "../_libs/react.mjs";
+import { e as buildLegacyAckAlertUrl } from "./ack-alert-hZc0eMx8.mjs";
+import { G as Route$o } from "./router-FK5WbXyp.mjs";
+import "./index.mjs";
+
+import "../_libs/sonner.mjs";
+
+
+import { L as LoaderCircle } from "../_libs/lucide-react.mjs";
+
+import "./client.server-U_pH-Evd.mjs";
+import "../_libs/supabase__supabase-js.mjs";
+import "../_libs/supabase__postgrest-js.mjs";
+import "../_libs/supabase__realtime-js.mjs";
+import "../_libs/unenv.mjs";
+
+
+import "../_libs/supabase__phoenix.mjs";
+import "../_libs/supabase__storage-js.mjs";
+import "../_libs/iceberg-js.mjs";
+import "../_libs/supabase__auth-js.mjs";
+import "../_libs/tslib.mjs";
+import "../_libs/supabase__functions-js.mjs";
+import "./twilio-DNHuHEFY.mjs";
+import "../_libs/tanstack__query-core.mjs";
+import "../_libs/tanstack__react-query.mjs";
+import "../_libs/tanstack__react-router.mjs";
+import "../_libs/tanstack__router-core.mjs";
+import "../_libs/tanstack__history.mjs";
+import "../_libs/cookie-es.mjs";
+import "../_libs/seroval.mjs";
+import "../_libs/seroval-plugins.mjs";
+
+
+import "../_libs/react-dom.mjs";
+import "../_libs/isbot.mjs";
+import "./plans-BJeLFmLc.mjs";
+import "../_libs/zod.mjs";
+import "./maps-BhXedqc-.mjs";
+import "./transbank-oneclick-mall-CC5wwzFZ.mjs";
+import "../_libs/h3-v2.mjs";
+import "../_libs/rou3.mjs";
+import "../_libs/srvx.mjs";
+
+
+
+
+import "./zoho-smtp-lj0bCuK6.mjs";
+import "./install-step-sync-65QKjQIB.mjs";
+import "./signups-db-JWUtXpaW.mjs";
+import "./twilio-inbound-_C02bj0d.mjs";
+import "./account-lookup-CBKDZ0Aw.mjs";
+import "./contacts-storage-DdsYD-uQ.mjs";
+import "./phone-utils-D7EH6fht.mjs";
+import "./senior-access-auth-Bmk7iyGS.mjs";
+import "./discount-codes-BbIma2Cq.mjs";
+import "./discount.functions-CbzrjeJP.mjs";
+import "./createSsrRpc-14pD3De2.mjs";
+import "./createServerFn-CqTdkD5n.mjs";
+import "./whatsapp-inbox-CZiWC44X.mjs";
+import "./admin-auth-5OIH6Qjw.mjs";
+import "./post-payment-install-notify-6plkg_BS.mjs";
+import "./transactional-email-html-C_kx3NhX.mjs";
+import "./emergency-cascade-continuation-BhQV3eMZ.mjs";
+import "./pin-reset-B5nhyHPX.mjs";
+import "./subscription-renewal-CVyJ9Wsj.mjs";
+import "./oneclick-renewal-charge-XKyXWH2D.mjs";
+import "../_libs/react-email__render.mjs";
+import "../_libs/prettier.mjs";
+import "../_libs/deepmerge.mjs";
+import "../_libs/react-email__html.mjs";
+import "../_libs/react-email__head.mjs";
+import "../_libs/react-email__preview.mjs";
+import "../_libs/react-email__body.mjs";
+import "../_libs/react-email__container.mjs";
+import "../_libs/react-email__section.mjs";
+import "../_libs/react-email__heading.mjs";
+import "../_libs/react-email__text.mjs";
+import "../_libs/react-email__button.mjs";
+import "../_libs/react-email__link.mjs";
+import "../_libs/react-email__hr.mjs";
+function AckRedirectPage() {
+  const {
+    token
+  } = Route$o.useParams();
+  reactExports.useEffect(() => {
+    window.location.replace(buildLegacyAckAlertUrl(token));
+  }, [token]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-h-dvh flex flex-col items-center justify-center bg-slate-50 p-6 text-center", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-12 h-12 animate-spin text-primary mb-4" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground", children: "Confirmando alerta…" })
+  ] });
+}
+export {
+  AckRedirectPage as component
+};

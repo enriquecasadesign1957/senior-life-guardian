@@ -1,0 +1,312 @@
+import { r as reactExports, j as jsxRuntimeExports } from "../_libs/react.mjs";
+import { o as Route$R, p as logOneclickToken, t as trackGoogleAdsSubscriptionConversion } from "./router-FK5WbXyp.mjs";
+import { N as Navigate, L as Link } from "../_libs/tanstack__react-router.mjs";
+import { u as useServerFn } from "./useServerFn-DL2oePlL.mjs";
+import { S as SiteHeader, a as SiteFooter } from "./site-layout-BSSgEBzk.mjs";
+import { f as finishOneclickCheckout } from "./oneclick.functions-B52Y5-ku.mjs";
+import { p as persistSignupHandoff, a as markRequiresPwaInstall } from "./post-payment-BtVMraP6.mjs";
+import { W as WhatsAppActivarCta } from "./whatsapp-activar-cta-CjTD6kty.mjs";
+import { I as InstallNotifyBanner } from "./install-notify-banner-CdM3Di4q.mjs";
+import "./index.mjs";
+
+import "../_libs/sonner.mjs";
+
+
+import { L as LoaderCircle, ac as CircleX, b as MessageCircle, C as CircleCheck, c as ArrowRight } from "../_libs/lucide-react.mjs";
+
+import "../_libs/tanstack__query-core.mjs";
+import "../_libs/tanstack__react-query.mjs";
+import "../_libs/tanstack__router-core.mjs";
+import "../_libs/tanstack__history.mjs";
+import "../_libs/cookie-es.mjs";
+import "../_libs/seroval.mjs";
+import "../_libs/unenv.mjs";
+
+
+import "../_libs/seroval-plugins.mjs";
+
+
+import "./plans-BJeLFmLc.mjs";
+import "../_libs/zod.mjs";
+import "./maps-BhXedqc-.mjs";
+import "./transbank-oneclick-mall-CC5wwzFZ.mjs";
+import "../_libs/h3-v2.mjs";
+import "../_libs/rou3.mjs";
+import "../_libs/srvx.mjs";
+
+
+
+
+import "./ack-alert-hZc0eMx8.mjs";
+import "./client.server-U_pH-Evd.mjs";
+import "../_libs/supabase__supabase-js.mjs";
+import "../_libs/supabase__postgrest-js.mjs";
+import "../_libs/supabase__realtime-js.mjs";
+import "../_libs/supabase__phoenix.mjs";
+import "../_libs/supabase__storage-js.mjs";
+import "../_libs/iceberg-js.mjs";
+import "../_libs/supabase__auth-js.mjs";
+import "../_libs/tslib.mjs";
+import "../_libs/supabase__functions-js.mjs";
+import "./twilio-DNHuHEFY.mjs";
+import "./zoho-smtp-lj0bCuK6.mjs";
+import "./install-step-sync-65QKjQIB.mjs";
+import "./signups-db-JWUtXpaW.mjs";
+import "./twilio-inbound-_C02bj0d.mjs";
+import "./account-lookup-CBKDZ0Aw.mjs";
+import "./contacts-storage-DdsYD-uQ.mjs";
+import "./phone-utils-D7EH6fht.mjs";
+import "./senior-access-auth-Bmk7iyGS.mjs";
+import "./discount-codes-BbIma2Cq.mjs";
+import "./discount.functions-CbzrjeJP.mjs";
+import "./createSsrRpc-14pD3De2.mjs";
+import "./createServerFn-CqTdkD5n.mjs";
+import "./whatsapp-inbox-CZiWC44X.mjs";
+import "./admin-auth-5OIH6Qjw.mjs";
+import "./post-payment-install-notify-6plkg_BS.mjs";
+import "./transactional-email-html-C_kx3NhX.mjs";
+import "./emergency-cascade-continuation-BhQV3eMZ.mjs";
+import "./pin-reset-B5nhyHPX.mjs";
+import "./subscription-renewal-CVyJ9Wsj.mjs";
+import "./oneclick-renewal-charge-XKyXWH2D.mjs";
+import "../_libs/react-email__render.mjs";
+import "../_libs/prettier.mjs";
+import "../_libs/deepmerge.mjs";
+import "../_libs/react-email__html.mjs";
+import "../_libs/react-email__head.mjs";
+import "../_libs/react-email__preview.mjs";
+import "../_libs/react-email__body.mjs";
+import "../_libs/react-email__container.mjs";
+import "../_libs/react-email__section.mjs";
+import "../_libs/react-email__heading.mjs";
+import "../_libs/react-email__text.mjs";
+import "../_libs/react-email__button.mjs";
+import "../_libs/react-email__link.mjs";
+import "../_libs/react-email__hr.mjs";
+import "../_libs/react-dom.mjs";
+import "../_libs/isbot.mjs";
+import "./demo-config-D1XL_8ap.mjs";
+import "./button-BC9oXVxV.mjs";
+import "../_libs/radix-ui__react-slot.mjs";
+import "../_libs/radix-ui__react-compose-refs.mjs";
+import "../_libs/class-variance-authority.mjs";
+import "../_libs/clsx.mjs";
+import "./utils-H80jjgLf.mjs";
+import "../_libs/tailwind-merge.mjs";
+const ONECLICK_VALIDATION_VOUCHER = {
+  tituloVoucher: "Comprobante Webpay Oneclick",
+  monto: "$6.900 CLP",
+  codigoAutorizacion: "1213",
+  tarjeta: "**** 6623",
+  ordenCompraMall: "SSMQFOQ95L",
+  ordenCompraTienda: "SSMQFOQ95L-1"
+};
+function mapOneclickCheckoutToVoucher(input) {
+  const amount = input.amount ?? 0;
+  return {
+    tituloVoucher: "Comprobante Webpay Oneclick",
+    monto: `$${amount.toLocaleString("es-CL")} CLP`,
+    codigoAutorizacion: input.authorizationCode?.trim() || "—",
+    tarjeta: input.cardLast4 ? `**** ${input.cardLast4}` : "—",
+    ordenCompraMall: input.mallBuyOrder?.trim() || "—",
+    ordenCompraTienda: input.storeBuyOrder?.trim() || "—"
+  };
+}
+const DEEP = "var(--brand-petrol-deep)";
+const GREEN = "#16a34a";
+function readSignupIdFromSession() {
+  try {
+    const raw = sessionStorage.getItem("seniorsafe_user");
+    if (!raw) return null;
+    return JSON.parse(raw)?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+const VOUCHER_ROWS = [{
+  key: "monto",
+  label: "Monto"
+}, {
+  key: "codigoAutorizacion",
+  label: "Código de autorización"
+}, {
+  key: "tarjeta",
+  label: "Tarjeta"
+}, {
+  key: "ordenCompraMall",
+  label: "Orden de Compra Mall (Padre)"
+}, {
+  key: "ordenCompraTienda",
+  label: "Orden de Compra Tienda (Hija)"
+}];
+function OneclickSuccessView({
+  voucher,
+  signupId,
+  isValidationPreview,
+  installNotify
+}) {
+  reactExports.useEffect(() => {
+    if (isValidationPreview) return;
+    const transactionId = String(voucher.ordenCompraMall || voucher.ordenCompraTienda || voucher.codigoAutorizacion || "").trim();
+    if (!transactionId || !signupId) return;
+    const rawMonto = String(voucher.monto ?? "").replace(/[^\d]/g, "");
+    const value = rawMonto ? Number(rawMonto) : null;
+    trackGoogleAdsSubscriptionConversion({
+      value: value && Number.isFinite(value) ? value : null,
+      currency: "CLP",
+      transactionId,
+      signupId
+    });
+  }, [isValidationPreview, voucher.monto, voucher.ordenCompraMall, voucher.ordenCompraTienda, voucher.codigoAutorizacion, signupId]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-h-screen flex flex-col bg-background text-foreground antialiased", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(SiteHeader, {}),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("main", { className: "flex-1 flex items-center justify-center px-5 py-12 md:py-16", style: {
+      background: "var(--gradient-soft)"
+    }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-full max-w-md", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-card border border-border rounded-3xl shadow-lg overflow-hidden", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "px-6 pt-8 pb-6 text-center border-b border-border bg-white", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-14 h-14 mx-auto rounded-full flex items-center justify-center mb-4", style: {
+          background: "color-mix(in oklab, #16a34a 14%, white)"
+        }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { className: "w-8 h-8", style: {
+          color: GREEN
+        } }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-xl md:text-2xl font-bold text-foreground tracking-tight", children: "¡Pago confirmado!" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground leading-relaxed", children: "Tu suscripción Senior Safe está activa. Instala la app en el celular del titular de la cuenta (también enviamos el enlace por correo y WhatsApp)." })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "px-6 pt-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(InstallNotifyBanner, { notify: installNotify }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "px-6 py-6", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "rounded-2xl bg-muted/60 border border-border p-4 space-y-3 text-sm", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-center text-xs font-bold uppercase tracking-wide text-foreground pb-1 border-b border-border/80", children: voucher.tituloVoucher }),
+          VOUCHER_ROWS.map(({
+            key,
+            label
+          }) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between gap-4 items-start", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground shrink-0", children: label }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-semibold text-foreground font-mono text-xs text-right break-all", children: voucher[key] })
+          ] }, key))
+        ] }),
+        isValidationPreview && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-3 text-[11px] text-center text-muted-foreground", children: "Vista de validación Transbank · datos de prueba integración" })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "px-6 pb-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(WhatsAppActivarCta, { compact: true }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "px-6 pb-8", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Link, { to: "/instalar-app", search: {
+        pago: "ok",
+        ...signupId ? {
+          ss: signupId
+        } : {}
+      }, className: "flex items-center justify-center gap-2 w-full py-4 rounded-2xl text-white font-bold text-base shadow-lg transition hover:opacity-95", style: {
+        background: DEEP
+      }, children: [
+        "Continuar a la activación",
+        /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowRight, { className: "w-5 h-5" })
+      ] }) })
+    ] }) }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(SiteFooter, {})
+  ] });
+}
+function OneclickReturnPage() {
+  const search = Route$R.useSearch();
+  const finish = useServerFn(finishOneclickCheckout);
+  const isValidationPreview = search.validacion_voucher === "1";
+  const [pageState, setPageState] = reactExports.useState(isValidationPreview ? "success" : "loading");
+  const [voucher, setVoucher] = reactExports.useState(isValidationPreview ? {
+    ...ONECLICK_VALIDATION_VOUCHER
+  } : null);
+  const [signupId, setSignupId] = reactExports.useState(() => isValidationPreview ? readSignupIdFromSession() : null);
+  const [installNotify, setInstallNotify] = reactExports.useState(null);
+  reactExports.useEffect(() => {
+    if (isValidationPreview) return;
+    let cancelled = false;
+    (async () => {
+      if (!search.TBK_TOKEN) {
+        if (!cancelled) setPageState("failed");
+        return;
+      }
+      logOneclickToken(search.TBK_TOKEN);
+      try {
+        const result = await finish({
+          data: {
+            token: search.TBK_TOKEN
+          }
+        });
+        if (cancelled) return;
+        if (result.ok) {
+          setVoucher(mapOneclickCheckoutToVoucher({
+            amount: result.amount,
+            authorizationCode: result.authorizationCode,
+            mallBuyOrder: result.mallBuyOrder,
+            storeBuyOrder: result.storeBuyOrder,
+            cardLast4: result.cardLast4
+          }));
+          const resolvedSignupId = result.signupId ?? readSignupIdFromSession();
+          if (resolvedSignupId) {
+            persistSignupHandoff(resolvedSignupId, {
+              purchase_mode: "contratar",
+              subscription_status: "active"
+            });
+          }
+          setSignupId(resolvedSignupId);
+          setInstallNotify(result.installNotify ?? null);
+          markRequiresPwaInstall();
+          setPageState("success");
+          return;
+        }
+        setPageState("failed");
+      } catch (error) {
+        console.error("[oneclick/retorno] finish error", error);
+        if (!cancelled) setPageState("failed");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isValidationPreview, search.TBK_TOKEN, finish]);
+  const resolvedVoucher = reactExports.useMemo(() => {
+    if (isValidationPreview) return {
+      ...ONECLICK_VALIDATION_VOUCHER
+    };
+    return voucher;
+  }, [isValidationPreview, voucher]);
+  if (isValidationPreview && true) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Navigate, { to: "/", replace: true });
+  }
+  if (pageState === "success" && resolvedVoucher) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(OneclickSuccessView, { voucher: resolvedVoucher, signupId, isValidationPreview, installNotify });
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-h-screen flex flex-col bg-background", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(SiteHeader, {}),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("main", { className: "flex-1", style: {
+      background: "var(--gradient-soft)"
+    }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "max-w-xl mx-auto px-6 py-16 md:py-24", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-card border border-border rounded-3xl p-8 md:p-10 shadow-sm text-center", children: [
+      pageState === "loading" && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-12 h-12 mx-auto animate-spin", style: {
+          color: DEEP
+        } }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "mt-6 text-2xl font-bold text-foreground", children: "Confirmando tarjeta y primer pago…" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-muted-foreground", children: "Procesando inscripción Oneclick Mall con Transbank. No cierres esta ventana." })
+      ] }),
+      pageState === "failed" && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-16 h-16 mx-auto rounded-full flex items-center justify-center", style: {
+          background: "color-mix(in oklab, #dc2626 12%, white)"
+        }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(CircleX, { className: "w-10 h-10 text-destructive" }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "mt-6 text-3xl font-bold text-foreground", children: "No se pudo inscribir la tarjeta o cobrar" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-3 text-muted-foreground", children: "Tu tarjeta no fue inscrita o el cobro fue rechazado. Puedes intentarlo nuevamente." }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-7 grid sm:grid-cols-2 gap-3", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/checkout", search: {
+            mode: "contratar"
+          }, className: "inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full text-white font-bold shadow-xl", style: {
+            background: DEEP
+          }, children: "Reintentar" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("a", { href: "https://wa.me/56971404580?text=Hola%20Senior%20Safe%2C%20tuve%20un%20problema%20con%20mi%20pago", target: "_blank", rel: "noopener noreferrer", className: "inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full bg-card border-2 border-border font-bold text-foreground", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(MessageCircle, { className: "w-5 h-5", style: {
+              color: "#25D366"
+            } }),
+            " WhatsApp"
+          ] })
+        ] })
+      ] })
+    ] }) }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(SiteFooter, {})
+  ] });
+}
+export {
+  OneclickReturnPage as component
+};
