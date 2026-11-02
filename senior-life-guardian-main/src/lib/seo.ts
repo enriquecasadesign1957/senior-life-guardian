@@ -1,12 +1,12 @@
 import { PLAN, formatPlanPrice } from "@/lib/plans";
 import { PRODUCTION_SITE_URL, SENIOR_SAFE_PLAY_STORE_URL, SENIOR_SAFE_ANDROID_PACKAGE_ID } from "@/lib/app-url";
-import { isInternational } from "@/lib/market";
+import { isInternational, SUPPORT_EMAIL } from "@/lib/market";
 
 export const SEO_SITE_NAME = "Senior Safe";
 export const SEO_BRAND = "Alarma Senior Safe";
 export const SEO_LOCALE = isInternational ? "es_419" : "es_CL";
 export const SEO_LANGUAGE = isInternational ? "es" : "es-CL";
-export const SEO_SUPPORT_EMAIL = "hola@alarmaseniorsafe.cl";
+export const SEO_SUPPORT_EMAIL = SUPPORT_EMAIL;
 const SEO_PRICE_CURRENCY = isInternational ? "USD" : "CLP";
 const SEO_AREA_NAME = isInternational ? "Latinoamérica" : "Chile";
 

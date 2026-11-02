@@ -17,3 +17,8 @@ export function lemonCheckoutUrl(periodo: "mensual" | "anual" = "mensual"): stri
 }
 
 export const paymentLabel = isInternational ? "Lemon Squeezy" : "Webpay Plus";
+
+/** Correo de contacto. .com usa el buzón administrador; Chile sigue con hola@. */
+export const SUPPORT_EMAIL = isInternational
+  ? "administrador@alarmaseniorsafe.cl"
+  : "hola@alarmaseniorsafe.cl";

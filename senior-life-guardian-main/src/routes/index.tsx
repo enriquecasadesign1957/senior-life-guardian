@@ -46,7 +46,7 @@ import {
 } from "@/lib/seo";
 import { CANCELLATION_POLICY_SUMMARY } from "@/lib/subscription-cancellation-policy";
 import { SENIOR_SAFE_PLAY_STORE_URL } from "@/lib/app-url";
-import { isInternational, paymentLabel } from "@/lib/market";
+import { isInternational, paymentLabel, SUPPORT_EMAIL } from "@/lib/market";
 
 export const Route = createFileRoute("/")({
   head: () => {
@@ -1262,7 +1262,7 @@ function Contacto() {
         </div>
         <div className="grid sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
           <ContactCard icon={MessageCircle} title="WhatsApp" value="Escríbenos ahora" href={seniorSafeWhatsAppMeUrl("Hola Senior Safe, tengo una consulta")} isExternal highlight />
-          <ContactCard icon={Mail} title="Email" value="hola@alarmaseniorsafe.cl" href="mailto:hola@alarmaseniorsafe.cl" />
+          <ContactCard icon={Mail} title="Email" value={SUPPORT_EMAIL} href={`mailto:${SUPPORT_EMAIL}`} />
         </div>
 
         <p className="text-center mt-12 text-xl md:text-2xl italic text-foreground/80 font-light">

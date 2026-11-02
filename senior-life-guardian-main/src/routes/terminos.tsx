@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { CANCELLATION_POLICY_BULLETS } from "@/lib/subscription-cancellation-policy";
-import { isInternational } from "@/lib/market";
+import { isInternational, SUPPORT_EMAIL } from "@/lib/market";
 import { buildPublicPageMeta, breadcrumbJsonLd, jsonLdHeadScript } from "@/lib/seo";
 
 export const Route = createFileRoute("/terminos")({
@@ -60,8 +60,8 @@ function Terms() {
             <h2 className="text-2xl font-bold mb-3">3. Suscripción y pagos</h2>
             <p className="text-muted-foreground leading-relaxed">
               Ofrecemos planes mensuales y anuales sin permanencia contractual. Los pagos se procesan a
-              través de {isInternational ? "Lemon Squeezy, en dólares" : "Webpay Plus"}. Puedes solicitar la baja del plan en cualquier momento escribiendo a
-              hola@alarmaseniorsafe.cl.
+              través de {isInternational ? "Lemon Squeezy, en dólares" : "Webpay Plus"}. Puedes solicitar la baja del plan en cualquier momento escribiendo a{" "}
+              {SUPPORT_EMAIL}.
             </p>
           </section>
 
@@ -104,7 +104,7 @@ function Terms() {
           <section>
             <h2 className="text-2xl font-bold mb-3">8. Contacto</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Para consultas legales o del servicio: hola@alarmaseniorsafe.cl.
+              Para consultas legales o del servicio: {SUPPORT_EMAIL}.
             </p>
           </section>
         </div>

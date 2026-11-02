@@ -1,3 +1,4 @@
+import { isInternational } from "@/lib/market";
 import { SENIOR_SAFE_SUPPORT_EMAIL } from "@/lib/senior-safe-ai";
 
 function escapeHtml(s: string): string {
@@ -68,7 +69,7 @@ export function buildBillingEmailHtml(layout: BillingEmailLayout): string {
     <tr>
       <td style="padding:16px 28px;background:#f8fafc;border-top:1px solid #e2e8f0;font-size:12px;color:#94a3b8;line-height:1.5;">
         Este es un aviso de facturación de tu suscripción Senior Safe. Si ya realizaste el pago, puedes ignorar este mensaje.<br/>
-        Consultas: <a href="mailto:${SENIOR_SAFE_SUPPORT_EMAIL}" style="color:#0f766e;">${SENIOR_SAFE_SUPPORT_EMAIL}</a> · Chile
+        Consultas: <a href="mailto:${SENIOR_SAFE_SUPPORT_EMAIL}" style="color:#0f766e;">${SENIOR_SAFE_SUPPORT_EMAIL}</a> · ${isInternational ? "Latinoamérica" : "Chile"}
       </td>
     </tr>
   </table>

@@ -8,7 +8,7 @@ import {
   SENIOR_SAFE_PLAY_STORE_URL,
   SENIOR_SAFE_SOS_SIMULATOR_URL,
 } from "@/lib/app-url";
-import { isInternational } from "@/lib/market";
+import { isInternational, SUPPORT_EMAIL } from "@/lib/market";
 import { PLAN, formatPlanPrice } from "@/lib/plans";
 import { SENIOR_SAFE_CHECKOUT_URL } from "@/lib/whatsapp-commercial-activation";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
@@ -19,7 +19,7 @@ import {
   SENIOR_SAFE_TERMS_CANCELLATION_URL,
 } from "@/lib/subscription-cancellation-policy";
 
-export const SENIOR_SAFE_SUPPORT_EMAIL = "hola@alarmaseniorsafe.cl";
+export const SENIOR_SAFE_SUPPORT_EMAIL = SUPPORT_EMAIL;
 export const SENIOR_SAFE_COMMERCIAL_EMAIL = SENIOR_SAFE_SUPPORT_EMAIL;
 export const TRIGGER_TECHNICAL_EMAIL_REDIRECT = "TRIGGER_TECHNICAL_EMAIL_REDIRECT";
 

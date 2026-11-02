@@ -5,7 +5,7 @@ import logo from "@/assets/logo-senior-safe.png";
 import { PLAN_KEY } from "@/lib/plans";
 import { isDemoMode } from "@/lib/demo/demo-config";
 import { SENIOR_SAFE_PLAY_STORE_URL } from "@/lib/app-url";
-import { SITE_ORIGIN, isInternational } from "@/lib/market";
+import { SITE_ORIGIN, SUPPORT_EMAIL, isInternational } from "@/lib/market";
 
 const defaultCheckoutSearch = {
   mode: "contratar" as const,
@@ -100,7 +100,7 @@ export function SiteFooter() {
           </p>
           <div className="mt-5 space-y-2 text-sm text-white/85">
             <div className="flex items-center gap-2"><Globe className="w-4 h-4" /><span>{SITE_ORIGIN.replace("https://", "")}</span></div>
-            <div className="flex items-center gap-2"><Mail className="w-4 h-4" /><span>hola@alarmaseniorsafe.cl</span></div>
+            <a className="flex items-center gap-2 hover:text-white" href={`mailto:${SUPPORT_EMAIL}`}><Mail className="w-4 h-4" /><span>{SUPPORT_EMAIL}</span></a>
           </div>
         </div>
         <div>

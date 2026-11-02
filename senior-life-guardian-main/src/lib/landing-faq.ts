@@ -3,7 +3,7 @@ import {
   FAQ_CANCELLATION_POSITIVE_Q,
 } from "@/components/trust-stack-chileno";
 import { PLAN, formatPlanPrice } from "@/lib/plans";
-import { isInternational, paymentLabel } from "@/lib/market";
+import { isInternational, paymentLabel, SUPPORT_EMAIL } from "@/lib/market";
 import {
   CANCELLATION_POLICY_FAQ_ANSWER,
   CANCELLATION_POLICY_SUMMARY,
@@ -93,7 +93,7 @@ export const LANDING_FAQ_SECTIONS: LandingFaqSection[] = [
       },
       {
         q: "¿Tienen atención en caso de dudas?",
-        a: "Sí. Soporte por WhatsApp o en hola@alarmaseniorsafe.cl.",
+        a: `Sí. Soporte por WhatsApp o en ${SUPPORT_EMAIL}.`,
       },
     ],
   },
