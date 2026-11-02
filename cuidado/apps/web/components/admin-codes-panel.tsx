@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+type InviteStatus = "available" | "used" | "expired";
+
 type Invite = {
   id: string;
   code: string;
@@ -10,14 +12,25 @@ type Invite = {
   usedCount: number;
   note: string | null;
   createdAt: string;
+  expiresAt: string | null;
   available: boolean;
+  status: InviteStatus;
   redeemedByEmail: string | null;
 };
+
+const DAY_OPTIONS = [1, 3, 7, 14, 30] as const;
+
+function statusLabel(status: InviteStatus): string {
+  if (status === "available") return "Libre";
+  if (status === "used") return "Usado";
+  return "Vencido";
+}
 
 export function AdminCodesPanel({ initiallyAuthed }: { initiallyAuthed: boolean }) {
   const [authed, setAuthed] = useState(initiallyAuthed);
   const [secret, setSecret] = useState("");
   const [note, setNote] = useState("");
+  const [validDays, setValidDays] = useState<(typeof DAY_OPTIONS)[number]>(7);
   const [invites, setInvites] = useState<Invite[]>([]);
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
@@ -81,7 +94,11 @@ export function AdminCodesPanel({ initiallyAuthed }: { initiallyAuthed: boolean 
       const response = await fetch("/api/admin/invites", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ note: note.trim() || undefined, seats: 5 }),
+        body: JSON.stringify({
+          note: note.trim() || undefined,
+          seats: 5,
+          validDays,
+        }),
       });
       const body = (await response.json()) as { invite?: Invite; error?: { message?: string } };
       if (!response.ok || !body.invite) {
@@ -90,7 +107,14 @@ export function AdminCodesPanel({ initiallyAuthed }: { initiallyAuthed: boolean 
       }
       setNote("");
       setInvites((prev) => [body.invite!, ...prev]);
-      setMessage(`Código listo: ${body.invite.code}`);
+      const until = body.invite.expiresAt
+        ? new Date(body.invite.expiresAt).toLocaleDateString("es-CL", { timeZone: "America/Santiago" })
+        : null;
+      setMessage(
+        until
+          ? `Código listo: ${body.invite.code} (válido hasta el ${until})`
+          : `Código listo: ${body.invite.code}`,
+      );
       await copyCode(body.invite);
     } catch {
       setMessage("No pudimos generar el código.");
@@ -125,7 +149,7 @@ export function AdminCodesPanel({ initiallyAuthed }: { initiallyAuthed: boolean 
           value={secret}
           onChange={(event) => setSecret(event.target.value)}
           className="mt-2 w-full rounded-2xl border border-stone-300 bg-paper px-4 py-3 text-base outline-none ring-pine focus:ring-2"
-          placeholder="ADMIN_SECRET"
+          placeholder="Clave"
           autoComplete="current-password"
         />
         <button
@@ -151,7 +175,7 @@ export function AdminCodesPanel({ initiallyAuthed }: { initiallyAuthed: boolean 
         <div>
           <h1 className="font-display text-3xl tracking-tight text-ink sm:text-4xl">Códigos de agencia</h1>
           <p className="mt-2 text-sm text-stone-600">
-            Genera, copia y envía. Cada código activa 5 sitios y se gasta al usarse.
+            Genera, copia y envía. Cada código activa 5 sitios, se gasta al usarse y vence si nadie lo activa a tiempo.
           </p>
         </div>
         <button
@@ -176,11 +200,26 @@ export function AdminCodesPanel({ initiallyAuthed }: { initiallyAuthed: boolean 
           placeholder="Ej. Agencia María"
           maxLength={120}
         />
+        <label className="mt-4 block text-sm text-stone-600" htmlFor="valid-days">
+          Vigencia
+        </label>
+        <select
+          id="valid-days"
+          value={validDays}
+          onChange={(event) => setValidDays(Number(event.target.value) as (typeof DAY_OPTIONS)[number])}
+          className="mt-2 w-full rounded-2xl border border-stone-300 bg-paper px-4 py-3 text-base outline-none ring-pine focus:ring-2 sm:w-auto"
+        >
+          {DAY_OPTIONS.map((days) => (
+            <option key={days} value={days}>
+              {days === 1 ? "1 día" : `${days} días`}
+            </option>
+          ))}
+        </select>
         <button
           type="button"
           onClick={createCode}
           disabled={pending}
-          className="mt-4 w-full rounded-full bg-pine px-5 py-3 text-sm font-medium text-white disabled:opacity-60 sm:w-auto"
+          className="mt-4 w-full rounded-full bg-pine px-5 py-3 text-sm font-medium text-white disabled:opacity-60 sm:ml-3 sm:w-auto"
         >
           {pending ? "Generando…" : "Generar código y copiar"}
         </button>
@@ -206,17 +245,22 @@ export function AdminCodesPanel({ initiallyAuthed }: { initiallyAuthed: boolean 
                 <p className="font-mono text-lg font-medium tracking-wide text-ink">{invite.code}</p>
                 <p className="mt-1 text-sm text-stone-600">
                   {invite.note ? `${invite.note} · ` : null}
-                  {invite.seats} sitios · {invite.available ? "Libre" : "Usado"}
+                  {invite.seats} sitios · {statusLabel(invite.status)}
                   {invite.redeemedByEmail ? ` · ${invite.redeemedByEmail}` : null}
                 </p>
                 <p className="mt-1 text-xs text-stone-500">
+                  Creado:{" "}
                   {new Date(invite.createdAt).toLocaleString("es-CL", { timeZone: "America/Santiago" })}
+                  {invite.expiresAt
+                    ? ` · Vence: ${new Date(invite.expiresAt).toLocaleString("es-CL", { timeZone: "America/Santiago" })}`
+                    : " · Sin vencimiento"}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => void copyCode(invite)}
-                className="mt-3 w-full rounded-full border border-stone-300 px-4 py-2 text-sm font-medium sm:mt-0 sm:w-auto"
+                disabled={invite.status !== "available"}
+                className="mt-3 w-full rounded-full border border-stone-300 px-4 py-2 text-sm font-medium disabled:opacity-50 sm:mt-0 sm:w-auto"
               >
                 {copiedId === invite.id ? "Copiado" : "Copiar"}
               </button>

@@ -22,6 +22,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     const invite = await createInviteCode({
       note: input.note,
       seats: input.seats,
+      validDays: input.validDays,
     });
     return NextResponse.json({ created: true, invite });
   } catch (error) {
