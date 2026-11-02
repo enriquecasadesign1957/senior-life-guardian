@@ -7,6 +7,8 @@ export const PAIR_TTL_MS = 10 * 60 * 1000;
 export const RESCUE_WATCH_MS = 30 * 24 * 60 * 60 * 1000;
 export const WATCH_INTERVAL_MS = 15 * 60 * 1000;
 export const AGENCY_TRIAL_SEATS = 5;
+export const AGENCY_INVITE_DEFAULT_DAYS = 7;
+export const AGENCY_INVITE_DAY_OPTIONS = [1, 3, 7, 14, 30] as const;
 
 export const agencyTrialActivateSchema = z.object({
   code: z.string().trim().min(4).max(64),
@@ -28,6 +30,7 @@ export const adminLoginSchema = z.object({
 export const adminCreateInviteSchema = z.object({
   note: z.string().trim().max(120).optional(),
   seats: z.number().int().min(1).max(40).optional(),
+  validDays: z.union([z.literal(1), z.literal(3), z.literal(7), z.literal(14), z.literal(30)]).optional(),
 });
 
 export const ACTION_IDS = [

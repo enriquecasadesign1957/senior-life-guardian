@@ -77,6 +77,7 @@ export async function activateAgencyTrial(userId: string, code: string): Promise
         seats: agencyInviteCodes.seats,
         maxUses: agencyInviteCodes.maxUses,
         usedCount: agencyInviteCodes.usedCount,
+        expiresAt: agencyInviteCodes.expiresAt,
       })
       .from(agencyInviteCodes)
       .where(eq(agencyInviteCodes.code, normalized))
@@ -84,6 +85,13 @@ export async function activateAgencyTrial(userId: string, code: string): Promise
   )[0];
   if (!invite) {
     throw new AgencyTrialError("AGENCY_CODE_INVALID", "Ese código de agencia no sirve.", 403);
+  }
+  if (invite.expiresAt && invite.expiresAt.getTime() <= Date.now()) {
+    throw new AgencyTrialError(
+      "AGENCY_CODE_EXPIRED",
+      "Ese código ya venció. Pide uno nuevo a CuidadoWeb.",
+      409,
+    );
   }
   if (invite.usedCount >= invite.maxUses) {
     throw new AgencyTrialError(
@@ -101,6 +109,7 @@ export async function activateAgencyTrial(userId: string, code: string): Promise
         and(
           eq(agencyInviteCodes.id, invite.id),
           sql`${agencyInviteCodes.usedCount} < ${agencyInviteCodes.maxUses}`,
+          sql`(${agencyInviteCodes.expiresAt} is null or ${agencyInviteCodes.expiresAt} > now())`,
         ),
       )
       .returning({ id: agencyInviteCodes.id, seats: agencyInviteCodes.seats })
@@ -108,7 +117,7 @@ export async function activateAgencyTrial(userId: string, code: string): Promise
   if (!redeemed) {
     throw new AgencyTrialError(
       "AGENCY_CODE_USED",
-      "Ese código ya se usó. Cada código de agencia sirve una sola vez.",
+      "Ese código ya no está disponible. Pide uno nuevo a CuidadoWeb.",
       409,
     );
   }

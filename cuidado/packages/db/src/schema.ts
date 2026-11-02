@@ -27,6 +27,7 @@ export const agencyInviteCodes = pgTable("agency_invite_codes", {
   maxUses: integer("max_uses").default(1).notNull(),
   usedCount: integer("used_count").default(0).notNull(),
   note: text("note"),
+  expiresAt: timestamp("expires_at", tz),
   createdAt: timestamp("created_at", tz).defaultNow().notNull(),
 });
 
