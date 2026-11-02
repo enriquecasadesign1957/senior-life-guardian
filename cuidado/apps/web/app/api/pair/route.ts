@@ -7,6 +7,7 @@ import { jsonError } from "@/lib/http";
 import { ApiError } from "@/lib/errors";
 import { clearPendingPair, savePendingPair } from "@/lib/pair-pending";
 import { probeSite, redeemPairCode } from "@/lib/plugin-client";
+import { maybeGrantAgencySeatOnConnect } from "@/lib/agency";
 import { withUrlLock } from "@/lib/locks";
 import { currentUserId } from "@/lib/session";
 import { assertPublicUrl, normalizeSiteUrl } from "@/lib/urls";
@@ -86,11 +87,15 @@ export async function POST(request: Request): Promise<NextResponse> {
             .update(sites)
             .set({ status: "connected", connectedAt: new Date() })
             .where(and(eq(sites.id, site.id), eq(sites.userId, userId)));
+          await maybeGrantAgencySeatOnConnect({ userId, siteId: site.id });
+          const refreshed = (
+            await db.select({ plan: sites.plan }).from(sites).where(eq(sites.id, site.id)).limit(1)
+          )[0];
           return {
             status: "connected" as const,
             siteId: site.id,
             siteName: redeemed.siteName,
-            plan: site.plan,
+            plan: refreshed?.plan ?? site.plan,
           };
         } catch (error) {
           if (!(error instanceof ApiError) || error.code !== "UNREACHABLE") {

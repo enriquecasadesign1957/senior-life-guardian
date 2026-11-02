@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { getDb, siteSecrets, sites } from "@cuidado/db";
 import { NextResponse } from "next/server";
+import { maybeGrantAgencySeatOnConnect } from "@/lib/agency";
 import { decryptSecret } from "@/lib/crypto";
 import { jsonError } from "@/lib/http";
 import { ApiError } from "@/lib/errors";
@@ -39,6 +40,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       .update(sites)
       .set({ status: "connected", connectedAt: new Date() })
       .where(eq(sites.id, site.id));
+    await maybeGrantAgencySeatOnConnect({ userId: site.userId, siteId: site.id });
     return NextResponse.json({ siteId: site.id, secret, baseUrl: site.baseUrl });
   } catch (error) {
     return jsonError(error);

@@ -6,6 +6,15 @@ export const DIAGNOSIS_TTL_MS = 24 * 60 * 60 * 1000;
 export const PAIR_TTL_MS = 10 * 60 * 1000;
 export const RESCUE_WATCH_MS = 30 * 24 * 60 * 60 * 1000;
 export const WATCH_INTERVAL_MS = 15 * 60 * 1000;
+export const AGENCY_TRIAL_SEATS = 5;
+
+export const agencyTrialActivateSchema = z.object({
+  code: z.string().trim().min(4).max(64),
+});
+
+export const agencyTrialClaimSchema = z.object({
+  siteId: z.string().uuid(),
+});
 
 export const ACTION_IDS = [
   "purge_transients",

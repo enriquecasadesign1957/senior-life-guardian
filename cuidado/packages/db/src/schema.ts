@@ -1,4 +1,5 @@
 import {
+  boolean,
   index,
   integer,
   jsonb,
@@ -25,6 +26,8 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   emailVerified: timestamp("email_verified", tz),
   image: text("image"),
+  agencyTrialSeats: integer("agency_trial_seats").default(0).notNull(),
+  agencyTrialActivatedAt: timestamp("agency_trial_activated_at", tz),
   createdAt: timestamp("created_at", tz).defaultNow().notNull(),
 });
 
@@ -76,6 +79,7 @@ export const sites = pgTable(
     baseUrl: text("base_url").notNull(),
     status: siteStatus("status").default("pending").notNull(),
     plan: sitePlan("plan").default("none").notNull(),
+    agencySeat: boolean("agency_seat").default(false).notNull(),
     watchUntil: timestamp("watch_until", tz),
     rescueCheckoutId: text("rescue_checkout_id").unique(),
     connectedAt: timestamp("connected_at", tz),

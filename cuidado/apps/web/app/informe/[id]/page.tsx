@@ -6,6 +6,7 @@ import {
   ConnectedCleanupPanel,
   ConnectedUndoBanner,
 } from "@/components/cleanup-undo";
+import { AgencySeatClaim } from "@/components/agency-seat-claim";
 import { IncidentNotice } from "@/components/incident-notice";
 import { PlanPanel } from "@/components/plan-panel";
 import { ReliefCompare } from "@/components/relief-compare";
@@ -13,6 +14,7 @@ import { OutsideRepair } from "@/components/outside-repair";
 import { Reassurance } from "@/components/reassurance";
 import { RevokeAccess } from "@/components/revoke-access";
 import { ScoreMeter } from "@/components/score-meter";
+import { getAgencyTrialStatus } from "@/lib/agency";
 import { optionalUserId } from "@/lib/session";
 import { isWatchActive, watchDaysRemaining } from "@/lib/watch";
 
@@ -107,6 +109,7 @@ export default async function InformePage({ params, searchParams }: PageProps) {
             .limit(1)
         )[0]
       : undefined;
+  const agency = viewerId ? await getAgencyTrialStatus(viewerId) : null;
 
   return (
     <CleanupUndoProvider
@@ -136,10 +139,14 @@ export default async function InformePage({ params, searchParams }: PageProps) {
       {site && site.plan === "cuidado" && isWatchActive(site, now) ? (
         <div className="rounded-3xl bg-pine px-6 py-8 text-white">
           <p className="font-display text-3xl tracking-tight sm:text-4xl">
-            Felicitaciones: tu vigilancia está activa con el Plan Cuidado
+            {site.agencySeat
+              ? "Felicitaciones: este sitio usa un cupo gratis de agencia"
+              : "Felicitaciones: tu vigilancia está activa con el Plan Cuidado"}
           </p>
           <p className="mt-3 text-base leading-relaxed text-white/90">
-            Acepta abajo lo que se va a quitar. Todavía no se borra nada. Se puede deshacer durante 7 días.
+            {site.agencySeat && agency?.active
+              ? `Cupos de prueba: ${agency.used} usados, ${agency.remaining} libres. Acepta abajo lo que se va a quitar.`
+              : "Acepta abajo lo que se va a quitar. Todavía no se borra nada. Se puede deshacer durante 7 días."}
           </p>
           <a
             href="#limpieza"
@@ -233,6 +240,9 @@ export default async function InformePage({ params, searchParams }: PageProps) {
       <Reassurance />
       <OutsideRepair />
       <ConnectedCleanupPanel siteId={ownedId} />
+      {ownedId && site && site.plan !== "cuidado" && agency && agency.remaining > 0 ? (
+        <AgencySeatClaim siteId={ownedId} remaining={agency.remaining} />
+      ) : null}
       {ownedId && site && site.plan !== "cuidado" ? <PlanPanel siteId={ownedId} /> : null}
       {ownedId ? <RevokeAccess siteId={ownedId} /> : null}
     </div>

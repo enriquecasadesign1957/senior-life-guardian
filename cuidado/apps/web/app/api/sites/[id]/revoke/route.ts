@@ -19,7 +19,7 @@ export async function POST(_request: Request, context: RouteContext): Promise<Ne
     const db = getDb();
     const updated = await db
       .update(sites)
-      .set({ status: "revoked" })
+      .set({ status: "revoked", agencySeat: false })
       .where(and(eq(sites.id, id), eq(sites.userId, userId), eq(sites.status, "connected")))
       .returning({ id: sites.id });
     if (!updated[0]) {

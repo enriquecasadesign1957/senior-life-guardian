@@ -29,6 +29,13 @@
       "when": 1793720000000,
       "tag": "0003_cleanup_batches",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793730000000,
+      "tag": "0004_agency_trial",
+      "breakpoints": true
     }
   ]
 }

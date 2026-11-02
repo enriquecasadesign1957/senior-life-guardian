@@ -1,3 +1,4 @@
+import { AgencyTrialPanel } from "@/components/agency-trial-panel";
 import { AnalyzeForm } from "@/components/analyze-form";
 import { BrandLogo } from "@/components/brand-logo";
 import { ConnectorPanel } from "@/components/connector-panel";
@@ -250,7 +251,10 @@ export default function HomePage() {
       <section id="agencias" className="scroll-mt-28 border-y border-stone-200 bg-white">
         <div className="mx-auto max-w-6xl px-6 py-16">
           <h2 className="max-w-2xl text-3xl tracking-tight sm:text-4xl">Para agencias</h2>
-          <p className="mt-3 text-stone-700">Dos formas de ganar dinero con CuidadoWeb</p>
+          <p className="mt-3 text-stone-700">Prueba gratis con 5 sitios y luego elige cómo ganar con CuidadoWeb</p>
+          <div className="mt-10">
+            <AgencyTrialPanel />
+          </div>
           <div className="mt-10 grid gap-6 lg:grid-cols-2">
             <article className="rounded-3xl border border-stone-200 p-6 sm:p-8">
               <h3 className="text-2xl">Programa de Reparto</h3>

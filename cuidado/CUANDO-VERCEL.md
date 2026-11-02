@@ -26,6 +26,8 @@ En Vercel van estas variables. `AUTH_SECRET`, `TOKEN_ENCRYPTION_KEY` y `CRON_SEC
 
 Lemon Squeezy ya tiene los productos. En Vercel basta con `LEMON_SQUEEZY_WEBHOOK_SECRET` (los buy URL y variant id tienen valor por defecto). En Lemon: Settings → Webhooks → URL `https://cuidadoweb.com/api/lemon/webhook`, eventos `order_created`, signing secret = esa variable.
 
+- `AGENCY_TRIAL_CODE` (opcional): código para activar la prueba de agencia (5 sitios gratis). Si no se define, el valor por defecto es `CW-AGENCIA-5`. Cámbialo en Production cuando quieras controlar quién activa la prueba.
+
 ## 3. PageSpeed
 
 1. En [Google Cloud](https://console.cloud.google.com/) crea un proyecto `CuidadoWeb`.
@@ -52,7 +54,7 @@ En tu máquina, dentro de `cuidado`, con la misma `DATABASE_URL` directa:
 npm run db:migrate
 ```
 
-Eso aplica `0000_init.sql`, `0001_site_probe.sql`, `0002_rescue_checkout.sql` y `0003_cleanup_batches.sql`.
+Eso aplica `0000_init.sql`, `0001_site_probe.sql`, `0002_rescue_checkout.sql`, `0003_cleanup_batches.sql` y `0004_agency_trial.sql`.
 
 ## 6. Dominio
 
