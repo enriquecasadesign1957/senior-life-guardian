@@ -9,14 +9,18 @@ import {
   formatPlanPrice,
   yearlyEquivalentMonthly,
 } from "@/lib/plans";
+import { isInternational, paymentLabel } from "@/lib/market";
 import { buildPublicPageMeta, breadcrumbJsonLd, jsonLdHeadScript, serviceJsonLd } from "@/lib/seo";
 
 export const Route = createFileRoute("/planes")({
   head: () => {
     const page = buildPublicPageMeta({
-      title: "Plan Único — Alarma Senior Safe | Desde $6.900/mes",
-      description:
-        "Plan Único Senior Safe: $6.900/mes o $69.000/año (ahorras 2 meses). Botón SOS, WhatsApp, SMS, GPS y llamada. Sin permanencia, Webpay Plus.",
+      title: isInternational
+        ? `Plan Único — Alarma Senior Safe | Desde $${formatPlanPrice(PLAN.monthly)} USD/mes`
+        : "Plan Único — Alarma Senior Safe | Desde $6.900/mes",
+      description: isInternational
+        ? `Plan Único Senior Safe: $${formatPlanPrice(PLAN.monthly)} USD/mes o $${formatPlanPrice(PLAN.yearly)} USD/año (ahorras 2 meses). Botón SOS, WhatsApp, SMS, GPS y llamada. Sin permanencia, Lemon Squeezy.`
+        : "Plan Único Senior Safe: $6.900/mes o $69.000/año (ahorras 2 meses). Botón SOS, WhatsApp, SMS, GPS y llamada. Sin permanencia, Webpay Plus.",
       pathname: "/planes",
       ogTitle: "Plan Único Senior Safe",
       ogDescription: `Protección completa desde $${formatPlanPrice(PLAN.monthly)}/mes. Mensual o anual con ahorro de 2 meses.`,
@@ -60,7 +64,7 @@ function PlanesPage() {
               {PLAN.displayName}
             </h1>
             <p className="mt-5 text-lg md:text-xl text-white/85 max-w-2xl mx-auto">
-              Alarma familiar para adultos mayores desde ${formatPlanPrice(PLAN.monthly)}/mes, sin permanencia.
+              Alarma familiar para adultos mayores desde ${formatPlanPrice(PLAN.monthly)}{isInternational ? " USD" : ""}/mes, sin permanencia.
               Botón SOS, WhatsApp, SMS, GPS y llamada automática. Activa la protección en menos de 2 minutos.
             </p>
 
@@ -103,7 +107,7 @@ function PlanesPage() {
                 <span className="text-5xl md:text-6xl font-bold tracking-tight text-white">
                   ${formatPlanPrice(price)}
                 </span>
-                <span className="text-white/70">/{yearly ? "año" : "mes"}</span>
+                <span className="text-white/70">{isInternational ? " USD" : ""}/{yearly ? "año" : "mes"}</span>
               </div>
               {yearly ? (
                 <div className="mt-2 text-sm font-semibold text-[#a7f3d0]">
@@ -121,7 +125,7 @@ function PlanesPage() {
                   className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full font-bold text-base transition hover:scale-[1.02] bg-white"
                   style={{ color: DEEP }}
                 >
-                  Contratar con Webpay Plus
+                  Contratar con {paymentLabel}
                   <ArrowRight className="w-4 h-4" />
                 </a>
               </div>

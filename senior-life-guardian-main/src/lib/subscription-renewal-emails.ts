@@ -1,4 +1,5 @@
 import { formatPlanPrice, PLAN, renewalCheckoutUrl } from "@/lib/plans";
+import { isInternational, paymentLabel } from "@/lib/market";
 import { buildBillingEmailHtml } from "@/lib/transactional-email-html";
 import { SENIOR_SAFE_SUPPORT_EMAIL } from "@/lib/senior-safe-ai";
 
@@ -19,7 +20,7 @@ function periodoLabel(periodo: "mensual" | "anual"): string {
 
 function amountLabel(periodo: "mensual" | "anual"): string {
   const amount = periodo === "anual" ? PLAN.yearly : PLAN.monthly;
-  return `$${formatPlanPrice(amount)} CLP`;
+  return isInternational ? `$${formatPlanPrice(amount)} USD` : `$${formatPlanPrice(amount)} CLP`;
 }
 
 function buildBodies(kind: RenewalEmailKind, input: RenewalEmailInput): { subject: string; text: string; html: string } {
@@ -37,13 +38,13 @@ function buildBodies(kind: RenewalEmailKind, input: RenewalEmailInput): { subjec
     const text =
       `${greeting}\n\n` +
       `Te recordamos que tu suscripción ${planLine} vence el ${input.renewalDateLabel}.\n\n` +
-      `Para mantener activas las alertas de emergencia de tu familia, puedes renovar con Webpay Plus:\n${checkout}\n\n` +
+      `Para mantener activas las alertas de emergencia de tu familia, puedes renovar con ${paymentLabel}:\n${checkout}\n\n` +
       `${footerPaid}\n\n` +
       `Cuenta: ${input.email}\n` +
       `Ayuda: ${SENIOR_SAFE_SUPPORT_EMAIL}\n\n` +
-      `Equipo Senior Safe\nalarmaseniorsafe.cl`;
+      `Equipo Senior Safe\n${isInternational ? "alarmaseniorsafe.com" : "alarmaseniorsafe.cl"}`;
     const html = htmlBase({
-      preheader: `Tu plan Senior Safe vence el ${input.renewalDateShort}. Renueva con Webpay cuando te acomode.`,
+      preheader: `Tu plan Senior Safe vence el ${input.renewalDateShort}. Renueva con ${paymentLabel} cuando te acomode.`,
       greeting,
       title: "Recordatorio de renovación de tu plan",
       lines: [
@@ -51,7 +52,7 @@ function buildBodies(kind: RenewalEmailKind, input: RenewalEmailInput): { subjec
         "Mantén activas las alertas por SMS, WhatsApp y llamada para tu red de cuidado.",
         footerPaid,
       ],
-      ctaLabel: "Renovar con Webpay Plus",
+      ctaLabel: `Renovar con ${paymentLabel}`,
       ctaUrl: checkout,
       footerNote: `Vencimiento: ${input.renewalDateLabel}`,
     });
@@ -93,7 +94,7 @@ function buildBodies(kind: RenewalEmailKind, input: RenewalEmailInput): { subjec
     `Ayuda: ${SENIOR_SAFE_SUPPORT_EMAIL}\n\n` +
     `Equipo Senior Safe`;
   const html = htmlBase({
-    preheader: "Tu cuenta Senior Safe está pausada. Reactiva el servicio con Webpay Plus.",
+    preheader: `Tu cuenta Senior Safe está pausada. Reactiva el servicio con ${paymentLabel}.`,
     greeting,
     title: "Servicio pausado por falta de renovación",
     lines: [
@@ -101,7 +102,7 @@ function buildBodies(kind: RenewalEmailKind, input: RenewalEmailInput): { subjec
       "Las alertas de emergencia no se enviarán hasta que renueves tu suscripción.",
       `Al pagar, usa el correo ${input.email} para reactivar tu cuenta.`,
     ],
-    ctaLabel: "Reactivar con Webpay Plus",
+    ctaLabel: `Reactivar con ${paymentLabel}`,
     ctaUrl: checkout,
   });
   return { subject, text, html };

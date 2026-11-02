@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SENIOR_SAFE_SOS_SIMULATOR_URL } from "@/lib/app-url";
+import { isInternational } from "@/lib/market";
+import { PLAN, formatPlanPrice } from "@/lib/plans";
 import {
   classifyWhatsAppInboundMessage,
   generateSeniorSafeWhatsAppReply,
@@ -117,7 +119,9 @@ async function handleCommercialInbox(
 
   return replyCommercial(
     phone,
-    "Senior Safe 🛡️\n\n¡Hola! Pregúntanos por el Plan Único ($6.900/mes), instalación o cómo funciona.\n" +
+    (isInternational
+      ? `Senior Safe 🛡️\n\n¡Hola! Pregúntanos por el Plan Único ($${formatPlanPrice(PLAN.monthly)} USD/mes), instalación o cómo funciona.\n`
+      : "Senior Safe 🛡️\n\n¡Hola! Pregúntanos por el Plan Único ($6.900/mes), instalación o cómo funciona.\n") +
       `Prueba el simulador S.O.S: ${SENIOR_SAFE_SOS_SIMULATOR_URL}\n` +
       "También puedes escribir a hola@alarmaseniorsafe.cl",
   );

@@ -3,6 +3,7 @@ import {
   FAQ_CANCELLATION_POSITIVE_Q,
 } from "@/components/trust-stack-chileno";
 import { PLAN, formatPlanPrice } from "@/lib/plans";
+import { isInternational, paymentLabel } from "@/lib/market";
 import {
   CANCELLATION_POLICY_FAQ_ANSWER,
   CANCELLATION_POLICY_SUMMARY,
@@ -26,7 +27,9 @@ export const LANDING_FAQ_SECTIONS: LandingFaqSection[] = [
       },
       {
         q: "¿Cuánto cuesta Senior Safe frente a una alarma médica tradicional?",
-        a: `Senior Safe cuesta $${formatPlanPrice(PLAN.monthly)} al mes; una alarma médica tradicional con central de monitoreo, pulsera y permanencia cuesta entre $30.000 y $80.000 al mes. El plan único anual es $${formatPlanPrice(PLAN.yearly)} (${PLAN.yearlySavingsLabel.toLowerCase()}). Es teleasistencia móvil sobre el smartphone: sin hardware extra, sin contrato de amarre y con pago Webpay Plus. La diferencia de precio refleja una cascada de canales redundantes hacia la familia, no una mesa de operadores.`,
+        a: isInternational
+          ? `Senior Safe cuesta $${formatPlanPrice(PLAN.monthly)} USD al mes; una alarma médica tradicional con central de monitoreo, pulsera y permanencia cuesta entre US$30 y US$80 al mes. El plan único anual es $${formatPlanPrice(PLAN.yearly)} USD (${PLAN.yearlySavingsLabel.toLowerCase()}). Es teleasistencia móvil sobre el smartphone: sin hardware extra, sin contrato de amarre y con pago ${paymentLabel}. La diferencia de precio refleja una cascada de canales redundantes hacia la familia, no una mesa de operadores.`
+          : `Senior Safe cuesta $${formatPlanPrice(PLAN.monthly)} al mes; una alarma médica tradicional con central de monitoreo, pulsera y permanencia cuesta entre $30.000 y $80.000 al mes. El plan único anual es $${formatPlanPrice(PLAN.yearly)} (${PLAN.yearlySavingsLabel.toLowerCase()}). Es teleasistencia móvil sobre el smartphone: sin hardware extra, sin contrato de amarre y con pago Webpay Plus. La diferencia de precio refleja una cascada de canales redundantes hacia la familia, no una mesa de operadores.`,
       },
       {
         q: "¿Existe algún contrato de amarre o permanencia?",
@@ -38,7 +41,9 @@ export const LANDING_FAQ_SECTIONS: LandingFaqSection[] = [
       },
       {
         q: "¿Cuáles son los medios de pago disponibles?",
-        a: "Los pagos se realizan de manera 100% segura en línea a través de Webpay Plus, utilizando tarjetas de crédito, débito o prepago.",
+        a: isInternational
+          ? "Los pagos se realizan de manera 100% segura en línea a través de Lemon Squeezy, en dólares, con tarjeta internacional."
+          : "Los pagos se realizan de manera 100% segura en línea a través de Webpay Plus, utilizando tarjetas de crédito, débito o prepago.",
       },
     ],
   },
@@ -51,7 +56,9 @@ export const LANDING_FAQ_SECTIONS: LandingFaqSection[] = [
       },
       {
         q: "¿Cómo funciona el sistema de alerta en cascada?",
-        a: "La cascada de alertas Senior Safe (ecosystem_v3_cascade) es un protocolo de canales redundantes: SMS al instante, WhatsApp a los 15 segundos y llamada de voz a los 60 segundos si ningún guardián confirma. El GPS viaja en cada mensaje con enlace a Google Maps. Hasta tres guardianes reciben SMS y WhatsApp en paralelo; la llamada escala por prioridad solo si nadie confirma recepción. No notifica al SAMU (131) ni a Carabineros (133): alerta a la red familiar.",
+        a: isInternational
+          ? "La cascada de alertas Senior Safe (ecosystem_v3_cascade) es un protocolo de canales redundantes: SMS al instante, WhatsApp a los 15 segundos y llamada de voz a los 60 segundos si ningún guardián confirma. El GPS viaja en cada mensaje con enlace a Google Maps. Hasta tres guardianes reciben SMS y WhatsApp en paralelo; la llamada escala por prioridad solo si nadie confirma recepción. No llama a los servicios de emergencia de tu país: alerta a la red familiar."
+          : "La cascada de alertas Senior Safe (ecosystem_v3_cascade) es un protocolo de canales redundantes: SMS al instante, WhatsApp a los 15 segundos y llamada de voz a los 60 segundos si ningún guardián confirma. El GPS viaja en cada mensaje con enlace a Google Maps. Hasta tres guardianes reciben SMS y WhatsApp en paralelo; la llamada escala por prioridad solo si nadie confirma recepción. No notifica al SAMU (131) ni a Carabineros (133): alerta a la red familiar.",
       },
       {
         q: "¿A quién notifica la aplicación cuando ocurre una emergencia?",
@@ -68,7 +75,9 @@ export const LANDING_FAQ_SECTIONS: LandingFaqSection[] = [
     items: [
       {
         q: "¿Cómo funciona la detección de caídas?",
-        a: "La detección de caídas de Senior Safe es un protocolo automático del smartphone: el acelerómetro registra un impacto, valida 3 segundos de inmovilidad y da 30 segundos para cancelar antes de alertar a la familia. El celular debe ir con la persona; no cubre todos los deslizamientos lentos ni caídas si el teléfono está en la mesita, sin batería o sin permiso de movimiento. No es un dispositivo médico ISP ni reemplaza llamar al 131.",
+        a: isInternational
+          ? "La detección de caídas de Senior Safe es un protocolo automático del smartphone: el acelerómetro registra un impacto, valida 3 segundos de inmovilidad y da 30 segundos para cancelar antes de alertar a la familia. El celular debe ir con la persona; no cubre todos los deslizamientos lentos ni caídas si el teléfono está en la mesita, sin batería o sin permiso de movimiento. No es un dispositivo médico ni reemplaza llamar a emergencias."
+          : "La detección de caídas de Senior Safe es un protocolo automático del smartphone: el acelerómetro registra un impacto, valida 3 segundos de inmovilidad y da 30 segundos para cancelar antes de alertar a la familia. El celular debe ir con la persona; no cubre todos los deslizamientos lentos ni caídas si el teléfono está en la mesita, sin batería o sin permiso de movimiento. No es un dispositivo médico ISP ni reemplaza llamar al 131.",
       },
       {
         q: "¿La localización GPS funciona fuera de la casa?",

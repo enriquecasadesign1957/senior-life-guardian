@@ -46,17 +46,22 @@ import {
 } from "@/lib/seo";
 import { CANCELLATION_POLICY_SUMMARY } from "@/lib/subscription-cancellation-policy";
 import { SENIOR_SAFE_PLAY_STORE_URL } from "@/lib/app-url";
+import { isInternational, paymentLabel } from "@/lib/market";
 
 export const Route = createFileRoute("/")({
   head: () => {
     const page = buildPublicPageMeta({
-      title: "Senior Safe — Alarma para adultos mayores en Chile",
-      description:
-        "App de emergencia con botón SOS, alerta familiar por WhatsApp, SMS, GPS y llamada. Desde $6.900/mes, sin permanencia. Ideal si tu mamá o papá vive solo.",
+      title: isInternational
+        ? "Senior Safe — Alarma para adultos mayores en Latinoamérica"
+        : "Senior Safe — Alarma para adultos mayores en Chile",
+      description: isInternational
+        ? `App de emergencia con botón SOS, alerta familiar por WhatsApp, SMS, GPS y llamada. Desde $${formatPlanPrice(PLAN.monthly)} USD/mes, sin permanencia.`
+        : "App de emergencia con botón SOS, alerta familiar por WhatsApp, SMS, GPS y llamada. Desde $6.900/mes, sin permanencia. Ideal si tu mamá o papá vive solo.",
       pathname: "/",
       ogTitle: "Senior Safe — Protección familiar en menos de 3 segundos",
-      ogDescription:
-        "Alertas por WhatsApp, SMS, GPS y llamada automática. Plan Único $6.900/mes, sin permanencia.",
+      ogDescription: isInternational
+        ? `Alertas por WhatsApp, SMS, GPS y llamada automática. Plan Único $${formatPlanPrice(PLAN.monthly)} USD/mes, sin permanencia.`
+        : "Alertas por WhatsApp, SMS, GPS y llamada automática. Plan Único $6.900/mes, sin permanencia.",
     });
 
     return {
@@ -94,7 +99,7 @@ function HeroSocialProof() {
           ))}
         </div>
         <span className="text-sm font-semibold text-white/95">
-          2.000+ familias protegidas en Chile
+          {isInternational ? "2.000+ familias protegidas" : "2.000+ familias protegidas en Chile"}
         </span>
       </div>
       <div className="flex items-center gap-3">
@@ -193,9 +198,9 @@ function Hero() {
             <span className="text-sm font-bold text-white/90">{PLAN.displayName}</span>
             <span className="text-2xl md:text-3xl font-extrabold text-white">
               ${formatPlanPrice(PLAN.monthly)}
-              <span className="text-base font-semibold text-white/80">/mes</span>
+              <span className="text-base font-semibold text-white/80">{isInternational ? " USD" : ""}/mes</span>
             </span>
-            <span className="text-xs text-white/70">Sin permanencia · Webpay Plus</span>
+            <span className="text-xs text-white/70">Sin permanencia · {paymentLabel}{isInternational ? " · USD" : ""}</span>
           </div>
           <div className="mt-4 sm:mt-8 flex flex-col gap-2 sm:gap-3 animate-fade-in" style={{ animationDelay: "260ms" }}>
             <a
@@ -205,7 +210,7 @@ function Hero() {
                 background: `linear-gradient(180deg, ${HERO_CTA_GREEN} 0%, ${HERO_CTA_GREEN_DARK} 100%)`,
               }}
             >
-              Proteger a mi familia — ${formatPlanPrice(PLAN.monthly)}/mes
+              Proteger a mi familia — ${formatPlanPrice(PLAN.monthly)}{isInternational ? " USD" : ""}/mes
               <ArrowRight className="w-5 h-5 shrink-0" />
             </a>
             <HeroSocialProof />
@@ -320,7 +325,7 @@ function QueEs() {
 
 function ParaQuien() {
   const cards = [
-    { icon: Home, title: "Adultos mayores", desc: "Que viven solos en Chile y necesitan una alarma accesible en su celular." },
+    { icon: Home, title: "Adultos mayores", desc: isInternational ? "Que viven solos y necesitan una alarma accesible en su celular." : "Que viven solos en Chile y necesitan una alarma accesible en su celular." },
     { icon: Heart, title: "Hijos y familiares", desc: "Para cuidar a mamá o papá desde lejos, con avisos al instante." },
     { icon: Activity, title: "Asistencia rápida", desc: "Personas con condiciones médicas o riesgo de caídas." },
     { icon: Accessibility, title: "Movilidad reducida", desc: "Quienes necesitan ayuda inmediata en casa." },
@@ -581,10 +586,12 @@ function AlarmaAdultosMayoresChile() {
         <div className="text-center max-w-3xl mx-auto mb-12">
           <div className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.18em] mb-3" style={{ color: PETROL }}>
             <Shield className="w-4 h-4" />
-            Chile · sin permanencia
+            {isInternational ? "Latinoamérica · sin permanencia" : "Chile · sin permanencia"}
           </div>
           <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight">
-            Alarma para adultos mayores en Chile — desde ${formatPlanPrice(PLAN.monthly)}/mes
+            {isInternational
+              ? `Alarma para adultos mayores en Latinoamérica — desde $${formatPlanPrice(PLAN.monthly)} USD/mes`
+              : `Alarma para adultos mayores en Chile — desde $${formatPlanPrice(PLAN.monthly)}/mes`}
           </h2>
           <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
             Senior Safe es teleasistencia familiar móvil: botón SOS, cascada de canales redundantes
@@ -615,7 +622,7 @@ function AlarmaAdultosMayoresChile() {
         <div className="mt-10 grid lg:grid-cols-2 gap-8 items-center rounded-3xl overflow-hidden border border-border shadow-xl">
           <img
             src={seniorCouple}
-            alt="Adultos mayores en Chile protegidos con alarma familiar Senior Safe"
+            alt={isInternational ? "Adultos mayores protegidos con alarma familiar Senior Safe" : "Adultos mayores en Chile protegidos con alarma familiar Senior Safe"}
             width={1200}
             height={1000}
             loading="lazy"
@@ -628,10 +635,10 @@ function AlarmaAdultosMayoresChile() {
             </h3>
             <p className="text-muted-foreground leading-relaxed mb-3">
               Las alarmas médicas tradicionales —teleasistencia fija, botón de pánico con central o
-              sistemas PERS— suelen costar entre $30.000 y $80.000 al mes: hardware (pulsera o
+              sistemas PERS— suelen costar entre {isInternational ? "US$30 y US$80" : "$30.000 y $80.000"} al mes: hardware (pulsera o
               colgante), permanencia contractual y un call center que intermedia la emergencia.
               Senior Safe es teleasistencia móvil sobre el smartphone: plan único de $
-              {formatPlanPrice(PLAN.monthly)}/mes, sin amarre y sin aparato extra.
+              {formatPlanPrice(PLAN.monthly)}{isInternational ? " USD" : ""}/mes, sin amarre y sin aparato extra.
             </p>
             <p className="text-muted-foreground leading-relaxed mb-3">
               La diferencia técnica no es solo el precio. Senior Safe dispara una cascada de canales
@@ -642,10 +649,9 @@ function AlarmaAdultosMayoresChile() {
               la red familiar, no un operador lejano.
             </p>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              En Chile eso la hace más accesible (costo de entrada y cobertura vía red celular) y más
-              precisa para quien cuida a distancia: el guardián recibe el aviso y el punto en Google
-              Maps, no un mensaje genérico de central. No reemplaza al SAMU (131): complementa la
-              teleasistencia familiar mientras llegan los servicios de urgencia.
+              {isInternational
+                ? "En Latinoamérica eso la hace más accesible (costo de entrada y cobertura vía red celular) y más precisa para quien cuida a distancia: el guardián recibe el aviso y el punto en Google Maps, no un mensaje genérico de central. No reemplaza a los servicios de emergencia de tu país: complementa la teleasistencia familiar mientras llegan."
+                : "En Chile eso la hace más accesible (costo de entrada y cobertura vía red celular) y más precisa para quien cuida a distancia: el guardián recibe el aviso y el punto en Google Maps, no un mensaje genérico de central. No reemplaza al SAMU (131): complementa la teleasistencia familiar mientras llegan los servicios de urgencia."}
             </p>
             <Link
               to="/planes"
@@ -846,7 +852,7 @@ function Planes() {
                 <span className="text-4xl md:text-5xl font-bold tracking-tight text-foreground">
                   ${formatPlanPrice(PLAN.monthly)}
                 </span>
-                <span className="text-muted-foreground font-medium">/mes</span>
+                <span className="text-muted-foreground font-medium">{isInternational ? " USD" : ""}/mes</span>
               </div>
             </div>
             <ul className="space-y-2.5 mb-8 flex-1">
@@ -892,11 +898,11 @@ function Planes() {
                 <span className="text-4xl md:text-5xl font-bold tracking-tight">
                   ${formatPlanPrice(PLAN.yearly)}
                 </span>
-                <span className="text-white/80 font-medium">/año</span>
+                <span className="text-white/80 font-medium">{isInternational ? " USD" : ""}/año</span>
               </div>
               <p className="mt-3 text-sm md:text-base font-bold text-[#bbf7d0] leading-snug">
-                Equivale a ${formatPlanPrice(yearlyEquivalentMonthly())}/mes. ¡Ahorras $
-                {formatPlanPrice(ANNUAL_SAVINGS_CRO_CLP)} al año!
+                Equivale a ${formatPlanPrice(yearlyEquivalentMonthly())}{isInternational ? " USD" : ""}/mes. ¡Ahorras $
+                {formatPlanPrice(ANNUAL_SAVINGS_CRO_CLP)}{isInternational ? " USD" : ""} al año!
               </p>
             </div>
             <ul className="space-y-2.5 mb-8 flex-1">
@@ -930,8 +936,10 @@ function Planes() {
                   {FAMILY_BUNDLE.label}
                 </span>
                 : Protege a {FAMILY_BUNDLE.adults} adultos mayores por{" "}
-                <span className="font-bold">${formatPlanPrice(FAMILY_BUNDLE.monthly)}/mes</span>
-                {" "}— ahorra ${formatPlanPrice(FAMILY_BUNDLE.monthlySavingsVsTwo)}/mes.
+                <span className="font-bold">${formatPlanPrice(FAMILY_BUNDLE.monthly)}{isInternational ? " USD" : ""}/mes</span>
+                {FAMILY_BUNDLE.monthlySavingsVsTwo > 0
+                  ? ` — ahorra $${formatPlanPrice(FAMILY_BUNDLE.monthlySavingsVsTwo)}/mes.`
+                  : " (dos planes mensuales)."}
               </p>
             </div>
             <a

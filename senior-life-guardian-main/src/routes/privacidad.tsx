@@ -1,13 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { buildPublicPageMeta, breadcrumbJsonLd, jsonLdHeadScript } from "@/lib/seo";
+import { isInternational } from "@/lib/market";
 
 export const Route = createFileRoute("/privacidad")({
   head: () => {
     const page = buildPublicPageMeta({
       title: "Política de Privacidad — Alarma Senior Safe",
       description:
-        "Cómo recopilamos, usamos y protegemos tus datos personales en Alarma Senior Safe. Chile.",
+        isInternational
+          ? "Cómo recopilamos, usamos y protegemos tus datos personales en Alarma Senior Safe. Latinoamérica."
+          : "Cómo recopilamos, usamos y protegemos tus datos personales en Alarma Senior Safe. Chile.",
       pathname: "/privacidad",
       robots: "index,follow",
     });

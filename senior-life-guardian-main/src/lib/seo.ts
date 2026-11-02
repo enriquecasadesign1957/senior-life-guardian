@@ -1,16 +1,21 @@
-import { PLAN } from "@/lib/plans";
+import { PLAN, formatPlanPrice } from "@/lib/plans";
 import { PRODUCTION_SITE_URL, SENIOR_SAFE_PLAY_STORE_URL, SENIOR_SAFE_ANDROID_PACKAGE_ID } from "@/lib/app-url";
+import { isInternational } from "@/lib/market";
 
 export const SEO_SITE_NAME = "Senior Safe";
 export const SEO_BRAND = "Alarma Senior Safe";
-export const SEO_LOCALE = "es_CL";
-export const SEO_LANGUAGE = "es-CL";
+export const SEO_LOCALE = isInternational ? "es_419" : "es_CL";
+export const SEO_LANGUAGE = isInternational ? "es" : "es-CL";
 export const SEO_SUPPORT_EMAIL = "hola@alarmaseniorsafe.cl";
+const SEO_PRICE_CURRENCY = isInternational ? "USD" : "CLP";
+const SEO_AREA_NAME = isInternational ? "Latinoamérica" : "Chile";
 
-export const SEO_DEFAULT_TITLE =
-  "Senior Safe — Alarma familiar para adultos mayores en Chile";
-export const SEO_DEFAULT_DESCRIPTION =
-  "Botón SOS que alerta a tu familia por WhatsApp, SMS, GPS y llamada automática. Plan desde $6.900/mes, sin permanencia. Chile.";
+export const SEO_DEFAULT_TITLE = isInternational
+  ? "Senior Safe — Alarma familiar para adultos mayores en Latinoamérica"
+  : "Senior Safe — Alarma familiar para adultos mayores en Chile";
+export const SEO_DEFAULT_DESCRIPTION = isInternational
+  ? "Botón SOS que alerta a tu familia por WhatsApp, SMS, GPS y llamada automática. Plan desde $8.90 USD/mes, sin permanencia."
+  : "Botón SOS que alerta a tu familia por WhatsApp, SMS, GPS y llamada automática. Plan desde $6.900/mes, sin permanencia. Chile.";
 
 /** Imagen Open Graph (1200×630) limpia, sin texto — requisito Discover ≥1200px. */
 export const SEO_OG_IMAGE = `${PRODUCTION_SITE_URL}/og-senior-safe-v2.jpg`;
@@ -99,7 +104,7 @@ export function homeUnifiedJsonLd(): JsonLd {
         offers: {
           "@type": "Offer",
           price: String(PLAN.monthly),
-          priceCurrency: "CLP",
+          priceCurrency: SEO_PRICE_CURRENCY,
           availability: "https://schema.org/InStock",
         },
       },
@@ -128,7 +133,9 @@ export function homeUnifiedJsonLd(): JsonLd {
             name: "¿Cuánto cuesta Senior Safe frente a una alarma médica tradicional?",
             acceptedAnswer: {
               "@type": "Answer",
-              text: "Senior Safe cuesta 6.900 CLP al mes; una alarma médica tradicional con central de monitoreo, pulsera y permanencia cuesta entre 30.000 CLP y 80.000 CLP al mes.",
+              text: isInternational
+                ? "Senior Safe cuesta 8.90 USD al mes; una alarma médica tradicional con central de monitoreo, pulsera y permanencia cuesta entre 30 USD y 80 USD al mes."
+                : "Senior Safe cuesta 6.900 CLP al mes; una alarma médica tradicional con central de monitoreo, pulsera y permanencia cuesta entre 30.000 CLP y 80.000 CLP al mes.",
             },
           },
         ],
@@ -148,7 +155,7 @@ export function organizationJsonLd(): JsonLd {
     email: SEO_SUPPORT_EMAIL,
     areaServed: {
       "@type": "Country",
-      name: "Chile",
+      name: SEO_AREA_NAME,
     },
     sameAs: [PRODUCTION_SITE_URL, SENIOR_SAFE_PLAY_STORE_URL],
   };
@@ -183,12 +190,12 @@ export function serviceJsonLd(): JsonLd {
     },
     areaServed: {
       "@type": "Country",
-      name: "Chile",
+      name: SEO_AREA_NAME,
     },
     offers: {
       "@type": "Offer",
       price: String(PLAN.monthly),
-      priceCurrency: "CLP",
+      priceCurrency: SEO_PRICE_CURRENCY,
       url: `${PRODUCTION_SITE_URL}/planes`,
       availability: "https://schema.org/InStock",
     },
@@ -210,7 +217,7 @@ export function mobileApplicationJsonLd(): JsonLd {
     offers: {
       "@type": "Offer",
       price: String(PLAN.monthly),
-      priceCurrency: "CLP",
+      priceCurrency: SEO_PRICE_CURRENCY,
     },
     url: PRODUCTION_SITE_URL,
   };
@@ -238,7 +245,7 @@ export function discoverEducationalGraphJsonLd(): JsonLd {
           "@type": "Offer",
           name: "Plan Único",
           price: String(PLAN.monthly),
-          priceCurrency: "CLP",
+          priceCurrency: SEO_PRICE_CURRENCY,
           priceValidUntil: SEO_PRICE_VALID_UNTIL,
           availability: "https://schema.org/InStock",
           url: `${PRODUCTION_SITE_URL}/planes`,
@@ -322,7 +329,9 @@ function ref(id: string): JsonLd {
  * Sustituye un FAQPage suelto para no duplicar el tipo en la misma URL.
  */
 export function techArticleFaqGraphJsonLd(items: { q: string; a: string }[]): JsonLd {
-  const monthlyLabel = `$${PLAN.monthly.toLocaleString("es-CL")}/mes`;
+  const monthlyLabel = isInternational
+    ? `$${formatPlanPrice(PLAN.monthly)} USD/mes`
+    : `$${PLAN.monthly.toLocaleString("es-CL")}/mes`;
   const questions = items.map((item, index) => ({
     "@type": "Question",
     "@id": `${PRODUCTION_SITE_URL}/#faq-q-${index + 1}`,
@@ -339,7 +348,7 @@ export function techArticleFaqGraphJsonLd(items: { q: string; a: string }[]): Js
       {
         "@type": "Country",
         "@id": GEO_IDS.chile,
-        name: "Chile",
+        name: SEO_AREA_NAME,
         alternateName: "CL",
         sameAs: "https://www.wikidata.org/wiki/Q298",
       },
@@ -383,7 +392,7 @@ export function techArticleFaqGraphJsonLd(items: { q: string; a: string }[]): Js
         "@id": GEO_IDS.offer,
         name: "Plan Único Senior Safe",
         price: String(PLAN.monthly),
-        priceCurrency: "CLP",
+        priceCurrency: SEO_PRICE_CURRENCY,
         priceValidUntil: SEO_PRICE_VALID_UNTIL,
         availability: "https://schema.org/InStock",
         url: `${PRODUCTION_SITE_URL}/planes`,
@@ -408,8 +417,12 @@ export function techArticleFaqGraphJsonLd(items: { q: string; a: string }[]): Js
         "@type": "TechArticle",
         "@id": GEO_IDS.techArticle,
         headline:
-          "Cascada de alertas Senior Safe: WhatsApp, SMS, GPS y llamada Twilio en Chile",
-        alternativeHeadline: `Teleasistencia familiar móvil en Chile desde ${monthlyLabel}`,
+          isInternational
+            ? "Cascada de alertas Senior Safe: WhatsApp, SMS, GPS y llamada Twilio en Latinoamérica"
+            : "Cascada de alertas Senior Safe: WhatsApp, SMS, GPS y llamada Twilio en Chile",
+        alternativeHeadline: isInternational
+          ? `Teleasistencia familiar móvil en Latinoamérica desde ${monthlyLabel}`
+          : `Teleasistencia familiar móvil en Chile desde ${monthlyLabel}`,
         description: SEO_DEFAULT_DESCRIPTION,
         inLanguage: SEO_LANGUAGE,
         url: PRODUCTION_SITE_URL,

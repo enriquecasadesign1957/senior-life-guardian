@@ -1,4 +1,6 @@
 import { PRODUCTION_SITE_URL } from "@/lib/app-url";
+import { isInternational } from "@/lib/market";
+import { PLAN, formatPlanPrice } from "@/lib/plans";
 
 export type BlogPost = {
   slug: string;
@@ -25,7 +27,9 @@ export const BLOG_POSTS: BlogPost[] = [
     description:
       "Qué debe resolver una alarma SOS para adultos mayores: botón simple, GPS, alerta en cascada por WhatsApp, SMS y llamada, y una red familiar que confirma quién tomó el caso.",
     excerpt:
-      "Del botón SOS a una alerta en cascada: WhatsApp, SMS, GPS y escalamiento si nadie confirma. Plan desde $6.900/mes, sin permanencia.",
+      isInternational
+        ? `Del botón SOS a una alerta en cascada: WhatsApp, SMS, GPS y escalamiento si nadie confirma. Plan desde $${formatPlanPrice(PLAN.monthly)} USD/mes, sin permanencia.`
+        : "Del botón SOS a una alerta en cascada: WhatsApp, SMS, GPS y escalamiento si nadie confirma. Plan desde $6.900/mes, sin permanencia.",
     publishedAt: "2026-08-15",
     author: "Equipo Senior Safe",
     category: "Protección familiar",
@@ -44,7 +48,9 @@ export const BLOG_POSTS: BlogPost[] = [
     description:
       "Estrategias de comunicación para convencer a adultos mayores de usar teleasistencia móvil sin afectar su autonomía ni dignidad.",
     excerpt:
-      "Cómo hablar de seguridad con mamá o papá sin collares estigmatizantes: red de guardianes en el celular, desde $6.900/mes.",
+      isInternational
+        ? `Cómo hablar de seguridad con mamá o papá sin collares estigmatizantes: red de guardianes en el celular, desde $${formatPlanPrice(PLAN.monthly)} USD/mes.`
+        : "Cómo hablar de seguridad con mamá o papá sin collares estigmatizantes: red de guardianes en el celular, desde $6.900/mes.",
     publishedAt: "2026-08-09",
     author: "Equipo de Psicología y Bienestar Senior Safe",
     category: "Familia y bienestar",

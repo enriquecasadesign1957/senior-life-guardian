@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
   ArrowRight,
@@ -17,6 +16,7 @@ import {
 import { DemoPhoneFrame } from "@/components/demo/demo-phone-frame";
 import { Button } from "@/components/ui/button";
 import { checkoutUrl, formatPlanPrice, PLAN } from "@/lib/plans";
+import { isInternational, paymentLabel } from "@/lib/market";
 import {
   Dialog,
   DialogContent,
@@ -430,15 +430,15 @@ export function EmergencySimulator({
                   ¡Alerta simulada con éxito! 🚀 Así de rápido recibirás la notificación en tu WhatsApp real.
                   Protege a tu familia hoy mismo por solo {monthlyPrice}.
                 </p>
-                <Link
-                  to={checkoutUrl()}
+                <a
+                  href={checkoutUrl()}
                   className="flex w-full sm:w-auto sm:inline-flex items-center justify-center gap-2 min-h-[52px] px-6 py-3.5 rounded-full text-white text-base font-bold shadow-xl bg-[#00845a] hover:bg-[#006b48] ring-2 ring-white/20 hover:ring-white/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white animate-pulse hover:animate-none"
                 >
                   Proteger a mi familia ahora
                   <ArrowRight className="w-5 h-5 shrink-0" aria-hidden />
-                </Link>
+                </a>
                 <p className="text-[11px] sm:text-xs text-slate-400 leading-snug">
-                  Pago seguro con Transbank · Sin permanencia · Cancela cuando quieras
+                  Pago seguro con {paymentLabel} · Sin permanencia · Cancela cuando quieras
                 </p>
               </div>
             </div>
@@ -463,7 +463,7 @@ export function EmergencySimulator({
                 <p className="text-xs font-bold uppercase tracking-widest text-teal-300/90">
                   Simulador comercial
                 </p>
-                <h1 className="text-lg font-bold leading-tight">Senior Safe Chile</h1>
+                <h1 className="text-lg font-bold leading-tight">{isInternational ? "Senior Safe" : "Senior Safe Chile"}</h1>
               </div>
             </div>
             <div className="flex items-center gap-2">

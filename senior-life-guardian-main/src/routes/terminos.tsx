@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { CANCELLATION_POLICY_BULLETS } from "@/lib/subscription-cancellation-policy";
+import { isInternational } from "@/lib/market";
 import { buildPublicPageMeta, breadcrumbJsonLd, jsonLdHeadScript } from "@/lib/seo";
 
 export const Route = createFileRoute("/terminos")({
@@ -8,7 +9,9 @@ export const Route = createFileRoute("/terminos")({
     const page = buildPublicPageMeta({
       title: "Términos y Condiciones — Alarma Senior Safe",
       description:
-        "Términos del servicio de Alarma Senior Safe: uso, suscripciones, cancelación y responsabilidades. Chile.",
+        isInternational
+          ? "Términos del servicio de Alarma Senior Safe: uso, suscripciones, cancelación y responsabilidades. Latinoamérica."
+          : "Términos del servicio de Alarma Senior Safe: uso, suscripciones, cancelación y responsabilidades. Chile.",
       pathname: "/terminos",
       robots: "index,follow",
     });
@@ -57,7 +60,7 @@ function Terms() {
             <h2 className="text-2xl font-bold mb-3">3. Suscripción y pagos</h2>
             <p className="text-muted-foreground leading-relaxed">
               Ofrecemos planes mensuales y anuales sin permanencia contractual. Los pagos se procesan a
-              través de Webpay Plus. Puedes solicitar la baja del plan en cualquier momento escribiendo a
+              través de {isInternational ? "Lemon Squeezy, en dólares" : "Webpay Plus"}. Puedes solicitar la baja del plan en cualquier momento escribiendo a
               hola@alarmaseniorsafe.cl.
             </p>
           </section>
@@ -79,7 +82,7 @@ function Terms() {
           <section>
             <h2 className="text-2xl font-bold mb-3">5. Activación y pago</h2>
             <p className="text-muted-foreground leading-relaxed">
-              El servicio requiere pago previo con Webpay Plus. Tras confirmar el pago, puedes practicar el botón de emergencia en modo simulación sin envíos reales.
+              El servicio requiere pago previo con {isInternational ? "Lemon Squeezy" : "Webpay Plus"}. Tras confirmar el pago, puedes practicar el botón de emergencia en modo simulación sin envíos reales.
             </p>
           </section>
 
