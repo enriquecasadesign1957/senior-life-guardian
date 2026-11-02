@@ -9,7 +9,8 @@ export function ConnectorPanel() {
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
   const [awaitingSiteId, setAwaitingSiteId] = useState<string | null>(null);
-  const uploadHref = uploadLink(url);
+  const ownApp = isCuidadoWebUrl(url);
+  const uploadHref = !ownApp ? uploadLink(url) : null;
   const tokenReady = TOKEN.test(pairCode);
   const tokenDirty = pairCode.length > 0;
 
@@ -48,6 +49,10 @@ export function ConnectorPanel() {
   async function pair(event: FormEvent) {
     event.preventDefault();
     if (!tokenReady) return;
+    if (ownApp || isCuidadoWebUrl(url)) {
+      setMessage("Pon la URL de tu WordPress (ej. https://www.casadesign.cl), no cuidadoweb.com.");
+      return;
+    }
     setPending(true);
     setMessage("");
     setAwaitingSiteId(null);
@@ -103,34 +108,44 @@ export function ConnectorPanel() {
           </a>
         </li>
         <li>
-          <Step n="2" title="Súbelo en WordPress" />
-          <p className="mt-2 text-sm text-stone-600">Como en la imagen: Plugins, Subir plugin, Instalar ahora. Luego actívalo.</p>
+          <Step n="2" title="Escribe la URL de tu WordPress" />
+          <p className="mt-2 text-sm text-stone-600">
+            Es la dirección de tu sitio en internet, la misma que abre el visitante. Ejemplo:{" "}
+            <span className="font-medium text-ink">https://www.casadesign.cl</span>. No pongas cuidadoweb.com.
+          </p>
+          <div className="mt-3">
+            <label className="block text-sm font-medium" htmlFor="connector-url">
+              URL de tu WordPress
+            </label>
+            <input
+              id="connector-url"
+              name="url"
+              value={url}
+              onChange={(event) => setUrl(event.target.value)}
+              placeholder="https://www.casadesign.cl"
+              autoComplete="url"
+              className="mt-1 w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-base"
+              required
+            />
+            {ownApp ? (
+              <p className="mt-2 text-sm text-red-800" role="alert">
+                Eso es CuidadoWeb. Pon la URL de tu WordPress.
+              </p>
+            ) : null}
+          </div>
+          <p className="mt-3 text-sm text-stone-600">Luego en WordPress: Plugins → Subir plugin → Instalar ahora → Activar.</p>
           {uploadHref ? (
             <a className="mt-2 inline-block text-sm underline decoration-stone-400 underline-offset-2" href={uploadHref}>
-              Abrir esa pantalla en tu sitio
+              Abrir “Subir plugin” en tu WordPress
             </a>
-          ) : (
-            <p className="mt-2 text-sm text-stone-500">Pega la dirección abajo y te abrimos esa pantalla.</p>
-          )}
+          ) : null}
         </li>
         <li>
           <Step n="3" title="Pega el código de 10 minutos" />
+          <p className="mt-2 text-sm text-stone-600">
+            En tu WordPress: Ajustes → Cuidado Conector → Generar código. Pégalo aquí.
+          </p>
           <form onSubmit={pair} className="mt-3 space-y-3">
-            <div>
-              <label className="block text-sm font-medium" htmlFor="connector-url">
-                Dirección del sitio
-              </label>
-              <input
-                id="connector-url"
-                name="url"
-                value={url}
-                onChange={(event) => setUrl(event.target.value)}
-                placeholder="https://tusitio.com"
-                autoComplete="url"
-                className="mt-1 w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-base"
-                required
-              />
-            </div>
             <div>
               <label className="block text-sm font-medium" htmlFor="pair-code">
                 Código del plugin
@@ -153,7 +168,7 @@ export function ConnectorPanel() {
             </div>
             <button
               type="submit"
-              disabled={pending || !tokenReady}
+              disabled={pending || !tokenReady || ownApp}
               className="rounded-full bg-pine px-5 py-3 text-sm font-medium text-white disabled:opacity-60"
             >
               {pending ? "Conectando…" : "Conectar sitio"}
@@ -180,6 +195,22 @@ function Step({ n, title }: { n: string; title: string }) {
       <h3 className="text-base">{title}</h3>
     </div>
   );
+}
+
+function isCuidadoWebUrl(value: string): boolean {
+  try {
+    const withScheme = /^https?:\/\//i.test(value) ? value : `https://${value}`;
+    const hostname = new URL(withScheme).hostname.toLowerCase();
+    return (
+      hostname === "cuidadoweb.com" ||
+      hostname === "www.cuidadoweb.com" ||
+      hostname.endsWith(".cuidadoweb.com") ||
+      hostname.endsWith("-cuidado-web.vercel.app") ||
+      hostname === "cuidadoweb.vercel.app"
+    );
+  } catch {
+    return false;
+  }
 }
 
 function uploadLink(value: string): string | null {

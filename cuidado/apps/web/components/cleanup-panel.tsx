@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { rememberPagoReturn } from "@/components/payment-return";
 import { cleanupProjection, type CleanupPreview } from "@/lib/panel";
 import { isAllowedCheckoutUrl } from "@/lib/rescue";
 
@@ -74,7 +75,8 @@ export function CleanupPanel({ siteId }: { siteId: string | null }) {
         }),
       });
       const body = (await response.json()) as { url?: string; error?: { message?: string } };
-      if (typeof body.url === "string" && isAllowedCheckoutUrl(body.url)) {
+      if (typeof body.url === "string" && isAllowedCheckoutUrl(body.url) && siteId) {
+        rememberPagoReturn(siteId);
         window.location.assign(body.url);
         return;
       }

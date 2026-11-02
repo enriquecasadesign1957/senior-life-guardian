@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { rememberPagoReturn } from "@/components/payment-return";
 import { isAllowedCheckoutUrl } from "@/lib/rescue";
 
 export function PlanPanel({ siteId }: { siteId: string }) {
@@ -23,6 +24,7 @@ export function PlanPanel({ siteId }: { siteId: string }) {
       });
       const body = (await response.json()) as { url?: string; error?: { message?: string } };
       if (typeof body.url === "string" && isAllowedCheckoutUrl(body.url)) {
+        rememberPagoReturn(siteId);
         window.location.assign(body.url);
         return;
       }
