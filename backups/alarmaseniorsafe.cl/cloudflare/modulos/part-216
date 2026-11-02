@@ -1,0 +1,125 @@
+import { r as reactExports, j as jsxRuntimeExports } from "../_libs/react.mjs";
+import { L as Link } from "../_libs/tanstack__react-router.mjs";
+import { b as PLAN_KEY } from "./discount-codes-BOatiw_p.mjs";
+import { i as isDemoMode } from "./demo-config-D1XL_8ap.mjs";
+import { S as SENIOR_SAFE_PLAY_STORE_URL } from "./index.mjs";
+import { d as BookOpen, X, e as Menu, G as Globe, f as Mail, S as Shield } from "../_libs/lucide-react.mjs";
+const logo = "/assets/logo-senior-safe-IwV_otLv.png";
+const defaultCheckoutSearch = {
+  mode: "contratar",
+  plan: PLAN_KEY,
+  periodo: "mensual"
+};
+function SiteHeader() {
+  const [open, setOpen] = reactExports.useState(false);
+  const links = [
+    { label: "Inicio", href: "/", isRoute: true },
+    { label: "¿Qué es?", href: "/#que-es" },
+    { label: "Cómo funciona", href: "/como-funciona", isRoute: true },
+    { label: "Planes", href: "/#planes" },
+    { label: "Guía de uso", href: "/guia", isRoute: true },
+    { label: "Blog", href: "/blog", isRoute: true },
+    { label: "Contacto", href: "/#contacto" }
+  ];
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("header", { className: "sticky top-0 z-50 backdrop-blur-xl bg-white/90 border-b border-border", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("nav", { className: "max-w-6xl mx-auto px-3 sm:px-5 h-11 md:h-16 py-2 flex items-center justify-between", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/", className: "flex items-center gap-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: logo, alt: "Alarma Senior Safe", className: "h-7 w-auto md:h-10" }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hidden md:flex items-center gap-7 text-sm text-muted-foreground font-medium", children: links.map(
+        (l) => l.isRoute ? /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: l.href, className: "hover:text-foreground transition-colors", children: l.label }, l.href) : /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: l.href, className: "hover:text-foreground transition-colors", children: l.label }, l.href)
+      ) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "hidden md:flex items-center gap-3", children: [
+        isDemoMode() && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Link,
+          {
+            to: "/demo",
+            className: "inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-amber-400/50 bg-amber-50 text-amber-900 text-sm font-semibold hover:bg-amber-100 transition",
+            children: "Demo municipal"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          Link,
+          {
+            to: "/guia",
+            className: "inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-[var(--brand-petrol)]/30 text-[var(--brand-petrol-deep)] text-sm font-semibold hover:bg-[var(--brand-petrol)]/5 transition",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(BookOpen, { className: "w-4 h-4" }),
+              "Guía"
+            ]
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/checkout", search: defaultCheckoutSearch, className: "inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--brand-petrol-deep)] text-white text-sm font-semibold hover:opacity-90 transition", children: "Contratar" })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "md:hidden text-foreground", onClick: () => setOpen(!open), "aria-label": "Menu", children: open ? /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-6 h-6" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Menu, { className: "w-6 h-6" }) })
+    ] }),
+    open && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "md:hidden border-t border-border px-6 py-5 flex flex-col gap-4 bg-white", children: [
+      links.map(
+        (l) => l.isRoute ? /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: l.href, onClick: () => setOpen(false), className: "text-foreground py-1", children: l.label }, l.href) : /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: l.href, onClick: () => setOpen(false), className: "text-foreground py-1", children: l.label }, l.href)
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/guia", onClick: () => setOpen(false), className: "px-5 py-4 rounded-full border border-[var(--brand-petrol)]/30 text-[var(--brand-petrol-deep)] font-semibold text-center", children: "Guía de instalación" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/native", onClick: () => setOpen(false), className: "px-5 py-4 rounded-full border border-[var(--brand-petrol)]/30 text-[var(--brand-petrol-deep)] font-semibold text-center", children: "Ya tengo cuenta · Entrar" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/checkout", search: defaultCheckoutSearch, onClick: () => setOpen(false), className: "px-5 py-4 rounded-full bg-[var(--brand-petrol-deep)] text-white font-semibold text-center", children: "Contratar" })
+    ] })
+  ] }) });
+}
+function SiteFooter() {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("footer", { className: "text-white bg-[var(--brand-petrol-deep)]", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-6xl mx-auto px-6 py-14 grid md:grid-cols-4 gap-10", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "md:col-span-2", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bg-white inline-flex p-3 rounded-xl", children: /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: logo, alt: "Alarma Senior Safe", className: "h-12 w-auto" }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-5 text-sm text-white/75 max-w-sm leading-relaxed", children: "Tecnología con corazón. Cuidando a quienes nos cuidaron toda la vida." }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-5 space-y-2 text-sm text-white/85", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Globe, { className: "w-4 h-4" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "alarmaseniorsafe.cl" })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Mail, { className: "w-4 h-4" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "hola@alarmaseniorsafe.cl" })
+          ] })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h4", { className: "text-xs uppercase tracking-wider text-white/50 mb-4 font-bold", children: "Producto" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("ul", { className: "space-y-3 text-sm", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/", className: "text-white/85 hover:text-white", children: "Inicio" }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: "/#que-es", className: "text-white/85 hover:text-white", children: "¿Qué es?" }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/como-funciona", className: "text-white/85 hover:text-white", children: "Cómo funciona" }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: "/#planes", className: "text-white/85 hover:text-white", children: "Planes" }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/guia", className: "text-white/85 hover:text-white", children: "Guía de instalación" }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/las-condes", className: "text-white/85 hover:text-white", children: "Convenio Las Condes" }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/blog", className: "text-white/85 hover:text-white", children: "Blog" }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "a",
+            {
+              href: SENIOR_SAFE_PLAY_STORE_URL,
+              target: "_blank",
+              rel: "noopener noreferrer",
+              className: "text-white/85 hover:text-white",
+              children: "Google Play"
+            }
+          ) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/checkout", search: defaultCheckoutSearch, className: "text-white/85 hover:text-white", children: "Contratar" }) })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h4", { className: "text-xs uppercase tracking-wider text-white/50 mb-4 font-bold", children: "Legal" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("ul", { className: "space-y-3 text-sm", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/privacidad", className: "text-white/85 hover:text-white", children: "Política de privacidad" }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/terminos", className: "text-white/85 hover:text-white", children: "Términos y condiciones" }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: "/#contacto", className: "text-white/85 hover:text-white", children: "Contacto" }) })
+        ] })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border-t border-white/10", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-6xl mx-auto px-6 py-5 flex flex-col md:flex-row justify-between gap-2 text-sm text-white/60", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "flex items-center gap-2", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Shield, { className: "w-4 h-4" }),
+        " © 2026 Alarma Senior Safe. Todos los derechos reservados."
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Hecho en Chile · Soporte 24/7" })
+    ] }) })
+  ] });
+}
+export {
+  SiteHeader as S,
+  SiteFooter as a
+};

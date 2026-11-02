@@ -1,0 +1,774 @@
+import { r as reactExports, j as jsxRuntimeExports } from "../_libs/react.mjs";
+import { e as useNavigate, h as useSearch, L as Link } from "../_libs/tanstack__react-router.mjs";
+import { u as useServerFn } from "./useServerFn-DL2oePlL.mjs";
+import { S as SiteHeader, a as SiteFooter } from "./site-layout-Drvwb4jj.mjs";
+import { c as createSsrRpc } from "./createSsrRpc-D8pBWdiG.mjs";
+import { j as createServerFn } from "./createServerFn-Bu17PEW9.mjs";
+import { c as normalizeDiscountCodeInput, k as annualSavingsClp, b as PLAN_KEY, P as PLAN, f as formatPlanPrice, p as periodoSchema, a as planKeySchema, n as normalizePlanKey } from "./discount-codes-BOatiw_p.mjs";
+import { i as initOneclickCheckout } from "./oneclick.functions-CEmcs7nW.mjs";
+import { i as initWebpayTransaction, m as mockApproveWebpay } from "./webpay.functions-DbhBJ5Mr.mjs";
+import { P as POST_PAYMENT_INSTALL_PATH } from "./post-payment-BtVMraP6.mjs";
+import { g as getServerErrorMessage, s as saveCheckoutDraft } from "./server-error-message-CUynOjvB.mjs";
+import { W as WhatsAppFloat } from "./whatsapp-float-CfwyDlWL.mjs";
+import { t as toast } from "../_libs/sonner.mjs";
+import { f as SENIOR_SAFE_TERMS_CANCELLATION_URL, C as CANCELLATION_POLICY_BULLETS } from "./zoho-smtp-DBq11U6O.mjs";
+import { a as RECURRING_BILLING_DISCLOSURE_BULLETS, b as RECURRING_BILLING_DISCLOSURE_FOOTER, c as RECURRING_BILLING_TERMS_LINK_LABEL, d as RECURRING_BILLING_SUPPORT_EMAIL } from "./recurring-billing-consent-BZWlCMrP.mjs";
+import { l as lasCondesTier, p as parseChileanRut, b as lasCondesCheckoutPath, a as LAS_CONDES_CODE, L as LAS_CONDES_AM_CODE } from "./tarjeta-vecino.server-s7vWwsdK.mjs";
+import "./index.mjs";
+
+
+import { i as Lock, o as Tag, L as LoaderCircle, C as CircleCheck, a as CircleAlert, w as CreditCard, S as Shield, B as Bell, b as MessageCircle, M as MapPin, U as Users, H as Heart, j as Clock, X } from "../_libs/lucide-react.mjs";
+import { s as stringType, o as objectType, b as booleanType, l as literalType } from "../_libs/zod.mjs";
+
+import "../_libs/tanstack__router-core.mjs";
+import "../_libs/tanstack__history.mjs";
+import "../_libs/cookie-es.mjs";
+import "../_libs/seroval.mjs";
+import "../_libs/unenv.mjs";
+
+
+import "../_libs/seroval-plugins.mjs";
+
+
+import "../_libs/react-dom.mjs";
+import "../_libs/isbot.mjs";
+import "./demo-config-D1XL_8ap.mjs";
+import "./senior-access-auth-Bmk7iyGS.mjs";
+import "./twilio-DNHuHEFY.mjs";
+import "./install-step-sync-snfezerQ.mjs";
+import "./client.server-U_pH-Evd.mjs";
+import "../_libs/supabase__supabase-js.mjs";
+import "../_libs/supabase__postgrest-js.mjs";
+import "../_libs/supabase__realtime-js.mjs";
+import "../_libs/supabase__phoenix.mjs";
+import "../_libs/supabase__storage-js.mjs";
+import "../_libs/iceberg-js.mjs";
+import "../_libs/supabase__auth-js.mjs";
+import "../_libs/tslib.mjs";
+import "../_libs/supabase__functions-js.mjs";
+import "./signups-db-JWUtXpaW.mjs";
+import "./twilio-inbound-_C02bj0d.mjs";
+import "../_libs/h3-v2.mjs";
+import "../_libs/rou3.mjs";
+import "../_libs/srvx.mjs";
+
+
+
+
+const createPurchaseSignup = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  nombre: stringType().min(2).max(160),
+  email: stringType().email().max(255),
+  telefono: stringType().min(8).max(40),
+  direccion: stringType().max(255).nullable().optional(),
+  plan: planKeySchema.transform(normalizePlanKey),
+  periodo: periodoSchema,
+  discountCode: stringType().trim().max(64).optional().or(literalType("")),
+  tarjetaVecinoRut: stringType().trim().max(16).optional().or(literalType("")),
+  recurringBillingConsent: booleanType().optional().default(true),
+  firstGuardian: objectType({
+    nombre: stringType().trim().min(2).max(100),
+    telefono: stringType().trim().min(8).max(40),
+    parentesco: stringType().trim().min(2).max(40)
+  }).optional()
+}).parse(input)).handler(createSsrRpc("49263aa3ee9117f2df910b74868e6dffc188033bbea71c85d356956dc46dec62"));
+const VALIDATE_TIMEOUT_MS = 12e3;
+async function validateDiscountViaApi(code, plan, periodo, email) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), VALIDATE_TIMEOUT_MS);
+  try {
+    const res = await fetch("/api/public/validate-discount", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        code,
+        plan,
+        periodo,
+        ...email?.trim() ? { email: email.trim().toLowerCase() } : {}
+      }),
+      signal: controller.signal
+    });
+    let json;
+    try {
+      json = await res.json();
+    } catch {
+      throw new Error("Respuesta inválida del servidor.");
+    }
+    if (!res.ok || !json.ok || !json.discount) {
+      throw new Error(json.error ?? "No pudimos validar el código.");
+    }
+    return json.discount;
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") {
+      throw new Error("Tiempo de espera agotado. Intenta de nuevo.");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+function redirectToOneclickInscription(token, url) {
+  if (typeof document === "undefined") {
+    throw new Error("redirectToOneclickInscription solo puede ejecutarse en el navegador");
+  }
+  if (!token?.trim() || !url?.trim()) {
+    throw new Error("Faltan token o URL de Oneclick");
+  }
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = url;
+  form.style.display = "none";
+  const input = document.createElement("input");
+  input.type = "hidden";
+  input.name = "TBK_TOKEN";
+  input.value = token;
+  form.appendChild(input);
+  document.body.appendChild(form);
+  form.submit();
+}
+function redirectToWebpayPlus(token, url) {
+  if (typeof document === "undefined") {
+    throw new Error("redirectToWebpayPlus solo puede ejecutarse en el navegador");
+  }
+  if (!token?.trim() || !url?.trim()) {
+    throw new Error("Faltan token o URL de Webpay");
+  }
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = url;
+  form.style.display = "none";
+  const input = document.createElement("input");
+  input.type = "hidden";
+  input.name = "token_ws";
+  input.value = token;
+  form.appendChild(input);
+  document.body.appendChild(form);
+  form.submit();
+}
+const CONSULTA_TIMEOUT_MS = 12e3;
+async function consultarTarjetaVecinoViaApi(input) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), CONSULTA_TIMEOUT_MS);
+  try {
+    const res = await fetch("/api/public/consultar-tarjeta-vecino", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+      signal: controller.signal
+    });
+    let json;
+    try {
+      json = await res.json();
+    } catch {
+      throw new Error("Respuesta inválida del servidor.");
+    }
+    if (!res.ok || !json.ok) {
+      throw new Error("error" in json && json.error || "No pudimos consultar la Tarjeta Vecino.");
+    }
+    return json;
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") {
+      throw new Error("Tiempo de espera agotado. Intenta de nuevo.");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+const PETROL = "var(--brand-petrol)";
+const DEEP = "var(--brand-petrol-deep)";
+const GREEN = "#16a34a";
+const CHECKOUT_FEATURE_ICONS = [Bell, MessageCircle, MapPin, Users, Heart, Clock, Shield];
+const phoneField = stringType().trim().min(8, "Ingresa un teléfono válido").max(20).regex(/^[0-9+\s-]+$/, "Solo números");
+const schema = objectType({
+  email: stringType().trim().email("Correo inválido").max(255),
+  phone: phoneField,
+  name: stringType().trim().min(2, "Ingresa el nombre del adulto mayor").max(100)
+});
+const fmt = formatPlanPrice;
+function CheckoutPage() {
+  const navigate = useNavigate();
+  const search = useSearch({
+    from: "/checkout"
+  });
+  const createPurchase = useServerFn(createPurchaseSignup);
+  const initWebpay = useServerFn(initWebpayTransaction);
+  const initOneclick = useServerFn(initOneclickCheckout);
+  useServerFn(mockApproveWebpay);
+  const [yearly, setYearly] = reactExports.useState(search.periodo === "anual");
+  const [form, setForm] = reactExports.useState({
+    email: "",
+    phone: "",
+    name: ""
+  });
+  const [errors, setErrors] = reactExports.useState({});
+  const [submitError, setSubmitError] = reactExports.useState(null);
+  const [loading, setLoading] = reactExports.useState(false);
+  const [redirecting, setRedirecting] = reactExports.useState(false);
+  const [mockLoading, setMockLoading] = reactExports.useState(false);
+  const [discountInput, setDiscountInput] = reactExports.useState(() => search.codigo ? normalizeDiscountCodeInput(search.codigo) : "");
+  const [appliedDiscount, setAppliedDiscount] = reactExports.useState(null);
+  const [discountError, setDiscountError] = reactExports.useState(null);
+  const [discountLoading, setDiscountLoading] = reactExports.useState(false);
+  const [vecinoRut, setVecinoRut] = reactExports.useState("");
+  const [vecinoCheck, setVecinoCheck] = reactExports.useState(null);
+  const [vecinoError, setVecinoError] = reactExports.useState(null);
+  const [vecinoAlternateCode, setVecinoAlternateCode] = reactExports.useState(null);
+  const [vecinoLoading, setVecinoLoading] = reactExports.useState(false);
+  const discountRequestRef = reactExports.useRef(0);
+  const urlCodigoAppliedRef = reactExports.useRef(false);
+  const discountEmailRef = reactExports.useRef("");
+  const listPrice = yearly ? PLAN.yearly : PLAN.monthly;
+  const price = appliedDiscount?.finalPrice ?? listPrice;
+  const savings = reactExports.useMemo(() => annualSavingsClp(), []);
+  const planKey = PLAN_KEY;
+  const periodo = yearly ? "anual" : "mensual";
+  const applyDiscountCode = reactExports.useCallback(async (rawCode, periodoOverride, emailOverride) => {
+    const code = normalizeDiscountCodeInput(rawCode ?? discountInput);
+    if (!code) {
+      setAppliedDiscount(null);
+      setDiscountError(null);
+      setVecinoCheck(null);
+      setVecinoError(null);
+      return;
+    }
+    const activePeriodo = periodoOverride ?? periodo;
+    const email = (emailOverride ?? form.email).trim().toLowerCase();
+    const requestId = ++discountRequestRef.current;
+    setDiscountLoading(true);
+    setDiscountError(null);
+    try {
+      const discount = await validateDiscountViaApi(code, planKey, activePeriodo, email || void 0);
+      if (requestId !== discountRequestRef.current) return;
+      setAppliedDiscount(discount);
+      setDiscountInput(discount.code);
+      discountEmailRef.current = email;
+      toast.success(`Convenio aplicado: ${discount.percentOff}% de descuento`);
+    } catch (err) {
+      if (requestId !== discountRequestRef.current) return;
+      setAppliedDiscount(null);
+      setVecinoCheck(null);
+      setDiscountError(getServerErrorMessage(err, "No pudimos validar el código."));
+    } finally {
+      if (requestId === discountRequestRef.current) {
+        setDiscountLoading(false);
+      }
+    }
+  }, [discountInput, periodo, planKey, form.email]);
+  reactExports.useEffect(() => {
+    const code = search.codigo ? normalizeDiscountCodeInput(search.codigo) : "";
+    if (!code || urlCodigoAppliedRef.current) return;
+    urlCodigoAppliedRef.current = true;
+    const activePeriodo = search.periodo === "anual" ? "anual" : "mensual";
+    void applyDiscountCode(code, activePeriodo);
+  }, [search.codigo, search.periodo, applyDiscountCode]);
+  reactExports.useEffect(() => {
+    if (!discountError?.toLowerCase().includes("correo")) return;
+    const code = normalizeDiscountCodeInput(discountInput);
+    const email = form.email.trim().toLowerCase();
+    if (!code || !stringType().email().safeParse(email).success) return;
+    const timer = setTimeout(() => void applyDiscountCode(code, periodo, email), 400);
+    return () => clearTimeout(timer);
+  }, [form.email, discountInput, discountError, periodo, applyDiscountCode]);
+  reactExports.useEffect(() => {
+    const email = form.email.trim().toLowerCase();
+    if (!appliedDiscount || !discountEmailRef.current) return;
+    if (email === discountEmailRef.current) return;
+    if (!stringType().email().safeParse(email).success) return;
+    setAppliedDiscount(null);
+    setVecinoCheck(null);
+    setDiscountError("Cambiaste tu correo. Vuelve a aplicar el código promocional.");
+  }, [form.email, appliedDiscount]);
+  const vecinoTier = appliedDiscount ? lasCondesTier(appliedDiscount.code) : null;
+  const onConvenioCheckout = Boolean(vecinoTier || lasCondesTier(normalizeDiscountCodeInput(search.codigo ?? "")));
+  const parsedVecinoRut = parseChileanRut(vecinoRut);
+  const vecinoVerified = !!vecinoTier && !!parsedVecinoRut && vecinoCheck?.code === appliedDiscount?.code && vecinoCheck.rut === parsedVecinoRut.formatted;
+  const verifyTarjetaVecino = async () => {
+    if (!appliedDiscount || !vecinoTier) return false;
+    const parsed = parseChileanRut(vecinoRut);
+    if (!parsed) {
+      setVecinoCheck(null);
+      setVecinoError("Ingresa un RUT chileno válido, con dígito verificador.");
+      return false;
+    }
+    setVecinoLoading(true);
+    setVecinoError(null);
+    setVecinoAlternateCode(null);
+    try {
+      const result = await consultarTarjetaVecinoViaApi({
+        rut: parsed.formatted,
+        code: appliedDiscount.code,
+        periodo
+      });
+      if (!result.eligible) {
+        setVecinoCheck(null);
+        setVecinoAlternateCode(result.alternateCode ?? null);
+        setVecinoError(result.message);
+        return false;
+      }
+      setVecinoCheck({
+        code: appliedDiscount.code,
+        rut: parsed.formatted,
+        message: result.message,
+        alternateCode: result.alternateCode
+      });
+      return true;
+    } catch (err) {
+      setVecinoCheck(null);
+      setVecinoError(getServerErrorMessage(err, "No pudimos consultar la Tarjeta Vecino."));
+      return false;
+    } finally {
+      setVecinoLoading(false);
+    }
+  };
+  const setBillingPeriod = (nextYearly) => {
+    setYearly(nextYearly);
+    if (appliedDiscount) {
+      void applyDiscountCode(appliedDiscount.code, nextYearly ? "anual" : "mensual");
+    }
+  };
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitError(null);
+    const r = schema.safeParse(form);
+    if (!r.success) {
+      const errs = {};
+      r.error.issues.forEach((i) => {
+        errs[i.path[0]] = i.message;
+      });
+      setErrors(errs);
+      return;
+    }
+    if (vecinoTier && !vecinoVerified) {
+      setSubmitError("Verifica la Tarjeta Vecino antes de pagar.");
+      return;
+    }
+    setErrors({});
+    setLoading(true);
+    const baseData = {
+      nombre: r.data.name,
+      email: r.data.email.toLowerCase(),
+      telefono: r.data.phone,
+      direccion: null,
+      plan: planKey,
+      periodo,
+      discountCode: appliedDiscount?.code ?? "",
+      tarjetaVecinoRut: vecinoVerified ? parsedVecinoRut?.formatted ?? "" : "",
+      recurringBillingConsent: true
+    };
+    try {
+      const {
+        signup,
+        alreadyPaid
+      } = await createPurchase({
+        data: baseData
+      });
+      saveCheckoutDraft({
+        email: r.data.email,
+        phone: r.data.phone,
+        seniorName: r.data.name,
+        signupId: signup.id
+      });
+      try {
+        const userPayload = {
+          id: signup.id,
+          nombre: signup.nombre,
+          email: signup.email,
+          telefono: signup.telefono,
+          plan: signup.plan,
+          periodo: signup.periodo,
+          purchase_mode: "contratar"
+        };
+        sessionStorage.setItem("seniorsafe_user", JSON.stringify(userPayload));
+        localStorage.setItem("seniorsafe_user_backup", JSON.stringify(userPayload));
+      } catch {
+      }
+      if (alreadyPaid) {
+        setLoading(false);
+        toast.message("Ya tienes una suscripción activa.", {
+          description: "Te llevamos a instalar o abrir la app."
+        });
+        navigate({
+          to: POST_PAYMENT_INSTALL_PATH,
+          search: {
+            ss: signup.id
+          }
+        });
+        return;
+      }
+      let useOneclick = false;
+      try {
+        const oc = await initOneclick({
+          data: {
+            signupId: signup.id,
+            plan: planKey,
+            periodo
+          }
+        });
+        useOneclick = true;
+        const tbkToken = oc.tbkToken ?? oc.token;
+        if (!oc.url || !tbkToken) {
+          throw new Error("Transbank no devolvió la URL o el token de inscripción Oneclick.");
+        }
+        setLoading(false);
+        setRedirecting(true);
+        toast.message("Redirigiendo a Oneclick…", {
+          description: "Inscribirás tu tarjeta en Transbank para pagos recurrentes."
+        });
+        redirectToOneclickInscription(tbkToken, oc.url);
+        return;
+      } catch (oneclickErr) {
+        if (false) ;
+        const msg = oneclickErr?.message ?? "";
+        if (!msg.includes("Oneclick Mall no está habilitado")) {
+          throw oneclickErr;
+        }
+      }
+      if (useOneclick) return;
+      const wp = await initWebpay({
+        data: {
+          signupId: signup.id,
+          plan: planKey,
+          periodo
+        }
+      });
+      const tokenWs = wp?.token_ws ?? wp?.token;
+      if (!wp?.url || !tokenWs) {
+        throw new Error("Transbank no devolvió la URL o el token de la pasarela.");
+      }
+      setLoading(false);
+      setRedirecting(true);
+      toast.message("Redirigiendo a Webpay Plus…", {
+        description: "Serás llevado a la pasarela oficial de Transbank para pagar."
+      });
+      redirectToWebpayPlus(tokenWs, wp.url);
+    } catch (err) {
+      console.error("Checkout error:", err);
+      const msg = err instanceof Error ? err.message : "";
+      setSubmitError(msg ? msg : "No pudimos iniciar el pago con Oneclick. Intenta nuevamente o contáctanos por WhatsApp.");
+      setLoading(false);
+      setRedirecting(false);
+    }
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-h-screen flex flex-col bg-background", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(SiteHeader, {}),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("main", { className: "flex-1", style: {
+      background: "var(--gradient-soft)"
+    }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-6xl mx-auto px-6 py-12 md:py-16", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-center mb-8 max-w-2xl mx-auto", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold", style: {
+          background: "color-mix(in oklab, var(--brand-petrol) 12%, white)",
+          color: DEEP
+        }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Lock, { className: "w-4 h-4" }),
+          " Pago seguro Oneclick · Transbank"
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "mt-5 text-3xl md:text-5xl font-bold tracking-tight text-foreground leading-[1.1]", children: "Contrata Senior Safe" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-4 text-base md:text-lg text-muted-foreground", children: "Solo 3 datos y pagas con Oneclick (Transbank) en menos de 30 segundos. El guardián se inscribe después del pago." })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid lg:grid-cols-[1fr_420px] gap-8", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("form", { onSubmit, className: "bg-card border border-border rounded-3xl p-6 md:p-8 shadow-sm space-y-7", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "text-sm font-bold text-foreground mb-3 block", children: [
+              "1. ",
+              PLAN.displayName
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "rounded-2xl p-4 border-2 shadow-md", style: {
+              borderColor: "var(--brand-petrol)",
+              background: "color-mix(in oklab, var(--brand-petrol) 6%, white)"
+            }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-bold text-foreground", children: PLAN.name }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-sm text-muted-foreground mt-1", children: [
+                "$",
+                fmt(PLAN.monthly),
+                " /mes · $",
+                fmt(PLAN.yearly),
+                " /año (",
+                PLAN.yearlySavingsLabel.toLowerCase(),
+                ")"
+              ] })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("label", { className: "text-sm font-bold text-foreground mb-3 block", children: "2. Período de facturación" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "inline-flex items-center bg-muted rounded-full p-1.5 w-full sm:w-auto", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { type: "button", onClick: () => setBillingPeriod(false), className: `flex-1 sm:flex-none px-5 py-2 rounded-full text-sm font-semibold transition ${!yearly ? "text-white" : "text-muted-foreground"}`, style: !yearly ? {
+                background: DEEP
+              } : void 0, children: [
+                "Mensual · $",
+                fmt(PLAN.monthly)
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { type: "button", onClick: () => setBillingPeriod(true), className: `flex-1 sm:flex-none px-5 py-2 rounded-full text-sm font-semibold transition flex items-center justify-center gap-2 ${yearly ? "text-white" : "text-muted-foreground"}`, style: yearly ? {
+                background: DEEP
+              } : void 0, children: [
+                "Anual · $",
+                fmt(PLAN.yearly),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "px-2 py-0.5 rounded-full text-white text-[10px] font-bold", style: {
+                  background: GREEN
+                }, children: PLAN.yearlySavingsLabel.toUpperCase() })
+              ] })
+            ] })
+          ] }),
+          !onConvenioCheckout && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "rounded-2xl border p-4 md:p-5", style: {
+            borderColor: "color-mix(in oklab, var(--brand-petrol) 22%, white)",
+            background: "color-mix(in oklab, var(--brand-petrol) 6%, white)"
+          }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-sm font-bold text-foreground", children: "¿Tienes Tarjeta Vecino de Las Condes?" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground mt-1 leading-relaxed", children: "Aquí se cobra el precio de lista. El descuento del convenio se aplica en el enlace correspondiente, después de verificar el RUT del titular." }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3 flex flex-col sm:flex-row gap-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: lasCondesCheckoutPath(LAS_CONDES_CODE, periodo), className: "inline-flex items-center justify-center px-4 py-2.5 rounded-full text-sm font-semibold text-white", style: {
+                background: DEEP
+              }, children: "Tarjeta Vecino · 15%" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: lasCondesCheckoutPath(LAS_CONDES_AM_CODE, periodo), className: "inline-flex items-center justify-center px-4 py-2.5 rounded-full text-sm font-semibold border", style: {
+                borderColor: DEEP,
+                color: DEEP
+              }, children: "Adulto Mayor · 20%" })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("label", { className: "text-sm font-bold text-foreground mb-1 block", children: "3. Datos para pagar e instalar" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground mb-3", children: "Solo 3 datos. Guardián y dirección se completan después del pago (menos de 1 minuto)." }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-4", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Field, { label: "Email del comprador / pagador", name: "email", type: "email", value: form.email, onChange: (v) => setForm({
+                ...form,
+                email: v
+              }), error: errors.email, placeholder: "tu@email.cl" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Field, { label: "Teléfono / WhatsApp del comprador", name: "phone", value: form.phone, onChange: (v) => setForm({
+                ...form,
+                phone: v
+              }), error: errors.phone, placeholder: "+56 9 ..." }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Field, { label: "Nombre completo del adulto mayor", name: "name", value: form.name, onChange: (v) => setForm({
+                ...form,
+                name: v
+              }), error: errors.name, placeholder: "María González" })
+            ] }),
+            appliedDiscount && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-4 p-4 rounded-2xl border text-sm", style: {
+              borderColor: "color-mix(in oklab, #16a34a 30%, white)",
+              background: "color-mix(in oklab, #16a34a 6%, white)",
+              color: GREEN
+            }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "font-bold text-foreground flex items-center gap-2", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(Tag, { className: "w-4 h-4" }),
+                " Convenio ",
+                appliedDiscount.code,
+                " aplicado"
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-muted-foreground mt-1", children: [
+                appliedDiscount.percentOff,
+                "% de descuento · Ahorras $",
+                fmt(appliedDiscount.discountAmount)
+              ] })
+            ] }),
+            vecinoTier && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-4 p-4 rounded-2xl border border-border bg-background space-y-3", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-sm font-bold text-foreground", children: vecinoTier === "adulto_mayor" ? "Tarjeta Vecino Adulto Mayor" : "Tarjeta Vecino" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground mt-1", children: "Ingresa el RUT del titular. Antes de cobrar consultamos si la tarjeta está activa en el portal de Las Condes." })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Field, { label: "RUT del titular", name: "rut", value: vecinoRut, onChange: (v) => {
+                setVecinoRut(v);
+                setVecinoError(null);
+              }, placeholder: "12.345.678-5" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { type: "button", onClick: () => void verifyTarjetaVecino(), disabled: vecinoLoading || loading, className: "inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold text-white disabled:opacity-70", style: {
+                background: DEEP
+              }, children: [
+                vecinoLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-4 h-4 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { className: "w-4 h-4" }),
+                vecinoLoading ? "Consultando portal…" : "Verificar tarjeta"
+              ] }),
+              vecinoVerified && vecinoCheck && /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs leading-relaxed", style: {
+                color: GREEN
+              }, children: [
+                vecinoCheck.message,
+                vecinoCheck.alternateCode && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                  " ",
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: lasCondesCheckoutPath(vecinoCheck.alternateCode, periodo), className: "font-semibold underline", children: "Abrir el otro convenio" })
+                ] })
+              ] }),
+              vecinoError && /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-destructive leading-relaxed", children: [
+                vecinoError,
+                vecinoAlternateCode && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                  " ",
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: lasCondesCheckoutPath(vecinoAlternateCode, periodo), className: "font-semibold underline", children: "Ir al convenio de 15%" })
+                ] })
+              ] })
+            ] }),
+            discountLoading && /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-2 text-xs text-muted-foreground inline-flex items-center gap-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-3.5 h-3.5 animate-spin" }),
+              " Validando convenio…"
+            ] }),
+            discountError && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-xs text-destructive", children: discountError })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("label", { className: "text-sm font-bold text-foreground mb-3 block", children: "Cobros recurrentes Oneclick" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "rounded-2xl border p-4 md:p-5 space-y-3 text-sm text-muted-foreground leading-relaxed", style: {
+              borderColor: "color-mix(in oklab, var(--brand-petrol) 22%, white)",
+              background: "color-mix(in oklab, var(--brand-petrol) 4%, white)"
+            }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-semibold text-foreground", children: "Al pagar autorizas los cobros automáticos de tu suscripción" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "space-y-2 list-disc pl-4", children: RECURRING_BILLING_DISCLOSURE_BULLETS.map((line) => /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: line }, line)) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: RECURRING_BILLING_DISCLOSURE_FOOTER }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: SENIOR_SAFE_TERMS_CANCELLATION_URL, target: "_blank", rel: "noopener noreferrer", className: "font-semibold underline", style: {
+                  color: DEEP
+                }, children: RECURRING_BILLING_TERMS_LINK_LABEL }),
+                " · ",
+                "Cancelar:",
+                " ",
+                /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: `mailto:${RECURRING_BILLING_SUPPORT_EMAIL}`, className: "font-semibold underline", style: {
+                  color: DEEP
+                }, children: RECURRING_BILLING_SUPPORT_EMAIL })
+              ] })
+            ] })
+          ] }),
+          submitError && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-3 p-4 rounded-2xl border border-destructive/30 bg-destructive/5 text-sm text-destructive", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(CircleAlert, { className: "w-5 h-5 mt-0.5 shrink-0" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: submitError })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { type: "submit", disabled: loading || redirecting || vecinoLoading || !!vecinoTier && !vecinoVerified, className: "w-full inline-flex items-center justify-center gap-3 px-6 py-5 rounded-full text-white font-bold text-base hover:scale-[1.01] transition shadow-xl disabled:opacity-80 disabled:cursor-wait disabled:hover:scale-100", style: {
+            background: GREEN
+          }, children: loading || redirecting ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-5 h-5 animate-spin" }),
+            redirecting ? "Abriendo pasarela Oneclick…" : "Conectando con Transbank…"
+          ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(CreditCard, { className: "w-5 h-5" }),
+            "Pagar con Oneclick · $",
+            fmt(price)
+          ] }) }),
+          vecinoTier && !vecinoVerified && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-center text-xs text-muted-foreground -mt-2", children: "Verifica la Tarjeta Vecino para habilitar el pago con este convenio." }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-center text-xs text-muted-foreground -mt-2", children: [
+            "Al continuar aceptas los ",
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/terminos", className: "underline", children: "Términos" }),
+            " y la ",
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/privacidad", className: "underline", children: "Política de privacidad" }),
+            "."
+          ] }),
+          false
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("aside", { className: "space-y-5 lg:sticky lg:top-24 self-start", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-card border border-border rounded-3xl p-6 md:p-7 shadow-sm", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground mb-2", children: "Resumen" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-baseline justify-between", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "text-xl font-bold text-foreground", children: PLAN.displayName }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs px-2.5 py-1 rounded-full font-semibold", style: {
+                background: "color-mix(in oklab, #16a34a 14%, white)",
+                color: GREEN
+              }, children: "Pago previo obligatorio" })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-5 flex items-baseline gap-1.5 flex-wrap", children: [
+              appliedDiscount && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-lg text-muted-foreground line-through mr-1", children: [
+                "$",
+                fmt(listPrice)
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-4xl font-bold tracking-tight text-foreground", children: [
+                "$",
+                fmt(price)
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-muted-foreground text-sm", children: [
+                "/",
+                yearly ? "año" : "mes"
+              ] })
+            ] }),
+            appliedDiscount && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-2 text-sm font-semibold", style: {
+              color: GREEN
+            }, children: [
+              "Convenio ",
+              appliedDiscount.code,
+              ": −",
+              appliedDiscount.percentOff,
+              "% (−$",
+              fmt(appliedDiscount.discountAmount),
+              ")"
+            ] }),
+            yearly && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-1 text-sm font-semibold", style: {
+              color: GREEN
+            }, children: [
+              PLAN.yearlySavingsLabel,
+              " ($",
+              fmt(savings),
+              " menos que 12 meses)"
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-5 p-4 rounded-2xl border", style: {
+              borderColor: "color-mix(in oklab, #16a34a 30%, white)",
+              background: "color-mix(in oklab, #16a34a 6%, white)"
+            }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-3", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Shield, { className: "w-5 h-5 mt-0.5 shrink-0", style: {
+                color: GREEN
+              } }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-sm text-foreground leading-relaxed", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "Acceso tras confirmar el pago en Transbank." }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground", children: "Luego practicas el botón de emergencia en modo simulación (sin Twilio)." })
+              ] })
+            ] }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-5", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3", children: "Incluye" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "space-y-2.5", children: PLAN.features.map((label, i) => {
+                const Icon = CHECKOUT_FEATURE_ICONS[i] ?? CircleCheck;
+                return /* @__PURE__ */ jsxRuntimeExports.jsxs("li", { className: "flex items-start gap-3 text-sm text-foreground", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(Icon, { className: "w-4 h-4 mt-0.5 shrink-0", style: {
+                    color: PETROL
+                  } }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: label })
+                ] }, label);
+              }) })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-card border border-border rounded-3xl p-6 grid grid-cols-2 gap-4 shadow-sm", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Trust, { icon: CreditCard, title: "Oneclick", sub: "Pago en CLP" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Trust, { icon: Lock, title: "SSL 256-bit", sub: "Datos cifrados" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Trust, { icon: MessageCircle, title: "Soporte 24/7", sub: "WhatsApp directo" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Trust, { icon: X, title: "Sin permanencia", sub: "Sin cargo extra al cancelar" })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-card border border-border rounded-3xl p-6 shadow-sm", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground mb-3", children: "Cancelación y reembolsos" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "space-y-2.5 text-sm text-muted-foreground leading-relaxed list-disc pl-4", children: CANCELLATION_POLICY_BULLETS.map((line) => /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: line }, line)) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-4 text-xs text-muted-foreground", children: [
+              "Al continuar aceptas esta política y nuestros",
+              " ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/terminos", className: "font-semibold underline", style: {
+                color: DEEP
+              }, children: "Términos y Condiciones" }),
+              "."
+            ] })
+          ] })
+        ] })
+      ] })
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(SiteFooter, {}),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(WhatsAppFloat, {})
+  ] });
+}
+function Field({
+  label,
+  name,
+  value,
+  onChange,
+  error,
+  type = "text",
+  placeholder
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("label", { htmlFor: name, className: "text-xs font-semibold text-muted-foreground mb-1.5 block", children: label }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("input", { id: name, name, type, value, onChange: (e) => onChange(e.target.value), placeholder, className: `w-full px-4 py-3 rounded-xl border bg-background text-foreground text-base outline-none transition focus:border-foreground/40 ${error ? "border-destructive" : "border-border"}` }),
+    error && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1 text-xs text-destructive", children: error })
+  ] });
+}
+function Trust({
+  icon: Icon,
+  title,
+  sub
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-10 h-10 rounded-xl flex items-center justify-center shrink-0", style: {
+      background: "color-mix(in oklab, var(--brand-petrol) 10%, white)",
+      color: DEEP
+    }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Icon, { className: "w-5 h-5" }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-sm font-bold text-foreground truncate", children: title }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[11px] text-muted-foreground truncate", children: sub })
+    ] })
+  ] });
+}
+export {
+  CheckoutPage as component
+};

@@ -37,6 +37,8 @@ import {
 import { normalizeDiscountCodeInput, type PublicDiscountPreview } from "@/lib/discount-codes";
 import { getServerErrorMessage } from "@/lib/server-error-message";
 import { buildPrivatePageMeta } from "@/lib/seo";
+import { isInternational } from "@/lib/market";
+import { LemonCheckoutPage } from "@/components/lemon-checkout-page";
 
 const searchSchema = z.object({
   mode: z
@@ -75,10 +77,17 @@ export const Route = createFileRoute("/checkout")({
   head: () =>
     buildPrivatePageMeta(
       "Contratar Senior Safe — Checkout seguro",
-      "Contrata Senior Safe con pago seguro Webpay Plus. Activación inmediata tras confirmar el pago.",
+      isInternational
+        ? "Contrata Senior Safe con pago seguro en Lemon Squeezy, en dólares. Activación tras confirmar el pago."
+        : "Contrata Senior Safe con pago seguro Webpay Plus. Activación inmediata tras confirmar el pago.",
     ),
-  component: CheckoutPage,
+  component: CheckoutRoute,
 });
+
+function CheckoutRoute() {
+  if (isInternational) return <LemonCheckoutPage />;
+  return <CheckoutPage />;
+}
 
 
 const PETROL = "var(--brand-petrol)";

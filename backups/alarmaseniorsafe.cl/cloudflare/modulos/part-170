@@ -1,0 +1,65 @@
+import { c as createServerRpc } from "./createServerRpc-Bn6pI9Hf.mjs";
+import { j as createServerFn } from "./createServerFn-Bu17PEW9.mjs";
+import { s as syncDeviceStatus } from "./device-status-sync-CbTBoYX6.mjs";
+import { s as seniorAccessTokenSchema, a as assertSeniorAccess } from "./senior-access-auth-Bmk7iyGS.mjs";
+
+import { o as objectType, n as numberType, s as stringType, b as booleanType } from "../_libs/zod.mjs";
+import "../_libs/tanstack__router-core.mjs";
+import "../_libs/tanstack__history.mjs";
+import "../_libs/cookie-es.mjs";
+import "../_libs/seroval.mjs";
+import "../_libs/unenv.mjs";
+
+
+
+import "../_libs/seroval-plugins.mjs";
+
+
+import "./client.server-U_pH-Evd.mjs";
+import "../_libs/supabase__supabase-js.mjs";
+import "../_libs/supabase__postgrest-js.mjs";
+import "../_libs/supabase__realtime-js.mjs";
+import "../_libs/supabase__phoenix.mjs";
+import "../_libs/supabase__storage-js.mjs";
+import "../_libs/iceberg-js.mjs";
+import "../_libs/supabase__auth-js.mjs";
+import "../_libs/tslib.mjs";
+import "../_libs/supabase__functions-js.mjs";
+const Schema = objectType({
+  signupId: stringType().uuid(),
+  accessToken: seniorAccessTokenSchema,
+  battery_level: numberType().int().min(0).max(100).nullable().optional(),
+  gps_enabled: booleanType().nullable().optional(),
+  internet_connected: booleanType().nullable().optional(),
+  app_version: stringType().max(40).nullable().optional(),
+  last_lat: numberType().nullable().optional(),
+  last_lng: numberType().nullable().optional()
+});
+const upsertHeartbeat_createServerFn_handler = createServerRpc({
+  id: "dc9bc96118e6fcab2406d51b9a7ebac3fe76136a601b5df973e2acd759e8bdb3",
+  name: "upsertHeartbeat",
+  filename: "src/lib/heartbeat.functions.ts"
+}, (opts) => upsertHeartbeat.__executeServer(opts));
+const upsertHeartbeat = createServerFn({
+  method: "POST"
+}).inputValidator((input) => Schema.parse(input)).handler(upsertHeartbeat_createServerFn_handler, async ({
+  data
+}) => {
+  await assertSeniorAccess(data.signupId, data.accessToken);
+  const result = await syncDeviceStatus({
+    contractSignupId: data.signupId,
+    ...data.battery_level != null ? {
+      battery_level: data.battery_level
+    } : {},
+    gps_enabled: data.gps_enabled ?? null,
+    // Si el ping llegó al servidor, hay conexión a internet.
+    internet_connected: data.internet_connected ?? true,
+    app_version: data.app_version ?? null,
+    last_lat: data.last_lat ?? null,
+    last_lng: data.last_lng ?? null
+  });
+  return result;
+});
+export {
+  upsertHeartbeat_createServerFn_handler
+};

@@ -1,0 +1,149 @@
+import { j as jsxRuntimeExports } from "../_libs/react.mjs";
+import { L as Link } from "../_libs/tanstack__react-router.mjs";
+import { e as DEMO_NAV_SECTIONS } from "./demo-data-CXO5wtMy.mjs";
+import { u as useDemo } from "./demo-context-qctLjgP3.mjs";
+import { D as DemoNav } from "./demo-nav-JE_mIMCo.mjs";
+import { h as Route$V } from "./router-FK5WbXyp.mjs";
+import "./index.mjs";
+
+import "../_libs/sonner.mjs";
+
+
+import { U as Users, B as Bell, j as Clock, H as Heart, n as ChevronRight } from "../_libs/lucide-react.mjs";
+
+import "../_libs/tanstack__router-core.mjs";
+import "../_libs/tanstack__history.mjs";
+import "../_libs/cookie-es.mjs";
+import "../_libs/seroval.mjs";
+import "../_libs/unenv.mjs";
+
+
+import "../_libs/seroval-plugins.mjs";
+
+
+import "../_libs/react-dom.mjs";
+import "../_libs/isbot.mjs";
+import "./demo-config-D1XL_8ap.mjs";
+import "./utils-H80jjgLf.mjs";
+import "../_libs/clsx.mjs";
+import "../_libs/tailwind-merge.mjs";
+import "../_libs/tanstack__query-core.mjs";
+import "../_libs/tanstack__react-query.mjs";
+import "./plans-BJeLFmLc.mjs";
+import "../_libs/zod.mjs";
+import "./maps-BhXedqc-.mjs";
+import "./transbank-oneclick-mall-CC5wwzFZ.mjs";
+import "../_libs/h3-v2.mjs";
+import "../_libs/rou3.mjs";
+import "../_libs/srvx.mjs";
+
+
+
+
+import "./ack-alert-hZc0eMx8.mjs";
+import "./client.server-U_pH-Evd.mjs";
+import "../_libs/supabase__supabase-js.mjs";
+import "../_libs/supabase__postgrest-js.mjs";
+import "../_libs/supabase__realtime-js.mjs";
+import "../_libs/supabase__phoenix.mjs";
+import "../_libs/supabase__storage-js.mjs";
+import "../_libs/iceberg-js.mjs";
+import "../_libs/supabase__auth-js.mjs";
+import "../_libs/tslib.mjs";
+import "../_libs/supabase__functions-js.mjs";
+import "./twilio-DNHuHEFY.mjs";
+import "./zoho-smtp-lj0bCuK6.mjs";
+import "./install-step-sync-65QKjQIB.mjs";
+import "./signups-db-JWUtXpaW.mjs";
+import "./twilio-inbound-_C02bj0d.mjs";
+import "./account-lookup-CBKDZ0Aw.mjs";
+import "./contacts-storage-DdsYD-uQ.mjs";
+import "./phone-utils-D7EH6fht.mjs";
+import "./senior-access-auth-Bmk7iyGS.mjs";
+import "./discount-codes-BbIma2Cq.mjs";
+import "./discount.functions-CbzrjeJP.mjs";
+import "./createSsrRpc-14pD3De2.mjs";
+import "./createServerFn-CqTdkD5n.mjs";
+import "./whatsapp-inbox-CZiWC44X.mjs";
+import "./admin-auth-5OIH6Qjw.mjs";
+import "./post-payment-install-notify-6plkg_BS.mjs";
+import "./transactional-email-html-C_kx3NhX.mjs";
+import "./emergency-cascade-continuation-BhQV3eMZ.mjs";
+import "./pin-reset-B5nhyHPX.mjs";
+import "./subscription-renewal-CVyJ9Wsj.mjs";
+import "./oneclick-renewal-charge-XKyXWH2D.mjs";
+import "../_libs/react-email__render.mjs";
+import "../_libs/prettier.mjs";
+import "../_libs/deepmerge.mjs";
+import "../_libs/react-email__html.mjs";
+import "../_libs/react-email__head.mjs";
+import "../_libs/react-email__preview.mjs";
+import "../_libs/react-email__body.mjs";
+import "../_libs/react-email__container.mjs";
+import "../_libs/react-email__section.mjs";
+import "../_libs/react-email__heading.mjs";
+import "../_libs/react-email__text.mjs";
+import "../_libs/react-email__button.mjs";
+import "../_libs/react-email__link.mjs";
+import "../_libs/react-email__hr.mjs";
+const DEEP = "var(--brand-petrol-deep)";
+function DemoHubPage() {
+  const {
+    preset
+  } = useDemo();
+  const institucion = Route$V.useSearch().institucion ?? preset.slug;
+  const kpis = preset.kpis;
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-8", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm font-bold uppercase tracking-wider text-muted-foreground", children: "Programa municipal" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-3xl font-bold mt-1", children: preset.municipality.nombre }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-muted-foreground mt-2 max-w-2xl", children: [
+        "Modo demostración para reuniones con municipalidades. UI y flujos reales de Senior Safe, datos simulados alineados al modelo ",
+        /* @__PURE__ */ jsxRuntimeExports.jsx("code", { className: "text-xs bg-muted px-1 rounded", children: "contract_signups" }),
+        " y",
+        " ",
+        /* @__PURE__ */ jsxRuntimeExports.jsx("code", { className: "text-xs bg-muted px-1 rounded", children: "alert_logs" }),
+        "."
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid sm:grid-cols-2 lg:grid-cols-4 gap-4", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Kpi, { icon: Users, label: "Usuarios protegidos", value: kpis.usuarios_protegidos.toLocaleString("es-CL") }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Kpi, { icon: Bell, label: "Alertas del mes", value: String(kpis.alertas_mes) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Kpi, { icon: Clock, label: "Respuesta prom.", value: `${kpis.tiempo_respuesta_promedio_min} min` }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Kpi, { icon: Heart, label: "Satisfacción", value: `${kpis.satisfaccion_pct}%` })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "lg:hidden", children: /* @__PURE__ */ jsxRuntimeExports.jsx(DemoNav, { compact: true }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid md:grid-cols-2 gap-4", children: DEMO_NAV_SECTIONS.map((s) => /* @__PURE__ */ jsxRuntimeExports.jsxs(Link, { to: s.to, search: {
+      institucion
+    }, className: "group p-5 rounded-2xl border border-border bg-card hover:shadow-md transition flex items-center justify-between", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-bold text-foreground group-hover:underline", children: s.label }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-sm text-muted-foreground mt-0.5", children: s.desc })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronRight, { className: "w-5 h-5 text-muted-foreground group-hover:translate-x-0.5 transition", style: {
+        color: DEEP
+      } })
+    ] }, s.to)) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-4 rounded-2xl border border-dashed border-amber-300 bg-amber-50/80 text-sm text-amber-950", children: [
+      "Usa el botón flotante ",
+      /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "«Simular Emergencia»" }),
+      " para ejecutar la cascada SOS (SMS → WhatsApp → confirmación) sin enviar mensajes reales."
+    ] })
+  ] });
+}
+function Kpi({
+  icon: Icon,
+  label,
+  value
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-4 rounded-2xl border border-border bg-card", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Icon, { className: "w-5 h-5 mb-2 opacity-70", style: {
+      color: DEEP
+    } }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-2xl font-bold", children: value }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-xs text-muted-foreground", children: label })
+  ] });
+}
+export {
+  DemoHubPage as component
+};

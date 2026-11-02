@@ -1,0 +1,20 @@
+Respaldo de alarmaseniorsafe.com — 1 de noviembre de 2026 (noche, hora de Chile).
+
+Qué hay aquí
+- codigo/                  código del sitio internacional
+- compilado/               el build que quedó publicado (precios en dólares y Lemon Squeezy)
+- cloudflare/worker.multipart   copia exacta del Worker publicado (alarmaseniorsafe-com)
+- cloudflare/modulos/      el mismo Worker, separado en archivos
+- cloudflare/settings.json variables públicas. No hay secretos de Twilio ni Groq en este Worker
+- cloudflare/routes.json   rutas: alarmaseniorsafe.com/* y www.alarmaseniorsafe.com/*
+
+El WhatsApp de la página es el de Chile: +56 9 7140 4580.
+El SMS y la llamada de las alertas siguen saliendo del sitio de Chile (+56 2 2914 7733).
+
+Para volver a publicarlo
+1. Entra a codigo/
+2. npm install
+3. npx wrangler login
+4. npm run cf:deploy:com
+
+No uses npm run cf:deploy. Ese otro comando publica alarmaseniorsafe.cl.

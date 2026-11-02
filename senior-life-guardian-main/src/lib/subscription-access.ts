@@ -1,3 +1,5 @@
+import { SUPPORT_EMAIL } from "@/lib/market";
+
 /** Estados que permiten usar el servicio (alertas, app). */
 const ALLOWED_STATUSES = new Set(["active"]);
 
@@ -19,5 +21,5 @@ export function subscriptionBlockedMessage(
   if (subscriptionStatus === "pending_payment" || subscriptionStatus === "payment_failed") {
     return "Completa el pago de tu plan para activar las alertas de emergencia.";
   }
-  return "Tu plan no está activo. Contacta a hola@alarmaseniorsafe.cl";
+  return `Tu plan no está activo. Contacta a ${SUPPORT_EMAIL}`;
 }

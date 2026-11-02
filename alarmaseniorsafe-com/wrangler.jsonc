@@ -1,0 +1,10 @@
+{
+  "name": "alarmaseniorsafe-com",
+  "main": "src/index.js",
+  "compatibility_date": "2025-09-24",
+  "workers_dev": true,
+  "routes": [
+    { "pattern": "alarmaseniorsafe.com/*", "zone_name": "alarmaseniorsafe.com" },
+    { "pattern": "www.alarmaseniorsafe.com/*", "zone_name": "alarmaseniorsafe.com" }
+  ]
+}

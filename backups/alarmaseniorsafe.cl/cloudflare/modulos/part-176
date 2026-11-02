@@ -1,0 +1,72 @@
+import { j as jsxRuntimeExports } from "../_libs/react.mjs";
+import { S as SiteHeader, a as SiteFooter } from "./site-layout-Drvwb4jj.mjs";
+import "./index.mjs";
+
+
+import "../_libs/tanstack__react-router.mjs";
+import "../_libs/tanstack__router-core.mjs";
+import "../_libs/tanstack__history.mjs";
+import "../_libs/cookie-es.mjs";
+import "../_libs/seroval.mjs";
+import "../_libs/unenv.mjs";
+
+
+import "../_libs/seroval-plugins.mjs";
+
+
+import "../_libs/react-dom.mjs";
+import "../_libs/isbot.mjs";
+import "./discount-codes-BOatiw_p.mjs";
+import "../_libs/zod.mjs";
+import "./demo-config-D1XL_8ap.mjs";
+import "../_libs/lucide-react.mjs";
+import "../_libs/h3-v2.mjs";
+import "../_libs/rou3.mjs";
+import "../_libs/srvx.mjs";
+
+
+
+
+function Privacy() {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-h-screen bg-background text-foreground", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(SiteHeader, {}),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("main", { className: "max-w-3xl mx-auto px-6 py-16 md:py-24", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-4xl md:text-5xl font-bold tracking-tight mb-3", children: "Política de Privacidad" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground mb-10", children: "Última actualización: julio 2026" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "prose prose-neutral max-w-none space-y-8 text-foreground", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-2xl font-bold mb-3", children: "1. Información que recopilamos" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground leading-relaxed", children: "Recopilamos la información necesaria para prestar el servicio de Alarma Senior Safe: nombre, email, teléfono, contactos familiares, ubicación GPS durante una alerta y registros de uso de la app." })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-2xl font-bold mb-3", children: "2. Uso de la información" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground leading-relaxed", children: "Usamos tus datos exclusivamente para enviar alertas de emergencia a tus contactos, mejorar el servicio y comunicarnos contigo sobre tu cuenta. Nunca vendemos tus datos a terceros." })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-2xl font-bold mb-3", children: "3. Compartir información" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground leading-relaxed", children: "Compartimos datos solo con los contactos familiares que tú autorices y con proveedores necesarios para el envío de mensajes (WhatsApp, SMS y llamadas), bajo estrictos acuerdos de confidencialidad." })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-2xl font-bold mb-3", children: "4. Analítica y publicidad" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground leading-relaxed", children: "Usamos Google Analytics 4 y, cuando corresponde, herramientas vinculadas a Google Ads para medir visitas, campañas y conversiones en el sitio. Estos servicios pueden usar cookies o identificadores similares. También usamos Microsoft Clarity para mejorar la experiencia de uso. Puedes limitar el seguimiento desde la configuración de tu navegador." })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-2xl font-bold mb-3", children: "5. Seguridad" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground leading-relaxed", children: "Aplicamos cifrado en tránsito y en reposo. Nuestra plataforma cloud cumple con estándares internacionales de seguridad para proteger tu información." })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-2xl font-bold mb-3", children: "6. Tus derechos" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground leading-relaxed", children: "Puedes acceder, modificar o eliminar tus datos en cualquier momento escribiendo a hola@alarmaseniorsafe.cl." })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-2xl font-bold mb-3", children: "7. Contacto" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground leading-relaxed", children: "Para cualquier consulta sobre privacidad, contáctanos en hola@alarmaseniorsafe.cl." })
+        ] })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(SiteFooter, {})
+  ] });
+}
+export {
+  Privacy as component
+};

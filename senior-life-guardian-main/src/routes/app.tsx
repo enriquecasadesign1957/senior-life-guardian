@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { isInternational } from "@/lib/market";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { useServerFn } from "@tanstack/react-start";
@@ -1026,7 +1027,7 @@ function AppHome() {
             </span>
             <div className="min-w-0 flex-1">
               <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">GPS activo</div>
-              <div className="text-lg font-bold text-foreground truncate">En casa · Las Condes</div>
+              <div className="text-lg font-bold text-foreground truncate">{isInternational ? "En casa" : "En casa · Las Condes"}</div>
               <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                 <Clock className="w-3 h-3" aria-hidden="true" /> Actualizado hace 1 min
               </div>
@@ -1319,7 +1320,7 @@ function AppHome() {
                     <MapPin className="w-4 h-4" style={{ color: GREEN }} aria-hidden="true" />
                     Compartiste tu ubicación
                   </div>
-                  <div className="text-sm text-muted-foreground">En casa · Las Condes</div>
+                  <div className="text-sm text-muted-foreground">{isInternational ? "En casa" : "En casa · Las Condes"}</div>
                 </div>
 
                 <button

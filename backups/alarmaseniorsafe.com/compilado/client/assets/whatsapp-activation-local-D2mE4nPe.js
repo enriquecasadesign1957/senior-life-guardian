@@ -1,0 +1,1 @@
+const t="ss_whatsapp_activated",a="ss_whatsapp_activated";function e(){if(typeof window>"u")return!1;try{return localStorage.getItem(t)==="1"}catch{return!1}}function n(){if(!(typeof window>"u"))try{localStorage.setItem(t,"1"),window.dispatchEvent(new Event(a))}catch{}}export{a as W,t as a,e as i,n as m};

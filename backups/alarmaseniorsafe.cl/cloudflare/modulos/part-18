@@ -1,0 +1,89 @@
+import { c as createSsrRpc } from "./createSsrRpc-D8pBWdiG.mjs";
+import { j as createServerFn } from "./createServerFn-Bu17PEW9.mjs";
+import { e as emergencyCategorySchema } from "./emergency-cascade-continuation-BjATaJyT.mjs";
+import { s as seniorAccessTokenSchema } from "./senior-access-auth-Bmk7iyGS.mjs";
+
+import "./index.mjs";
+import { o as objectType, s as stringType, n as numberType, e as enumType, b as booleanType, a as anyType } from "../_libs/zod.mjs";
+import "../_libs/tanstack__router-core.mjs";
+import "../_libs/tanstack__history.mjs";
+import "../_libs/cookie-es.mjs";
+import "../_libs/seroval.mjs";
+import "../_libs/unenv.mjs";
+
+
+
+import "../_libs/seroval-plugins.mjs";
+
+
+import "./client.server-U_pH-Evd.mjs";
+import "../_libs/supabase__supabase-js.mjs";
+import "../_libs/supabase__postgrest-js.mjs";
+import "../_libs/supabase__realtime-js.mjs";
+import "../_libs/supabase__phoenix.mjs";
+import "../_libs/supabase__storage-js.mjs";
+import "../_libs/iceberg-js.mjs";
+import "../_libs/supabase__auth-js.mjs";
+import "../_libs/tslib.mjs";
+import "../_libs/supabase__functions-js.mjs";
+import "./signups-db-JWUtXpaW.mjs";
+import "./contacts-storage-DdsYD-uQ.mjs";
+import "./phone-utils-D7EH6fht.mjs";
+import "./twilio-DNHuHEFY.mjs";
+import "../_libs/h3-v2.mjs";
+import "../_libs/rou3.mjs";
+import "../_libs/srvx.mjs";
+
+
+
+
+const GpsInput = anyType().transform((raw) => {
+  if (raw == null) return null;
+  const src = raw && typeof raw === "object" && raw.coords && typeof raw.coords === "object" ? raw.coords : raw;
+  const lat = typeof src?.lat === "number" ? src.lat : typeof src?.latitude === "number" ? src.latitude : typeof src?.lat === "string" ? parseFloat(src.lat) : typeof src?.latitude === "string" ? parseFloat(src.latitude) : NaN;
+  const lng = typeof src?.lng === "number" ? src.lng : typeof src?.longitude === "number" ? src.longitude : typeof src?.lon === "number" ? src.lon : typeof src?.lng === "string" ? parseFloat(src.lng) : typeof src?.longitude === "string" ? parseFloat(src.longitude) : typeof src?.lon === "string" ? parseFloat(src.lon) : NaN;
+  const accRaw = src?.accuracy;
+  const accuracy = typeof accRaw === "number" ? accRaw : typeof accRaw === "string" ? parseFloat(accRaw) : void 0;
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+  return {
+    lat,
+    lng,
+    accuracy: Number.isFinite(accuracy) ? accuracy : void 0
+  };
+}).nullable().optional();
+const CancelSchema = objectType({
+  signupId: stringType().uuid(),
+  accessToken: seniorAccessTokenSchema,
+  alertId: stringType().uuid().optional()
+});
+const Schema = objectType({
+  signupId: stringType().uuid(),
+  accessToken: seniorAccessTokenSchema,
+  gps: GpsInput,
+  /** Coordenadas GPS planas (alternativa a `gps`). */
+  gpsLat: numberType().finite().optional(),
+  gpsLng: numberType().finite().optional(),
+  /** Modo entrenamiento: no llama a Twilio (sin costo). */
+  trainingMode: booleanType().optional().default(false),
+  /** Tipo de emergencia elegido por el usuario en la app. */
+  emergencyCategory: emergencyCategorySchema.optional(),
+  /** App: espera en servidor antes del primer SMS para permitir «Estoy bien». */
+  graceBeforeSend: booleanType().optional().default(false),
+  /** send = cascada inmediata (webhooks). arm/dispatch = legado interno. */
+  intent: enumType(["send", "arm", "dispatch"]).optional().default("send"),
+  /** Requerido cuando intent=dispatch. */
+  alertId: stringType().uuid().optional(),
+  /** Epoch ms (Date.now()) cuando el cliente gatilló el S.O.S. */
+  sosTriggeredAtMs: numberType().int().positive().optional()
+});
+const sendEmergencyAlert = createServerFn({
+  method: "POST"
+}).inputValidator((input) => Schema.parse(input)).handler(createSsrRpc("230816b26689b6ff9837dcee775dcf74513eae1a16e4623b821ff26fc4f356b7"));
+const cancelEmergencyAlert = createServerFn({
+  method: "POST"
+}).inputValidator((input) => CancelSchema.parse(input)).handler(createSsrRpc("fb1afaddadfef2cade4defacd62c0f3ecb8f4933ef8396f125de993f4e5766ba"));
+export {
+  cancelEmergencyAlert,
+  sendEmergencyAlert
+};

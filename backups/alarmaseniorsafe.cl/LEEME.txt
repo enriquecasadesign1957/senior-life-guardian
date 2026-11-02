@@ -1,0 +1,19 @@
+Respaldo de alarmaseniorsafe.cl — 1 de noviembre de 2026 (noche, hora de Chile).
+
+Qué hay aquí
+- codigo/                  código para volver a construir el sitio de Chile
+- cloudflare/worker.multipart   copia exacta del Worker publicado (senior-life-guardian)
+- cloudflare/modulos/      el mismo Worker, separado en archivos para poder leerlo
+- cloudflare/settings.json nombres de variables. Los secretos figuran solo por nombre, sin valor
+- cloudflare/routes.json   rutas: alarmaseniorsafe.cl/*, www.alarmaseniorsafe.cl/* y el demo
+
+Para volver a publicarlo
+1. Entra a codigo/
+2. npm install
+3. npx wrangler login
+4. npm run cf:deploy
+
+Ese comando publica solo Chile. No publica alarmaseniorsafe.com.
+
+El SMS y la llamada salen del +56 2 2914 7733. El WhatsApp sale del +56 9 7140 4580.
+Esas claves siguen en el Worker de Cloudflare, no en esta carpeta.

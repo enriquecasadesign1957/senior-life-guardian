@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flyer cuadrado — Senior Safe</title>
+  <meta property="og:title" content="Senior Safe — Protección familiar 24/7" />
+  <meta property="og:description" content="Alertas WhatsApp, SMS y llamada. GPS y detección de caídas. Desde $6.900/mes." />
+  <meta property="og:url" content="https://alarmaseniorsafe.cl/flyer-cuadrado.html" />
+  <style>
+    :root {
+      --petrol-deep: #0d4f5c;
+      --petrol: #0f6b7c;
+      --green: #16a34a;
+      --red: #dc2626;
+      --gold: #ffd66b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: #1e293b;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    img { display: block; max-width: 100%; }
+
+    /* Lienzo fijo 1080×1080 para WhatsApp / Instagram */
+    .square {
+      width: 1080px;
+      height: 1080px;
+      max-width: 100%;
+      aspect-ratio: 1;
+      background: linear-gradient(160deg, var(--petrol-deep) 0%, var(--petrol) 42%, #145f70 100%);
+      color: #fff;
+      overflow: hidden;
+      position: relative;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    }
+
+    @supports (aspect-ratio: 1) {
+      .square {
+        height: auto;
+      }
+      @media (min-width: 1081px) {
+        .square { height: 1080px; }
+      }
+    }
+
+    .square::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 88% 12%, rgba(255,214,107,0.18), transparent 38%),
+        radial-gradient(circle at 8% 88%, rgba(22,163,74,0.14), transparent 40%);
+      pointer-events: none;
+    }
+
+    .top {
+      position: relative;
+      z-index: 1;
+      padding: 44px 48px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #fff;
+      border-radius: 18px;
+      padding: 10px 16px;
+    }
+    .logo img { height: 52px; width: auto; }
+    .logo span { font-weight: 900; color: var(--petrol-deep); font-size: 28px; }
+
+    .badge {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.28);
+    }
+
+    .mid {
+      position: relative;
+      z-index: 1;
+      padding: 0 48px;
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 28px;
+      align-items: center;
+      min-height: 0;
+    }
+
+    .copy h1 {
+      font-size: 54px;
+      line-height: 1.02;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+    .copy h1 em { font-style: normal; color: var(--gold); }
+
+    .copy .sub {
+      margin-top: 16px;
+      font-size: 22px;
+      line-height: 1.35;
+      color: rgba(255,255,255,0.92);
+      max-width: 96%;
+    }
+
+    .price {
+      margin-top: 22px;
+      display: inline-flex;
+      flex-direction: column;
+      gap: 4px;
+      background: rgba(255,255,255,0.12);
+      border: 2px solid rgba(255,255,255,0.22);
+      border-radius: 20px;
+      padding: 16px 22px;
+    }
+    .price .big { font-size: 52px; font-weight: 900; line-height: 1; }
+    .price .big small { font-size: 24px; font-weight: 700; opacity: 0.9; }
+    .price .small { font-size: 16px; opacity: 0.88; }
+
+    .chips {
+      margin-top: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .chip {
+      font-size: 14px;
+      font-weight: 700;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.14);
+    }
+
+    .visual {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .phone {
+      width: 100%;
+      max-width: 380px;
+      border-radius: 28px;
+      border: 4px solid rgba(255,255,255,0.3);
+      box-shadow: 0 24px 50px rgba(0,0,0,0.35);
+      object-fit: cover;
+      aspect-ratio: 9/16;
+      object-position: top;
+    }
+
+    .thumbs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      width: 100%;
+      max-width: 380px;
+    }
+    .thumbs img {
+      width: 100%;
+      height: 64px;
+      object-fit: cover;
+      object-position: top;
+      border-radius: 10px;
+      border: 2px solid rgba(255,255,255,0.25);
+    }
+
+    .bottom {
+      position: relative;
+      z-index: 1;
+      padding: 22px 48px 40px;
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 24px;
+      align-items: end;
+      background: linear-gradient(180deg, transparent, rgba(0,0,0,0.22));
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 16px;
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.25;
+    }
+    .features span::before {
+      content: "✓ ";
+      color: var(--gold);
+      font-weight: 900;
+    }
+
+    .qr-wrap { text-align: center; }
+    .qr-wrap img {
+      width: 108px;
+      height: 108px;
+      background: #fff;
+      border-radius: 12px;
+      padding: 6px;
+    }
+    .qr-wrap p {
+      margin-top: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      opacity: 0.9;
+    }
+
+    .cta-block { text-align: right; }
+    .cta-block .url {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -0.01em;
+    }
+    .cta-block .wa {
+      margin-top: 6px;
+      font-size: 15px;
+      opacity: 0.9;
+    }
+
+    .toolbar {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    .toolbar button, .toolbar a {
+      background: #fff;
+      color: var(--petrol-deep);
+      border: 0;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .toolbar button { background: var(--green); color: #fff; }
+
+    @media print {
+      body { background: #fff; padding: 0; }
+      .toolbar { display: none !important; }
+      .square {
+        max-width: none;
+        width: 1080px;
+        height: 1080px;
+        box-shadow: none;
+        page-break-inside: avoid;
+      }
+      img { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+
+    @media (max-width: 700px) {
+      .top { padding: 24px 20px 12px; }
+      .logo span { font-size: 18px; }
+      .logo img { height: 36px; }
+      .badge { font-size: 10px; padding: 6px 10px; }
+      .mid {
+        grid-template-columns: 1fr;
+        padding: 0 20px;
+        gap: 16px;
+      }
+      .copy h1 { font-size: 32px; }
+      .copy .sub { font-size: 15px; }
+      .price .big { font-size: 36px; }
+      .bottom {
+        grid-template-columns: 1fr;
+        padding: 16px 20px 24px;
+        gap: 14px;
+      }
+      .cta-block { text-align: left; }
+      .features { font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+
+  <article class="square" id="flyer-cuadrado">
+    <header class="top">
+      <div class="logo">
+        <img src="/brochure/logo-senior-safe.png" alt="Senior Safe" />
+        <span>Senior Safe</span>
+      </div>
+      <span class="badge">Chile 2026</span>
+    </header>
+
+    <div class="mid">
+      <div class="copy">
+        <h1>Protección <em>24/7</em> para tu familia</h1>
+        <p class="sub">
+          Botón de emergencia, GPS en vivo y detección de caídas.
+          WhatsApp, SMS y llamada automática.
+        </p>
+        <div class="price">
+          <div class="big">$6.900<small>/mes</small></div>
+          <div class="small">Sin permanencia · Webpay Plus</div>
+        </div>
+        <div class="chips">
+          <span class="chip">&lt; 3 s respuesta</span>
+          <span class="chip">App WAM</span>
+          <span class="chip">Soporte 24/7</span>
+        </div>
+      </div>
+
+      <div class="visual">
+        <img class="phone" src="/brochure/emergency-button.jpg" alt="Botón de emergencia Senior Safe" />
+        <div class="thumbs" aria-hidden="true">
+          <img src="/brochure/screen-red-proteccion.png" alt="" />
+          <img src="/brochure/screen-ubicacion-gps.png" alt="" />
+          <img src="/brochure/screen-alerta-multicanal.png" alt="" />
+          <img src="/brochure/screen-modo-familiar.png" alt="" />
+        </div>
+      </div>
+    </div>
+
+    <footer class="bottom">
+      <div class="features">
+        <span>Botón de emergencia</span>
+        <span>GPS en tiempo real</span>
+        <span>Detección de caídas</span>
+        <span>Cascada SMS → WA → llamada</span>
+      </div>
+      <div class="qr-wrap">
+        <img
+          src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https%3A%2F%2Falarmaseniorsafe.cl%2Fcheckout%3Fmode%3Dcontratar%26plan%3Dunico%26periodo%3Dmensual"
+          alt="QR Senior Safe"
+        />
+        <p>Escanea y contrata</p>
+      </div>
+      <div class="cta-block">
+        <div class="url">alarmaseniorsafe.cl</div>
+        <div class="wa">WhatsApp +56 9 7140 4580</div>
+      </div>
+    </footer>
+  </article>
+
+  <div class="toolbar">
+    <button type="button" onclick="window.print()">Guardar PNG / PDF</button>
+    <a href="/flyer.html">Flyer 1 página</a>
+    <a href="/brochure.html">Brochure completo</a>
+  </div>
+
+</body>
+</html>

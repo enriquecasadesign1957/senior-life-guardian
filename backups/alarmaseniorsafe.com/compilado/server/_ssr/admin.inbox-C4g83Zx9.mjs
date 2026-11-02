@@ -1,0 +1,258 @@
+import { r as reactExports, j as jsxRuntimeExports } from "../_libs/react.mjs";
+import { L as Link } from "../_libs/tanstack__react-router.mjs";
+import { u as useServerFn } from "./useServerFn-DL2oePlL.mjs";
+import { B as Button } from "./button-BC9oXVxV.mjs";
+import { I as Input } from "./input-C0QjszdI.mjs";
+import { t as toast } from "../_libs/sonner.mjs";
+import { c as createSsrRpc } from "./createSsrRpc-14pD3De2.mjs";
+import { j as createServerFn } from "./createServerFn-CqTdkD5n.mjs";
+import { A as ADMIN_PIN_SESSION_KEY } from "./admin-auth-5OIH6Qjw.mjs";
+
+import { b as MessageCircle, L as LoaderCircle, A as ArrowLeft, ao as RefreshCw, W as Send } from "../_libs/lucide-react.mjs";
+import { o as objectType, e as enumType, s as stringType } from "../_libs/zod.mjs";
+
+import "../_libs/tanstack__router-core.mjs";
+import "../_libs/tanstack__history.mjs";
+import "../_libs/cookie-es.mjs";
+import "../_libs/seroval.mjs";
+import "../_libs/unenv.mjs";
+
+
+import "../_libs/seroval-plugins.mjs";
+
+
+import "../_libs/react-dom.mjs";
+import "../_libs/isbot.mjs";
+import "../_libs/radix-ui__react-slot.mjs";
+import "../_libs/radix-ui__react-compose-refs.mjs";
+import "../_libs/class-variance-authority.mjs";
+import "../_libs/clsx.mjs";
+import "./utils-H80jjgLf.mjs";
+import "../_libs/tailwind-merge.mjs";
+const pinSchema = stringType().min(4).max(64);
+const inboxListThreads = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  pin: pinSchema,
+  inbox: enumType(["commercial", "alerts"]).optional()
+}).parse(input)).handler(createSsrRpc("5e97b23f151022839e4e83bc879306130cac9f23fcccc372554b60cecb070318"));
+const inboxListMessages = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  pin: pinSchema,
+  peerPhone: stringType().min(8),
+  inbox: enumType(["commercial", "alerts"]).optional()
+}).parse(input)).handler(createSsrRpc("06203203de242025ec96321aee7d989524a66c68ede46fb548991a6a44060649"));
+const inboxSendReply = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  pin: pinSchema,
+  peerPhone: stringType().min(8),
+  body: stringType().min(1).max(1600),
+  inbox: enumType(["commercial", "alerts"]).optional()
+}).parse(input)).handler(createSsrRpc("6e7575f9709049c47e6d5a4a99a6fe6ef605a1ee7bcb1a6f550d344174bff5a2"));
+const PIN_KEY = ADMIN_PIN_SESSION_KEY;
+function formatPhone(p) {
+  const d = p.replace(/\D/g, "");
+  if (d.length === 11 && d.startsWith("569")) {
+    return `+56 9 ${d.slice(3, 7)} ${d.slice(7)}`;
+  }
+  return p.startsWith("+") ? p : `+${d}`;
+}
+function formatTime(iso) {
+  try {
+    return new Date(iso).toLocaleString("es-CL", {
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  } catch {
+    return iso;
+  }
+}
+function AdminInboxPage() {
+  const listThreads = useServerFn(inboxListThreads);
+  const listMessages = useServerFn(inboxListMessages);
+  const sendReply = useServerFn(inboxSendReply);
+  const [pin, setPin] = reactExports.useState("");
+  const [unlocked, setUnlocked] = reactExports.useState(false);
+  const [threads, setThreads] = reactExports.useState([]);
+  const [selected, setSelected] = reactExports.useState(null);
+  const [messages, setMessages] = reactExports.useState([]);
+  const [draft, setDraft] = reactExports.useState("");
+  const [loading, setLoading] = reactExports.useState(false);
+  const [sending, setSending] = reactExports.useState(false);
+  reactExports.useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(PIN_KEY);
+      if (saved) {
+        setPin(saved);
+        setUnlocked(true);
+      }
+    } catch {
+    }
+  }, []);
+  const refreshThreads = reactExports.useCallback(async () => {
+    if (!pin) return;
+    setLoading(true);
+    try {
+      const res = await listThreads({
+        data: {
+          pin,
+          inbox: "commercial"
+        }
+      });
+      setThreads(res);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo cargar la bandeja.");
+      setUnlocked(false);
+      try {
+        sessionStorage.removeItem(PIN_KEY);
+      } catch {
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [listThreads, pin]);
+  const refreshMessages = reactExports.useCallback(async () => {
+    if (!pin || !selected) return;
+    try {
+      const res = await listMessages({
+        data: {
+          pin,
+          peerPhone: selected,
+          inbox: "commercial"
+        }
+      });
+      setMessages(res);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo cargar el chat.");
+    }
+  }, [listMessages, pin, selected]);
+  reactExports.useEffect(() => {
+    if (!unlocked || !pin) return;
+    void refreshThreads();
+    const t = setInterval(() => {
+      void refreshThreads();
+      if (selected) void refreshMessages();
+    }, 2e4);
+    return () => clearInterval(t);
+  }, [unlocked, pin, selected, refreshThreads, refreshMessages]);
+  reactExports.useEffect(() => {
+    if (selected) void refreshMessages();
+  }, [selected, refreshMessages]);
+  const handleUnlock = async () => {
+    if (pin.length < 4) {
+      toast.error("Ingresa el PIN de administrador.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await listThreads({
+        data: {
+          pin,
+          inbox: "commercial"
+        }
+      });
+      try {
+        sessionStorage.setItem(PIN_KEY, pin);
+      } catch {
+      }
+      setUnlocked(true);
+      await refreshThreads();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "PIN incorrecto.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const handleSend = async () => {
+    if (!selected || !draft.trim()) return;
+    setSending(true);
+    try {
+      await sendReply({
+        data: {
+          pin,
+          peerPhone: selected,
+          body: draft.trim(),
+          inbox: "commercial"
+        }
+      });
+      setDraft("");
+      await refreshMessages();
+      await refreshThreads();
+      toast.success("Mensaje enviado.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo enviar.");
+    } finally {
+      setSending(false);
+    }
+  };
+  if (!unlocked) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "min-h-dvh flex flex-col items-center justify-center p-6 bg-[#f0f7f9]", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full max-w-sm bg-white rounded-3xl border p-6 shadow-lg", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3 mb-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "w-12 h-12 rounded-2xl bg-[#0d4f5c] text-white flex items-center justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx(MessageCircle, { className: "w-6 h-6" }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-xl font-bold text-foreground", children: "Bandeja WhatsApp" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-muted-foreground", children: "Número comercial · solo admin" })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("label", { className: "text-sm font-semibold text-foreground", children: "PIN de acceso" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Input, { type: "password", inputMode: "numeric", autoComplete: "current-password", className: "mt-2 h-12 text-lg", value: pin, onChange: (e) => setPin(e.target.value), onKeyDown: (e) => {
+        if (e.key === "Enter") void handleUnlock();
+      }, placeholder: "••••" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { className: "w-full mt-4 h-12 font-bold", style: {
+        background: "#16a34a"
+      }, disabled: loading, onClick: () => void handleUnlock(), children: loading ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-5 h-5 animate-spin" }) : "Entrar" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-4 text-xs text-muted-foreground text-center", children: "No uses la app WhatsApp en el número API. Lee y responde desde aquí." })
+    ] }) });
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-h-dvh flex flex-col bg-background max-w-lg mx-auto w-full", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("header", { className: "sticky top-0 z-10 bg-[#0d4f5c] text-white px-4 py-3 flex items-center gap-3", children: [
+      selected ? /* @__PURE__ */ jsxRuntimeExports.jsx("button", { type: "button", className: "p-2 -ml-2 rounded-xl hover:bg-white/10", onClick: () => setSelected(null), "aria-label": "Volver", children: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-5 h-5" }) }) : /* @__PURE__ */ jsxRuntimeExports.jsx(MessageCircle, { className: "w-6 h-6 shrink-0" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 min-w-0", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "font-bold truncate", children: selected ? formatPhone(selected) : "WhatsApp comercial" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-white/80 truncate", children: selected ? "Responde cuando quieras · la IA también atiende consultas" : "+56 9 7140 4580" })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { type: "button", className: "p-2 rounded-xl hover:bg-white/10", onClick: () => {
+        void refreshThreads();
+        if (selected) void refreshMessages();
+      }, "aria-label": "Actualizar", children: /* @__PURE__ */ jsxRuntimeExports.jsx(RefreshCw, { className: `w-5 h-5 ${loading ? "animate-spin" : ""}` }) })
+    ] }),
+    !selected ? /* @__PURE__ */ jsxRuntimeExports.jsxs("main", { className: "flex-1 overflow-y-auto", children: [
+      threads.length === 0 && !loading && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "p-6 text-center text-muted-foreground text-sm", children: "Aún no hay mensajes guardados. Cuando alguien escriba al WhatsApp comercial, aparecerán aquí." }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("ul", { children: threads.map((t) => /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { type: "button", className: "w-full text-left px-4 py-4 border-b hover:bg-muted/40 flex gap-3", onClick: () => setSelected(t.peer_phone), children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "w-11 h-11 rounded-full bg-[#0d4f5c]/10 text-[#0d4f5c] flex items-center justify-center font-bold shrink-0", children: t.peer_phone.replace(/\D/g, "").slice(-2) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "min-w-0 flex-1", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold block truncate", children: formatPhone(t.peer_phone) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm text-muted-foreground block truncate", children: t.last_body })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[10px] text-muted-foreground shrink-0", children: formatTime(t.last_at) })
+      ] }) }, t.peer_phone)) })
+    ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("main", { className: "flex-1 overflow-y-auto p-4 space-y-3 bg-[#eef4f9]", children: messages.map((m) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `max-w-[88%] rounded-2xl px-3 py-2 text-sm shadow-sm ${m.direction === "outbound" ? "ml-auto bg-[#dcf8c6] text-foreground" : "mr-auto bg-white text-foreground border"}`, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "whitespace-pre-wrap break-words", children: m.body }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[10px] text-muted-foreground mt-1 text-right", children: formatTime(m.created_at) })
+      ] }, m.id)) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("footer", { className: "sticky bottom-0 border-t bg-white p-3 flex gap-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Input, { className: "flex-1 h-12", placeholder: "Escribe tu respuesta…", value: draft, onChange: (e) => setDraft(e.target.value), onKeyDown: (e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            void handleSend();
+          }
+        } }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { className: "h-12 w-12 shrink-0", style: {
+          background: "#16a34a"
+        }, disabled: sending || !draft.trim(), onClick: () => void handleSend(), "aria-label": "Enviar", children: sending ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-5 h-5 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Send, { className: "w-5 h-5" }) })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "px-4 py-2 text-center border-t", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/admin/transbank-validacion", className: "text-xs text-muted-foreground underline", children: "Validación Transbank Oneclick" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/admin/reset", className: "text-xs text-muted-foreground underline", children: "Admin" })
+    ] })
+  ] });
+}
+export {
+  AdminInboxPage as component
+};

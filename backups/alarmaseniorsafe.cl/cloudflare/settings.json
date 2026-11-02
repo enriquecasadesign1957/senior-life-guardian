@@ -1,0 +1,159 @@
+{
+  "result": {
+    "placement": {},
+    "compatibility_date": "2025-09-24",
+    "compatibility_flags": [
+      "nodejs_compat"
+    ],
+    "usage_model": "standard",
+    "tags": [
+      "cf:service=senior-life-guardian"
+    ],
+    "tail_consumers": [],
+    "logpush": false,
+    "observability": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "redact_query_string": false,
+      "logs": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "persist": true,
+        "invocation_logs": true
+      },
+      "traces": {
+        "enabled": false,
+        "persist": true,
+        "head_sampling_rate": 1
+      }
+    },
+    "annotations": {
+      "workers/triggered_by": "version_upload"
+    },
+    "bindings": [
+      {
+        "name": "ADMIN_INBOX_PIN",
+        "type": "secret_text"
+      },
+      {
+        "name": "ASSETS",
+        "type": "assets"
+      },
+      {
+        "name": "CRON_SECRET",
+        "type": "secret_text"
+      },
+      {
+        "name": "GROQ_API_KEY",
+        "type": "secret_text"
+      },
+      {
+        "name": "LAS_CONDES_TARJETA_API_TOKEN",
+        "type": "secret_text"
+      },
+      {
+        "name": "LEMON_SQUEEZY_API_KEY",
+        "type": "secret_text"
+      },
+      {
+        "name": "LEMON_SQUEEZY_SIGNING_SECRET",
+        "type": "secret_text"
+      },
+      {
+        "name": "PUBLIC_APP_URL",
+        "text": "https://alarmaseniorsafe.cl",
+        "type": "plain_text"
+      },
+      {
+        "name": "SUPABASE_SERVICE_ROLE_KEY",
+        "type": "secret_text"
+      },
+      {
+        "name": "SUPABASE_URL",
+        "type": "secret_text"
+      },
+      {
+        "name": "TRANSBANK_API_KEY",
+        "type": "secret_text"
+      },
+      {
+        "name": "TRANSBANK_CC",
+        "type": "secret_text"
+      },
+      {
+        "name": "TRANSBANK_ENVIRONMENT",
+        "text": "production",
+        "type": "plain_text"
+      },
+      {
+        "name": "TRANSBANK_ONECLICK_API_KEY",
+        "type": "secret_text"
+      },
+      {
+        "name": "TRANSBANK_ONECLICK_MALL_CC",
+        "type": "secret_text"
+      },
+      {
+        "name": "TRANSBANK_ONECLICK_STORE_CC",
+        "type": "secret_text"
+      },
+      {
+        "name": "TRANSBANK_PAYMENT_MODE",
+        "text": "oneclick_mall",
+        "type": "plain_text"
+      },
+      {
+        "name": "TWILIO_ACCOUNT_SID",
+        "type": "secret_text"
+      },
+      {
+        "name": "TWILIO_AUTH_TOKEN",
+        "type": "secret_text"
+      },
+      {
+        "name": "TWILIO_EMERGENCY_WHATSAPP_CONTENT_SID",
+        "type": "secret_text"
+      },
+      {
+        "name": "TWILIO_PHONE_NUMBER",
+        "type": "secret_text"
+      },
+      {
+        "name": "TWILIO_SMS_FROM",
+        "type": "secret_text"
+      },
+      {
+        "name": "TWILIO_VOICE_FROM",
+        "type": "secret_text"
+      },
+      {
+        "name": "TWILIO_WHATSAPP_COMMERCIAL_FROM",
+        "text": "56971404580",
+        "type": "plain_text"
+      },
+      {
+        "name": "TWILIO_WHATSAPP_FROM",
+        "type": "secret_text"
+      },
+      {
+        "name": "ZOHO_EMAIL_WEBHOOK_SECRET",
+        "type": "secret_text"
+      },
+      {
+        "name": "ZOHO_SMTP_FROM",
+        "type": "secret_text"
+      },
+      {
+        "name": "ZOHO_SMTP_PASSWORD",
+        "type": "secret_text"
+      },
+      {
+        "name": "ZOHO_SMTP_USER",
+        "type": "secret_text"
+      }
+    ]
+  },
+  "success": true,
+  "errors": [],
+  "messages": []
+}

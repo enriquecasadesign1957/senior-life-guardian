@@ -1,10 +1,11 @@
 import { Clock, Lock, MapPin, Shield } from "lucide-react";
+import { isInternational, paymentLabel } from "@/lib/market";
 
 const TRUST_ITEMS = [
-  { icon: Lock, label: "Pago seguro con Webpay Plus" },
+  { icon: Lock, label: `Pago seguro con ${paymentLabel}` },
   { icon: Shield, label: "Sin permanencia — Cancela cuando quieras" },
   { icon: Clock, label: "24/7 respuesta garantizada" },
-  { icon: MapPin, label: "Cobertura nacional" },
+  { icon: MapPin, label: isInternational ? "Latinoamérica" : "Cobertura nacional" },
 ] as const;
 
 type TrustStackChilenoProps = {

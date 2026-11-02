@@ -1,0 +1,10 @@
+Respaldo del 1 de noviembre de 2026 (noche, hora de Chile).
+
+Dos carpetas separadas:
+
+- alarmaseniorsafe.cl  → sitio de Chile (pesos, Webpay, Worker senior-life-guardian)
+- alarmaseniorsafe.com → sitio internacional (dólares, Lemon Squeezy, Worker alarmaseniorsafe-com)
+
+Cada carpeta tiene su propio código y una copia del Worker que estaba publicado en Cloudflare.
+Los secretos (Twilio, Groq, Supabase, Transbank) no vienen en el respaldo: Cloudflare no los entrega.
+Siguen guardados en cada Worker mientras no se borre ese Worker.

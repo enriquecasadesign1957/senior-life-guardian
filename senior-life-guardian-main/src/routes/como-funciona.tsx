@@ -5,6 +5,7 @@ import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { WhatsAppFloat } from "@/components/whatsapp-float";
 import { EmergencySimulator } from "@/components/sales-demo/emergency-simulator";
 import { checkoutUrl, formatPlanPrice, PLAN } from "@/lib/plans";
+import { isInternational, paymentLabel } from "@/lib/market";
 import { buildPublicPageMeta, breadcrumbJsonLd, jsonLdHeadScript } from "@/lib/seo";
 
 const YOUTUBE_VIDEO_ID = "xSOKFh1oZnI";
@@ -19,8 +20,10 @@ const TESTIMONIALS: {
 }[] = [
   {
     segments: [
-      { text: "Estaba buscando una alarma para mi mamá en Villa Alemana, pero todas cobraban sobre 30 mil pesos al mes. Encontré Senior Safe y " },
-      { text: "por $6.900 tengo la tranquilidad", highlight: true },
+      { text: isInternational
+          ? "Estaba buscando una alarma para mi mamá, pero todas cobraban sobre 30 dólares al mes. Encontré Senior Safe y "
+          : "Estaba buscando una alarma para mi mamá en Villa Alemana, pero todas cobraban sobre 30 mil pesos al mes. Encontré Senior Safe y " },
+      { text: `por $${formatPlanPrice(PLAN.monthly)} tengo la tranquilidad`, highlight: true },
       { text: " de que si le pasa algo, el aviso me llega al segundo por WhatsApp y me llama automáticamente. Excelente servicio." },
     ],
     author: "Carmen R.",
@@ -47,7 +50,7 @@ const TESTIMONIALS: {
 ];
 
 const TRUST_CTA_ITEMS = [
-  "Pago seguro con Transbank",
+  `Pago seguro con ${paymentLabel}`,
   "Sin contratos ni permanencia",
   "Cancela con 1 click cuando quieras",
 ] as const;
@@ -57,7 +60,9 @@ export const Route = createFileRoute("/como-funciona")({
     const page = buildPublicPageMeta({
       title: "Alerta familiar WhatsApp, SMS y GPS — Cómo funciona Senior Safe",
       description:
-        "Simulador SOS en vivo: mira cómo Senior Safe envía alerta familiar por WhatsApp, SMS, GPS y llamada automática. Desde $6.900/mes, sin permanencia.",
+        isInternational
+          ? `Simulador SOS en vivo: mira cómo Senior Safe envía alerta familiar por WhatsApp, SMS, GPS y llamada automática. Desde $${formatPlanPrice(PLAN.monthly)} USD/mes, sin permanencia.`
+          : "Simulador SOS en vivo: mira cómo Senior Safe envía alerta familiar por WhatsApp, SMS, GPS y llamada automática. Desde $6.900/mes, sin permanencia.",
       pathname: "/como-funciona",
       ogTitle: "Alerta familiar WhatsApp, SMS y GPS",
     });
@@ -248,13 +253,13 @@ function ComoFuncionaPage() {
           <p className="text-muted-foreground text-sm sm:text-base md:text-lg mb-7 md:mb-8 leading-relaxed px-1">
             Sin contratos amarrados, sin equipos caros. Todo el control en tu celular.
           </p>
-          <Link
-            to={checkoutUrl()}
+          <a
+            href={checkoutUrl()}
             className="inline-flex items-center justify-center gap-2 w-full sm:w-auto max-w-md mx-auto px-6 py-4 sm:px-8 sm:py-4 md:px-10 md:py-5 rounded-full text-white text-sm sm:text-base md:text-lg font-bold shadow-xl hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 bg-[#00845a] hover:bg-[#006b48] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00845a]"
           >
             Proteger a mi familia ahora — {monthlyLabel}
             <ArrowRight className="w-5 h-5 shrink-0" aria-hidden />
-          </Link>
+          </a>
           <ul
             className="mt-5 md:mt-6 flex flex-col sm:flex-row flex-wrap items-center justify-center gap-x-2 gap-y-2 text-xs sm:text-sm text-slate-600 leading-snug px-1"
             aria-label="Garantías de compra"

@@ -1,0 +1,228 @@
+import process from "node:process";
+const LAS_CONDES_CODE = "VECINO-LASCONDES";
+const LAS_CONDES_AM_CODE = "VECINO-LASCONDES-AM";
+const LAS_CONDES_CHECKOUT_ORIGIN = "https://alarmaseniorsafe.cl";
+const INACTIVE_ESTADOS = /* @__PURE__ */ new Set([
+  "MENOR",
+  "BLOQUEADO",
+  "ANULADA",
+  "TARJETA_BLOQUEADA",
+  "VENCIDO",
+  "VENCIDO_PERIODO",
+  "SIN_TARJETA",
+  "ELIMINADO",
+  "NO_VIGENTE",
+  "NO_EXISTE",
+  "INACTIVO"
+]);
+function normalizeDiscountCode(raw) {
+  return raw.trim().toUpperCase().replace(/\s+/g, "");
+}
+function lasCondesTier(rawCode) {
+  const code = normalizeDiscountCode(rawCode ?? "");
+  if (code === LAS_CONDES_AM_CODE) return "adulto_mayor";
+  if (code === LAS_CONDES_CODE) return "general";
+  return null;
+}
+function computeRutDv(body) {
+  let sum = 0;
+  let multiplier = 2;
+  for (let i = body.length - 1; i >= 0; i -= 1) {
+    sum += Number(body[i]) * multiplier;
+    multiplier = multiplier === 7 ? 2 : multiplier + 1;
+  }
+  const rest = 11 - sum % 11;
+  if (rest === 11) return "0";
+  if (rest === 10) return "K";
+  return String(rest);
+}
+function formatChileanRut(body, dv) {
+  const groups = [];
+  for (let i = body.length; i > 0; i -= 3) {
+    groups.unshift(body.slice(Math.max(0, i - 3), i));
+  }
+  return `${groups.join(".")}-${dv}`;
+}
+function parseChileanRut(raw) {
+  const compact = raw.trim().toUpperCase().replace(/\./g, "").replace(/\s+/g, "");
+  const match = compact.match(/^(\d{7,8})-?([0-9K])$/);
+  if (!match) return null;
+  const body = match[1];
+  const dv = match[2];
+  if (computeRutDv(body) !== dv) return null;
+  return { body, dv, formatted: formatChileanRut(body, dv) };
+}
+function normalizePortalToken(value) {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim().replace(/[^A-Z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+}
+function isTarjetaVecinoActiva(found, estadoRaw) {
+  const estado = normalizePortalToken(estadoRaw);
+  if (INACTIVE_ESTADOS.has(estado)) return false;
+  if (estado === "RENOVACION") return true;
+  if (found === true) return true;
+  if (estado === "VIGENTE" || estado === "ACTIVA" || estado === "ACTIVO") return true;
+  return false;
+}
+function isAdultoMayorTipo(tipoRaw) {
+  const token = normalizePortalToken(tipoRaw);
+  if (!token) return false;
+  const compact = token.replace(/_/g, "");
+  if (compact.includes("ADULTO") && compact.includes("MAYOR")) return true;
+  if (compact.includes("TERCERAEDAD")) return true;
+  if (compact.includes("SENIOR")) return true;
+  const parts = token.split("_").filter(Boolean);
+  return parts.includes("AM");
+}
+function asText(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+function mapOficialTarjetaVecino(vecino) {
+  if (!vecino) {
+    return { found: false, estado: "", tipo: "" };
+  }
+  const estado = asText(vecino.estado);
+  const interno = asText(vecino.estado_interno);
+  const tipo = asText(vecino.tipo_vecino);
+  const internoBloquea = Boolean(interno) && !isTarjetaVecinoActiva(false, interno);
+  return {
+    found: false,
+    estado: internoBloquea ? interno : estado,
+    tipo
+  };
+}
+function lasCondesCheckoutPath(code, periodo) {
+  const params = new URLSearchParams({
+    mode: "contratar",
+    plan: "unico",
+    periodo,
+    codigo: code
+  });
+  return `/checkout?${params.toString()}`;
+}
+function lasCondesCheckoutUrl(code, periodo) {
+  return `${LAS_CONDES_CHECKOUT_ORIGIN}${lasCondesCheckoutPath(code, periodo)}`;
+}
+function decideLasCondesDiscount(input) {
+  const estado = (input.estado ?? "").trim();
+  const tipo = (input.tipo ?? "").trim();
+  const activo = isTarjetaVecinoActiva(input.found, estado);
+  const adultoMayor = isAdultoMayorTipo(tipo);
+  const estadoLabel = normalizePortalToken(estado) || "SIN_DATO";
+  const tipoLabel = normalizePortalToken(tipo) || "SIN_DATO";
+  if (!activo) {
+    return {
+      activo: false,
+      adultoMayor,
+      eligible: false,
+      estado,
+      tipo,
+      message: `No encontramos una Tarjeta Vecino activa para ese RUT (estado: ${estadoLabel}). El descuento solo aplica con la tarjeta vigente.`
+    };
+  }
+  if (input.tier === "adulto_mayor" && !adultoMayor) {
+    const alternateCode = LAS_CONDES_CODE;
+    return {
+      activo: true,
+      adultoMayor: false,
+      eligible: false,
+      estado,
+      tipo,
+      alternateCode,
+      alternateUrl: lasCondesCheckoutUrl(alternateCode, input.periodo),
+      message: `La tarjeta está activa, pero el portal no la identifica como Adulto Mayor (tipo: ${tipoLabel}). El 20% no aplica. El 15% de Tarjeta Vecino está en ${lasCondesCheckoutUrl(alternateCode, input.periodo)}.`
+    };
+  }
+  if (input.tier === "general" && adultoMayor) {
+    const alternateCode = LAS_CONDES_AM_CODE;
+    return {
+      activo: true,
+      adultoMayor: true,
+      eligible: true,
+      estado,
+      tipo,
+      alternateCode,
+      alternateUrl: lasCondesCheckoutUrl(alternateCode, input.periodo),
+      message: "Tarjeta Vecino vigente. Este enlace aplica 15%. Si tu tarjeta es Adulto Mayor, puedes usar el 20% en el otro convenio."
+    };
+  }
+  return {
+    activo: true,
+    adultoMayor,
+    eligible: true,
+    estado,
+    tipo,
+    message: adultoMayor ? "Tarjeta Vecino Adulto Mayor vigente. El 20% queda aplicado." : "Tarjeta Vecino vigente. El 15% queda aplicado."
+  };
+}
+const TARJETA_API_URL = "https://api.lascondes.cl/maestros/vecinos/tarjeta";
+const TARJETA_API_TIMEOUT_MS = 8e3;
+class TarjetaVecinoPortalError extends Error {
+  constructor(message = "No pudimos consultar la Tarjeta Vecino. Intenta nuevamente en unos minutos.") {
+    super(message);
+    this.name = "TarjetaVecinoPortalError";
+  }
+}
+function rutSinPuntos(formattedRut) {
+  return formattedRut.replace(/\./g, "").replace(/\s+/g, "");
+}
+async function consultarTarjetaVecino(formattedRut, tier, periodo) {
+  const token = process.env.LAS_CONDES_TARJETA_API_TOKEN?.trim();
+  if (!token) {
+    throw new TarjetaVecinoPortalError(
+      "La consulta de Tarjeta Vecino no está configurada en el servidor."
+    );
+  }
+  const rut = rutSinPuntos(formattedRut);
+  if (!/^\d{7,8}-[0-9K]$/i.test(rut)) {
+    throw new TarjetaVecinoPortalError("Ingresa un RUT chileno válido, con dígito verificador.");
+  }
+  const url = new URL(TARJETA_API_URL);
+  url.searchParams.set("rut", rut.toUpperCase());
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), TARJETA_API_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      signal: controller.signal
+    });
+    if (res.status === 401 || res.status === 403) {
+      throw new TarjetaVecinoPortalError(
+        "La municipalidad rechazó la credencial de consulta de Tarjeta Vecino."
+      );
+    }
+    if (!res.ok) {
+      throw new TarjetaVecinoPortalError();
+    }
+    let payload;
+    try {
+      payload = await res.json();
+    } catch {
+      throw new TarjetaVecinoPortalError();
+    }
+    const mapped = mapOficialTarjetaVecino(payload.vecino);
+    return decideLasCondesDiscount({
+      tier,
+      periodo,
+      found: mapped.found,
+      estado: mapped.estado,
+      tipo: mapped.tipo
+    });
+  } catch (err) {
+    if (err instanceof TarjetaVecinoPortalError) throw err;
+    throw new TarjetaVecinoPortalError();
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+export {
+  LAS_CONDES_AM_CODE as L,
+  LAS_CONDES_CODE as a,
+  lasCondesCheckoutPath as b,
+  consultarTarjetaVecino as c,
+  lasCondesTier as l,
+  parseChileanRut as p
+};
