@@ -21,6 +21,15 @@ export const agencyAccountSchema = z.object({
   password: z.string().min(8).max(72),
 });
 
+export const adminLoginSchema = z.object({
+  secret: z.string().trim().min(8).max(200),
+});
+
+export const adminCreateInviteSchema = z.object({
+  note: z.string().trim().max(120).optional(),
+  seats: z.number().int().min(1).max(40).optional(),
+});
+
 export const ACTION_IDS = [
   "purge_transients",
   "purge_revisions",

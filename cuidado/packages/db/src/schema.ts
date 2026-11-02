@@ -26,6 +26,7 @@ export const agencyInviteCodes = pgTable("agency_invite_codes", {
   seats: integer("seats").default(5).notNull(),
   maxUses: integer("max_uses").default(1).notNull(),
   usedCount: integer("used_count").default(0).notNull(),
+  note: text("note"),
   createdAt: timestamp("created_at", tz).defaultNow().notNull(),
 });
 
