@@ -17,9 +17,10 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 function purge_blog(): void {
 	global $wpdb;
 
-	$table = $wpdb->prefix . 'cuidado_backups';
-	if ( 1 === preg_match( '/^[A-Za-z0-9_]+$/', $table ) ) {
-		$wpdb->query( "DROP TABLE IF EXISTS {$table}" );
+	foreach ( array( $wpdb->prefix . 'cuidado_undo', $wpdb->prefix . 'cuidado_backups' ) as $table ) {
+		if ( 1 === preg_match( '/^[A-Za-z0-9_]+$/', $table ) ) {
+			$wpdb->query( "DROP TABLE IF EXISTS {$table}" );
+		}
 	}
 
 	unschedule( 'cuidado_conector_purge_backup' );

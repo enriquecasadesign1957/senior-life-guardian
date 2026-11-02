@@ -32,6 +32,15 @@ export const cleanupSimulateSchema = z.object({
   siteId: z.string().uuid(),
 });
 
+export const cleanupApplySchema = z.object({
+  siteId: z.string().uuid(),
+});
+
+export const cleanupUndoSchema = z.object({
+  siteId: z.string().uuid(),
+  batchId: z.string().uuid(),
+});
+
 export const rescueCheckoutSchema = cleanupSimulateSchema.extend({
   returnPath: z
     .string()
@@ -49,6 +58,13 @@ export const payloadBytesSchema = z.object({
   revisions: z.number().int().nonnegative(),
   expiredTransients: z.number().int().nonnegative(),
   spamComments: z.number().int().nonnegative(),
+});
+
+export const cleanupApplyResultSchema = z.object({
+  batchId: z.string().uuid(),
+  undoUntil: z.string().min(1),
+  counts: payloadCountsSchema,
+  bytes: payloadBytesSchema.optional(),
 });
 
 export const snapshotSchema = z.object({

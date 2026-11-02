@@ -1,6 +1,7 @@
 import { grantPaidRescue } from "@/lib/grant-rescue";
 import { readPaidRescue } from "@/lib/rescue";
 import { getStripe } from "@/lib/stripe";
+import { PaymentReturn } from "@/components/payment-return";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -61,26 +62,19 @@ async function confirmStripe(sessionId: string): Promise<{ title: string; body: 
   };
 }
 
-async function confirm(sessionId: string | undefined): Promise<{ title: string; body: string }> {
-  if (sessionId?.startsWith("cs_")) {
-    return confirmStripe(sessionId);
-  }
-  return {
-    title: "Pago recibido",
-    body: "Si acabas de pagar el Rescate en Lemon Squeezy, la vigilancia se activa en unos segundos. La limpieza de la base todavía no se ejecuta sola. Si no pagaste, vuelve al informe y no se ha cobrado nada.",
-  };
-}
-
 export default async function RescuePaymentPage({ searchParams }: PageProps) {
   const { session_id: sessionId } = await searchParams;
-  const result = await confirm(sessionId);
-  return (
-    <section className="mx-auto max-w-xl px-6 py-20">
-      <h1 className="text-4xl tracking-tight">{result.title}</h1>
-      <p className="mt-6 text-lg leading-relaxed text-stone-700">{result.body}</p>
-      <a href="/" className="mt-8 inline-block text-sm font-medium text-pine underline decoration-pine/40 underline-offset-4">
-        Volver al inicio
-      </a>
-    </section>
-  );
+  if (sessionId?.startsWith("cs_")) {
+    const result = await confirmStripe(sessionId);
+    return (
+      <section className="mx-auto max-w-xl px-6 py-20">
+        <h1 className="text-4xl tracking-tight">{result.title}</h1>
+        <p className="mt-6 text-lg leading-relaxed text-stone-700">{result.body}</p>
+        <a href="/" className="mt-8 inline-block text-sm font-medium text-pine underline decoration-pine/40 underline-offset-4">
+          Volver al inicio
+        </a>
+      </section>
+    );
+  }
+  return <PaymentReturn purpose="rescue" />;
 }

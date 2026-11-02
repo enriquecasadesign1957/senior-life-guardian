@@ -1,7 +1,11 @@
-import { and, eq } from "drizzle-orm";
-import { findings, getDb, scanRuns, sites } from "@cuidado/db";
+import { and, desc, eq, gt } from "drizzle-orm";
+import { cleanupBatches, findings, getDb, scanRuns, sites } from "@cuidado/db";
 import { notFound } from "next/navigation";
-import { CleanupPanel } from "@/components/cleanup-panel";
+import {
+  CleanupUndoProvider,
+  ConnectedCleanupPanel,
+  ConnectedUndoBanner,
+} from "@/components/cleanup-undo";
 import { IncidentNotice } from "@/components/incident-notice";
 import { PlanPanel } from "@/components/plan-panel";
 import { ReliefCompare } from "@/components/relief-compare";
@@ -9,7 +13,6 @@ import { OutsideRepair } from "@/components/outside-repair";
 import { Reassurance } from "@/components/reassurance";
 import { RevokeAccess } from "@/components/revoke-access";
 import { ScoreMeter } from "@/components/score-meter";
-import { UndoBanner } from "@/components/undo-banner";
 import { optionalUserId } from "@/lib/session";
 import { isWatchActive, watchDaysRemaining } from "@/lib/watch";
 
@@ -33,6 +36,19 @@ function seconds(value: number | null): string {
 function cls(value: number | null): string {
   if (value === null) return "—";
   return (value / 1000).toLocaleString("es-CL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function isUrgentCleanup(code: string, severity: string): boolean {
+  if (
+    code === "post_revisions" ||
+    code === "expired_transients" ||
+    code === "spam_comments" ||
+    code === "innodb_unavailable" ||
+    code === "payload_limit"
+  ) {
+    return true;
+  }
+  return severity === "high";
 }
 
 export default async function InformePage({ params, searchParams }: PageProps) {
@@ -71,18 +87,67 @@ export default async function InformePage({ params, searchParams }: PageProps) {
     site && site.plan === "rescue" && site.watchUntil && isWatchActive(site, now)
       ? watchDaysRemaining(site.watchUntil, now)
       : null;
+  const undoBatch =
+    ownedId
+      ? (
+          await db
+            .select({
+              pluginBatchId: cleanupBatches.pluginBatchId,
+              undoUntil: cleanupBatches.undoUntil,
+            })
+            .from(cleanupBatches)
+            .where(
+              and(
+                eq(cleanupBatches.siteId, ownedId),
+                eq(cleanupBatches.status, "applied"),
+                gt(cleanupBatches.undoUntil, now),
+              ),
+            )
+            .orderBy(desc(cleanupBatches.appliedAt))
+            .limit(1)
+        )[0]
+      : undefined;
 
   return (
+    <CleanupUndoProvider
+      initialBatchId={undoBatch?.pluginBatchId ?? null}
+      initialUndoUntil={undoBatch?.undoUntil ? undoBatch.undoUntil.toISOString() : null}
+    >
     <div className="mx-auto max-w-3xl space-y-8 px-6 py-12">
-      <UndoBanner undoUntil={null} />
+      <ConnectedUndoBanner siteId={ownedId} />
       {site?.lastProbeAt ? <IncidentNotice status={site.lastProbeStatus} streak={site.probeStreak} /> : null}
       {watchDays !== null && watchDays > 0 ? (
-        <p className="text-sm text-stone-600">
-          Vigilancia activa por {watchDays} {watchDays === 1 ? "día" : "días"} más. Después puedes seguir con el plan Cuidado, a $19 al mes.
-        </p>
+        <div className="rounded-3xl bg-pine px-6 py-8 text-white">
+          <p className="font-display text-3xl tracking-tight sm:text-4xl">
+            Felicitaciones: tu vigilancia está activa
+          </p>
+          <p className="mt-3 text-base leading-relaxed text-white/90">
+            Quedan {watchDays} {watchDays === 1 ? "día" : "días"} del Rescate. Abajo puedes aceptar lo que se va a
+            quitar.
+          </p>
+          <a
+            href="#limpieza"
+            className="mt-5 inline-flex rounded-full bg-white px-5 py-3 text-sm font-medium text-pine"
+          >
+            Ver qué se va a quitar
+          </a>
+        </div>
       ) : null}
       {site && site.plan === "cuidado" && isWatchActive(site, now) ? (
-        <p className="text-sm text-stone-600">Vigilancia activa con el plan Cuidado.</p>
+        <div className="rounded-3xl bg-pine px-6 py-8 text-white">
+          <p className="font-display text-3xl tracking-tight sm:text-4xl">
+            Felicitaciones: tu vigilancia está activa con el Plan Cuidado
+          </p>
+          <p className="mt-3 text-base leading-relaxed text-white/90">
+            Acepta abajo lo que se va a quitar. Todavía no se borra nada. Se puede deshacer durante 7 días.
+          </p>
+          <a
+            href="#limpieza"
+            className="mt-5 inline-flex rounded-full bg-white px-5 py-3 text-sm font-medium text-pine"
+          >
+            Ver qué se va a quitar
+          </a>
+        </div>
       ) : null}
 
       <div>
@@ -141,20 +206,36 @@ export default async function InformePage({ params, searchParams }: PageProps) {
       ) : null}
 
       <section className="space-y-3">
-        {issues.map((issue) => (
-          <article key={issue.id} className="rounded-2xl bg-white p-5">
-            <h2 className="text-xl">{issue.plainTitle}</h2>
-            <p className="mt-2 text-sm text-stone-700">{issue.whatItMeans}</p>
-            <p className="mt-2 text-sm text-stone-500">{issue.ifIgnored}</p>
-          </article>
-        ))}
+        {issues.map((issue) => {
+          const urgent = isUrgentCleanup(issue.code, issue.severity);
+          return (
+            <article
+              key={issue.id}
+              className={
+                urgent
+                  ? "rounded-2xl border-2 border-[#d36b76] bg-[#fde8e8] p-5"
+                  : "rounded-2xl bg-white p-5"
+              }
+            >
+              {urgent ? (
+                <p className="text-xs font-medium uppercase tracking-wide text-[#9f3a45]">Limpieza urgente</p>
+              ) : null}
+              <h2 className={`text-xl ${urgent ? "mt-1 text-[#9f3a45]" : ""}`}>{issue.plainTitle}</h2>
+              <p className={`mt-2 text-sm ${urgent ? "text-[#9f3a45]" : "text-stone-700"}`}>{issue.whatItMeans}</p>
+              <p className={`mt-2 text-sm ${urgent ? "font-medium text-[#9f3a45]" : "text-stone-500"}`}>
+                {issue.ifIgnored}
+              </p>
+            </article>
+          );
+        })}
       </section>
 
       <Reassurance />
       <OutsideRepair />
-      <CleanupPanel siteId={ownedId} />
+      <ConnectedCleanupPanel siteId={ownedId} />
       {ownedId && site && site.plan !== "cuidado" ? <PlanPanel siteId={ownedId} /> : null}
       {ownedId ? <RevokeAccess siteId={ownedId} /> : null}
     </div>
+    </CleanupUndoProvider>
   );
 }

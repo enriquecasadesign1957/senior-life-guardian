@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Cuidado Conector
- * Description: Conecta el sitio con Cuidado. Lee el estado y no modifica el tema, los plugins ni wp-config.php.
- * Version: 0.2.0
+ * Description: Conecta el sitio con Cuidado. Lee el estado, limpia basura de la base y no modifica el tema ni wp-config.php.
+ * Version: 0.3.0
  * Requires at least: 6.1
  * Requires PHP: 8.0
  * Author: Cuidado
@@ -19,6 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 require_once __DIR__ . '/includes/class-rest.php';
+require_once __DIR__ . '/includes/class-cleanup.php';
 
 const PAIR_TTL_SECONDS = 600;
 const MAX_ROWS          = 2000;
@@ -32,6 +33,7 @@ function activate( bool $network_wide ): void {
 	if ( is_multisite() && $network_wide ) {
 		update_site_option( 'cuidado_conector_network_active', '1' );
 	}
+	Cleanup::ensure_table();
 }
 
 function deactivate(): void {
@@ -41,6 +43,7 @@ add_action(
 	'plugins_loaded',
 	static function (): void {
 		Rest::register();
+		Cleanup::register();
 	}
 );
 

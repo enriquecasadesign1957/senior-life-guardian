@@ -52,7 +52,7 @@ En tu máquina, dentro de `cuidado`, con la misma `DATABASE_URL` directa:
 npm run db:migrate
 ```
 
-Eso aplica `0000_init.sql`, `0001_site_probe.sql` y `0002_rescue_checkout.sql`.
+Eso aplica `0000_init.sql`, `0001_site_probe.sql`, `0002_rescue_checkout.sql` y `0003_cleanup_batches.sql`.
 
 ## 6. Dominio
 

@@ -143,3 +143,28 @@ export const findings = pgTable(
   },
   (table) => [index("findings_scan_run").on(table.scanRunId)],
 );
+
+export const cleanupBatchStatus = pgEnum("cleanup_batch_status", ["applied", "undone"]);
+
+export const cleanupBatches = pgTable(
+  "cleanup_batches",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    siteId: uuid("site_id")
+      .notNull()
+      .references(() => sites.id, { onDelete: "cascade" }),
+    pluginBatchId: text("plugin_batch_id").notNull().unique(),
+    status: cleanupBatchStatus("status").default("applied").notNull(),
+    revisions: integer("revisions").default(0).notNull(),
+    expiredTransients: integer("expired_transients").default(0).notNull(),
+    spamComments: integer("spam_comments").default(0).notNull(),
+    bytes: integer("bytes").default(0).notNull(),
+    appliedAt: timestamp("applied_at", tz).defaultNow().notNull(),
+    undoUntil: timestamp("undo_until", tz).notNull(),
+    undoneAt: timestamp("undone_at", tz),
+  },
+  (table) => [
+    index("cleanup_batches_site_applied").on(table.siteId, table.appliedAt),
+    index("cleanup_batches_site_undo").on(table.siteId, table.undoUntil),
+  ],
+);
