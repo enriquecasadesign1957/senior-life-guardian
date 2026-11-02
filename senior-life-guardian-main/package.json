@@ -13,6 +13,7 @@
     "cf:clean-wrangler-cache": "node scripts/clean-wrangler-cache.mjs",
     "cf:wrangler": "cross-env NODE_OPTIONS=--use-system-ca wrangler",
     "cf:deploy": "npm run cf:build && npm run cf:clean-wrangler-cache && npm run cf:wrangler -- deploy --cwd dist/server --no-bundle",
+    "cf:deploy:com": "node scripts/deploy-com.mjs",
     "cf:deploy:preview": "npm run cf:build && npm run cf:clean-wrangler-cache && npm run cf:wrangler -- deploy --cwd dist/server --env preview --no-bundle",
     "cf:deploy:demo": "npm run cf:build:demo && npm run cf:clean-wrangler-cache && npm run cf:wrangler -- deploy --cwd dist/server --env demo --no-bundle",
     "deploy": "npm run cf:deploy",
