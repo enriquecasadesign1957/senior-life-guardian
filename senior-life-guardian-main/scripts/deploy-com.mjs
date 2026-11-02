@@ -41,6 +41,8 @@ const config = {
 
 fs.writeFileSync(wranglerPath, `${JSON.stringify(config, null, 2)}\n`);
 
+fs.rmSync(path.join(root, ".wrangler"), { recursive: true, force: true });
+
 const deploy = spawnSync(
   "npx",
   ["wrangler", "deploy", "--cwd", "dist/server", "--no-bundle"],
