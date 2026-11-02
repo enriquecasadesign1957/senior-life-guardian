@@ -16,6 +16,11 @@ export const agencyTrialClaimSchema = z.object({
   siteId: z.string().uuid(),
 });
 
+export const agencyAccountSchema = z.object({
+  email: z.string().trim().email().max(180),
+  password: z.string().min(8).max(72),
+});
+
 export const ACTION_IDS = [
   "purge_transients",
   "purge_revisions",

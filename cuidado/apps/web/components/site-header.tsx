@@ -5,6 +5,7 @@ const links = [
   ["/#funciona", "Cómo funciona"],
   ["/#precios", "Precios"],
   ["/#agencias", "Agencias"],
+  ["/mis-sitios", "Mis sitios"],
 ];
 
 export function SiteHeader() {
@@ -21,9 +22,14 @@ export function SiteHeader() {
             </a>
           ))}
         </nav>
-        <a href="/#analizar" className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-white">
-          Analizar mi sitio
-        </a>
+        <div className="flex items-center gap-2">
+          <a href="/agencia/entrar" className="hidden rounded-full border border-stone-300 px-4 py-2 text-sm font-medium sm:inline-flex">
+            Agencia
+          </a>
+          <a href="/#analizar" className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-white">
+            Analizar mi sitio
+          </a>
+        </div>
       </div>
       <nav className="mx-auto flex max-w-6xl gap-4 overflow-x-auto px-6 pb-3 text-sm text-stone-600 sm:hidden">
         {links.map(([href, label]) => (
