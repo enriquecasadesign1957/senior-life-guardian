@@ -26,7 +26,12 @@ En Vercel van estas variables. `AUTH_SECRET`, `TOKEN_ENCRYPTION_KEY` y `CRON_SEC
 
 Lemon Squeezy ya tiene los productos. En Vercel basta con `LEMON_SQUEEZY_WEBHOOK_SECRET` (los buy URL y variant id tienen valor por defecto). En Lemon: Settings → Webhooks → URL `https://cuidadoweb.com/api/lemon/webhook`, eventos `order_created`, signing secret = esa variable.
 
-- `AGENCY_TRIAL_CODE` (opcional): código para activar la prueba de agencia (5 sitios gratis). Si no se define, el valor por defecto es `CW-AGENCIA-5`. Cámbialo en Production cuando quieras controlar quién activa la prueba.
+Los códigos de prueba de agencia viven en Neon (`agency_invite_codes`). Cada fila tiene `max_uses` (por defecto 1: un solo uso). La migración `0004` inserta `CW-AGENCIA-5` una vez. Para otra agencia:
+
+```sql
+INSERT INTO agency_invite_codes (code, seats, max_uses)
+VALUES ('CW-AGENCIA-NUEVA', 5, 1);
+```
 
 ## 3. PageSpeed
 

@@ -77,9 +77,10 @@ export function AgencyTrialPanel() {
       <h3 className="mt-2 text-2xl">Prueba gratis para agencias</h3>
       <p className="mt-3 text-stone-700">
         Activa 5 sitios con vigilancia y limpieza, sin cobro, para probar CuidadoWeb con tus clientes.
+        Cada código sirve una sola vez.
       </p>
       <label className="mt-6 block text-sm text-stone-600" htmlFor="agency-trial-code">
-        Código de agencia
+        Código de agencia (un solo uso)
       </label>
       <input
         id="agency-trial-code"
@@ -103,7 +104,8 @@ export function AgencyTrialPanel() {
         </p>
       ) : (
         <p className="mt-3 text-xs text-stone-500">
-          Si no tienes código, escríbenos a hola@cuidadoweb.com con el asunto “Prueba agencia”.
+          Si no tienes código, escríbenos a hola@cuidadoweb.com con el asunto “Prueba agencia”. Te enviamos un
+          código nuevo; el anterior no se puede reutilizar.
         </p>
       )}
     </div>

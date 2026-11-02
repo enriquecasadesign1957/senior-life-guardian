@@ -1,6 +1,6 @@
-import { and, count, eq } from "drizzle-orm";
+import { and, count, eq, sql } from "drizzle-orm";
 import { AGENCY_TRIAL_SEATS } from "@cuidado/contract";
-import { getDb, sites, users } from "@cuidado/db";
+import { agencyInviteCodes, getDb, sites, users } from "@cuidado/db";
 
 export type AgencyTrialStatus = {
   active: boolean;
@@ -9,9 +9,8 @@ export type AgencyTrialStatus = {
   remaining: number;
 };
 
-export function agencyTrialInviteCode(): string {
-  const configured = process.env.AGENCY_TRIAL_CODE?.trim();
-  return configured && configured.length >= 4 ? configured : "CW-AGENCIA-5";
+export function normalizeAgencyInviteCode(code: string): string {
+  return code.trim().toUpperCase().replace(/\s+/g, "");
 }
 
 export async function getAgencyTrialStatus(userId: string): Promise<AgencyTrialStatus> {
@@ -47,9 +46,11 @@ export async function getAgencyTrialStatus(userId: string): Promise<AgencyTrialS
 }
 
 export async function activateAgencyTrial(userId: string, code: string): Promise<AgencyTrialStatus> {
-  if (code.trim() !== agencyTrialInviteCode()) {
+  const normalized = normalizeAgencyInviteCode(code);
+  if (normalized.length < 4) {
     throw new AgencyTrialError("AGENCY_CODE_INVALID", "Ese código de agencia no sirve.", 403);
   }
+
   const db = getDb();
   const existing = (
     await db
@@ -64,14 +65,61 @@ export async function activateAgencyTrial(userId: string, code: string): Promise
   if (!existing) {
     throw new AgencyTrialError("UNAUTHENTICATED", "Vuelve a abrir cuidadoweb.com e inténtalo otra vez.", 401);
   }
+  // La misma sesión/cuenta no vuelve a consumir un código.
   if (existing.activatedAt) {
     return getAgencyTrialStatus(userId);
   }
+
+  const invite = (
+    await db
+      .select({
+        id: agencyInviteCodes.id,
+        seats: agencyInviteCodes.seats,
+        maxUses: agencyInviteCodes.maxUses,
+        usedCount: agencyInviteCodes.usedCount,
+      })
+      .from(agencyInviteCodes)
+      .where(eq(agencyInviteCodes.code, normalized))
+      .limit(1)
+  )[0];
+  if (!invite) {
+    throw new AgencyTrialError("AGENCY_CODE_INVALID", "Ese código de agencia no sirve.", 403);
+  }
+  if (invite.usedCount >= invite.maxUses) {
+    throw new AgencyTrialError(
+      "AGENCY_CODE_USED",
+      "Ese código ya se usó. Cada código de agencia sirve una sola vez.",
+      409,
+    );
+  }
+
+  const redeemed = (
+    await db
+      .update(agencyInviteCodes)
+      .set({ usedCount: sql`${agencyInviteCodes.usedCount} + 1` })
+      .where(
+        and(
+          eq(agencyInviteCodes.id, invite.id),
+          sql`${agencyInviteCodes.usedCount} < ${agencyInviteCodes.maxUses}`,
+        ),
+      )
+      .returning({ id: agencyInviteCodes.id, seats: agencyInviteCodes.seats })
+  )[0];
+  if (!redeemed) {
+    throw new AgencyTrialError(
+      "AGENCY_CODE_USED",
+      "Ese código ya se usó. Cada código de agencia sirve una sola vez.",
+      409,
+    );
+  }
+
+  const seats = redeemed.seats > 0 ? redeemed.seats : AGENCY_TRIAL_SEATS;
   await db
     .update(users)
     .set({
-      agencyTrialSeats: AGENCY_TRIAL_SEATS,
+      agencyTrialSeats: seats,
       agencyTrialActivatedAt: new Date(),
+      agencyTrialCodeId: redeemed.id,
     })
     .where(eq(users.id, userId));
   return getAgencyTrialStatus(userId);
@@ -128,7 +176,6 @@ export async function claimAgencySeat(input: {
     .returning({ id: sites.id });
 
   if (!updated[0]) {
-    // rescue sites can still take a seat
     const fromRescue = await db
       .update(sites)
       .set({

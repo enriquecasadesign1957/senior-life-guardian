@@ -20,6 +20,15 @@ export const scanStatus = pgEnum("scan_status", ["queued", "running", "ready", "
 export const findingSeverity = pgEnum("finding_severity", ["low", "medium", "high"]);
 export const findingSource = pgEnum("finding_source", ["template", "model"]);
 
+export const agencyInviteCodes = pgTable("agency_invite_codes", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  code: text("code").notNull().unique(),
+  seats: integer("seats").default(5).notNull(),
+  maxUses: integer("max_uses").default(1).notNull(),
+  usedCount: integer("used_count").default(0).notNull(),
+  createdAt: timestamp("created_at", tz).defaultNow().notNull(),
+});
+
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name"),
@@ -28,6 +37,9 @@ export const users = pgTable("users", {
   image: text("image"),
   agencyTrialSeats: integer("agency_trial_seats").default(0).notNull(),
   agencyTrialActivatedAt: timestamp("agency_trial_activated_at", tz),
+  agencyTrialCodeId: uuid("agency_trial_code_id").references(() => agencyInviteCodes.id, {
+    onDelete: "set null",
+  }),
   createdAt: timestamp("created_at", tz).defaultNow().notNull(),
 });
 
