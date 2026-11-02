@@ -40,6 +40,7 @@ export const users = pgTable("users", {
   agencyTrialCodeId: uuid("agency_trial_code_id").references(() => agencyInviteCodes.id, {
     onDelete: "set null",
   }),
+  passwordHash: text("password_hash"),
   createdAt: timestamp("created_at", tz).defaultNow().notNull(),
 });
 

@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { ApiError } from "./errors";
 
 const COOKIE = "cuidado_session";
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 180;
 
 function authSecret(): string {
   const secret = process.env.AUTH_SECRET;
@@ -32,6 +33,26 @@ function readSigned(value: string | undefined): string | null {
   return userId;
 }
 
+function cookieOptions() {
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: COOKIE_MAX_AGE,
+  };
+}
+
+export async function writeSessionCookie(userId: string): Promise<void> {
+  const jar = await cookies();
+  jar.set(COOKIE, sign(userId), cookieOptions());
+}
+
+export async function clearSessionCookie(): Promise<void> {
+  const jar = await cookies();
+  jar.set(COOKIE, "", { ...cookieOptions(), maxAge: 0 });
+}
+
 export async function currentUserId(): Promise<string> {
   const jar = await cookies();
   const existing = readSigned(jar.get(COOKIE)?.value);
@@ -47,13 +68,7 @@ export async function currentUserId(): Promise<string> {
     id,
     email: `session-${id}@users.cuidadoweb.invalid`,
   });
-  jar.set(COOKIE, sign(id), {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 180,
-  });
+  await writeSessionCookie(id);
   return id;
 }
 

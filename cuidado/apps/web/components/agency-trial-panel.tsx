@@ -67,6 +67,14 @@ export function AgencyTrialPanel() {
           Conecta cada WordPress con el conector. Si el sitio aún no tiene plan, se le asigna un cupo gratis con
           vigilancia y limpieza.
         </p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <a href="/agencia/entrar" className="rounded-full bg-pine px-5 py-3 text-sm font-medium text-white">
+            Guardar cuenta con correo
+          </a>
+          <a href="/mis-sitios" className="rounded-full border border-stone-300 px-5 py-3 text-sm font-medium">
+            Ver mis sitios
+          </a>
+        </div>
       </div>
     );
   }
@@ -77,7 +85,11 @@ export function AgencyTrialPanel() {
       <h3 className="mt-2 text-2xl">Prueba gratis para agencias</h3>
       <p className="mt-3 text-stone-700">
         Activa 5 sitios con vigilancia y limpieza, sin cobro, para probar CuidadoWeb con tus clientes.
-        Cada código sirve una sola vez.
+        Cada código sirve una sola vez. Después guarda tu cuenta con correo para ver todos los sitios en{" "}
+        <a href="/mis-sitios" className="underline underline-offset-4">
+          Mis sitios
+        </a>
+        .
       </p>
       <label className="mt-6 block text-sm text-stone-600" htmlFor="agency-trial-code">
         Código de agencia (un solo uso)
