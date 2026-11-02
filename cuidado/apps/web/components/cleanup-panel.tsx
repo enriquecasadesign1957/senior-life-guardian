@@ -15,11 +15,26 @@ type SimulateBody = {
   overLimit?: boolean;
 };
 
-export function CleanupPanel({ siteId }: { siteId: string | null }) {
+type ApplyBody = {
+  applied?: boolean;
+  batchId?: string;
+  undoUntil?: string;
+  counts?: { revisions?: number; expiredTransients?: number; spamComments?: number };
+  error?: { message?: string };
+};
+
+export function CleanupPanel({
+  siteId,
+  onApplied,
+}: {
+  siteId: string | null;
+  onApplied?: (input: { batchId: string; undoUntil: string }) => void;
+}) {
   const [preview, setPreview] = useState<CleanupPreview | null>(null);
   const [needsPayment, setNeedsPayment] = useState(false);
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
+  const [done, setDone] = useState<{ batchId: string; undoUntil: string; summary: string } | null>(null);
 
   async function prepare() {
     if (!siteId) {
@@ -28,6 +43,7 @@ export function CleanupPanel({ siteId }: { siteId: string | null }) {
     }
     setPending(true);
     setMessage("");
+    setDone(null);
     try {
       const response = await fetch("/api/cleanup/simulate", {
         method: "POST",
@@ -88,9 +104,53 @@ export function CleanupPanel({ siteId }: { siteId: string | null }) {
     }
   }
 
+  async function apply() {
+    if (!siteId) return;
+    setPending(true);
+    setMessage("");
+    try {
+      const response = await fetch("/api/cleanup/apply", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ siteId }),
+      });
+      const body = (await response.json()) as ApplyBody;
+      if (!response.ok || !body.applied || !body.batchId || !body.undoUntil) {
+        setMessage(body?.error?.message ?? "No pudimos aplicar la limpieza.");
+        return;
+      }
+      const counts = body.counts;
+      const summary = [
+        counts?.revisions ? `${counts.revisions} copias` : null,
+        counts?.expiredTransients ? `${counts.expiredTransients} temporales` : null,
+        counts?.spamComments ? `${counts.spamComments} spam` : null,
+      ]
+        .filter(Boolean)
+        .join(", ");
+      setDone({
+        batchId: body.batchId,
+        undoUntil: body.undoUntil,
+        summary: summary || "el lote medido",
+      });
+      onApplied?.({ batchId: body.batchId, undoUntil: body.undoUntil });
+      setPreview(null);
+    } catch {
+      setMessage("No pudimos aplicar la limpieza.");
+    } finally {
+      setPending(false);
+    }
+  }
+
   return (
     <div id="limpieza" className="rounded-2xl border border-stone-200 bg-white p-6">
-      {preview ? (
+      {done ? (
+        <div className="space-y-3">
+          <h2 className="font-display text-3xl tracking-tight text-pine">Limpieza aplicada</h2>
+          <p className="text-lg leading-relaxed text-stone-700">
+            Sacamos {done.summary} de la base. Puedes deshacer durante 7 días desde el aviso de arriba.
+          </p>
+        </div>
+      ) : preview ? (
         <div className="space-y-5">
           <h2 className="font-display text-3xl tracking-tight text-ink">Esto es lo que vamos a limpiar</h2>
           <p className="text-xl leading-relaxed text-pine">{preview.headline}</p>
@@ -130,10 +190,19 @@ export function CleanupPanel({ siteId }: { siteId: string | null }) {
               <p className="mt-2 text-xs text-stone-500">Se puede deshacer durante 7 días. El pago único es de $29.</p>
             </div>
           ) : (
-            <p className="rounded-2xl border border-pine/20 bg-[#e7f3ec] px-4 py-3 text-sm text-pine">
-              El lote quedó aceptado en pantalla. La limpieza todavía no se ejecuta sola: cuando corra, verás este mismo
-              detalle aplicado fila por fila.
-            </p>
+            <div>
+              <button
+                type="button"
+                onClick={apply}
+                disabled={pending}
+                className="rounded-full bg-pine px-6 py-4 text-base font-medium text-white disabled:opacity-60"
+              >
+                {pending ? "Limpiando la base…" : "Limpiar la base ahora"}
+              </button>
+              <p className="mt-2 text-xs text-stone-500">
+                Se puede deshacer durante 7 días. No tocamos el tema, functions.php ni pedidos de WooCommerce.
+              </p>
+            </div>
           )}
         </div>
       ) : (
@@ -141,7 +210,7 @@ export function CleanupPanel({ siteId }: { siteId: string | null }) {
           <h2 className="font-display text-3xl tracking-tight text-ink">Acepta el lote de limpieza</h2>
           <p className="mt-2 text-sm leading-relaxed text-stone-600">
             Te mostramos cada tipo de basura medido —copias viejas, temporales vencidos, spam— y el alivio concreto que
-            deja en la base. Todavía no se borra nada.
+            deja en la base. Todavía no se borra nada hasta que confirmes.
           </p>
           <button
             type="button"

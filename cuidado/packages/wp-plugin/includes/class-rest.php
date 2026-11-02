@@ -52,7 +52,7 @@ final class Rest {
 		return new \WP_REST_Response(
 			array(
 				'ok'      => true,
-				'version' => '0.2.0',
+				'version' => '0.3.0',
 			),
 			200
 		);

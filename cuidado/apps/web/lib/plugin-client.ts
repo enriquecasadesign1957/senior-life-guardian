@@ -1,4 +1,10 @@
-import { payloadOverLimit, pluginErrorSchema, snapshotSchema, type Snapshot } from "@cuidado/contract";
+import {
+  cleanupApplyResultSchema,
+  payloadOverLimit,
+  pluginErrorSchema,
+  snapshotSchema,
+  type Snapshot,
+} from "@cuidado/contract";
 import { ApiError } from "./errors";
 import { assertPublicUrl } from "./urls";
 
@@ -9,10 +15,15 @@ export type PluginFailure = {
   counts?: Snapshot["counts"];
 };
 
-async function pluginFetch(baseUrl: string, path: string, init: RequestInit): Promise<Response> {
+async function pluginFetch(
+  baseUrl: string,
+  path: string,
+  init: RequestInit,
+  timeoutMs = 15_000,
+): Promise<Response> {
   const url = await assertPublicUrl(baseUrl);
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 15_000);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     return await fetch(new URL(path, url), {
       ...init,
@@ -87,6 +98,97 @@ export async function readSnapshot(baseUrl: string, secret: string): Promise<Sna
     return { ok: false, code: "UNREACHABLE", message: "El conector no respondió un informe válido." };
   }
   return { ok: false, code: parsed.data.code, message: parsed.data.message, counts: parsed.data.counts };
+}
+
+export async function applyCleanup(
+  baseUrl: string,
+  secret: string,
+): Promise<
+  | { ok: true; batchId: string; undoUntil: string; counts: Snapshot["counts"]; bytes?: Snapshot["bytes"] }
+  | PluginFailure
+  | { ok: false; code: "CLEANUP_FAILED" | "UNDO_PENDING"; message: string }
+> {
+  let response: Response;
+  try {
+    response = await pluginFetch(
+      baseUrl,
+      "/wp-json/cuidado/v1/cleanup/apply",
+      {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${secret}`,
+          "content-type": "application/json",
+        },
+        body: "{}",
+      },
+      60_000,
+    );
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    return { ok: false, code: "UNREACHABLE", message: "No pudimos limpiar el sitio." };
+  }
+  const body = await response.json().catch(() => null);
+  if (response.ok) {
+    const parsed = cleanupApplyResultSchema.safeParse(body);
+    if (!parsed.success) {
+      return { ok: false, code: "CLEANUP_FAILED", message: "El conector no confirmó la limpieza." };
+    }
+    return { ok: true, ...parsed.data };
+  }
+  const code = typeof (body as { code?: string } | null)?.code === "string" ? (body as { code: string }).code : "";
+  const message =
+    typeof (body as { message?: string } | null)?.message === "string"
+      ? (body as { message: string }).message
+      : "No pudimos limpiar el sitio.";
+  if (code === "UNDO_PENDING") {
+    return { ok: false, code: "UNDO_PENDING", message };
+  }
+  const parsed = readPluginError(body);
+  if (parsed.success) {
+    return { ok: false, code: parsed.data.code, message: parsed.data.message, counts: parsed.data.counts };
+  }
+  return { ok: false, code: "CLEANUP_FAILED", message };
+}
+
+export async function undoCleanup(
+  baseUrl: string,
+  secret: string,
+  batchId: string,
+): Promise<{ ok: true } | PluginFailure | { ok: false; code: "UNDO_FAILED" | "UNDO_EXPIRED" | "UNDO_UNAVAILABLE"; message: string }> {
+  let response: Response;
+  try {
+    response = await pluginFetch(
+      baseUrl,
+      "/wp-json/cuidado/v1/cleanup/undo",
+      {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${secret}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ batchId }),
+      },
+      60_000,
+    );
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    return { ok: false, code: "UNREACHABLE", message: "No pudimos deshacer la limpieza." };
+  }
+  const body = await response.json().catch(() => null);
+  if (response.ok) return { ok: true };
+  const code = typeof (body as { code?: string } | null)?.code === "string" ? (body as { code: string }).code : "UNDO_FAILED";
+  const message =
+    typeof (body as { message?: string } | null)?.message === "string"
+      ? (body as { message: string }).message
+      : "No pudimos deshacer la limpieza.";
+  if (code === "UNDO_EXPIRED" || code === "UNDO_UNAVAILABLE" || code === "UNAUTHORIZED") {
+    return { ok: false, code: code as "UNDO_EXPIRED" | "UNDO_UNAVAILABLE" | "UNAUTHORIZED", message };
+  }
+  const parsed = readPluginError(body);
+  if (parsed.success) {
+    return { ok: false, code: parsed.data.code, message: parsed.data.message, counts: parsed.data.counts };
+  }
+  return { ok: false, code: "UNDO_FAILED", message };
 }
 
 function readPluginError(body: unknown) {

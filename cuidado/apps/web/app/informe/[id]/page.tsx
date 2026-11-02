@@ -1,7 +1,11 @@
-import { and, eq } from "drizzle-orm";
-import { findings, getDb, scanRuns, sites } from "@cuidado/db";
+import { and, desc, eq, gt } from "drizzle-orm";
+import { cleanupBatches, findings, getDb, scanRuns, sites } from "@cuidado/db";
 import { notFound } from "next/navigation";
-import { CleanupPanel } from "@/components/cleanup-panel";
+import {
+  CleanupUndoProvider,
+  ConnectedCleanupPanel,
+  ConnectedUndoBanner,
+} from "@/components/cleanup-undo";
 import { IncidentNotice } from "@/components/incident-notice";
 import { PlanPanel } from "@/components/plan-panel";
 import { ReliefCompare } from "@/components/relief-compare";
@@ -9,7 +13,6 @@ import { OutsideRepair } from "@/components/outside-repair";
 import { Reassurance } from "@/components/reassurance";
 import { RevokeAccess } from "@/components/revoke-access";
 import { ScoreMeter } from "@/components/score-meter";
-import { UndoBanner } from "@/components/undo-banner";
 import { optionalUserId } from "@/lib/session";
 import { isWatchActive, watchDaysRemaining } from "@/lib/watch";
 
@@ -84,10 +87,34 @@ export default async function InformePage({ params, searchParams }: PageProps) {
     site && site.plan === "rescue" && site.watchUntil && isWatchActive(site, now)
       ? watchDaysRemaining(site.watchUntil, now)
       : null;
+  const undoBatch =
+    ownedId
+      ? (
+          await db
+            .select({
+              pluginBatchId: cleanupBatches.pluginBatchId,
+              undoUntil: cleanupBatches.undoUntil,
+            })
+            .from(cleanupBatches)
+            .where(
+              and(
+                eq(cleanupBatches.siteId, ownedId),
+                eq(cleanupBatches.status, "applied"),
+                gt(cleanupBatches.undoUntil, now),
+              ),
+            )
+            .orderBy(desc(cleanupBatches.appliedAt))
+            .limit(1)
+        )[0]
+      : undefined;
 
   return (
+    <CleanupUndoProvider
+      initialBatchId={undoBatch?.pluginBatchId ?? null}
+      initialUndoUntil={undoBatch?.undoUntil ? undoBatch.undoUntil.toISOString() : null}
+    >
     <div className="mx-auto max-w-3xl space-y-8 px-6 py-12">
-      <UndoBanner undoUntil={null} />
+      <ConnectedUndoBanner siteId={ownedId} />
       {site?.lastProbeAt ? <IncidentNotice status={site.lastProbeStatus} streak={site.probeStreak} /> : null}
       {watchDays !== null && watchDays > 0 ? (
         <div className="rounded-3xl bg-pine px-6 py-8 text-white">
@@ -205,9 +232,10 @@ export default async function InformePage({ params, searchParams }: PageProps) {
 
       <Reassurance />
       <OutsideRepair />
-      <CleanupPanel siteId={ownedId} />
+      <ConnectedCleanupPanel siteId={ownedId} />
       {ownedId && site && site.plan !== "cuidado" ? <PlanPanel siteId={ownedId} /> : null}
       {ownedId ? <RevokeAccess siteId={ownedId} /> : null}
     </div>
+    </CleanupUndoProvider>
   );
 }
