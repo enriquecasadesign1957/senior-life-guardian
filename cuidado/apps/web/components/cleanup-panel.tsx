@@ -91,9 +91,29 @@ export function CleanupPanel({ siteId }: { siteId: string | null }) {
   return (
     <div id="limpieza" className="rounded-2xl border border-stone-200 bg-white p-6">
       {preview ? (
-        <div className="space-y-4">
-          <h2 className="text-2xl">Esto es lo que pasaría</h2>
-          <p className="text-lg leading-relaxed">{preview.headline}</p>
+        <div className="space-y-5">
+          <h2 className="font-display text-3xl tracking-tight text-ink">Esto es lo que vamos a limpiar</h2>
+          <p className="text-xl leading-relaxed text-pine">{preview.headline}</p>
+          {preview.steps.length > 0 ? (
+            <div>
+              <p className="text-sm font-medium text-stone-500">Hasta el detalle más chico del lote</p>
+              <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-stone-700">
+                {preview.steps.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {preview.wins.length > 0 ? (
+            <div className="rounded-2xl bg-[#e7f3ec] p-5">
+              <p className="font-display text-2xl text-pine">Lo que ganas al sacar esa basura</p>
+              <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-pine">
+                {preview.wins.map((win) => (
+                  <li key={win}>{win}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
           <p className="text-sm text-stone-600">{preview.detail}</p>
           {preview.blocked ? null : needsPayment ? (
             <div>
@@ -108,20 +128,28 @@ export function CleanupPanel({ siteId }: { siteId: string | null }) {
               <p className="mt-2 text-xs text-stone-500">Se puede deshacer durante 7 días. El pago único es de $29.</p>
             </div>
           ) : (
-            <p className="text-sm text-stone-600">El lote quedó descrito. La limpieza todavía no se ejecuta.</p>
+            <p className="rounded-2xl border border-pine/20 bg-[#e7f3ec] px-4 py-3 text-sm text-pine">
+              El lote quedó aceptado en pantalla. La limpieza todavía no se ejecuta sola: cuando corra, verás este mismo
+              detalle aplicado fila por fila.
+            </p>
           )}
         </div>
       ) : (
         <div>
+          <h2 className="font-display text-3xl tracking-tight text-ink">Acepta el lote de limpieza</h2>
+          <p className="mt-2 text-sm leading-relaxed text-stone-600">
+            Te mostramos cada tipo de basura medido —copias viejas, temporales vencidos, spam— y el alivio concreto que
+            deja en la base. Todavía no se borra nada.
+          </p>
           <button
             type="button"
             onClick={prepare}
             disabled={pending}
-            className="rounded-full bg-pine px-6 py-4 text-base font-medium text-white disabled:opacity-60"
+            className="mt-4 rounded-full bg-pine px-6 py-4 text-base font-medium text-white disabled:opacity-60"
           >
             {pending ? "Revisando el lote…" : "Ver qué se va a quitar"}
           </button>
-          <p className="mt-2 text-xs text-stone-500">Todavía no se borra nada. Se puede deshacer durante 7 días.</p>
+          <p className="mt-2 text-xs text-stone-500">Se puede deshacer durante 7 días cuando la limpieza se aplique.</p>
         </div>
       )}
       {message ? (

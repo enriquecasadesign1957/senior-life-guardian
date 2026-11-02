@@ -44,7 +44,10 @@ test("la plantilla cuenta las copias en castellano y la IA no cambia la acción"
     ],
   }));
   assert.equal(explained.summary, "Resumen pulido.");
-  assert.equal(explained.issues[0]?.plainTitle, "Tienes 1.240 copias viejas de tus páginas");
+  assert.equal(
+    explained.issues[0]?.plainTitle,
+    "Tienes 1.240 copias viejas de tus páginas hinchando la base",
+  );
   assert.equal(explained.issues[0]?.actionId, "purge_revisions");
 });
 

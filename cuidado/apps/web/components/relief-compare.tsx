@@ -15,17 +15,17 @@ export function ReliefCompare({
   return (
     <section className="grid gap-4 sm:grid-cols-2">
       <div>
-        <p className="mb-2 text-sm font-medium text-stone-500">Así está</p>
+        <p className="mb-2 text-sm font-medium text-stone-500">Así está hoy</p>
         <JunkMeter revisions={revisions} />
       </div>
       <div>
-        <p className="mb-2 text-sm font-medium text-pine">Así quedaría</p>
+        <p className="mb-2 text-sm font-medium text-pine">Así quedaría tras la limpieza</p>
         <article className="rounded-2xl bg-[#e7f3ec] p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm text-stone-600">Copias viejas de tus páginas</p>
               <p className="mt-2 font-display text-4xl text-pine">{formatCount(0)}</p>
-              <p className="mt-2 text-sm font-medium text-pine">Limpio</p>
+              <p className="mt-2 text-sm font-medium text-pine">Base limpia</p>
             </div>
             <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-pine" aria-hidden>
               <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
@@ -33,8 +33,10 @@ export function ReliefCompare({
               </svg>
             </span>
           </div>
-          <p className="mt-5 text-sm text-pine">
-            Estas {formatCount(revisions)} copias se pueden quitar. El puntaje de arriba mide la velocidad por separado.
+          <p className="mt-5 text-sm leading-relaxed text-pine">
+            Sacamos las {formatCount(revisions)} copias viejas. La base deja de arrastrar ese historial basura: respaldos
+            más livianos, escritorio menos hinchado y solo la versión publicada de cada página. El puntaje de velocidad de
+            arriba se mide aparte.
           </p>
         </article>
       </div>
