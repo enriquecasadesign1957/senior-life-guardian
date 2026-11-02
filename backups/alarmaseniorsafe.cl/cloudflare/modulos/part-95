@@ -1,0 +1,14 @@
+const RECURRING_BILLING_CONSENT_VERSION = "2026-06";
+const RECURRING_BILLING_SUPPORT_EMAIL = "hola@alarmaseniorsafe.cl";
+const RECURRING_BILLING_DISCLOSURE_BULLETS = [
+  "Al inscribir tu tarjeta en Transbank Oneclick pagas el primer período. Si marcas la casilla opcional, autorizas a Senior Safe a debitar automáticamente el valor del plan (mensual o anual) en cada renovación."
+];
+const RECURRING_BILLING_DISCLOSURE_FOOTER = "";
+const RECURRING_BILLING_TERMS_LINK_LABEL = "Cancelación y reembolsos (Términos)";
+export {
+  RECURRING_BILLING_CONSENT_VERSION as R,
+  RECURRING_BILLING_DISCLOSURE_BULLETS as a,
+  RECURRING_BILLING_DISCLOSURE_FOOTER as b,
+  RECURRING_BILLING_TERMS_LINK_LABEL as c,
+  RECURRING_BILLING_SUPPORT_EMAIL as d
+};

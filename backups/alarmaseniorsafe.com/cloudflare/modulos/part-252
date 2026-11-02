@@ -1,0 +1,71 @@
+import { j as jsxRuntimeExports } from "../_libs/react.mjs";
+import { E as EmergencySimulator } from "./emergency-simulator-NFWOR7nI.mjs";
+import "./index.mjs";
+
+
+import "./demo-phone-frame-DskwpBik.mjs";
+import "./button-BC9oXVxV.mjs";
+import "../_libs/radix-ui__react-slot.mjs";
+import "../_libs/radix-ui__react-compose-refs.mjs";
+import "../_libs/class-variance-authority.mjs";
+import "../_libs/clsx.mjs";
+import "./utils-H80jjgLf.mjs";
+import "../_libs/tailwind-merge.mjs";
+import "./plans-BJeLFmLc.mjs";
+import "../_libs/zod.mjs";
+import "./dialog-CPxdlKfP.mjs";
+import "../_libs/radix-ui__react-dialog.mjs";
+import "../_libs/radix-ui__primitive.mjs";
+import "../_libs/radix-ui__react-context.mjs";
+import "../_libs/radix-ui__react-id.mjs";
+import "../_libs/@radix-ui/react-use-layout-effect+[...].mjs";
+import "../_libs/@radix-ui/react-use-controllable-state+[...].mjs";
+import "../_libs/@radix-ui/react-dismissable-layer+[...].mjs";
+import "../_libs/radix-ui__react-primitive.mjs";
+import "../_libs/react-dom.mjs";
+import "../_libs/@radix-ui/react-use-callback-ref+[...].mjs";
+import "../_libs/@radix-ui/react-use-escape-keydown+[...].mjs";
+import "../_libs/radix-ui__react-focus-scope.mjs";
+import "../_libs/radix-ui__react-portal.mjs";
+import "../_libs/radix-ui__react-presence.mjs";
+import "../_libs/radix-ui__react-focus-guards.mjs";
+import "../_libs/react-remove-scroll.mjs";
+import "../_libs/tslib.mjs";
+import "../_libs/react-remove-scroll-bar.mjs";
+import "../_libs/react-style-singleton.mjs";
+import "../_libs/get-nonce.mjs";
+import "../_libs/use-sidecar.mjs";
+import "../_libs/use-callback-ref.mjs";
+import "../_libs/aria-hidden.mjs";
+import "../_libs/lucide-react.mjs";
+import "./emergency-cascade-continuation-BhQV3eMZ.mjs";
+import "./client.server-U_pH-Evd.mjs";
+import "../_libs/supabase__supabase-js.mjs";
+import "../_libs/supabase__postgrest-js.mjs";
+import "../_libs/supabase__realtime-js.mjs";
+import "../_libs/unenv.mjs";
+
+
+import "../_libs/supabase__phoenix.mjs";
+import "../_libs/supabase__storage-js.mjs";
+import "../_libs/iceberg-js.mjs";
+import "../_libs/supabase__auth-js.mjs";
+import "../_libs/supabase__functions-js.mjs";
+import "./signups-db-JWUtXpaW.mjs";
+import "./contacts-storage-DdsYD-uQ.mjs";
+import "./phone-utils-D7EH6fht.mjs";
+import "./twilio-DNHuHEFY.mjs";
+import "../_libs/h3-v2.mjs";
+import "../_libs/rou3.mjs";
+import "../_libs/srvx.mjs";
+
+
+
+
+
+function DemoFlujoPage() {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(EmergencySimulator, { embedded: true, showIntro: true });
+}
+export {
+  DemoFlujoPage as component
+};

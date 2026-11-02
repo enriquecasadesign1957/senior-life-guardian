@@ -1,0 +1,231 @@
+import { j as jsxRuntimeExports, r as reactExports } from "../_libs/react.mjs";
+import { L as Link } from "../_libs/tanstack__react-router.mjs";
+import { u as useServerFn } from "./useServerFn-DL2oePlL.mjs";
+import { A as AdminPinGate } from "./admin-pin-gate-BkqeYSuC.mjs";
+import { B as Button } from "./button-BC9oXVxV.mjs";
+import { I as Input } from "./input-C0QjszdI.mjs";
+import { L as Label } from "./label-JU3yqRBo.mjs";
+import { t as toast } from "../_libs/sonner.mjs";
+import { c as createSsrRpc } from "./createSsrRpc-14pD3De2.mjs";
+import { j as createServerFn } from "./createServerFn-CqTdkD5n.mjs";
+
+import { A as ArrowLeft, L as LoaderCircle, ap as Search, aa as Gift, aq as Ban } from "../_libs/lucide-react.mjs";
+import { s as stringType, n as numberType, o as objectType } from "../_libs/zod.mjs";
+
+import "../_libs/tanstack__router-core.mjs";
+import "../_libs/tanstack__history.mjs";
+import "../_libs/cookie-es.mjs";
+import "../_libs/seroval.mjs";
+import "../_libs/unenv.mjs";
+
+
+import "../_libs/seroval-plugins.mjs";
+
+
+import "../_libs/react-dom.mjs";
+import "../_libs/isbot.mjs";
+import "./admin-auth-5OIH6Qjw.mjs";
+import "../_libs/radix-ui__react-slot.mjs";
+import "../_libs/radix-ui__react-compose-refs.mjs";
+import "../_libs/class-variance-authority.mjs";
+import "../_libs/clsx.mjs";
+import "./utils-H80jjgLf.mjs";
+import "../_libs/tailwind-merge.mjs";
+import "../_libs/radix-ui__react-label.mjs";
+import "../_libs/radix-ui__react-primitive.mjs";
+const pinSchema = objectType({
+  pin: stringType().min(1).max(64)
+});
+const lookupSchema = pinSchema.extend({
+  email: stringType().email().optional(),
+  signupId: stringType().uuid().optional()
+});
+const grantSchema = pinSchema.extend({
+  email: stringType().email().optional(),
+  signupId: stringType().uuid().optional(),
+  reason: stringType().trim().min(3).max(500),
+  grantedBy: stringType().trim().min(1).max(120).optional(),
+  /** Meses de vigencia; null = sin fecha de fin (sin cobro automático). */
+  durationMonths: numberType().int().min(1).max(120).nullable().optional()
+});
+const revokeSchema = pinSchema.extend({
+  signupId: stringType().uuid(),
+  reason: stringType().trim().min(3).max(500).optional()
+});
+const adminLookupAccount = createServerFn({
+  method: "POST"
+}).inputValidator((input) => lookupSchema.parse(input)).handler(createSsrRpc("f27efb3e2b865251959452215d37d8d60ef542512841abc03138a96ddd48e6d5"));
+const adminGrantFreeService = createServerFn({
+  method: "POST"
+}).inputValidator((input) => grantSchema.parse(input)).handler(createSsrRpc("2b17e3f7112775bcb1be66d8c42d9728d38ccd49587997b6e2707f7c5b39d59c"));
+const adminRevokeFreeService = createServerFn({
+  method: "POST"
+}).inputValidator((input) => revokeSchema.parse(input)).handler(createSsrRpc("55dff177ecc3a93ada34854da91b29cf509b7d27253e06022d2ab03f34020a87"));
+function AdminAccountsPage() {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(AdminPinGate, { title: "Gratuidad / cortesía", description: "Activa Senior Safe sin cobro. Se envían automáticamente correo y WhatsApp/SMS con el enlace de instalación.", onUnlockFailed: (m) => toast.error(m), children: (pin) => /* @__PURE__ */ jsxRuntimeExports.jsx(AdminAccountsInner, { pin }) });
+}
+function AdminAccountsInner({
+  pin
+}) {
+  const lookup = useServerFn(adminLookupAccount);
+  const grant = useServerFn(adminGrantFreeService);
+  const revoke = useServerFn(adminRevokeFreeService);
+  const [email, setEmail] = reactExports.useState("");
+  const [loading, setLoading] = reactExports.useState(false);
+  const [account, setAccount] = reactExports.useState(null);
+  const [reason, setReason] = reactExports.useState("");
+  const [grantedBy, setGrantedBy] = reactExports.useState("");
+  const [durationMonths, setDurationMonths] = reactExports.useState("12");
+  const [unlimited, setUnlimited] = reactExports.useState(false);
+  const [acting, setActing] = reactExports.useState(false);
+  const search = async () => {
+    if (!email.trim()) return toast.error("Ingresa un email");
+    setLoading(true);
+    try {
+      const res = await lookup({
+        data: {
+          pin,
+          email: email.trim()
+        }
+      });
+      if (!res.ok) {
+        setAccount(null);
+        toast.error(res.message);
+        return;
+      }
+      setAccount(res.account);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error al buscar");
+      setAccount(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const grantFree = async () => {
+    if (!account) return;
+    if (reason.trim().length < 3) return toast.error("Indica un motivo (mín. 3 caracteres)");
+    setActing(true);
+    try {
+      const res = await grant({
+        data: {
+          pin,
+          signupId: account.id,
+          reason: reason.trim(),
+          grantedBy: grantedBy.trim() || void 0,
+          durationMonths: unlimited ? null : Number(durationMonths) || 12
+        }
+      });
+      toast.success(res.message, {
+        duration: 8e3
+      });
+      await search();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo otorgar");
+    } finally {
+      setActing(false);
+    }
+  };
+  const revokeFree = async () => {
+    if (!account) return;
+    setActing(true);
+    try {
+      const res = await revoke({
+        data: {
+          pin,
+          signupId: account.id,
+          reason: "Revocado desde panel admin"
+        }
+      });
+      toast.success(res.message);
+      await search();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo revocar");
+    } finally {
+      setActing(false);
+    }
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-h-screen bg-muted/30", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("header", { className: "border-b border-border bg-card", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-2xl mx-auto px-4 py-4 flex items-center gap-3", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/admin", className: "text-muted-foreground hover:text-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-5 h-5" }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-xl font-bold", children: "Gratuidad / cortesía" })
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("main", { className: "max-w-2xl mx-auto px-4 py-8 space-y-6", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "p-5 rounded-2xl border bg-card space-y-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Label, { htmlFor: "email", children: "Buscar cuenta por email" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Input, { id: "email", type: "email", placeholder: "usuario@ejemplo.cl", value: email, onChange: (e) => setEmail(e.target.value), onKeyDown: (e) => e.key === "Enter" && void search() }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { type: "button", onClick: () => void search(), disabled: loading, children: loading ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-4 h-4 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Search, { className: "w-4 h-4" }) })
+        ] })
+      ] }),
+      account && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "p-5 rounded-2xl border bg-card space-y-2 text-sm", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-bold text-lg", children: account.nombre }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-muted-foreground", children: account.email }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-2 gap-2 pt-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Stat, { label: "Pago", value: account.payment_status }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Stat, { label: "Suscripción", value: account.subscription_status }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Stat, { label: "Periodo", value: account.periodo }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Stat, { label: "Renovación", value: account.renewal_date ? new Date(account.renewal_date).toLocaleDateString("es-CL") : "—" })
+          ] }),
+          account.payment_status === "comp" && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "Cortesía activa." }),
+            account.comp_reason && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-1", children: account.comp_reason }),
+            account.comp_granted_at && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-1 opacity-80", children: [
+              "Desde ",
+              new Date(account.comp_granted_at).toLocaleString("es-CL"),
+              account.comp_granted_by ? ` · ${account.comp_granted_by}` : ""
+            ] })
+          ] }),
+          account.discount_code && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-xs text-muted-foreground", children: [
+            "Descuento checkout: ",
+            account.discount_code
+          ] })
+        ] }),
+        account.payment_status !== "comp" ? /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "p-5 rounded-2xl border bg-card space-y-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { className: "font-bold flex items-center gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Gift, { className: "w-4 h-4" }),
+            " Otorgar gratuidad"
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Label, { htmlFor: "reason", children: "Motivo" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Input, { id: "reason", placeholder: "Convenio municipal Maipú, beca social, cortesía soporte…", value: reason, onChange: (e) => setReason(e.target.value) })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Label, { htmlFor: "by", children: "Otorgado por (opcional)" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Input, { id: "by", placeholder: "Tu nombre o equipo", value: grantedBy, onChange: (e) => setGrantedBy(e.target.value) })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3 flex-wrap", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "flex items-center gap-2 text-sm", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("input", { type: "checkbox", checked: unlimited, onChange: (e) => setUnlimited(e.target.checked) }),
+              "Sin fecha de término"
+            ] }),
+            !unlimited && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Label, { htmlFor: "months", className: "sr-only", children: "Meses" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Input, { id: "months", type: "number", min: 1, max: 120, className: "w-24", value: durationMonths, onChange: (e) => setDurationMonths(e.target.value) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm text-muted-foreground", children: "meses" })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(Button, { type: "button", className: "w-full", disabled: acting, onClick: () => void grantFree(), children: [
+            acting ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-4 h-4 animate-spin mr-2" }) : null,
+            "Activar servicio gratuito"
+          ] })
+        ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(Button, { type: "button", variant: "destructive", disabled: acting, onClick: () => void revokeFree(), children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Ban, { className: "w-4 h-4 mr-2" }),
+          "Revocar cortesía"
+        ] })
+      ] })
+    ] })
+  ] });
+}
+function Stat({
+  label,
+  value
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-2 rounded-lg bg-muted/50", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[10px] uppercase tracking-wider text-muted-foreground", children: label }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-semibold capitalize", children: value })
+  ] });
+}
+export {
+  AdminAccountsPage as component
+};

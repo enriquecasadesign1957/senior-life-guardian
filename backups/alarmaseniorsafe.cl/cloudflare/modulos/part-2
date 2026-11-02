@@ -1,0 +1,189 @@
+import { j as jsxRuntimeExports, r as reactExports } from "../_libs/react.mjs";
+import { L as Link } from "../_libs/tanstack__react-router.mjs";
+import { B as BLOG_POSTS, l as getBlogPostsNewestFirst, j as blogPostPath, k as formatBlogDate } from "./router-fGRx5M7O.mjs";
+import { S as SiteHeader, a as SiteFooter } from "./site-layout-Drvwb4jj.mjs";
+import { W as WhatsAppFloat } from "./whatsapp-float-CfwyDlWL.mjs";
+import "./index.mjs";
+
+import "../_libs/sonner.mjs";
+
+
+import { d as BookOpen, j as Clock, c as ArrowRight } from "../_libs/lucide-react.mjs";
+
+import "../_libs/tanstack__router-core.mjs";
+import "../_libs/tanstack__history.mjs";
+import "../_libs/cookie-es.mjs";
+import "../_libs/seroval.mjs";
+import "../_libs/unenv.mjs";
+
+
+import "../_libs/seroval-plugins.mjs";
+
+
+import "../_libs/react-dom.mjs";
+import "../_libs/isbot.mjs";
+import "../_libs/tanstack__query-core.mjs";
+import "../_libs/tanstack__react-query.mjs";
+import "./discount-codes-BOatiw_p.mjs";
+import "../_libs/zod.mjs";
+import "./maps-BhXedqc-.mjs";
+import "./transbank-oneclick-mall-CC5wwzFZ.mjs";
+import "../_libs/h3-v2.mjs";
+import "../_libs/rou3.mjs";
+import "../_libs/srvx.mjs";
+
+
+
+
+import "./ack-alert-hZc0eMx8.mjs";
+import "./client.server-U_pH-Evd.mjs";
+import "../_libs/supabase__supabase-js.mjs";
+import "../_libs/supabase__postgrest-js.mjs";
+import "../_libs/supabase__realtime-js.mjs";
+import "../_libs/supabase__phoenix.mjs";
+import "../_libs/supabase__storage-js.mjs";
+import "../_libs/iceberg-js.mjs";
+import "../_libs/supabase__auth-js.mjs";
+import "../_libs/tslib.mjs";
+import "../_libs/supabase__functions-js.mjs";
+import "./twilio-DNHuHEFY.mjs";
+import "./zoho-smtp-DBq11U6O.mjs";
+import "./install-step-sync-snfezerQ.mjs";
+import "./signups-db-JWUtXpaW.mjs";
+import "./twilio-inbound-_C02bj0d.mjs";
+import "./account-lookup-BFsZGyOu.mjs";
+import "./contacts-storage-DdsYD-uQ.mjs";
+import "./phone-utils-D7EH6fht.mjs";
+import "./senior-access-auth-Bmk7iyGS.mjs";
+import "./discount.functions-D1O_Tm2i.mjs";
+import "./createSsrRpc-D8pBWdiG.mjs";
+import "./createServerFn-Bu17PEW9.mjs";
+import "./whatsapp-inbox-CZiWC44X.mjs";
+import "./admin-auth-5OIH6Qjw.mjs";
+import "./post-payment-install-notify-nTNOSfzd.mjs";
+import "./transactional-email-html-WTtLAqil.mjs";
+import "./emergency-cascade-continuation-BjATaJyT.mjs";
+import "./pin-reset-CmQ6yj5h.mjs";
+import "./tarjeta-vecino.server-s7vWwsdK.mjs";
+import "./subscription-renewal-DVQYQdbm.mjs";
+import "./oneclick-renewal-charge-cRPVjMuC.mjs";
+import "../_libs/react-email__render.mjs";
+import "../_libs/prettier.mjs";
+import "../_libs/deepmerge.mjs";
+import "../_libs/react-email__html.mjs";
+import "../_libs/react-email__head.mjs";
+import "../_libs/react-email__preview.mjs";
+import "../_libs/react-email__body.mjs";
+import "../_libs/react-email__container.mjs";
+import "../_libs/react-email__section.mjs";
+import "../_libs/react-email__heading.mjs";
+import "../_libs/react-email__text.mjs";
+import "../_libs/react-email__button.mjs";
+import "../_libs/react-email__link.mjs";
+import "../_libs/react-email__hr.mjs";
+import "./demo-config-D1XL_8ap.mjs";
+const PETROL$1 = "var(--brand-petrol)";
+function BlogPostCard({ post }) {
+  const href = blogPostPath(post.slug);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("article", { className: "group flex flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition hover:shadow-lg", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: href, className: "block overflow-hidden", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "img",
+      {
+        src: post.coverImage,
+        alt: post.coverAlt,
+        width: post.coverWidth,
+        height: post.coverHeight,
+        loading: "lazy",
+        decoding: "async",
+        className: "aspect-[16/9] w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+      }
+    ) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-1 flex-col p-6 md:p-7", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { color: PETROL$1 }, children: post.category }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { "aria-hidden": true, children: "·" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("time", { dateTime: post.publishedAt, children: formatBlogDate(post.publishedAt) })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-xl font-bold leading-snug tracking-tight text-foreground md:text-2xl", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: href, className: "hover:underline decoration-2 underline-offset-4", children: post.title }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-3 flex-1 text-sm leading-relaxed text-muted-foreground md:text-base", children: post.excerpt }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-5 flex items-center justify-between gap-3 border-t border-border pt-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Clock, { className: "h-3.5 w-3.5", "aria-hidden": true }),
+          post.readingMinutes,
+          " min de lectura"
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          Link,
+          {
+            to: href,
+            className: "inline-flex items-center gap-1.5 text-sm font-bold transition hover:opacity-80",
+            style: { color: PETROL$1 },
+            children: [
+              "Leer artículo",
+              /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowRight, { className: "h-4 w-4", "aria-hidden": true })
+            ]
+          }
+        )
+      ] })
+    ] })
+  ] });
+}
+const SORO_SCRIPT_SRC = "https://app.trysoro.com/api/embed/11fa918b-98ba-41a6-a145-08550f87ffaf";
+const SORO_SCRIPT_ATTR = "data-soro-blog-embed";
+function SoroBlogEmbed() {
+  reactExports.useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.querySelectorAll(`script[${SORO_SCRIPT_ATTR}]`).forEach((node) => node.remove());
+    const script = document.createElement("script");
+    script.src = SORO_SCRIPT_SRC;
+    script.defer = true;
+    script.setAttribute(SORO_SCRIPT_ATTR, "true");
+    document.body.appendChild(script);
+    return () => {
+      script.remove();
+    };
+  }, []);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { id: "soro-blog" });
+}
+const PETROL = "var(--brand-petrol)";
+const DEEP = "var(--brand-petrol-deep)";
+function BlogIndexPage() {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-h-screen bg-background flex flex-col", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(SiteHeader, {}),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("main", { className: "flex-1", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "relative overflow-hidden text-white", style: {
+        background: `linear-gradient(135deg, ${DEEP} 0%, ${PETROL} 55%, oklch(0.5 0.14 235) 100%)`
+      }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative mx-auto max-w-6xl px-6 py-14 md:py-20", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mb-3 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-white/75", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(BookOpen, { className: "h-4 w-4", "aria-hidden": true }),
+          "Blog Senior Safe"
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "max-w-3xl text-3xl font-bold tracking-tight md:text-5xl", children: "Guías claras para cuidar a quien más quieres" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-4 max-w-2xl text-base leading-relaxed text-white/85 md:text-lg", children: "Explicamos sin tecnicismos cómo funciona la detección de caídas, las alertas familiares y la tecnología que ayuda en emergencias domésticas en Chile." })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "mx-auto max-w-6xl px-6 py-12 md:py-16", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mb-8 flex flex-wrap items-end justify-between gap-3", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-xl font-bold text-foreground md:text-2xl", children: "Artículos recientes" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-1 text-sm text-muted-foreground", children: [
+              BLOG_POSTS.length,
+              " ",
+              BLOG_POSTS.length === 1 ? "artículo" : "artículos",
+              " publicados"
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/", className: "text-sm font-semibold hover:underline", style: {
+            color: PETROL
+          }, children: "Volver al inicio" })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "grid gap-6 sm:grid-cols-2 lg:grid-cols-3", children: getBlogPostsNewestFirst().map((post) => /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: /* @__PURE__ */ jsxRuntimeExports.jsx(BlogPostCard, { post }) }, post.slug)) })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "mx-auto max-w-6xl px-6 pb-12 md:pb-16", "aria-label": "Más artículos", children: /* @__PURE__ */ jsxRuntimeExports.jsx(SoroBlogEmbed, {}) })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(SiteFooter, {}),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(WhatsAppFloat, {})
+  ] });
+}
+export {
+  BlogIndexPage as component
+};

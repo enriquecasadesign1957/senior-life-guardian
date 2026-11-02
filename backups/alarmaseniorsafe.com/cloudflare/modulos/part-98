@@ -1,0 +1,471 @@
+import { r as reactExports, j as jsxRuntimeExports } from "../_libs/react.mjs";
+import { D as DemoPhoneFrame } from "./demo-phone-frame-DskwpBik.mjs";
+import { B as Button } from "./button-BC9oXVxV.mjs";
+import { f as formatPlanPrice, P as PLAN, d as checkoutUrl } from "./plans-BJeLFmLc.mjs";
+import { b as paymentLabel } from "./index.mjs";
+import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, d as DialogDescription } from "./dialog-CPxdlKfP.mjs";
+import { s as EMERGENCY_CATEGORIES, f as emergencyCategoryMessageLine } from "./emergency-cascade-continuation-BhQV3eMZ.mjs";
+import { B as Bell, S as Shield, T as TriangleAlert, H as Heart, L as LoaderCircle, b as MessageCircle, C as CircleCheck, P as Phone, g as Sparkles, c as ArrowRight, R as Radio, h as RotateCcw } from "../_libs/lucide-react.mjs";
+const SIMULATOR_GPS = {
+  lat: -33.4489,
+  lng: -70.6693,
+  label: "Plaza de Armas, Santiago, Chile"
+};
+function buildSimulatorWhatsAppMessage(category) {
+  const tipo = emergencyCategoryMessageLine(category);
+  return `🚨 ALERTA SENIOR SAFE — María González
+
+Tipo: ${tipo}
+Botón S.O.S activado desde la app.
+
+📍 Ubicación:
+https://alarmaseniorsafe.cl/ubicacion?lat=-33.448900&lng=-70.669300&nombre=María+González
+
+Responda RECIBIDO si va en camino.
+Central Senior Safe · IA supervisando el caso.`;
+}
+function buildSimulatorLogScript(category) {
+  const tipo = emergencyCategoryMessageLine(category);
+  return [
+    {
+      offsetMs: 0,
+      clock: "00:00",
+      message: `Botón S.O.S presionado por usuario. Seleccionado el tipo de emergencia: ${tipo}.`,
+      status: "info"
+    },
+    {
+      offsetMs: 1e3,
+      clock: "00:01",
+      message: `Geolocalización GPS obtenida exitosamente (${SIMULATOR_GPS.label}).`,
+      status: "success"
+    },
+    {
+      offsetMs: 1e3,
+      clock: "00:01",
+      message: "Alerta enviada a Central Senior Safe con Inteligencia Artificial.",
+      status: "success"
+    },
+    {
+      offsetMs: 2e3,
+      clock: "00:02",
+      message: "WhatsApp enviado con éxito al Contacto 1 (Hijo/a — Carmen R.)",
+      status: "success",
+      actionLabel: "Ver mensaje simulado"
+    },
+    {
+      offsetMs: 2e3,
+      clock: "00:02",
+      message: "SMS de respaldo enviado con éxito al Contacto 2 (Cuidador — Pedro M.)",
+      status: "success"
+    },
+    {
+      offsetMs: 3e3,
+      clock: "00:03",
+      message: "Llamada de voz automatizada en curso al Contacto 3 (Vecina — Rosa L.)…",
+      status: "progress"
+    }
+  ];
+}
+const SIMULATOR_SENDING_MS = 2e3;
+const RED = "#dc2626";
+const PETROL = "#0f766e";
+const CATEGORY_ICONS = {
+  salud: Heart,
+  accidente: TriangleAlert,
+  delincuencia: Shield
+};
+function statusIcon(status) {
+  if (status === "success") {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { className: "w-4 h-4 shrink-0 text-green-500", "aria-hidden": true });
+  }
+  if (status === "progress") {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-4 h-4 shrink-0 text-amber-400 animate-spin", "aria-hidden": true });
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Radio, { className: "w-4 h-4 shrink-0 text-sky-400", "aria-hidden": true });
+}
+function EmergencySimulator({
+  embedded = false,
+  showIntro,
+  showConversionTrigger = false,
+  priorityMobile = false
+}) {
+  const showPageIntro = showIntro ?? !embedded;
+  const [phase, setPhase] = reactExports.useState("idle");
+  const [selectedCategory, setSelectedCategory] = reactExports.useState(null);
+  const [whatsappMessage, setWhatsappMessage] = reactExports.useState("");
+  const [logs, setLogs] = reactExports.useState([]);
+  const [whatsappOpen, setWhatsappOpen] = reactExports.useState(false);
+  const timersRef = reactExports.useRef([]);
+  const conversionRef = reactExports.useRef(null);
+  const monthlyPrice = `$${formatPlanPrice(PLAN.monthly)}/mes`;
+  const simulationComplete = phase === "done" && logs.some((entry) => entry.message.includes(SIMULATOR_GPS.label));
+  reactExports.useEffect(() => {
+    if (!showConversionTrigger || !simulationComplete || !conversionRef.current) return;
+    const timer = window.setTimeout(() => {
+      conversionRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [showConversionTrigger, simulationComplete]);
+  const clearTimers = reactExports.useCallback(() => {
+    for (const id of timersRef.current) window.clearTimeout(id);
+    timersRef.current = [];
+  }, []);
+  const reset = reactExports.useCallback(() => {
+    clearTimers();
+    setPhase("idle");
+    setSelectedCategory(null);
+    setWhatsappMessage("");
+    setLogs([]);
+    setWhatsappOpen(false);
+  }, [clearTimers]);
+  reactExports.useEffect(() => () => clearTimers(), [clearTimers]);
+  const schedule = reactExports.useCallback((fn, ms) => {
+    const id = window.setTimeout(fn, ms);
+    timersRef.current.push(id);
+  }, []);
+  const showCategoryScreen = reactExports.useCallback(() => {
+    if (phase !== "idle") return;
+    clearTimers();
+    setLogs([]);
+    setSelectedCategory(null);
+    setPhase("category");
+  }, [clearTimers, phase]);
+  const confirmCategory = reactExports.useCallback(
+    (category) => {
+      if (phase !== "category") return;
+      clearTimers();
+      setLogs([]);
+      setSelectedCategory(category);
+      setWhatsappMessage(buildSimulatorWhatsAppMessage(category));
+      setPhase("sending");
+      schedule(() => {
+        setPhase("running");
+        const entries = buildSimulatorLogScript(category).map((row, index) => ({
+          ...row,
+          id: `log-${index}`
+        }));
+        for (const entry of entries) {
+          schedule(() => {
+            setLogs((prev) => [...prev, entry]);
+            if (entry.status === "progress") {
+              setPhase("done");
+            }
+          }, entry.offsetMs);
+        }
+      }, SIMULATOR_SENDING_MS);
+    },
+    [clearTimers, phase, schedule]
+  );
+  const sosDisabled = phase !== "idle";
+  const mobilePriority = priorityMobile && embedded;
+  const showCaregiverOnMobile = !mobilePriority || phase === "running" || phase === "done" || phase === "sending";
+  const hideCaregiverMobile = mobilePriority && !showCaregiverOnMobile;
+  const resetButton = /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    Button,
+    {
+      type: "button",
+      variant: "outline",
+      size: "sm",
+      onClick: reset,
+      className: embedded ? "gap-2" : "gap-2 border-white/20 bg-transparent text-slate-100 hover:bg-white/10 hover:text-white",
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(RotateCcw, { className: "w-4 h-4" }),
+        "Reiniciar simulador"
+      ]
+    }
+  );
+  const simulatorGrid = /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8 items-start", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "rounded-2xl md:rounded-3xl border border-white/10 bg-gradient-to-b from-slate-900 to-slate-950 shadow-2xl p-3 sm:p-5 md:p-6 lg:p-8", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 mb-3 md:mb-6", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "w-2 h-2 rounded-full bg-red-500 animate-pulse" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { className: "text-[10px] sm:text-sm font-bold uppercase tracking-wider text-slate-300", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "md:hidden", children: "Toca S.O.S para probar" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "hidden md:inline", children: "Pantalla 1 · Dispositivo del adulto mayor" })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(DemoPhoneFrame, { accent: RED, className: "mx-auto max-w-[280px] md:max-w-none", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full text-center", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[10px] font-semibold text-slate-500 mb-1", children: "Senior Safe" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs font-bold text-slate-700 mb-3 md:mb-5", children: "María González" }),
+          phase === "category" ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full text-left", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative w-14 h-14 mx-auto mb-3", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "span",
+                {
+                  className: "absolute inset-0 rounded-full animate-ping",
+                  style: { background: "rgba(220,38,38,0.25)" },
+                  "aria-hidden": true
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "div",
+                {
+                  className: "relative w-14 h-14 rounded-full flex items-center justify-center text-white shadow-lg mx-auto",
+                  style: { background: RED },
+                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(Bell, { className: "w-7 h-7", "aria-hidden": true })
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "text-sm font-bold text-slate-800 leading-tight text-center", children: "¿Qué tipo de ayuda necesitas?" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-1.5 text-[10px] text-slate-500 mb-3 text-center", children: "Toca una opción y avisaremos a tu familia al instante." }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-1.5", children: EMERGENCY_CATEGORIES.map((category) => {
+              const Icon = CATEGORY_ICONS[category.id];
+              return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "button",
+                {
+                  type: "button",
+                  onClick: () => confirmCategory(category.id),
+                  className: "w-full py-2.5 px-2.5 rounded-xl text-white text-left font-bold shadow-md flex items-center gap-2 transition hover:scale-[1.02] ring-2 ring-transparent hover:ring-white/40",
+                  style: { background: category.color },
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Icon, { className: "w-4 h-4", "aria-hidden": true }) }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "block text-xs leading-tight", children: category.label }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "block text-[9px] font-medium text-white/90", children: category.subtitle })
+                    ] })
+                  ]
+                },
+                category.id
+              );
+            }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                type: "button",
+                onClick: reset,
+                className: "mt-2 w-full py-2 rounded-xl bg-slate-100 text-slate-600 font-semibold text-[10px] hover:bg-slate-200",
+                children: "Cancelar — estoy bien"
+              }
+            )
+          ] }) : phase === "sending" ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "py-8 space-y-4", "aria-live": "polite", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-12 h-12 mx-auto text-red-500 animate-spin" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm font-bold text-red-600", children: "Enviando alerta…" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[11px] text-slate-500 leading-snug px-2", children: "Conectando GPS, central IA y contactos de emergencia" })
+          ] }) : phase === "done" ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sos-wrap mx-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "span",
+              {
+                className: `relative flex flex-col items-center justify-center w-32 h-32 md:w-44 md:h-44 rounded-full text-white font-extrabold opacity-90 border-4 border-red-300/40`,
+                style: {
+                  background: `radial-gradient(circle at 30% 25%, #f87171, ${RED} 55%, #7f1d1d)`
+                },
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-base leading-tight px-2", children: "ALERTA" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[9px] font-semibold text-white/90 mt-1 uppercase tracking-wide", children: "ACTIVA" })
+                ]
+              }
+            ) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-5 text-[11px] text-slate-500 leading-snug px-1", children: [
+              "Alerta",
+              selectedCategory ? ` (${EMERGENCY_CATEGORIES.find((c) => c.id === selectedCategory)?.label})` : "",
+              " ",
+              "en curso. Usa «Reiniciar simulador» para probar de nuevo."
+            ] })
+          ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "button",
+              {
+                type: "button",
+                disabled: sosDisabled,
+                onClick: showCategoryScreen,
+                className: "relative mx-auto block focus:outline-none focus-visible:ring-4 focus-visible:ring-red-300 rounded-full disabled:opacity-60 disabled:cursor-not-allowed",
+                "aria-label": "Presionar en caso de emergencia",
+                children: [
+                  !sosDisabled && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "span",
+                      {
+                        className: "absolute inset-0 rounded-full animate-ping",
+                        style: { background: "rgba(220,38,38,0.3)" },
+                        "aria-hidden": true
+                      }
+                    ),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "span",
+                      {
+                        className: "absolute -inset-3 rounded-full",
+                        style: { background: "rgba(220,38,38,0.12)" },
+                        "aria-hidden": true
+                      }
+                    )
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    "span",
+                    {
+                      className: "relative flex flex-col items-center justify-center w-32 h-32 md:w-44 md:h-44 rounded-full text-white font-extrabold shadow-[0_24px_60px_-18px_rgba(220,38,38,0.75)] border-4 border-red-300/40",
+                      style: {
+                        background: `radial-gradient(circle at 30% 25%, #f87171, ${RED} 55%, #7f1d1d)`
+                      },
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(TriangleAlert, { className: "w-8 h-8 md:w-10 md:h-10 mb-1", strokeWidth: 2.5, "aria-hidden": true }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm sm:text-base leading-tight px-2", children: "S.O.S" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[8px] sm:text-[9px] font-semibold text-white/90 mt-0.5 uppercase tracking-wide px-2", children: "Presionar en caso de emergencia" })
+                      ]
+                    }
+                  )
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-5 text-[11px] text-slate-500 leading-snug px-1", children: "Un toque abre el selector de emergencia; luego avisamos por WhatsApp, SMS y llamada." })
+          ] })
+        ] }) })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "section",
+        {
+          className: `rounded-2xl md:rounded-3xl border border-white/10 bg-slate-900 shadow-2xl flex flex-col p-3 sm:p-5 md:p-6 lg:p-8 min-h-0 md:min-h-[520px] ${hideCaregiverMobile ? "max-md:hidden" : ""}`,
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between gap-3 mb-4", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "span",
+                  {
+                    className: `w-2 h-2 rounded-full ${phase === "idle" ? "bg-slate-600" : phase === "done" ? "bg-amber-400" : "bg-green-400"} ${phase !== "idle" ? "animate-pulse" : ""}`
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-sm font-bold uppercase tracking-wider text-slate-300", children: "Pantalla 2 · Panel del cuidador / central" })
+              ] }),
+              phase !== "idle" && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[10px] font-mono text-teal-300 border border-teal-500/30 px-2 py-0.5 rounded", children: "LIVE" })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "div",
+              {
+                className: "flex-1 rounded-2xl border border-white/5 bg-black/40 p-4 font-mono text-[13px] leading-relaxed overflow-y-auto max-h-[420px]",
+                "aria-live": "polite",
+                "aria-label": "Log de eventos de envío",
+                children: logs.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-slate-500 text-center py-16", children: phase === "category" ? "Esperando que el adulto mayor elija el tipo de emergencia…" : phase === "sending" ? "Esperando confirmación del dispositivo…" : "El log de envíos aparecerá aquí cuando se active el S.O.S." }) : /* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "space-y-3", children: logs.map((entry) => /* @__PURE__ */ jsxRuntimeExports.jsxs("li", { className: "flex gap-3 items-start animate-in fade-in slide-in-from-left-2 duration-300", children: [
+                  statusIcon(entry.status),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0 flex-1", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-teal-400", children: [
+                      "[",
+                      entry.clock,
+                      "]"
+                    ] }),
+                    " ",
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-slate-200", children: entry.message }),
+                    entry.actionLabel && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                      " ",
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                        "button",
+                        {
+                          type: "button",
+                          onClick: () => setWhatsappOpen(true),
+                          className: "text-sky-400 underline underline-offset-2 hover:text-sky-300",
+                          children: [
+                            "→ ",
+                            entry.actionLabel
+                          ]
+                        }
+                      )
+                    ] })
+                  ] })
+                ] }, entry.id)) })
+              }
+            ),
+            logs.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-4 grid grid-cols-3 gap-2 text-center text-[10px]", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "rounded-xl bg-white/5 p-2 border border-white/5", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(MessageCircle, { className: "w-4 h-4 mx-auto text-green-400 mb-1" }),
+                "WhatsApp OK"
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "rounded-xl bg-white/5 p-2 border border-white/5", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { className: "w-4 h-4 mx-auto text-green-400 mb-1" }),
+                "SMS OK"
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "rounded-xl bg-white/5 p-2 border border-white/5", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(Phone, { className: "w-4 h-4 mx-auto text-amber-400 mb-1" }),
+                "Voz en curso"
+              ] })
+            ] }),
+            phase === "done" && !showConversionTrigger && /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-4 text-xs text-slate-400 flex items-center gap-2", style: { color: PETROL }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Shield, { className: "w-3.5 h-3.5" }),
+              "Simulación completa — en producción la central IA y los familiares reciben estos eventos de verdad."
+            ] })
+          ]
+        }
+      )
+    ] }),
+    showConversionTrigger && simulationComplete && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "div",
+      {
+        ref: conversionRef,
+        role: "alert",
+        className: "mt-6 md:mt-8 rounded-2xl border-2 border-[#00845a]/60 bg-gradient-to-br from-[#00845a]/20 via-emerald-950/40 to-slate-900 p-5 sm:p-6 md:p-7 shadow-[0_0_40px_-8px_rgba(0,132,90,0.55)] animate-in fade-in slide-in-from-bottom-4 duration-500",
+        children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-3 sm:gap-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "flex shrink-0 items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#00845a] text-white shadow-lg", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Sparkles, { className: "w-5 h-5 sm:w-6 sm:h-6", "aria-hidden": true }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0 flex-1 space-y-4", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-sm sm:text-base md:text-lg font-bold text-white leading-snug", children: [
+              "¡Alerta simulada con éxito! 🚀 Así de rápido recibirás la notificación en tu WhatsApp real. Protege a tu familia hoy mismo por solo ",
+              monthlyPrice,
+              "."
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "a",
+              {
+                href: checkoutUrl(),
+                className: "flex w-full sm:w-auto sm:inline-flex items-center justify-center gap-2 min-h-[52px] px-6 py-3.5 rounded-full text-white text-base font-bold shadow-xl bg-[#00845a] hover:bg-[#006b48] ring-2 ring-white/20 hover:ring-white/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white animate-pulse hover:animate-none",
+                children: [
+                  "Proteger a mi familia ahora",
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowRight, { className: "w-5 h-5 shrink-0", "aria-hidden": true })
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-[11px] sm:text-xs text-slate-400 leading-snug", children: [
+              "Pago seguro con ",
+              paymentLabel,
+              " · Sin permanencia · Cancela cuando quieras"
+            ] })
+          ] })
+        ] })
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-center text-[10px] md:text-[11px] text-slate-600 mt-4 md:mt-8", children: [
+      "Coordenadas demo: ",
+      SIMULATOR_GPS.lat.toFixed(4),
+      ", ",
+      SIMULATOR_GPS.lng.toFixed(4),
+      " ·",
+      " ",
+      SIMULATOR_GPS.label
+    ] })
+  ] });
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: embedded ? "" : "min-h-dvh bg-slate-950 text-slate-100", children: [
+    !embedded && /* @__PURE__ */ jsxRuntimeExports.jsx("header", { className: "border-b border-white/10 bg-slate-900/80 backdrop-blur sticky top-0 z-30", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Shield, { className: "w-8 h-8 text-teal-400", "aria-hidden": true }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs font-bold uppercase tracking-widest text-teal-300/90", children: "Simulador comercial" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-lg font-bold leading-tight", children: "Senior Safe" })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "hidden sm:inline text-xs text-slate-400 px-3 py-1 rounded-full border border-white/10", children: "Sin backend · datos ficticios" }),
+        resetButton
+      ] })
+    ] }) }),
+    showPageIntro && embedded && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm font-bold uppercase tracking-wider text-muted-foreground", children: "Experiencia de usuario" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-3xl font-bold mt-1 text-foreground", children: "Flujo SOS en pantalla" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground mt-2 max-w-2xl leading-relaxed", children: "Pulsa el botón de emergencia, elige el tipo de ayuda (Salud, Accidente o Delincuencia) y observa en tiempo real cómo se envían WhatsApp, SMS y llamada al panel del cuidador. Datos simulados." })
+      ] }),
+      resetButton
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: embedded ? "rounded-2xl md:rounded-3xl bg-slate-950 text-slate-100 p-2 sm:p-3 md:p-8" : "", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("main", { className: embedded ? "" : "max-w-7xl mx-auto px-4 py-8", children: [
+      !embedded && showPageIntro && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-center text-slate-400 text-sm max-w-2xl mx-auto mb-8 leading-relaxed", children: "Demostración aislada para clientes potenciales. Pulsa el botón de emergencia del adulto mayor y observa cómo reacciona el panel del cuidador en tiempo real." }),
+      simulatorGrid
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Dialog, { open: whatsappOpen, onOpenChange: setWhatsappOpen, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogContent, { className: "max-w-md", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogTitle, { className: "flex items-center gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(MessageCircle, { className: "w-5 h-5 text-green-600" }),
+          "Mensaje WhatsApp simulado"
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(DialogDescription, { children: "Vista previa del mensaje que recibiría el Contacto 1 (Carmen R.)." })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("pre", { className: "whitespace-pre-wrap text-sm bg-green-50 border border-green-200 rounded-xl p-4 text-green-950 font-sans leading-relaxed", children: whatsappMessage })
+    ] }) })
+  ] });
+}
+export {
+  EmergencySimulator as E
+};

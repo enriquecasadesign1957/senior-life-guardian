@@ -1,0 +1,258 @@
+import { j as jsxRuntimeExports, r as reactExports } from "../_libs/react.mjs";
+import { L as Link } from "../_libs/tanstack__react-router.mjs";
+import { u as useServerFn } from "./useServerFn-DL2oePlL.mjs";
+import { A as AdminPinGate } from "./admin-pin-gate-BkqeYSuC.mjs";
+import { B as Button } from "./button-BC9oXVxV.mjs";
+import { I as Input } from "./input-C0QjszdI.mjs";
+import { L as Label } from "./label-JU3yqRBo.mjs";
+import { S as Switch } from "./switch-CQ4rbtn8.mjs";
+import { t as toast } from "../_libs/sonner.mjs";
+import { c as createSsrRpc } from "./createSsrRpc-14pD3De2.mjs";
+import { j as createServerFn } from "./createServerFn-CqTdkD5n.mjs";
+
+import { A as ArrowLeft, ao as RefreshCw, u as Plus, L as LoaderCircle } from "../_libs/lucide-react.mjs";
+import { o as objectType, s as stringType, n as numberType, b as booleanType } from "../_libs/zod.mjs";
+
+import "../_libs/tanstack__router-core.mjs";
+import "../_libs/tanstack__history.mjs";
+import "../_libs/cookie-es.mjs";
+import "../_libs/seroval.mjs";
+import "../_libs/unenv.mjs";
+
+
+import "../_libs/seroval-plugins.mjs";
+
+
+import "../_libs/react-dom.mjs";
+import "../_libs/isbot.mjs";
+import "./admin-auth-5OIH6Qjw.mjs";
+import "../_libs/radix-ui__react-slot.mjs";
+import "../_libs/radix-ui__react-compose-refs.mjs";
+import "../_libs/class-variance-authority.mjs";
+import "../_libs/clsx.mjs";
+import "./utils-H80jjgLf.mjs";
+import "../_libs/tailwind-merge.mjs";
+import "../_libs/radix-ui__react-label.mjs";
+import "../_libs/radix-ui__react-primitive.mjs";
+import "../_libs/radix-ui__react-switch.mjs";
+import "../_libs/radix-ui__primitive.mjs";
+import "../_libs/radix-ui__react-context.mjs";
+import "../_libs/@radix-ui/react-use-controllable-state+[...].mjs";
+import "../_libs/@radix-ui/react-use-layout-effect+[...].mjs";
+import "../_libs/radix-ui__react-use-previous.mjs";
+import "../_libs/radix-ui__react-use-size.mjs";
+const pinSchema = objectType({
+  pin: stringType().min(1).max(64)
+});
+const createSchema = pinSchema.extend({
+  code: stringType().trim().min(2).max(64),
+  label: stringType().trim().min(2).max(200),
+  partner_slug: stringType().trim().min(2).max(64),
+  percent_off: numberType().int().min(1).max(100),
+  applies_monthly: booleanType().default(true),
+  applies_annual: booleanType().default(true),
+  active: booleanType().default(true),
+  one_per_customer: booleanType().default(false),
+  max_redemptions: numberType().int().min(1).nullable().optional(),
+  valid_from: stringType().datetime().nullable().optional(),
+  valid_until: stringType().datetime().nullable().optional(),
+  notes: stringType().trim().max(2e3).nullable().optional()
+});
+const updateSchema = pinSchema.extend({
+  id: stringType().uuid(),
+  active: booleanType().optional(),
+  max_redemptions: numberType().int().min(1).nullable().optional(),
+  valid_until: stringType().datetime().nullable().optional(),
+  notes: stringType().trim().max(2e3).nullable().optional()
+});
+const adminListDiscountCodes = createServerFn({
+  method: "POST"
+}).inputValidator((input) => pinSchema.parse(input)).handler(createSsrRpc("30aef816d2dd9d7269bc3ef865425125cabc7aadea0fa3df219b22cb1b8daae3"));
+const adminCreateDiscountCode = createServerFn({
+  method: "POST"
+}).inputValidator((input) => createSchema.parse(input)).handler(createSsrRpc("fef21ae8725155f7665a0a68200b91ed27ec5ce45745f274849624a3f90e49d3"));
+const adminUpdateDiscountCode = createServerFn({
+  method: "POST"
+}).inputValidator((input) => updateSchema.parse(input)).handler(createSsrRpc("37f1021d63dc8699956e8d92b927546dcb286d1d65a9561708627ee284f1862d"));
+function AdminDiscountsPage() {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(AdminPinGate, { title: "Códigos de descuento", description: "Convenios municipales y promociones aplicables en checkout.", onUnlockFailed: (m) => toast.error(m), children: (pin) => /* @__PURE__ */ jsxRuntimeExports.jsx(AdminDiscountsInner, { pin }) });
+}
+function AdminDiscountsInner({
+  pin
+}) {
+  const listFn = useServerFn(adminListDiscountCodes);
+  const createFn = useServerFn(adminCreateDiscountCode);
+  const updateFn = useServerFn(adminUpdateDiscountCode);
+  const [codes, setCodes] = reactExports.useState([]);
+  const [loading, setLoading] = reactExports.useState(true);
+  const [creating, setCreating] = reactExports.useState(false);
+  const [showForm, setShowForm] = reactExports.useState(false);
+  const [code, setCode] = reactExports.useState("");
+  const [label, setLabel] = reactExports.useState("");
+  const [partnerSlug, setPartnerSlug] = reactExports.useState("");
+  const [percentOff, setPercentOff] = reactExports.useState("15");
+  const [appliesMonthly, setAppliesMonthly] = reactExports.useState(true);
+  const [appliesAnnual, setAppliesAnnual] = reactExports.useState(true);
+  const [onePerCustomer, setOnePerCustomer] = reactExports.useState(false);
+  const [maxRedemptions, setMaxRedemptions] = reactExports.useState("");
+  const [notes, setNotes] = reactExports.useState("");
+  const refresh = reactExports.useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await listFn({
+        data: {
+          pin
+        }
+      });
+      setCodes(res.codes);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo cargar códigos");
+    } finally {
+      setLoading(false);
+    }
+  }, [listFn, pin]);
+  reactExports.useEffect(() => {
+    void refresh();
+  }, [refresh]);
+  const createCode = async () => {
+    setCreating(true);
+    try {
+      await createFn({
+        data: {
+          pin,
+          code: code.trim(),
+          label: label.trim(),
+          partner_slug: partnerSlug.trim(),
+          percent_off: Number(percentOff),
+          applies_monthly: appliesMonthly,
+          applies_annual: appliesAnnual,
+          one_per_customer: onePerCustomer,
+          max_redemptions: maxRedemptions ? Number(maxRedemptions) : null,
+          notes: notes.trim() || null
+        }
+      });
+      toast.success("Código creado");
+      setShowForm(false);
+      setCode("");
+      setLabel("");
+      setPartnerSlug("");
+      setNotes("");
+      await refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo crear");
+    } finally {
+      setCreating(false);
+    }
+  };
+  const toggleActive = async (row) => {
+    try {
+      await updateFn({
+        data: {
+          pin,
+          id: row.id,
+          active: !row.active
+        }
+      });
+      toast.success(row.active ? "Código desactivado" : "Código activado");
+      await refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error al actualizar");
+    }
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-h-screen bg-muted/30", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("header", { className: "border-b border-border bg-card", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-3xl mx-auto px-4 py-4 flex items-center justify-between gap-3", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/admin", className: "text-muted-foreground hover:text-foreground", children: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-5 h-5" }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-xl font-bold", children: "Códigos de descuento" })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-2", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { type: "button", variant: "outline", size: "sm", onClick: () => void refresh(), disabled: loading, children: /* @__PURE__ */ jsxRuntimeExports.jsx(RefreshCw, { className: `w-4 h-4 ${loading ? "animate-spin" : ""}` }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(Button, { type: "button", size: "sm", onClick: () => setShowForm((s) => !s), children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "w-4 h-4 mr-1" }),
+          " Nuevo"
+        ] })
+      ] })
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("main", { className: "max-w-3xl mx-auto px-4 py-8 space-y-6", children: [
+      showForm && /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "p-5 rounded-2xl border bg-card space-y-4", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-bold", children: "Crear código" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid sm:grid-cols-2 gap-3", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Label, { htmlFor: "code", children: "Código" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Input, { id: "code", placeholder: "VECINO-MAIPU", value: code, onChange: (e) => setCode(e.target.value) })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Label, { htmlFor: "pct", children: "Descuento %" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Input, { id: "pct", type: "number", min: 1, max: 100, value: percentOff, onChange: (e) => setPercentOff(e.target.value) })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sm:col-span-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Label, { htmlFor: "label", children: "Nombre visible" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Input, { id: "label", placeholder: "Convenio Municipalidad de Maipú", value: label, onChange: (e) => setLabel(e.target.value) })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Label, { htmlFor: "slug", children: "Partner slug" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Input, { id: "slug", placeholder: "maipu", value: partnerSlug, onChange: (e) => setPartnerSlug(e.target.value) })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Label, { htmlFor: "max", children: "Máx. usos (vacío = ilimitado)" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Input, { id: "max", type: "number", min: 1, value: maxRedemptions, onChange: (e) => setMaxRedemptions(e.target.value) })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap gap-6", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "flex items-center gap-2 text-sm", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Switch, { checked: appliesMonthly, onCheckedChange: setAppliesMonthly }),
+            "Aplica mensual"
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "flex items-center gap-2 text-sm", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Switch, { checked: appliesAnnual, onCheckedChange: setAppliesAnnual }),
+            "Aplica anual"
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "flex items-center gap-2 text-sm", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Switch, { checked: onePerCustomer, onCheckedChange: setOnePerCustomer }),
+            "Un uso por correo"
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Label, { htmlFor: "notes", children: "Notas internas" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Input, { id: "notes", value: notes, onChange: (e) => setNotes(e.target.value) })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(Button, { type: "button", disabled: creating, onClick: () => void createCode(), children: [
+          creating ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-4 h-4 animate-spin mr-2" }) : null,
+          "Crear código"
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "rounded-2xl border bg-card overflow-hidden", children: loading ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "p-8 flex justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-6 h-6 animate-spin text-muted-foreground" }) }) : codes.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "p-6 text-sm text-muted-foreground", children: "No hay códigos. Crea el primero arriba." }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full text-sm", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { className: "bg-muted/50 text-left", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "p-3", children: "Código" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "p-3", children: "%" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "p-3", children: "Usos" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "p-3", children: "Estado" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "p-3" })
+        ] }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: codes.map((row) => /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { className: "border-t border-border", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "p-3", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-mono font-bold", children: row.code }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-xs text-muted-foreground truncate max-w-[200px]", children: [
+              row.label,
+              row.one_per_customer ? " · 1× por correo" : ""
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "p-3", children: [
+            row.percent_off,
+            "%"
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("td", { className: "p-3", children: [
+            row.redemption_count,
+            row.max_redemptions != null ? ` / ${row.max_redemptions}` : ""
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "p-3", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: `text-xs font-bold px-2 py-0.5 rounded-full ${row.active ? "bg-green-100 text-green-800" : "bg-slate-100 text-slate-600"}`, children: row.active ? "Activo" : "Inactivo" }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "p-3 text-right", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { type: "button", variant: "outline", size: "sm", onClick: () => void toggleActive(row), children: row.active ? "Desactivar" : "Activar" }) })
+        ] }, row.id)) })
+      ] }) }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground", children: "Los descuentos se aplican en checkout. El cobro mínimo con Transbank es $1 CLP (100% requiere cortesía admin en «Gratuidad»)." })
+    ] })
+  ] });
+}
+export {
+  AdminDiscountsPage as component
+};

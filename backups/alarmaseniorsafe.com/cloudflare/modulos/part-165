@@ -1,0 +1,4298 @@
+import process from "node:process";
+import { Q as QueryClient } from "../_libs/tanstack__query-core.mjs";
+import { Q as QueryClientProvider } from "../_libs/tanstack__react-query.mjs";
+import { c as createRouter, a as createRootRouteWithContext, u as useRouter, b as useRouterState, O as Outlet, H as HeadContent, S as Scripts, d as createFileRoute, l as lazyRouteComponent } from "../_libs/tanstack__react-router.mjs";
+import { U as redirect } from "../_libs/tanstack__router-core.mjs";
+import { j as jsxRuntimeExports, r as reactExports } from "../_libs/react.mjs";
+import { P as PRODUCTION_SITE_URL, p as productionHomeUrl, a as SENIOR_SAFE_SOS_SIMULATOR_URL, S as SENIOR_SAFE_PLAY_STORE_URL } from "./index.mjs";
+import { f as formatPlanPrice, P as PLAN, p as periodoSchema, a as planKeySchema, n as normalizePlanKey, b as PLAN_KEY } from "./plans-BJeLFmLc.mjs";
+import { T as Toaster$1 } from "../_libs/sonner.mjs";
+import { p as parseCoordinate } from "./maps-BhXedqc-.mjs";
+import fs from "node:fs/promises";
+import { f as finishOneclickMallInscription, g as getOneclickMallConfig, a as generateOneclickBuyOrders, b as authorizeOneclickMallTransaction } from "./transbank-oneclick-mall-CC5wwzFZ.mjs";
+import { a as acknowledgeAlertByToken, n as normalizeAckToken, b as acknowledgeAlertByIdAndToken, s as sanitizeRouteToken, p as parseAckPathFromUrl } from "./ack-alert-hZc0eMx8.mjs";
+import { s as supabaseAdmin } from "./client.server-U_pH-Evd.mjs";
+import { g as getZohoSmtpConfig, a as generateSeniorSafeEmailReply, S as SENIOR_SAFE_SUPPORT_EMAIL, w as wrapSupportHtmlReply, s as sendSupportEmailViaZoho, c as classifyWhatsAppInboundMessage, b as generateSeniorSafeWhatsAppReply } from "./zoho-smtp-lj0bCuK6.mjs";
+import { r as readStoredPinHash, p as persistUserPin, f as fetchAppConfiguration } from "./account-lookup-CBKDZ0Aw.mjs";
+import { a as assertSeniorAccess, s as seniorAccessTokenSchema } from "./senior-access-auth-Bmk7iyGS.mjs";
+import { t as toPublicDiscountPreview } from "./discount-codes-BbIma2Cq.mjs";
+import { r as resolveDiscountForCheckout } from "./discount.functions-CbzrjeJP.mjs";
+import { t as twilioWhatsappCommercialFrom } from "./twilio-DNHuHEFY.mjs";
+import { p as parseTwilioInbound, n as normalizeTwilioPhone, l as logInbound, t as twimlMessage, i as isOptOutMessage, f as findSignupByPhone, a as isSosMessage, b as isWhatsAppActivationMessage } from "./twilio-inbound-_C02bj0d.mjs";
+import { C as CONTRACT_SIGNUPS_TABLE$1 } from "./signups-db-JWUtXpaW.mjs";
+import { s as saveWhatsAppInboxMessage } from "./whatsapp-inbox-CZiWC44X.mjs";
+import { t as tryAutoActivatePaidSignup, p as processWhatsAppActivation, f as findSignupForActivation, i as isSignupPaymentComplete, m as markSignupWhatsAppActivated, r as readInstallProgress, a as isActivationKeyword } from "./install-step-sync-65QKjQIB.mjs";
+import { s as sendPostPaymentInstallNotifications, b as buildPostPaymentInstallUrl } from "./post-payment-install-notify-6plkg_BS.mjs";
+import { c as continueEmergencyCascade, b as buildEmergencyVoiceTwiml, a as buildEmergencyVoiceTwimlHangup, i as isAlertCancelled, d as buildEmergencyVoiceMessage } from "./emergency-cascade-continuation-BhQV3eMZ.mjs";
+import { v as verifyPinResetCode, r as requestPinResetCode } from "./pin-reset-B5nhyHPX.mjs";
+import { l as listFamilyContacts, a as addFamilyContact, u as updateFamilyContact, d as deleteFamilyContact } from "./contacts-storage-DdsYD-uQ.mjs";
+import { verifyCronSecret, runSubscriptionRenewalJob } from "./subscription-renewal-CVyJ9Wsj.mjs";
+import { r as render } from "../_libs/react-email__render.mjs";
+import { H as Html } from "../_libs/react-email__html.mjs";
+import { H as Head } from "../_libs/react-email__head.mjs";
+import { P as Preview } from "../_libs/react-email__preview.mjs";
+import { B as Body } from "../_libs/react-email__body.mjs";
+import { C as Container } from "../_libs/react-email__container.mjs";
+import { S as Section } from "../_libs/react-email__section.mjs";
+import { H as Heading } from "../_libs/react-email__heading.mjs";
+import { T as Text } from "../_libs/react-email__text.mjs";
+import { B as Button } from "../_libs/react-email__button.mjs";
+import { L as Link } from "../_libs/react-email__link.mjs";
+import { H as Hr } from "../_libs/react-email__hr.mjs";
+import { o as objectType, s as stringType, l as literalType, d as discriminatedUnionType, b as booleanType, e as enumType } from "../_libs/zod.mjs";
+import "../_libs/react-dom.mjs";
+
+import "../_libs/isbot.mjs";
+import "../_libs/tanstack__history.mjs";
+import "../_libs/cookie-es.mjs";
+import "../_libs/seroval.mjs";
+import "../_libs/unenv.mjs";
+
+
+import "../_libs/seroval-plugins.mjs";
+
+
+import "../_libs/h3-v2.mjs";
+import "../_libs/rou3.mjs";
+import "../_libs/srvx.mjs";
+
+
+
+
+import "../_libs/supabase__supabase-js.mjs";
+import "../_libs/supabase__postgrest-js.mjs";
+import "../_libs/supabase__realtime-js.mjs";
+import "../_libs/supabase__phoenix.mjs";
+import "../_libs/supabase__storage-js.mjs";
+import "../_libs/iceberg-js.mjs";
+import "../_libs/supabase__auth-js.mjs";
+import "../_libs/tslib.mjs";
+import "../_libs/supabase__functions-js.mjs";
+
+import "./phone-utils-D7EH6fht.mjs";
+import "./createSsrRpc-14pD3De2.mjs";
+import "./createServerFn-CqTdkD5n.mjs";
+import "./admin-auth-5OIH6Qjw.mjs";
+import "./transactional-email-html-C_kx3NhX.mjs";
+import "./oneclick-renewal-charge-XKyXWH2D.mjs";
+import "../_libs/prettier.mjs";
+import "../_libs/deepmerge.mjs";
+const appCss = "/assets/styles--iCr8MCh.css";
+const API_BASE_URL = "https://alarmaseniorsafe.cl";
+const ORIGINAL_FETCH_KEY = "__api_base_original_fetch__";
+function installApiBaseFetch() {
+  if (typeof window === "undefined") return;
+  const host = window.location.hostname;
+  const savedOriginal = window[ORIGINAL_FETCH_KEY];
+  if (savedOriginal && typeof savedOriginal === "function") {
+    window.fetch = savedOriginal;
+    console.log("[api-base] restored original fetch");
+  }
+  if (host === "localhost" || host === "127.0.0.1" || host.includes("lovableproject.com") || host.includes("lovable.app")) {
+    console.log("[api-base] skipped — dev/preview host:", host);
+    return;
+  }
+  const cap = window.Capacitor;
+  const proto = window.location.protocol;
+  const isNative = cap?.isNativePlatform?.() || proto === "capacitor:" || proto === "file:" || new URLSearchParams(window.location.search).get("source") === "apk";
+  if (!isNative) {
+    console.log("[api-base] skipped — not native:", host, proto);
+    return;
+  }
+  console.log("[api-base] installing for native host:", host);
+  const originalFetch = window.fetch.bind(window);
+  window[ORIGINAL_FETCH_KEY] = originalFetch;
+  const rewrite = (url) => {
+    if (!url) return url;
+    if (/^https?:\/\//i.test(url)) return url;
+    if (/^(data|blob|capacitor|file):/i.test(url)) return url;
+    if (url.startsWith("/")) {
+      return API_BASE_URL + url;
+    }
+    return url;
+  };
+  window.fetch = ((input, init) => {
+    try {
+      if (typeof input === "string") {
+        return originalFetch(rewrite(input), init);
+      }
+      if (input instanceof URL) {
+        return originalFetch(input.toString(), init);
+      }
+      const req = input;
+      const rewritten = rewrite(req.url);
+      if (rewritten === req.url) {
+        return originalFetch(input, init);
+      }
+      const newReq = new Request(rewritten, req);
+      return originalFetch(newReq, init);
+    } catch (e) {
+      console.warn("[api-base] rewrite failed", e);
+      return originalFetch(input, init);
+    }
+  });
+  window.__API_BASE__ = API_BASE_URL;
+  console.info("[api-base] rewritten to", API_BASE_URL);
+}
+const GA4_MEASUREMENT_ID = "G-MWTYRRE3YE";
+const GOOGLE_ADS_ID = "AW-18356247992";
+const GOOGLE_ADS_SUBSCRIPTION_SEND_TO = "AW-18356247992/nvz8CNGdgdgcELi7-LBE";
+const DEFAULT_SUBSCRIPTION_VALUE_CLP = 6900;
+const CONVERSION_PREFIX = "seniorsafe_ads_subscription_conv:";
+function shouldLoadGoogleTags() {
+  if (typeof window === "undefined") return false;
+  const host = window.location.hostname;
+  if (host === "localhost" || host === "127.0.0.1") return false;
+  if (host.includes("lovableproject.com") || host.includes("lovable.app")) return false;
+  return true;
+}
+const shouldLoadGa4 = shouldLoadGoogleTags;
+function trackGa4Pageview(path, title) {
+  if (typeof window === "undefined" || !window.gtag || !shouldLoadGoogleTags()) return;
+  window.gtag("event", "page_view", {
+    page_path: path,
+    page_title: document.title,
+    page_location: window.location.href
+  });
+}
+function alreadyTrackedConversion(transactionId) {
+  try {
+    return localStorage.getItem(CONVERSION_PREFIX + transactionId) === "1";
+  } catch {
+    return false;
+  }
+}
+function markTrackedConversion(transactionId) {
+  try {
+    localStorage.setItem(CONVERSION_PREFIX + transactionId, "1");
+  } catch {
+  }
+}
+function trackGoogleAdsSubscriptionConversion(opts) {
+  if (typeof window === "undefined" || !window.gtag || !shouldLoadGoogleTags()) return;
+  const transactionId = opts.transactionId.trim();
+  if (!transactionId || transactionId.length < 4) return;
+  if (opts.signupId && transactionId === opts.signupId) return;
+  if (alreadyTrackedConversion(transactionId)) return;
+  markTrackedConversion(transactionId);
+  const value = opts.value != null && Number.isFinite(opts.value) && opts.value > 0 ? opts.value : DEFAULT_SUBSCRIPTION_VALUE_CLP;
+  const currency = opts.currency ?? "CLP";
+  window.gtag("event", "conversion", {
+    send_to: GOOGLE_ADS_SUBSCRIPTION_SEND_TO,
+    value,
+    currency,
+    transaction_id: transactionId
+  });
+  window.gtag("event", "purchase", {
+    currency,
+    value,
+    transaction_id: transactionId
+  });
+}
+const SEO_SITE_NAME = "Senior Safe";
+const SEO_BRAND = "Alarma Senior Safe";
+const SEO_LOCALE = "es_419";
+const SEO_LANGUAGE = "es";
+const SEO_SUPPORT_EMAIL = "hola@alarmaseniorsafe.cl";
+const SEO_PRICE_CURRENCY = "USD";
+const SEO_AREA_NAME = "Latinoamérica";
+const SEO_DEFAULT_TITLE = "Senior Safe — Alarma familiar para adultos mayores en Latinoamérica";
+const SEO_DEFAULT_DESCRIPTION = "Botón SOS que alerta a tu familia por WhatsApp, SMS, GPS y llamada automática. Plan desde $8.90 USD/mes, sin permanencia.";
+const SEO_OG_IMAGE = `${PRODUCTION_SITE_URL}/og-senior-safe-v2.jpg`;
+const SEO_OG_IMAGE_WIDTH = "1200";
+const SEO_OG_IMAGE_HEIGHT = "630";
+function canonicalUrl(pathname) {
+  const path = pathname.startsWith("/") ? pathname : `/${pathname}`;
+  if (path === "/") {
+    return `${PRODUCTION_SITE_URL}/`;
+  }
+  return `${PRODUCTION_SITE_URL}${path.replace(/\/$/, "")}`;
+}
+function canonicalLink(pathname) {
+  return { rel: "canonical", href: canonicalUrl(pathname) };
+}
+function hreflangLink(pathname) {
+  return {
+    rel: "alternate",
+    hrefLang: SEO_LANGUAGE.toLowerCase(),
+    href: canonicalUrl(pathname)
+  };
+}
+function serializeJsonLd(data) {
+  return JSON.stringify(data).replace(/[&><\u2028\u2029]/g, (ch) => {
+    switch (ch) {
+      case "&":
+        return "\\u0026";
+      case ">":
+        return "\\u003e";
+      case "<":
+        return "\\u003c";
+      case "\u2028":
+        return "\\u2028";
+      case "\u2029":
+        return "\\u2029";
+      default:
+        return ch;
+    }
+  });
+}
+function jsonLdHeadScript(data) {
+  return {
+    type: "application/ld+json",
+    children: serializeJsonLd(data)
+  };
+}
+function homeUnifiedJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "@id": `${PRODUCTION_SITE_URL}/#android-app`,
+        name: SEO_SITE_NAME,
+        url: PRODUCTION_SITE_URL,
+        operatingSystem: "Android",
+        applicationCategory: "HealthApplication",
+        downloadUrl: SENIOR_SAFE_PLAY_STORE_URL,
+        offers: {
+          "@type": "Offer",
+          price: String(PLAN.monthly),
+          priceCurrency: SEO_PRICE_CURRENCY,
+          availability: "https://schema.org/InStock"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "@id": `${PRODUCTION_SITE_URL}/#faq`,
+        mainEntity: [
+          {
+            "@type": "Question",
+            name: "¿Cómo funciona el sistema de alerta en cascada?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "La cascada de alertas Senior Safe (ecosystem_v3_cascade) es un protocolo de canales redundantes: SMS al instante (0 segundos), WhatsApp a los 15 segundos y llamada de voz a los 60 segundos si ningún guardián confirma."
+            }
+          },
+          {
+            "@type": "Question",
+            name: "¿Cómo funciona la detección de caídas?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "La detección de caídas de Senior Safe es un protocolo automático en smartphones Android: el acelerómetro registra un impacto, valida 3 segundos de inmovilidad y da 30 segundos para cancelar antes de alertar a la familia."
+            }
+          },
+          {
+            "@type": "Question",
+            name: "¿Cuánto cuesta Senior Safe frente a una alarma médica tradicional?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Senior Safe cuesta 8.90 USD al mes; una alarma médica tradicional con central de monitoreo, pulsera y permanencia cuesta entre 30 USD y 80 USD al mes."
+            }
+          }
+        ]
+      }
+    ]
+  };
+}
+function organizationJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: SEO_BRAND,
+    alternateName: SEO_SITE_NAME,
+    url: PRODUCTION_SITE_URL,
+    logo: `${PRODUCTION_SITE_URL}/senior-safe-512.webp`,
+    email: SEO_SUPPORT_EMAIL,
+    areaServed: {
+      "@type": "Country",
+      name: SEO_AREA_NAME
+    },
+    sameAs: [PRODUCTION_SITE_URL, SENIOR_SAFE_PLAY_STORE_URL]
+  };
+}
+function webSiteJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: SEO_SITE_NAME,
+    alternateName: SEO_BRAND,
+    url: PRODUCTION_SITE_URL,
+    inLanguage: SEO_LANGUAGE,
+    publisher: {
+      "@type": "Organization",
+      name: SEO_BRAND,
+      url: PRODUCTION_SITE_URL
+    }
+  };
+}
+function serviceJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: "Senior Safe — Plan Único",
+    description: SEO_DEFAULT_DESCRIPTION,
+    provider: {
+      "@type": "Organization",
+      name: SEO_BRAND,
+      url: PRODUCTION_SITE_URL
+    },
+    areaServed: {
+      "@type": "Country",
+      name: SEO_AREA_NAME
+    },
+    offers: {
+      "@type": "Offer",
+      price: String(PLAN.monthly),
+      priceCurrency: SEO_PRICE_CURRENCY,
+      url: `${PRODUCTION_SITE_URL}/planes`,
+      availability: "https://schema.org/InStock"
+    },
+    serviceType: "Emergency alert service for seniors and families"
+  };
+}
+function breadcrumbJsonLd(crumbs) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: crumbs.map((crumb, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: crumb.name,
+      item: canonicalUrl(crumb.path)
+    }))
+  };
+}
+function buildPublicPageMeta(input) {
+  const {
+    title,
+    description,
+    pathname,
+    ogTitle = title,
+    ogDescription = description,
+    ogType = "website",
+    robots = "index, follow, max-image-preview:large"
+  } = input;
+  const url = canonicalUrl(pathname);
+  return {
+    meta: [
+      { title },
+      { name: "description", content: description },
+      { name: "author", content: SEO_BRAND },
+      { name: "robots", content: robots },
+      { name: "geo.region", content: "CL" },
+      { name: "language", content: SEO_LANGUAGE },
+      { property: "og:site_name", content: SEO_SITE_NAME },
+      { property: "og:locale", content: SEO_LOCALE },
+      { property: "og:type", content: ogType },
+      { property: "og:title", content: ogTitle },
+      { property: "og:description", content: ogDescription },
+      { property: "og:url", content: url },
+      { property: "og:image", content: SEO_OG_IMAGE },
+      { property: "og:image:width", content: SEO_OG_IMAGE_WIDTH },
+      { property: "og:image:height", content: SEO_OG_IMAGE_HEIGHT },
+      { property: "og:image:alt", content: `${SEO_SITE_NAME} — botón SOS y alertas familiares` },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: ogTitle },
+      { name: "twitter:description", content: ogDescription },
+      { name: "twitter:image", content: SEO_OG_IMAGE }
+    ],
+    links: [canonicalLink(pathname), hreflangLink(pathname)]
+  };
+}
+function buildPrivatePageMeta(title, description) {
+  return {
+    meta: [
+      { title },
+      ...[{ name: "description", content: description }],
+      { name: "robots", content: "noindex,nofollow" }
+    ]
+  };
+}
+function globalJsonLdScripts(pathname) {
+  if (pathname === "/" || pathname === "") {
+    return [];
+  }
+  return [jsonLdHeadScript([organizationJsonLd(), webSiteJsonLd()])];
+}
+const Toaster = ({ ...props }) => {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    Toaster$1,
+    {
+      className: "toaster group",
+      toastOptions: {
+        classNames: {
+          toast: "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
+          description: "group-[.toast]:text-muted-foreground",
+          actionButton: "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
+          cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground"
+        }
+      },
+      ...props
+    }
+  );
+};
+const CLARITY_PROJECT_ID = "xepub34xxl";
+const CLARITY_HEAD_SNIPPET = `(function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "${CLARITY_PROJECT_ID}");`;
+const GA4_INIT_SNIPPET = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA4_MEASUREMENT_ID}',{send_page_view:false,anonymize_ip:true});gtag('config','${GOOGLE_ADS_ID}');`;
+function setupApiBase() {
+  if (typeof window === "undefined") return;
+  const host = window.location.hostname;
+  const isDevOrPreview = host === "localhost" || host === "127.0.0.1" || host.includes("lovableproject.com") || host.includes("lovable.app");
+  if (isDevOrPreview && window.__API_BASE__ && document.body) {
+    try {
+      const iframe = document.createElement("iframe");
+      iframe.style.display = "none";
+      iframe.src = "about:blank";
+      document.body.appendChild(iframe);
+      const nativeFetch = iframe.contentWindow?.fetch;
+      if (nativeFetch) {
+        window.fetch = nativeFetch.bind(window);
+      }
+      document.body.removeChild(iframe);
+    } catch {
+    }
+  }
+  if (!isDevOrPreview) {
+    installApiBaseFetch();
+  }
+}
+function NotFoundComponent() {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex min-h-screen items-center justify-center bg-background px-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-md text-center", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-7xl font-bold text-foreground", children: "404" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "mt-4 text-xl font-semibold text-foreground", children: "Página no encontrada" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: "La página que buscas no existe o fue movida." }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-6", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "a",
+      {
+        href: productionHomeUrl(),
+        className: "inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90",
+        children: "Volver al inicio"
+      }
+    ) })
+  ] }) });
+}
+function ErrorComponent({ error, reset }) {
+  console.error(error);
+  const router2 = useRouter();
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex min-h-screen items-center justify-center bg-background px-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-md text-center", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-xl font-semibold tracking-tight text-foreground", children: "No pudimos cargar esta página" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-2 text-sm text-muted-foreground", children: "Ocurrió un error. Puedes reintentar o volver al inicio." }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-6 flex flex-wrap justify-center gap-2", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          onClick: () => {
+            router2.invalidate();
+            reset();
+          },
+          className: "inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90",
+          children: "Reintentar"
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "a",
+        {
+          href: productionHomeUrl(),
+          className: "inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent",
+          children: "Volver al inicio"
+        }
+      )
+    ] })
+  ] }) });
+}
+const Route$1h = createRootRouteWithContext()({
+  head: ({ matches }) => {
+    const leaf = matches[matches.length - 1];
+    const pathname = leaf?.pathname ?? "/";
+    return {
+      meta: [
+        { charSet: "utf-8" },
+        { name: "viewport", content: "width=device-width, initial-scale=1.0" },
+        { title: SEO_DEFAULT_TITLE },
+        { name: "description", content: SEO_DEFAULT_DESCRIPTION },
+        { name: "author", content: SEO_BRAND },
+        // Discover: permite previsualizaciones de imágenes grandes (≥1200px)
+        { name: "robots", content: "index, follow, max-image-preview:large" },
+        { name: "geo.region", content: "CL" },
+        { name: "language", content: SEO_LANGUAGE },
+        { property: "og:site_name", content: SEO_SITE_NAME },
+        { property: "og:locale", content: "es_CL" },
+        { property: "og:title", content: SEO_DEFAULT_TITLE },
+        { property: "og:description", content: SEO_DEFAULT_DESCRIPTION },
+        { property: "og:type", content: "website" },
+        { property: "og:url", content: canonicalLink(pathname).href },
+        { property: "og:image", content: SEO_OG_IMAGE },
+        { property: "og:image:width", content: SEO_OG_IMAGE_WIDTH },
+        { property: "og:image:height", content: SEO_OG_IMAGE_HEIGHT },
+        { property: "og:image:alt", content: `${SEO_SITE_NAME} — botón SOS y alertas familiares` },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:title", content: SEO_DEFAULT_TITLE },
+        { name: "twitter:description", content: SEO_DEFAULT_DESCRIPTION },
+        { name: "twitter:image", content: SEO_OG_IMAGE },
+        { name: "theme-color", content: "#dc2626" },
+        { name: "mobile-web-app-capable", content: "yes" },
+        { name: "apple-mobile-web-app-capable", content: "yes" },
+        { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+        { name: "apple-mobile-web-app-title", content: SEO_SITE_NAME },
+        { name: "application-name", content: SEO_SITE_NAME },
+        { name: "format-detection", content: "telephone=yes" }
+      ],
+      links: [
+        { rel: "stylesheet", href: appCss },
+        { rel: "manifest", href: "/manifest.json?v=2026-06-22" },
+        { rel: "apple-touch-icon", href: "/senior-safe-512.webp" },
+        { rel: "icon", type: "image/webp", href: "/senior-safe-512.webp" },
+        canonicalLink(pathname),
+        hreflangLink(pathname)
+      ],
+      scripts: globalJsonLdScripts(pathname)
+    };
+  },
+  shellComponent: RootShell,
+  component: RootComponent,
+  notFoundComponent: NotFoundComponent,
+  errorComponent: ErrorComponent
+});
+function RootShell({ children }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("html", { lang: "es-CL", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("head", { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(HeadContent, {}),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "script",
+        {
+          type: "text/javascript",
+          dangerouslySetInnerHTML: { __html: CLARITY_HEAD_SNIPPET }
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("script", { async: true, src: `https://www.googletagmanager.com/gtag/js?id=${GA4_MEASUREMENT_ID}` }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "script",
+        {
+          type: "text/javascript",
+          dangerouslySetInnerHTML: { __html: GA4_INIT_SNIPPET }
+        }
+      )
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("body", { children: [
+      children,
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Scripts, {})
+    ] })
+  ] });
+}
+function RootComponent() {
+  const { queryClient } = Route$1h.useRouteContext();
+  const router2 = useRouter();
+  const location = useRouterState({ select: (s) => s.location });
+  reactExports.useEffect(() => {
+    if (typeof window === "undefined") return;
+    setupApiBase();
+    const PROMPT_KEY = "__seniorSafeInstallPrompt";
+    const BOUND_KEY = "__seniorSafeInstallPromptBound";
+    if (!window[BOUND_KEY]) {
+      window[BOUND_KEY] = true;
+      window.addEventListener("beforeinstallprompt", (event) => {
+        event.preventDefault();
+        window[PROMPT_KEY] = event;
+      });
+    }
+    const isCapacitor = Boolean(window.Capacitor?.isNativePlatform?.());
+    if (!isCapacitor) return;
+    const path = window.location.pathname;
+    if (path === "/" || path === "" || path === "/index.html") {
+      router2.navigate({ to: "/native" });
+    }
+  }, [router2]);
+  reactExports.useEffect(() => {
+    if (!shouldLoadGa4()) return;
+    const path = `${location.pathname}${location.searchStr || ""}`;
+    trackGa4Pageview(path);
+  }, [location.pathname, location.searchStr]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(QueryClientProvider, { client: queryClient, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Outlet, {}),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Toaster, { position: "top-center", richColors: true, closeButton: true })
+  ] });
+}
+const $$splitComponentImporter$Q = () => import("./unsubscribe-BdZImrfC.mjs");
+const Route$1g = createFileRoute("/unsubscribe")({
+  validateSearch: (s) => ({
+    token: typeof s.token === "string" ? s.token : ""
+  }),
+  head: () => ({
+    meta: [{
+      title: "Cancelar suscripción — Senior Safe"
+    }]
+  }),
+  component: lazyRouteComponent($$splitComponentImporter$Q, "component")
+});
+const $$splitComponentImporter$P = () => import("./ubicacion-dinSMaE7.mjs");
+const Route$1f = createFileRoute("/ubicacion")({
+  head: () => ({
+    meta: [{
+      title: "Ubicación — Senior Safe"
+    }, {
+      name: "description",
+      content: "Mapa de ubicación compartida por Senior Safe."
+    }, {
+      name: "robots",
+      content: "noindex,nofollow"
+    }]
+  }),
+  validateSearch: (raw) => ({
+    lat: parseCoordinate(raw.lat),
+    lng: parseCoordinate(raw.lng),
+    nombre: typeof raw.nombre === "string" ? raw.nombre.trim() : ""
+  }),
+  component: lazyRouteComponent($$splitComponentImporter$P, "component")
+});
+const $$splitComponentImporter$O = () => import("./tutorial-DI6QipEI.mjs");
+const Route$1e = createFileRoute("/tutorial")({
+  head: () => ({
+    meta: [{
+      title: "Tutorial — Cómo usar Senior Safe"
+    }, {
+      name: "description",
+      content: "Aprende en 5 pasos simples cómo usar Senior Safe: pedir ayuda, alertas, monitoreo familiar y estado seguro."
+    }]
+  }),
+  component: lazyRouteComponent($$splitComponentImporter$O, "component")
+});
+const $$splitComponentImporter$N = () => import("./terminos-Bt7CgloF.mjs");
+const Route$1d = createFileRoute("/terminos")({
+  head: () => {
+    const page = buildPublicPageMeta({
+      title: "Términos y Condiciones — Alarma Senior Safe",
+      description: "Términos del servicio de Alarma Senior Safe: uso, suscripciones, cancelación y responsabilidades. Latinoamérica.",
+      pathname: "/terminos",
+      robots: "index,follow"
+    });
+    return {
+      ...page,
+      scripts: [jsonLdHeadScript(breadcrumbJsonLd([{
+        name: "Inicio",
+        path: "/"
+      }, {
+        name: "Términos",
+        path: "/terminos"
+      }]))]
+    };
+  },
+  component: lazyRouteComponent($$splitComponentImporter$N, "component")
+});
+const $$splitComponentImporter$M = () => import("./simulador-DWYhlFfG.mjs");
+const Route$1c = createFileRoute("/simulador")({
+  head: () => ({
+    meta: [{
+      title: "Simulador S.O.S — Senior Safe"
+    }, {
+      name: "description",
+      content: "Demostración interactiva del botón de pánico y panel de envíos de Senior Safe. Sin conexión real."
+    }, {
+      name: "robots",
+      content: "noindex,nofollow"
+    }]
+  }),
+  component: lazyRouteComponent($$splitComponentImporter$M, "component")
+});
+const $$splitComponentImporter$L = () => import("./privacidad-C-KdOs1e.mjs");
+const Route$1b = createFileRoute("/privacidad")({
+  head: () => {
+    const page = buildPublicPageMeta({
+      title: "Política de Privacidad — Alarma Senior Safe",
+      description: "Cómo recopilamos, usamos y protegemos tus datos personales en Alarma Senior Safe. Latinoamérica.",
+      pathname: "/privacidad",
+      robots: "index,follow"
+    });
+    return {
+      ...page,
+      scripts: [jsonLdHeadScript(breadcrumbJsonLd([{
+        name: "Inicio",
+        path: "/"
+      }, {
+        name: "Privacidad",
+        path: "/privacidad"
+      }]))]
+    };
+  },
+  component: lazyRouteComponent($$splitComponentImporter$L, "component")
+});
+const $$splitComponentImporter$K = () => import("./planes-CYiVtCY-.mjs");
+const Route$1a = createFileRoute("/planes")({
+  head: () => {
+    const page = buildPublicPageMeta({
+      title: `Plan Único — Alarma Senior Safe | Desde $${formatPlanPrice(PLAN.monthly)} USD/mes`,
+      description: `Plan Único Senior Safe: $${formatPlanPrice(PLAN.monthly)} USD/mes o $${formatPlanPrice(PLAN.yearly)} USD/año (ahorras 2 meses). Botón SOS, WhatsApp, SMS, GPS y llamada. Sin permanencia, Lemon Squeezy.`,
+      pathname: "/planes",
+      ogTitle: "Plan Único Senior Safe",
+      ogDescription: `Protección completa desde $${formatPlanPrice(PLAN.monthly)}/mes. Mensual o anual con ahorro de 2 meses.`
+    });
+    return {
+      ...page,
+      scripts: [jsonLdHeadScript([serviceJsonLd(), breadcrumbJsonLd([{
+        name: "Inicio",
+        path: "/"
+      }, {
+        name: "Planes",
+        path: "/planes"
+      }])])]
+    };
+  },
+  component: lazyRouteComponent($$splitComponentImporter$K, "component")
+});
+const $$splitComponentImporter$J = () => import("./native-DCIEkRUb.mjs");
+const Route$19 = createFileRoute("/native")({
+  validateSearch: (raw) => ({
+    entrenamiento: raw.entrenamiento === "1" ? "1" : void 0,
+    ss: typeof raw.ss === "string" ? raw.ss : void 0,
+    source: typeof raw.source === "string" ? raw.source : void 0
+  }),
+  head: () => ({
+    meta: [{
+      title: "Senior Safe"
+    }, {
+      name: "description",
+      content: "App de emergencia Senior Safe."
+    }, {
+      name: "viewport",
+      content: "width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
+    }]
+  }),
+  component: lazyRouteComponent($$splitComponentImporter$J, "component")
+});
+const $$splitComponentImporter$I = () => import("./instalar-app-9rt-glB9.mjs");
+const searchSchema$1 = objectType({
+  entrenamiento: stringType().optional(),
+  ss: stringType().uuid().optional(),
+  pago: enumType(["ok"]).optional()
+});
+const Route$18 = createFileRoute("/instalar-app")({
+  validateSearch: (raw) => {
+    const parsed = searchSchema$1.safeParse(raw);
+    if (parsed.success) return parsed.data;
+    return {
+      entrenamiento: typeof raw.entrenamiento === "string" ? raw.entrenamiento : void 0,
+      pago: raw.pago === "ok" ? "ok" : void 0,
+      ss: void 0
+    };
+  },
+  head: () => ({
+    meta: [{
+      title: "Instalar Senior Safe — Paso final"
+    }, {
+      name: "description",
+      content: "Instala la aplicación en tu teléfono tras confirmar el pago."
+    }, {
+      name: "robots",
+      content: "noindex"
+    }]
+  }),
+  component: lazyRouteComponent($$splitComponentImporter$I, "component")
+});
+const $$splitComponentImporter$H = () => import("./guia-hqzekkcC.mjs");
+const Route$17 = createFileRoute("/guia")({
+  head: () => {
+    const page = buildPublicPageMeta({
+      title: "Cómo instalar Senior Safe en el celular del abuelo — Guía paso a paso",
+      description: "Cómo instalar Senior Safe: Google Play en Android, guía iPhone, guardianes, WhatsApp, GPS y botón SOS. Latinoamérica.",
+      pathname: "/guia",
+      ogTitle: "Instalar Senior Safe en el celular del abuelo"
+    });
+    return {
+      ...page,
+      scripts: [jsonLdHeadScript(breadcrumbJsonLd([{
+        name: "Inicio",
+        path: "/"
+      }, {
+        name: "Guía de instalación",
+        path: "/guia"
+      }]))]
+    };
+  },
+  component: lazyRouteComponent($$splitComponentImporter$H, "component")
+});
+const $$splitComponentImporter$G = () => import("./flujo-Dy3957kW.mjs");
+const Route$16 = createFileRoute("/flujo")({
+  head: () => ({
+    meta: [{
+      title: "Flujo de activación — Senior Safe"
+    }, {
+      name: "description",
+      content: "Mira cómo Senior Safe activa tu protección: pago con Lemon Squeezy, cuenta, entrenamiento simulado y onboarding."
+    }]
+  }),
+  component: lazyRouteComponent($$splitComponentImporter$G, "component")
+});
+const $$splitComponentImporter$F = () => import("./familia-Cw1tiuXc.mjs");
+const Route$15 = createFileRoute("/familia")({
+  validateSearch: (search) => ({
+    redirect: typeof search.redirect === "string" ? search.redirect : void 0
+  }),
+  head: () => ({
+    meta: [{
+      title: "Portal Familia — Senior Safe"
+    }, {
+      name: "description",
+      content: "Acceso para familiares y guardianes."
+    }, {
+      name: "robots",
+      content: "noindex,nofollow"
+    }]
+  }),
+  component: lazyRouteComponent($$splitComponentImporter$F, "component")
+});
+const $$splitComponentImporter$E = () => import("./demo-Tx3yxocY.mjs");
+const Route$14 = createFileRoute("/demo")({
+  validateSearch: (search) => ({
+    institucion: typeof search.institucion === "string" ? search.institucion : "las-condes"
+  }),
+  head: () => ({
+    meta: [{
+      title: "Modo Demo Institucional — Senior Safe"
+    }, {
+      name: "robots",
+      content: "noindex,nofollow"
+    }]
+  }),
+  component: lazyRouteComponent($$splitComponentImporter$E, "component")
+});
+const $$splitComponentImporter$D = () => import("./dashboard-BTU5dmpx.mjs");
+const Route$13 = createFileRoute("/dashboard")({
+  beforeLoad: () => {
+    throw redirect({
+      to: "/familia"
+    });
+  },
+  head: () => ({
+    meta: [{
+      title: "Portal Familia — Senior Safe"
+    }]
+  }),
+  component: lazyRouteComponent($$splitComponentImporter$D, "component")
+});
+const $$splitComponentImporter$C = () => import("./como-funciona-DeETerHH.mjs");
+const Route$12 = createFileRoute("/como-funciona")({
+  head: () => {
+    const page = buildPublicPageMeta({
+      title: "Alerta familiar WhatsApp, SMS y GPS — Cómo funciona Senior Safe",
+      description: `Simulador SOS en vivo: mira cómo Senior Safe envía alerta familiar por WhatsApp, SMS, GPS y llamada automática. Desde $${formatPlanPrice(PLAN.monthly)} USD/mes, sin permanencia.`,
+      pathname: "/como-funciona",
+      ogTitle: "Alerta familiar WhatsApp, SMS y GPS"
+    });
+    return {
+      ...page,
+      scripts: [jsonLdHeadScript(breadcrumbJsonLd([{
+        name: "Inicio",
+        path: "/"
+      }, {
+        name: "Cómo funciona",
+        path: "/como-funciona"
+      }]))]
+    };
+  },
+  component: lazyRouteComponent($$splitComponentImporter$C, "component")
+});
+const $$splitComponentImporter$B = () => import("./checkout-B0HbiMln.mjs");
+const searchSchema = objectType({
+  mode: enumType(["trial", "contratar"]).optional().default("contratar").transform((m) => m === "trial" ? "contratar" : m),
+  plan: planKeySchema.optional().default(PLAN_KEY).transform(normalizePlanKey),
+  periodo: periodoSchema.optional().default("mensual"),
+  codigo: stringType().trim().max(64).optional()
+});
+function parseCheckoutSearch(raw) {
+  const parsed = searchSchema.safeParse(raw);
+  if (parsed.success) return parsed.data;
+  const planRaw = typeof raw.plan === "string" ? raw.plan : void 0;
+  const periodoRaw = typeof raw.periodo === "string" ? raw.periodo : void 0;
+  const codigoRaw = typeof raw.codigo === "string" ? raw.codigo.trim().slice(0, 64) || void 0 : void 0;
+  const planOk = planKeySchema.safeParse(planRaw);
+  const periodoOk = periodoSchema.safeParse(periodoRaw);
+  return {
+    mode: "contratar",
+    plan: planOk.success ? normalizePlanKey(planOk.data) : PLAN_KEY,
+    periodo: periodoOk.success ? periodoOk.data : "mensual",
+    codigo: codigoRaw
+  };
+}
+const Route$11 = createFileRoute("/checkout")({
+  validateSearch: (s) => parseCheckoutSearch(s),
+  head: () => buildPrivatePageMeta("Contratar Senior Safe — Checkout seguro", "Contrata Senior Safe con pago seguro en Lemon Squeezy, en dólares. Activación tras confirmar el pago."),
+  component: lazyRouteComponent($$splitComponentImporter$B, "component")
+});
+const $$splitComponentImporter$A = () => import("./bienvenida-premium-Byw_rhsi.mjs");
+const Route$10 = createFileRoute("/bienvenida-premium")({
+  head: () => ({
+    meta: [{
+      title: "?Tu plan ya est? activo! ? Senior Safe"
+    }, {
+      name: "description",
+      content: "Bienvenido a Senior Safe. Tu suscripci?n est? activa."
+    }, {
+      name: "robots",
+      content: "noindex"
+    }]
+  }),
+  component: lazyRouteComponent($$splitComponentImporter$A, "component")
+});
+const $$splitComponentImporter$z = () => import("./app-o4K_5ZrJ.mjs");
+const appSearchSchema = objectType({
+  entrenamiento: enumType(["1"]).optional(),
+  ss: stringType().uuid().optional()
+});
+const Route$$ = createFileRoute("/app")({
+  validateSearch: (raw) => {
+    const parsed = appSearchSchema.safeParse(raw);
+    if (parsed.success) return parsed.data;
+    return {
+      entrenamiento: raw.entrenamiento === "1" ? "1" : void 0,
+      ss: void 0
+    };
+  },
+  head: () => ({
+    meta: [{
+      title: "Senior Safe — Mi protección"
+    }, {
+      name: "description",
+      content: "Pide ayuda en un solo toque. Tu red familiar te protege 24/7."
+    }]
+  }),
+  component: lazyRouteComponent($$splitComponentImporter$z, "component")
+});
+const $$splitComponentImporter$y = () => import("./alarma-familiar-BUN9P4FV.mjs");
+const Route$_ = createFileRoute("/alarma-familiar")({
+  head: () => {
+    const page = buildPublicPageMeta({
+      title: `Alarma familiar — WhatsApp, SMS y GPS desde $${formatPlanPrice(PLAN.monthly)} USD/mes`,
+      description: `Seguridad del hogar con alerta familiar: comunicación en cascada por WhatsApp y SMS, geolocalización y plan desde $${formatPlanPrice(PLAN.monthly)} USD al mes. Sin permanencia. Pago con Lemon Squeezy.`,
+      pathname: "/alarma-familiar",
+      ogTitle: "Alarma familiar — WhatsApp, SMS y GPS"
+    });
+    return {
+      ...page,
+      scripts: [jsonLdHeadScript(breadcrumbJsonLd([{
+        name: "Inicio",
+        path: "/"
+      }, {
+        name: "Alarma familiar",
+        path: "/alarma-familiar"
+      }]))]
+    };
+  },
+  component: lazyRouteComponent($$splitComponentImporter$y, "component")
+});
+const $$splitComponentImporter$x = () => import("./admin-CChAcs_3.mjs");
+const Route$Z = createFileRoute("/admin")({
+  component: lazyRouteComponent($$splitComponentImporter$x, "component")
+});
+const $$splitComponentImporter$w = () => import("./activar-whatsapp-4EMENoij.mjs");
+const Route$Y = createFileRoute("/activar-whatsapp")({
+  head: () => ({
+    meta: [{
+      title: "Activa tus alertas WhatsApp — Senior Safe"
+    }, {
+      name: "description",
+      content: "Vincula WhatsApp con Senior Safe. En la app también se activa al usar el botón rojo por primera vez."
+    }]
+  }),
+  component: lazyRouteComponent($$splitComponentImporter$w, "component")
+});
+const $$splitComponentImporter$v = () => import("./activacion-BTU5dmpx.mjs");
+const Route$X = createFileRoute("/activacion")({
+  beforeLoad: () => {
+    throw redirect({
+      to: "/app",
+      search: {
+        entrenamiento: "1"
+      }
+    });
+  },
+  head: () => ({
+    meta: [{
+      title: "Redirigiendo — Senior Safe"
+    }]
+  }),
+  component: lazyRouteComponent($$splitComponentImporter$v, "component")
+});
+const $$splitComponentImporter$u = () => import("./index-C3Xz53RX.mjs");
+const Route$W = createFileRoute("/")({
+  head: () => {
+    const page = buildPublicPageMeta({
+      title: "Senior Safe — Alarma para adultos mayores en Latinoamérica",
+      description: `App de emergencia con botón SOS, alerta familiar por WhatsApp, SMS, GPS y llamada. Desde $${formatPlanPrice(PLAN.monthly)} USD/mes, sin permanencia.`,
+      pathname: "/",
+      ogTitle: "Senior Safe — Protección familiar en menos de 3 segundos",
+      ogDescription: `Alertas por WhatsApp, SMS, GPS y llamada automática. Plan Único $${formatPlanPrice(PLAN.monthly)} USD/mes, sin permanencia.`
+    });
+    return {
+      ...page,
+      scripts: [jsonLdHeadScript(homeUnifiedJsonLd())]
+    };
+  },
+  component: lazyRouteComponent($$splitComponentImporter$u, "component")
+});
+const $$splitComponentImporter$t = () => import("./index-evxziFei.mjs");
+const Route$V = createFileRoute("/demo/")({
+  validateSearch: (search) => ({
+    institucion: typeof search.institucion === "string" ? search.institucion : "las-condes"
+  }),
+  component: lazyRouteComponent($$splitComponentImporter$t, "component")
+});
+const $$splitComponentImporter$s = () => import("./blog.index-DUl_ELio.mjs");
+const DISCOVER_ROBOTS$4 = "index, follow, max-image-preview:large";
+const Route$U = createFileRoute("/blog/")({
+  head: () => {
+    const page = buildPublicPageMeta({
+      title: "Blog Senior Safe — Guías de protección para familias en Chile",
+      description: "Artículos claros sobre caídas, alertas familiares, IA en el celular y cómo cuidar a adultos mayores en casa. Contenido práctico para hijos y cuidadores.",
+      pathname: "/blog",
+      ogTitle: "Blog Senior Safe — protección familiar sin tecnicismos",
+      robots: DISCOVER_ROBOTS$4
+    });
+    return {
+      ...page,
+      scripts: [jsonLdHeadScript(breadcrumbJsonLd([{
+        name: "Inicio",
+        path: "/"
+      }, {
+        name: "Blog",
+        path: "/blog"
+      }]))]
+    };
+  },
+  component: lazyRouteComponent($$splitComponentImporter$s, "component")
+});
+const $$splitComponentImporter$r = () => import("./admin.index-B-jpOWXq.mjs");
+const Route$T = createFileRoute("/admin/")({
+  component: lazyRouteComponent($$splitComponentImporter$r, "component"),
+  head: () => ({
+    meta: [{
+      title: "Administración — Senior Safe"
+    }]
+  })
+});
+function logTransbankTestToken(token_ws) {
+  if (!token_ws) return;
+  console.log("\n===== TOKEN TRANSBANK DE PRUEBA =====\n", token_ws, "\n====================================\n");
+}
+const $$splitComponentImporter$q = () => import("./webpay.retorno-BcDs1-s7.mjs");
+const Route$S = createFileRoute("/webpay/retorno")({
+  validateSearch: (s) => ({
+    token_ws: typeof s.token_ws === "string" ? s.token_ws : void 0,
+    TBK_TOKEN: typeof s.TBK_TOKEN === "string" ? s.TBK_TOKEN : void 0,
+    TBK_ORDEN_COMPRA: typeof s.TBK_ORDEN_COMPRA === "string" ? s.TBK_ORDEN_COMPRA : void 0,
+    TBK_ID_SESION: typeof s.TBK_ID_SESION === "string" ? s.TBK_ID_SESION : void 0
+  }),
+  head: () => ({
+    meta: [{
+      title: "Confirmando pago — Senior Safe"
+    }, {
+      name: "robots",
+      content: "noindex"
+    }]
+  }),
+  server: {
+    handlers: {
+      // Webpay vuelve por POST form-encoded. Convertimos a GET con query.
+      POST: async ({
+        request
+      }) => {
+        const form = await request.formData();
+        const params = new URLSearchParams();
+        for (const [k, v] of form.entries()) {
+          if (typeof v === "string") params.set(k, v);
+        }
+        logTransbankTestToken(params.get("token_ws"));
+        const url = new URL(request.url);
+        url.search = params.toString();
+        return new Response(null, {
+          status: 303,
+          headers: {
+            Location: url.pathname + "?" + params.toString()
+          }
+        });
+      }
+    }
+  },
+  component: lazyRouteComponent($$splitComponentImporter$q, "component")
+});
+function logOneclickToken(token) {
+  if (!token) return;
+  console.log("\n===== TOKEN ONECLICK INSCRIPCIÓN (TBK_TOKEN) =====\n", token, "\n==================================================\n");
+}
+const $$splitComponentImporter$p = () => import("./oneclick.retorno-DosvtMQg.mjs");
+const Route$R = createFileRoute("/oneclick/retorno")({
+  validateSearch: (s) => ({
+    TBK_TOKEN: typeof s.TBK_TOKEN === "string" ? s.TBK_TOKEN : void 0,
+    validacion_voucher: s.validacion_voucher === "1" || s.validacion_voucher === "0" ? s.validacion_voucher : void 0
+  }),
+  head: () => ({
+    meta: [{
+      title: "Comprobante Webpay Oneclick — Senior Safe"
+    }, {
+      name: "robots",
+      content: "noindex"
+    }]
+  }),
+  server: {
+    handlers: {
+      POST: async ({
+        request
+      }) => {
+        const form = await request.formData();
+        const params = new URLSearchParams();
+        for (const [k, v] of form.entries()) {
+          if (typeof v === "string") params.set(k, v);
+        }
+        logOneclickToken(params.get("TBK_TOKEN"));
+        const url = new URL(request.url);
+        url.search = params.toString();
+        return new Response(null, {
+          status: 303,
+          headers: {
+            Location: `${url.pathname}?${params.toString()}`
+          }
+        });
+      }
+    }
+  },
+  component: lazyRouteComponent($$splitComponentImporter$p, "component")
+});
+const $$splitComponentImporter$o = () => import("./oneclick.inscripcion-abandonada-BTU5dmpx.mjs");
+const Route$Q = createFileRoute("/oneclick/inscripcion-abandonada")({
+  component: lazyRouteComponent($$splitComponentImporter$o, "component"),
+  server: {
+    handlers: {
+      POST: async ({
+        request
+      }) => {
+        const form = await request.formData();
+        const params = new URLSearchParams();
+        for (const [k, v] of form.entries()) {
+          if (typeof v === "string") params.set(k, v);
+        }
+        const url = new URL(request.url);
+        url.search = params.toString();
+        return Response.redirect(url.pathname + "?" + params.toString(), 303);
+      },
+      GET: async ({
+        request
+      }) => {
+        const url = new URL(request.url);
+        const tbkToken = url.searchParams.get("TBK_TOKEN") ?? "—";
+        const tbkIdSesion = url.searchParams.get("TBK_ID_SESION") ?? "—";
+        const tbkOrdenCompra = url.searchParams.get("TBK_ORDEN_COMPRA") ?? "—";
+        let createToken = "—";
+        try {
+          const raw = await fs.readFile("public/oneclick-abandon-inscription.json", "utf8");
+          createToken = JSON.parse(raw).token ?? "—";
+        } catch {
+        }
+        const html2 = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/><title>Inscripción abandonada</title></head>
+<body style="font-family:sans-serif;padding:2rem;max-width:720px;line-height:1.6">
+<h1>Inscripción abandonada — caso validación</h1>
+<p>Parámetros recibidos en la URL de retorno:</p>
+<ul>
+<li><strong>TBK_TOKEN:</strong> <code>${escapeHtml$1(tbkToken)}</code></li>
+<li><strong>TBK_ID_SESION:</strong> <code>${escapeHtml$1(tbkIdSesion)}</code></li>
+<li><strong>TBK_ORDEN_COMPRA:</strong> <code>${escapeHtml$1(tbkOrdenCompra)}</code></li>
+</ul>
+<p><strong>Para el formulario Transbank</strong> pega el token recibido <em>al crear</em> la inscripción (API), no el TBK_TOKEN de arriba:</p>
+<p style="font-size:1.1rem;word-break:break-all"><code>${escapeHtml$1(createToken)}</code></p>
+<p><a href="/oneclick-abandon-inscription.html">Nueva prueba</a></p>
+</body></html>`;
+        return new Response(html2, {
+          headers: {
+            "Content-Type": "text/html; charset=utf-8"
+          }
+        });
+      }
+    }
+  }
+});
+function escapeHtml$1(value) {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+const $$splitComponentImporter$n = () => import("./oneclick.debit-retorno-BTU5dmpx.mjs");
+const Route$P = createFileRoute("/oneclick/debit-retorno")({
+  component: lazyRouteComponent($$splitComponentImporter$n, "component"),
+  server: {
+    handlers: {
+      POST: async ({
+        request
+      }) => {
+        const form = await request.formData();
+        const params = new URLSearchParams();
+        for (const [k, v] of form.entries()) {
+          if (typeof v === "string") params.set(k, v);
+        }
+        const url = new URL(request.url);
+        url.search = params.toString();
+        return Response.redirect(url.pathname + "?" + params.toString(), 303);
+      },
+      GET: async ({
+        request
+      }) => {
+        const url = new URL(request.url);
+        const token = url.searchParams.get("TBK_TOKEN")?.trim();
+        if (!token) {
+          return new Response("Falta TBK_TOKEN", {
+            status: 400
+          });
+        }
+        let meta = {};
+        try {
+          const fs2 = await import("node:fs/promises");
+          const raw = await fs2.readFile("public/oneclick-debit-inscription.json", "utf8");
+          meta = JSON.parse(raw);
+        } catch {
+        }
+        const finish = await finishOneclickMallInscription(token);
+        if (!finish.ok || !finish.tbkUser || !meta.username) {
+          return new Response(`<html><body style="font-family:sans-serif;padding:2rem"><h1>Inscripción no completada</h1><p>response_code: ${finish.responseCode ?? "?"}</p><p><a href="/oneclick-debit-inscription.html">Reintentar</a></p></body></html>`, {
+            headers: {
+              "Content-Type": "text/html; charset=utf-8"
+            }
+          });
+        }
+        const cfg = getOneclickMallConfig();
+        const {
+          mallBuyOrder,
+          storeBuyOrder
+        } = generateOneclickBuyOrders();
+        const auth = await authorizeOneclickMallTransaction({
+          username: meta.username,
+          tbkUser: finish.tbkUser,
+          buyOrder: mallBuyOrder,
+          details: [{
+            commerceCode: cfg.storeCommerceCode,
+            buyOrder: storeBuyOrder,
+            amount: 6900
+          }]
+        });
+        try {
+          const fs2 = await import("node:fs/promises");
+          await fs2.writeFile("public/oneclick-debit-inscription.json", JSON.stringify({
+            ...meta,
+            tbk_user: finish.tbkUser,
+            username: meta.username
+          }, null, 2));
+        } catch {
+        }
+        const detail = auth.details[0];
+        const html2 = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/><title>Débito OK</title></head>
+<body style="font-family:sans-serif;padding:2rem;max-width:640px">
+<h1>Transacción débito ${auth.ok ? "aprobada" : "fallida"}</h1>
+<p><strong>buy_order PADRE:</strong> <code>${mallBuyOrder}</code></p>
+<p>buy_order tienda: <code>${storeBuyOrder}</code></p>
+<p>payment_type_code: ${detail?.paymentTypeCode ?? "—"}</p>
+<p>response_code: ${detail?.responseCode ?? "—"}</p>
+<p>authorization_code: ${detail?.authorizationCode ?? "—"}</p>
+<p>Copia el buy_order PADRE para el formulario Transbank.</p>
+</body></html>`;
+        return new Response(html2, {
+          headers: {
+            "Content-Type": "text/html; charset=utf-8"
+          }
+        });
+      }
+    }
+  }
+});
+const $$splitComponentImporter$m = () => import("./oneclick.debit-reject-validacion-BTU5dmpx.mjs");
+const REJECT_AMOUNT = 1e7;
+const Route$O = createFileRoute("/oneclick/debit-reject-validacion")({
+  component: lazyRouteComponent($$splitComponentImporter$m, "component"),
+  server: {
+    handlers: {
+      GET: async () => {
+        let meta = {};
+        try {
+          const raw = await fs.readFile("public/oneclick-debit-inscription.json", "utf8");
+          meta = JSON.parse(raw);
+        } catch {
+          return html("Falta public/oneclick-debit-inscription.json. Ejecuta la inscripción débito primero.", null);
+        }
+        let tbkUser = meta.tbk_user;
+        let username = meta.username;
+        let finishHint = "";
+        if (!tbkUser && meta.token) {
+          const finish = await finishOneclickMallInscription(meta.token);
+          if (finish.ok && finish.tbkUser) {
+            tbkUser = finish.tbkUser;
+            await fs.writeFile("public/oneclick-debit-inscription.json", JSON.stringify({
+              ...meta,
+              tbk_user: tbkUser
+            }, null, 2));
+          } else {
+            const code = finish.responseCode ?? "?";
+            finishHint = code === -96 ? "<br/><br/><strong>Token expirado o inscripción no completada (-96).</strong> Genera uno nuevo con <code>node scripts/oneclick-validation-start-debit-inscription.mjs</code> y completa Webpay antes de volver aquí." : `<br/><br/>Transbank respondió <code>response_code: ${code}</code>. Completa Webpay primero.`;
+          }
+        }
+        if (!tbkUser || !username) {
+          return html(`<strong>Paso 1:</strong> inscribe la tarjeta débito en Webpay<br/>
+            <a href="/oneclick-debit-inscription.html">/oneclick-debit-inscription.html</a><br/>
+            Tarjeta Redcompra: <code>4051 8842 3993 7763</code> · RUT <code>11.111.111-1</code> / clave <code>123</code><br/><br/>
+            <strong>Paso 2:</strong> al terminar Webpay, vuelve a esta misma página para el cobro de $10.000.000 (-98).${finishHint}`, null);
+        }
+        const cfg = getOneclickMallConfig();
+        const {
+          mallBuyOrder,
+          storeBuyOrder
+        } = generateOneclickBuyOrders();
+        const auth = await authorizeOneclickMallTransaction({
+          username,
+          tbkUser,
+          buyOrder: mallBuyOrder,
+          details: [{
+            commerceCode: cfg.storeCommerceCode,
+            buyOrder: storeBuyOrder,
+            amount: REJECT_AMOUNT
+          }]
+        });
+        const detail = auth.details[0];
+        return html(`Transacción débito rechazada (-98)<br/>
+          <strong>buy_order PADRE:</strong> <code>${mallBuyOrder}</code><br/>
+          buy_order tienda: <code>${storeBuyOrder}</code><br/>
+          response_code: ${detail?.responseCode ?? "—"}<br/>
+          status: ${detail?.status ?? "—"}<br/>
+          payment_type_code: ${detail?.paymentTypeCode ?? "—"}`, mallBuyOrder);
+      }
+    }
+  }
+});
+function html(message, buyOrder) {
+  return new Response(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/><title>Validación débito rechazada</title></head>
+<body style="font-family:sans-serif;padding:2rem;max-width:720px;line-height:1.6">
+<h1>Oneclick · débito rechazada</h1>
+<p>${message}</p>
+${buyOrder ? `<p>Copia este buy_order PADRE para Transbank:</p><p style="font-size:1.25rem"><code>${buyOrder}</code></p>` : ""}
+<p><a href="/oneclick-debit-inscription.html">Inscripción débito</a></p>
+</body></html>`, {
+    headers: {
+      "Content-Type": "text/html; charset=utf-8"
+    }
+  });
+}
+const $$splitComponentImporter$l = () => import("./oneclick.credit-retorno-BTU5dmpx.mjs");
+const Route$N = createFileRoute("/oneclick/credit-retorno")({
+  component: lazyRouteComponent($$splitComponentImporter$l, "component"),
+  server: {
+    handlers: {
+      POST: async ({
+        request
+      }) => {
+        const form = await request.formData();
+        const params = new URLSearchParams();
+        for (const [k, v] of form.entries()) {
+          if (typeof v === "string") params.set(k, v);
+        }
+        const url = new URL(request.url);
+        url.search = params.toString();
+        return Response.redirect(url.pathname + "?" + params.toString(), 303);
+      },
+      GET: async ({
+        request
+      }) => {
+        const url = new URL(request.url);
+        const token = url.searchParams.get("TBK_TOKEN")?.trim();
+        if (!token) {
+          return new Response("Falta TBK_TOKEN", {
+            status: 400
+          });
+        }
+        const {
+          finishOneclickMallInscription: finishOneclickMallInscription2
+        } = await import("./transbank-oneclick-mall-CC5wwzFZ.mjs").then((n) => n.t);
+        const finish = await finishOneclickMallInscription2(token);
+        let meta = {};
+        try {
+          const raw = await fs.readFile("public/oneclick-credit-inscription.json", "utf8");
+          meta = JSON.parse(raw);
+        } catch {
+        }
+        if (finish.ok && finish.tbkUser) {
+          await fs.writeFile("public/oneclick-credit-inscription.json", JSON.stringify({
+            ...meta,
+            token,
+            tbk_user: finish.tbkUser,
+            username: finish.raw?.username ?? meta.username,
+            card_type: finish.cardType,
+            card_last4: finish.cardLast4
+          }, null, 2));
+        }
+        const html2 = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/><title>Crédito inscrito</title></head>
+<body style="font-family:sans-serif;padding:2rem;max-width:640px">
+<h1>Inscripción crédito ${finish.ok ? "OK" : "fallida"}</h1>
+<p>response_code: ${finish.responseCode ?? "—"}</p>
+<p>card_type: ${finish.cardType ?? "—"}</p>
+<p>tbk_user: ${finish.ok ? "guardado" : "—"}</p>
+<p><a href="/oneclick-credit-inscription.html">Reintentar</a></p>
+<p>Ejecuta: <code>node scripts/oneclick-validation-credit-partial-refund.mjs</code></p>
+</body></html>`;
+        return new Response(html2, {
+          headers: {
+            "Content-Type": "text/html; charset=utf-8"
+          }
+        });
+      }
+    }
+  }
+});
+const $$splitComponentImporter$k = () => import("./familia.guardianes-BaGM947b.mjs");
+const Route$M = createFileRoute("/familia/guardianes")({
+  head: () => ({
+    meta: [{
+      title: "Mis Guardianes — Senior Safe"
+    }, {
+      name: "robots",
+      content: "noindex,nofollow"
+    }]
+  }),
+  component: lazyRouteComponent($$splitComponentImporter$k, "component")
+});
+const $$splitComponentImporter$j = () => import("./familia.dashboard-644QSSfW.mjs");
+const Route$L = createFileRoute("/familia/dashboard")({
+  head: () => ({
+    meta: [{
+      title: "Estado — Portal Familia"
+    }, {
+      name: "robots",
+      content: "noindex,nofollow"
+    }]
+  }),
+  component: lazyRouteComponent($$splitComponentImporter$j, "component")
+});
+const Route$K = createFileRoute("/email/unsubscribe")({
+  server: {
+    handlers: {
+      GET: async ({ request }) => {
+        process.env.SUPABASE_SERVICE_ROLE_KEY;
+        {
+          return Response.json({ error: "Server configuration error" }, { status: 500 });
+        }
+      },
+      POST: async ({ request }) => {
+        process.env.SUPABASE_SERVICE_ROLE_KEY;
+        {
+          return Response.json({ error: "Server configuration error" }, { status: 500 });
+        }
+      }
+    }
+  }
+});
+const $$splitComponentImporter$i = () => import("./reportes-BZTRMr5e.mjs");
+const Route$J = createFileRoute("/demo/reportes")({
+  component: lazyRouteComponent($$splitComponentImporter$i, "component")
+});
+const $$splitComponentImporter$h = () => import("./presentacion-BfEYwUH5.mjs");
+const Route$I = createFileRoute("/demo/presentacion")({
+  component: lazyRouteComponent($$splitComponentImporter$h, "component")
+});
+const $$splitComponentImporter$g = () => import("./perfil-v0Kv-sJ3.mjs");
+const Route$H = createFileRoute("/demo/perfil")({
+  component: lazyRouteComponent($$splitComponentImporter$g, "component")
+});
+const $$splitComponentImporter$f = () => import("./monitoreo-DV_lXr99.mjs");
+const Route$G = createFileRoute("/demo/monitoreo")({
+  head: () => ({
+    meta: [{
+      title: "Supervisión del programa — Demo Senior Safe"
+    }]
+  }),
+  component: lazyRouteComponent($$splitComponentImporter$f, "component")
+});
+const $$splitComponentImporter$e = () => import("./mapa-CRbLKuoC.mjs");
+const Route$F = createFileRoute("/demo/mapa")({
+  component: lazyRouteComponent($$splitComponentImporter$e, "component")
+});
+const $$splitComponentImporter$d = () => import("./flujo-DfMHh2Yr.mjs");
+const Route$E = createFileRoute("/demo/flujo")({
+  component: lazyRouteComponent($$splitComponentImporter$d, "component")
+});
+const $$splitComponentImporter$c = () => import("./ejecutivo-Djlgrq9y.mjs");
+const Route$D = createFileRoute("/demo/ejecutivo")({
+  component: lazyRouteComponent($$splitComponentImporter$c, "component")
+});
+const $$splitComponentImporter$b = () => import("./analitica-CLO24Xd5.mjs");
+const Route$C = createFileRoute("/demo/analitica")({
+  component: lazyRouteComponent($$splitComponentImporter$b, "component")
+});
+const $$splitComponentImporter$a = () => import("./alertas-yDvcntvK.mjs");
+const Route$B = createFileRoute("/demo/alertas")({
+  component: lazyRouteComponent($$splitComponentImporter$a, "component")
+});
+function layout(title, body) {
+  return `<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>${title}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <style>
+      body { font: 16px/1.5 system-ui, -apple-system, sans-serif; background: #f1f5f9; color: #0f172a; margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 1.25rem; }
+      .card { max-width: 26rem; width: 100%; background: #fff; border-radius: 1.5rem; padding: 2rem; text-align: center; box-shadow: 0 20px 40px rgba(15,23,42,.08); }
+      h1 { font-size: 1.5rem; margin: 0 0 .5rem; }
+      p { color: #475569; margin: 0 0 1rem; }
+      .ok { color: #16a34a; font-size: 3rem; line-height: 1; margin-bottom: .75rem; }
+      .err { color: #dc2626; font-size: 3rem; line-height: 1; margin-bottom: .75rem; }
+      .note { font-size: .9rem; background: #fef3c7; color: #92400e; border-radius: .75rem; padding: .75rem; margin-bottom: 1rem; }
+      label { display: block; text-align: left; font-weight: 600; margin-bottom: .35rem; font-size: .9rem; }
+      input { width: 100%; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: .75rem; padding: .75rem; font: inherit; margin-bottom: .75rem; }
+      button, a.btn { display: inline-block; width: 100%; box-sizing: border-box; border: 0; border-radius: .75rem; padding: .85rem 1rem; font: inherit; font-weight: 700; text-decoration: none; cursor: pointer; }
+      .primary { background: #16a34a; color: #fff; }
+      .secondary { background: #e2e8f0; color: #0f172a; margin-top: .5rem; }
+    </style>
+  </head>
+  <body>
+    <div class="card">${body}</div>
+  </body>
+</html>`;
+}
+function renderAckSuccessHtml(opts) {
+  const note = opts.already ? `<div class="note">Esta alerta ya había sido confirmada antes.</div>` : `<p>Gracias. Le avisaremos al senior que ya viste la alerta. <strong>No debería recibirse la llamada automática.</strong></p>`;
+  const form = opts.nombre ? `<p><strong>Confirmado por:</strong> ${escapeHtml(opts.nombre)}</p>` : `<form method="post" action="">
+        <label for="nombre">¿Cómo te llamas? (opcional)</label>
+        <input id="nombre" name="nombre" maxlength="120" placeholder="Tu nombre" />
+        <button class="primary" type="submit">Guardar mi nombre</button>
+      </form>`;
+  return layout(
+    "Alerta confirmada — Senior Safe",
+    `<div class="ok">✓</div>
+     <h1>Alerta confirmada</h1>
+     ${note}
+     ${form}
+     <a class="btn secondary" href="${PRODUCTION_SITE_URL}/familia">Ir al portal familia</a>`
+  );
+}
+function renderAckErrorHtml(message) {
+  return layout(
+    "No se pudo confirmar — Senior Safe",
+    `<div class="err">✕</div>
+     <h1>No se pudo confirmar</h1>
+     <p>${escapeHtml(message)}</p>
+     <a class="btn secondary" href="${PRODUCTION_SITE_URL}/familia">Ir al portal familia</a>`
+  );
+}
+function escapeHtml(value) {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+const Route$A = createFileRoute("/c/$token")({
+  server: {
+    handlers: {
+      GET: async ({ params, request }) => {
+        try {
+          const pathname = new URL(request.url).pathname;
+          const token = pathname.split("/").filter(Boolean)[1] ?? params.token;
+          const result = await acknowledgeAlertByToken(token);
+          return new Response(
+            renderAckSuccessHtml({ token: sanitizeRouteToken(token), already: result.already }),
+            { status: 200, headers: { "content-type": "text/html; charset=utf-8" } }
+          );
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "Link inválido o expirado.";
+          return new Response(renderAckErrorHtml(message), {
+            status: 400,
+            headers: { "content-type": "text/html; charset=utf-8" }
+          });
+        }
+      },
+      POST: async ({ params, request }) => {
+        let nombre;
+        try {
+          const ct = request.headers.get("content-type") ?? "";
+          if (ct.includes("application/json")) {
+            const json = await request.json();
+            nombre = json.nombre?.trim();
+          } else {
+            const form = await request.formData();
+            nombre = String(form.get("nombre") ?? "").trim() || void 0;
+          }
+        } catch {
+        }
+        try {
+          const pathname = new URL(request.url).pathname;
+          const token = pathname.split("/").filter(Boolean)[1] ?? params.token;
+          const result = await acknowledgeAlertByToken(token, nombre);
+          return new Response(
+            renderAckSuccessHtml({
+              token: sanitizeRouteToken(token),
+              already: result.already,
+              nombre
+            }),
+            { status: 200, headers: { "content-type": "text/html; charset=utf-8" } }
+          );
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "Link inválido o expirado.";
+          return new Response(renderAckErrorHtml(message), {
+            status: 400,
+            headers: { "content-type": "text/html; charset=utf-8" }
+          });
+        }
+      }
+    }
+  }
+});
+const BLOG_POSTS = [
+  {
+    slug: "alarma-sos-para-adultos-mayores-que-si-responde",
+    title: "Alarma SOS para adultos mayores que sí responde",
+    description: "Qué debe resolver una alarma SOS para adultos mayores: botón simple, GPS, alerta en cascada por WhatsApp, SMS y llamada, y una red familiar que confirma quién tomó el caso.",
+    excerpt: `Del botón SOS a una alerta en cascada: WhatsApp, SMS, GPS y escalamiento si nadie confirma. Plan desde $${formatPlanPrice(PLAN.monthly)} USD/mes, sin permanencia.`,
+    publishedAt: "2026-08-15",
+    author: "Equipo Senior Safe",
+    category: "Protección familiar",
+    readingMinutes: 8,
+    coverImage: "/images/blog-alarma-sos-responde.png",
+    coverWidth: 1200,
+    coverHeight: 630,
+    coverAlt: "Adulto mayor sonriente en su living con smartphone Senior Safe",
+    tags: ["SOS", "WhatsApp", "GPS", "adultos mayores", "Chile"]
+  },
+  {
+    slug: "como-hablar-con-padres-seguridad-sin-perder-independencia",
+    title: "¿No quiere usar un botón de pánico? Cómo hablar con tus padres sobre su seguridad sin que sientan que pierden su independencia",
+    description: "Estrategias de comunicación para convencer a adultos mayores de usar teleasistencia móvil sin afectar su autonomía ni dignidad.",
+    excerpt: `Cómo hablar de seguridad con mamá o papá sin collares estigmatizantes: red de guardianes en el celular, desde $${formatPlanPrice(PLAN.monthly)} USD/mes.`,
+    publishedAt: "2026-08-09",
+    author: "Equipo de Psicología y Bienestar Senior Safe",
+    category: "Familia y bienestar",
+    readingMinutes: 7,
+    coverImage: "/images/blog-independencia-senior.jpg",
+    coverWidth: 1200,
+    coverHeight: 630,
+    coverAlt: "Adulto mayor independiente en su taller con smartphone como red de protección familiar",
+    tags: ["independencia", "familia", "teleasistencia", "conversación", "Chile"]
+  },
+  {
+    slug: "revista-seguridad-destaca-lanzamiento-senior-safe",
+    title: 'Revista Seguridad destaca el lanzamiento de Senior Safe en Chile: "Tecnología con corazón"',
+    description: "Reseña del reportaje de Revista Seguridad & Defensa sobre la plataforma chilena de teleasistencia con IA y algoritmo en cascada.",
+    excerpt: "La Revista Seguridad & Defensa destaca a Senior Safe como alternativa accesible e inteligente frente a las alarmas tradicionales.",
+    publishedAt: "2026-07-10",
+    author: "Equipo Senior Safe",
+    category: "Prensa",
+    readingMinutes: 5,
+    coverImage: "/images/blog-prensa-seguridad.jpg",
+    coverWidth: 1200,
+    coverHeight: 675,
+    coverAlt: "Adulta mayor tranquila en su hogar con smartphone y teleasistencia Senior Safe",
+    tags: ["prensa", "lanzamiento", "Revista Seguridad", "Chile"]
+  },
+  {
+    slug: "como-la-ia-salva-vidas-emergencias-domesticas",
+    title: "¿Cómo la Inteligencia Artificial y WhatsApp están salvando vidas ante emergencias domésticas en Chile?",
+    description: "Cascada WhatsApp/SMS/llamada, tres botones de emergencia y GPS a Maps/Waze: cómo la IA familiar protege a adultos mayores sin amarras de $30.000–$80.000 mensuales.",
+    excerpt: "Cascada WhatsApp/SMS/llamada, tres botones de emergencia y GPS a Maps/Waze: cómo la IA familiar protege a adultos mayores sin amarras de $30.000–$80.000 mensuales.",
+    publishedAt: "2026-08-06",
+    updatedAt: "2026-08-31",
+    author: "Equipo de Producto Senior Safe",
+    category: "Protección familiar",
+    readingMinutes: 8,
+    coverImage: "/images/blog-ia-teleasistencia.jpg",
+    coverWidth: 1200,
+    coverHeight: 675,
+    coverAlt: "Adulto mayor independiente en su hogar utilizando teleasistencia inteligente con smartphone en Chile",
+    tags: ["IA", "WhatsApp", "caídas", "teleasistencia", "infraestructura", "Chile"]
+  }
+];
+function getBlogPost(slug) {
+  return BLOG_POSTS.find((p) => p.slug === slug);
+}
+function getBlogPostsNewestFirst() {
+  return [...BLOG_POSTS].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+}
+function blogPostPath(slug) {
+  return `/blog/${slug}`;
+}
+function formatBlogDate(isoDate) {
+  const d = /* @__PURE__ */ new Date(`${isoDate}T12:00:00`);
+  return d.toLocaleDateString("es-CL", {
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+  });
+}
+const SLUG$3 = "revista-seguridad-destaca-lanzamiento-senior-safe";
+const POST$2 = getBlogPost(SLUG$3);
+const HEADLINE$3 = 'Revista Seguridad destaca el lanzamiento de Senior Safe en Chile: "Tecnología con corazón"';
+const TECH_DESCRIPTION$3 = "Reseña del reportaje de Revista Seguridad & Defensa sobre la plataforma chilena de teleasistencia con IA y algoritmo en cascada.";
+const COVER$3 = "/images/blog-prensa-seguridad.jpg";
+const $$splitComponentImporter$9 = () => import("./blog.revista-seguridad-destaca-lanzamiento-senior-safe-BFHlj6fM.mjs");
+const DISCOVER_ROBOTS$3 = "index, follow, max-image-preview:large";
+const PATH$3 = blogPostPath(SLUG$3);
+const COVER_ABS$3 = `${PRODUCTION_SITE_URL}${COVER$3}`;
+function techArticleJsonLd$3() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    headline: HEADLINE$3,
+    description: TECH_DESCRIPTION$3,
+    image: COVER_ABS$3,
+    datePublished: "2026-07-10T12:00:00-04:00",
+    inLanguage: "es-CL",
+    author: {
+      "@type": "Person",
+      name: "robertogutter"
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Revista Seguridad & Defensa"
+    }
+  };
+}
+const Route$z = createFileRoute("/blog/revista-seguridad-destaca-lanzamiento-senior-safe")({
+  head: () => {
+    const page = buildPublicPageMeta({
+      title: `${HEADLINE$3} — Blog Senior Safe`,
+      description: TECH_DESCRIPTION$3,
+      pathname: PATH$3,
+      ogTitle: HEADLINE$3,
+      ogDescription: TECH_DESCRIPTION$3,
+      ogType: "article",
+      robots: DISCOVER_ROBOTS$3
+    });
+    const meta = [...page.meta.filter((m) => !("property" in m && m.property?.startsWith("og:image")) && !("name" in m && m.name === "twitter:image")), {
+      property: "og:image",
+      content: COVER_ABS$3
+    }, {
+      property: "og:image:width",
+      content: "1200"
+    }, {
+      property: "og:image:height",
+      content: "675"
+    }, {
+      property: "og:image:alt",
+      content: POST$2.coverAlt
+    }, {
+      name: "twitter:image",
+      content: COVER_ABS$3
+    }];
+    return {
+      ...page,
+      meta,
+      scripts: [jsonLdHeadScript(breadcrumbJsonLd([{
+        name: "Inicio",
+        path: "/"
+      }, {
+        name: "Blog",
+        path: "/blog"
+      }, {
+        name: HEADLINE$3,
+        path: PATH$3
+      }])), jsonLdHeadScript(techArticleJsonLd$3())]
+    };
+  },
+  component: lazyRouteComponent($$splitComponentImporter$9, "component")
+});
+const SLUG$2 = "como-la-ia-salva-vidas-emergencias-domesticas";
+const HEADLINE$2 = "¿Cómo la Inteligencia Artificial y WhatsApp están salvando vidas ante emergencias domésticas en Chile?";
+const TECH_DESCRIPTION$2 = "Cascada WhatsApp/SMS/llamada, tres botones de emergencia y GPS a Maps/Waze: cómo la IA familiar protege a adultos mayores sin amarras de $30.000–$80.000 mensuales.";
+const COVER$2 = "/images/blog-ia-teleasistencia.jpg";
+const COVER_ALT = "Adulto mayor independiente en su hogar utilizando teleasistencia inteligente con smartphone en Chile";
+const $$splitComponentImporter$8 = () => import("./blog.como-la-ia-salva-vidas-emergencias-domesticas-eTeOWX1L.mjs");
+const DISCOVER_ROBOTS$2 = "index, follow, max-image-preview:large";
+const PATH$2 = blogPostPath(SLUG$2);
+const COVER_ABS$2 = `${PRODUCTION_SITE_URL}${COVER$2}`;
+function techArticleJsonLd$2() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    headline: HEADLINE$2,
+    description: TECH_DESCRIPTION$2,
+    image: COVER_ABS$2,
+    datePublished: "2026-08-06T12:00:00-04:00",
+    dateModified: "2026-08-31T12:00:00-04:00",
+    inLanguage: "es-CL",
+    author: {
+      "@type": "Organization",
+      name: "Equipo de Producto Senior Safe"
+    }
+  };
+}
+const Route$y = createFileRoute("/blog/como-la-ia-salva-vidas-emergencias-domesticas")({
+  head: () => {
+    const page = buildPublicPageMeta({
+      title: `${HEADLINE$2} — Blog Senior Safe`,
+      description: TECH_DESCRIPTION$2,
+      pathname: PATH$2,
+      ogTitle: HEADLINE$2,
+      ogDescription: TECH_DESCRIPTION$2,
+      ogType: "article",
+      robots: DISCOVER_ROBOTS$2
+    });
+    const meta = [...page.meta.filter((m) => !("property" in m && m.property?.startsWith("og:image")) && !("name" in m && m.name === "twitter:image")), {
+      property: "og:image",
+      content: COVER_ABS$2
+    }, {
+      property: "og:image:width",
+      content: "1200"
+    }, {
+      property: "og:image:height",
+      content: "675"
+    }, {
+      property: "og:image:alt",
+      content: COVER_ALT
+    }, {
+      name: "twitter:image",
+      content: COVER_ABS$2
+    }];
+    return {
+      ...page,
+      meta,
+      scripts: [jsonLdHeadScript(breadcrumbJsonLd([{
+        name: "Inicio",
+        path: "/"
+      }, {
+        name: "Blog",
+        path: "/blog"
+      }, {
+        name: HEADLINE$2,
+        path: PATH$2
+      }])), jsonLdHeadScript(techArticleJsonLd$2())]
+    };
+  },
+  component: lazyRouteComponent($$splitComponentImporter$8, "component")
+});
+const SLUG$1 = "como-hablar-con-padres-seguridad-sin-perder-independencia";
+const POST$1 = getBlogPost(SLUG$1);
+const HEADLINE$1 = "¿No quiere usar un botón de pánico? Cómo hablar con tus padres sobre su seguridad sin que sientan que pierden su independencia";
+const TECH_DESCRIPTION$1 = "Estrategias de comunicación para convencer a adultos mayores de usar teleasistencia móvil sin afectar su autonomía ni dignidad.";
+const COVER$1 = "/images/blog-independencia-senior.jpg";
+const $$splitComponentImporter$7 = () => import("./blog.como-hablar-con-padres-seguridad-sin-perder-independencia-BghRBKm2.mjs");
+const DISCOVER_ROBOTS$1 = "index, follow, max-image-preview:large";
+const PATH$1 = blogPostPath(SLUG$1);
+const COVER_ABS$1 = `${PRODUCTION_SITE_URL}${COVER$1}`;
+function techArticleJsonLd$1() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    headline: HEADLINE$1,
+    description: TECH_DESCRIPTION$1,
+    image: COVER_ABS$1,
+    datePublished: "2026-08-09T12:00:00-04:00",
+    inLanguage: "es-CL",
+    author: {
+      "@type": "Organization",
+      name: "Equipo de Psicología y Bienestar Senior Safe"
+    }
+  };
+}
+const Route$x = createFileRoute("/blog/como-hablar-con-padres-seguridad-sin-perder-independencia")({
+  head: () => {
+    const page = buildPublicPageMeta({
+      title: `${HEADLINE$1} — Blog Senior Safe`,
+      description: TECH_DESCRIPTION$1,
+      pathname: PATH$1,
+      ogTitle: HEADLINE$1,
+      ogDescription: TECH_DESCRIPTION$1,
+      ogType: "article",
+      robots: DISCOVER_ROBOTS$1
+    });
+    const meta = [...page.meta.filter((m) => !("property" in m && m.property?.startsWith("og:image")) && !("name" in m && m.name === "twitter:image")), {
+      property: "og:image",
+      content: COVER_ABS$1
+    }, {
+      property: "og:image:width",
+      content: "1200"
+    }, {
+      property: "og:image:height",
+      content: "630"
+    }, {
+      property: "og:image:alt",
+      content: POST$1.coverAlt
+    }, {
+      name: "twitter:image",
+      content: COVER_ABS$1
+    }];
+    return {
+      ...page,
+      meta,
+      scripts: [jsonLdHeadScript(breadcrumbJsonLd([{
+        name: "Inicio",
+        path: "/"
+      }, {
+        name: "Blog",
+        path: "/blog"
+      }, {
+        name: HEADLINE$1,
+        path: PATH$1
+      }])), jsonLdHeadScript(techArticleJsonLd$1())]
+    };
+  },
+  component: lazyRouteComponent($$splitComponentImporter$7, "component")
+});
+const SLUG = "alarma-sos-para-adultos-mayores-que-si-responde";
+const POST = getBlogPost(SLUG);
+const HEADLINE = "Alarma SOS para adultos mayores que sí responde";
+const TECH_DESCRIPTION = "Qué debe resolver una alarma SOS para adultos mayores: botón simple, GPS, alerta en cascada por WhatsApp, SMS y llamada, y una red familiar que confirma quién tomó el caso.";
+const COVER = "/images/blog-alarma-sos-responde.png";
+const $$splitComponentImporter$6 = () => import("./blog.alarma-sos-para-adultos-mayores-que-si-responde-CNvq8cJ5.mjs");
+const DISCOVER_ROBOTS = "index, follow, max-image-preview:large";
+const PATH = blogPostPath(SLUG);
+const COVER_ABS = `${PRODUCTION_SITE_URL}${COVER}`;
+function techArticleJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    headline: HEADLINE,
+    description: TECH_DESCRIPTION,
+    image: COVER_ABS,
+    datePublished: "2026-08-15T12:00:00-04:00",
+    inLanguage: "es-CL",
+    author: {
+      "@type": "Organization",
+      name: "Equipo Senior Safe"
+    }
+  };
+}
+const Route$w = createFileRoute("/blog/alarma-sos-para-adultos-mayores-que-si-responde")({
+  head: () => {
+    const page = buildPublicPageMeta({
+      title: `${HEADLINE} — Blog Senior Safe`,
+      description: TECH_DESCRIPTION,
+      pathname: PATH,
+      ogTitle: HEADLINE,
+      ogDescription: TECH_DESCRIPTION,
+      ogType: "article",
+      robots: DISCOVER_ROBOTS
+    });
+    const meta = [...page.meta.filter((m) => !("property" in m && m.property?.startsWith("og:image")) && !("name" in m && m.name === "twitter:image")), {
+      property: "og:image",
+      content: COVER_ABS
+    }, {
+      property: "og:image:width",
+      content: "1200"
+    }, {
+      property: "og:image:height",
+      content: "630"
+    }, {
+      property: "og:image:alt",
+      content: POST.coverAlt
+    }, {
+      name: "twitter:image",
+      content: COVER_ABS
+    }];
+    return {
+      ...page,
+      meta,
+      scripts: [jsonLdHeadScript(breadcrumbJsonLd([{
+        name: "Inicio",
+        path: "/"
+      }, {
+        name: "Blog",
+        path: "/blog"
+      }, {
+        name: HEADLINE,
+        path: PATH
+      }])), jsonLdHeadScript(techArticleJsonLd())]
+    };
+  },
+  component: lazyRouteComponent($$splitComponentImporter$6, "component")
+});
+const $$splitComponentImporter$5 = () => import("./admin.transbank-validacion-CdhJo7Ei.mjs");
+const Route$v = createFileRoute("/admin/transbank-validacion")({
+  component: lazyRouteComponent($$splitComponentImporter$5, "component"),
+  head: () => ({
+    meta: [{
+      title: "Admin · Validación Transbank Oneclick"
+    }]
+  })
+});
+const $$splitComponentImporter$4 = () => import("./admin.reset-CFEWHcXR.mjs");
+const Route$u = createFileRoute("/admin/reset")({
+  component: lazyRouteComponent($$splitComponentImporter$4, "component"),
+  head: () => ({
+    meta: [{
+      title: "Admin · Reset datos de prueba"
+    }]
+  })
+});
+const $$splitComponentImporter$3 = () => import("./admin.inbox-C4g83Zx9.mjs");
+const Route$t = createFileRoute("/admin/inbox")({
+  component: lazyRouteComponent($$splitComponentImporter$3, "component"),
+  head: () => ({
+    meta: [{
+      title: "Bandeja WhatsApp — Senior Safe"
+    }]
+  })
+});
+const $$splitComponentImporter$2 = () => import("./admin.discounts-Bw6Xcaos.mjs");
+const Route$s = createFileRoute("/admin/discounts")({
+  component: lazyRouteComponent($$splitComponentImporter$2, "component"),
+  head: () => ({
+    meta: [{
+      title: "Admin · Descuentos — Senior Safe"
+    }]
+  })
+});
+const $$splitComponentImporter$1 = () => import("./admin.accounts-CHHLgI7l.mjs");
+const Route$r = createFileRoute("/admin/accounts")({
+  component: lazyRouteComponent($$splitComponentImporter$1, "component"),
+  head: () => ({
+    meta: [{
+      title: "Admin · Gratuidad — Senior Safe"
+    }]
+  })
+});
+const Route$q = createFileRoute("/a/$token")({
+  server: {
+    handlers: {
+      GET: async ({ params, request }) => {
+        try {
+          const parsed = parseAckPathFromUrl(new URL(request.url).pathname);
+          const pathname = new URL(request.url).pathname;
+          const pathToken = pathname.split("/").filter(Boolean).slice(1).join("/");
+          const tokenParam = parsed?.token ?? pathToken ?? params.token;
+          const result = parsed?.alertId ? await acknowledgeAlertByIdAndToken(parsed.alertId, tokenParam) : await acknowledgeAlertByToken(tokenParam);
+          return new Response(
+            renderAckSuccessHtml({ token: sanitizeRouteToken(tokenParam), already: result.already }),
+            { status: 200, headers: { "content-type": "text/html; charset=utf-8" } }
+          );
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "Link inválido o expirado.";
+          return new Response(renderAckErrorHtml(message), {
+            status: 400,
+            headers: { "content-type": "text/html; charset=utf-8" }
+          });
+        }
+      },
+      POST: async ({ params, request }) => {
+        let nombre;
+        try {
+          const ct = request.headers.get("content-type") ?? "";
+          if (ct.includes("application/json")) {
+            const json = await request.json();
+            nombre = json.nombre?.trim();
+          } else {
+            const form = await request.formData();
+            nombre = String(form.get("nombre") ?? "").trim() || void 0;
+          }
+        } catch {
+        }
+        try {
+          const parsed = parseAckPathFromUrl(new URL(request.url).pathname);
+          const pathname = new URL(request.url).pathname;
+          const pathToken = pathname.split("/").filter(Boolean).slice(1).join("/");
+          const tokenParam = parsed?.token ?? pathToken ?? params.token;
+          const result = parsed?.alertId ? await acknowledgeAlertByIdAndToken(parsed.alertId, tokenParam, nombre) : await acknowledgeAlertByToken(tokenParam, nombre);
+          return new Response(
+            renderAckSuccessHtml({
+              token: sanitizeRouteToken(tokenParam),
+              already: result.already,
+              nombre
+            }),
+            { status: 200, headers: { "content-type": "text/html; charset=utf-8" } }
+          );
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "Link inválido o expirado.";
+          return new Response(renderAckErrorHtml(message), {
+            status: 400,
+            headers: { "content-type": "text/html; charset=utf-8" }
+          });
+        }
+      }
+    }
+  }
+});
+const Route$p = createFileRoute("/lovable/email/suppression")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        process.env.LOVABLE_API_KEY;
+        process.env.SUPABASE_SERVICE_ROLE_KEY;
+        {
+          console.error("Missing required environment variables");
+          return Response.json({ error: "Server configuration error" }, { status: 500 });
+        }
+      }
+    }
+  }
+});
+const $$splitComponentImporter = () => import("./familia.ack._token-K4cV1amU.mjs");
+const Route$o = createFileRoute("/familia/ack/$token")({
+  head: () => ({
+    meta: [{
+      title: "Confirmar alerta recibida — Senior Safe"
+    }, {
+      name: "robots",
+      content: "noindex,nofollow"
+    }]
+  }),
+  component: lazyRouteComponent($$splitComponentImporter, "component")
+});
+function pickString(obj, keys) {
+  for (const k of keys) {
+    const v = obj[k];
+    if (typeof v === "string" && v.trim()) return v.trim();
+    if (typeof v === "number") return String(v);
+  }
+  return "";
+}
+function stripHtml(html2) {
+  return html2.replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<script[\s\S]*?<\/script>/gi, "").replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>/gi, "\n\n").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/\n{3,}/g, "\n\n").trim();
+}
+function extractEmailAddress(raw) {
+  const angle = raw.match(/<([^>]+@[^>]+)>/);
+  if (angle?.[1]) return angle[1].trim().toLowerCase();
+  const plain = raw.match(/[\w.+-]+@[\w.-]+\.\w+/);
+  return (plain?.[0] ?? raw).trim().toLowerCase();
+}
+function extractDisplayName(raw) {
+  const m = raw.match(/^"?([^"<]+)"?\s*</);
+  if (m?.[1]) return m[1].trim();
+  if (!raw.includes("@")) return raw.trim() || null;
+  return null;
+}
+function extractLatestCustomerQuestion(text2) {
+  const lines = text2.split(/\r?\n/);
+  const cutPatterns = [
+    /^On .+ wrote:$/i,
+    /^El .+ escribió:$/i,
+    /^De:/i,
+    /^From:/i,
+    /^-----Original Message-----/i,
+    /^_{5,}/,
+    /^>{1,}\s/
+  ];
+  const kept = [];
+  for (const line of lines) {
+    if (cutPatterns.some((p) => p.test(line.trim()))) break;
+    kept.push(line);
+  }
+  const trimmed = kept.join("\n").trim();
+  return trimmed.length >= 8 ? trimmed : text2.trim();
+}
+function parseInboundEmailPayload(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const obj = raw;
+  const fromRaw = pickString(obj, [
+    "fromAddress",
+    "from_address",
+    "FROM",
+    "sender",
+    "from",
+    "From"
+  ]);
+  const toRaw = pickString(obj, ["toAddress", "to_address", "TO", "to", "To"]);
+  const subject = pickString(obj, ["subject", "SUBJECT", "Subject"]) || "(sin asunto)";
+  const summary = pickString(obj, ["summary", "body", "text", "plainText", "plain_text"]);
+  const html2 = pickString(obj, ["html", "CONTENT", "content", "htmlBody", "html_body"]);
+  const sm = pickString(obj, ["SM"]);
+  let bodyText = summary || (html2 ? stripHtml(html2) : "") || (sm ? stripHtml(sm) : "");
+  bodyText = extractLatestCustomerQuestion(bodyText);
+  const fromAddress = extractEmailAddress(fromRaw);
+  if (!fromAddress || !fromAddress.includes("@")) return null;
+  const messageId = pickString(obj, ["messageId", "message_id", "MSGID", "header_message_id"]) || null;
+  const inReplyTo = pickString(obj, ["inReplyTo", "in_reply_to"]) || null;
+  return {
+    fromAddress,
+    fromName: extractDisplayName(fromRaw),
+    toAddress: extractEmailAddress(toRaw) || toRaw,
+    subject,
+    bodyText,
+    messageId,
+    inReplyTo: inReplyTo || null
+  };
+}
+async function parseZohoWebhookRequest(request) {
+  const ct = request.headers.get("content-type") || "";
+  if (ct.includes("application/json")) {
+    const json = await request.json();
+    if (Array.isArray(json)) {
+      return parseInboundEmailPayload(json[0]) ?? null;
+    }
+    const direct = parseInboundEmailPayload(json);
+    if (direct) return direct;
+    const nested = json.data ?? json.email;
+    return parseInboundEmailPayload(nested) ?? null;
+  }
+  if (ct.includes("application/x-www-form-urlencoded") || ct.includes("multipart/form-data")) {
+    const fd = await request.formData();
+    const map = {};
+    fd.forEach((v, k) => {
+      map[k] = typeof v === "string" ? v : v.name;
+    });
+    return parseInboundEmailPayload(map);
+  }
+  const text2 = await request.text();
+  if (!text2.trim()) return null;
+  try {
+    return parseInboundEmailPayload(JSON.parse(text2));
+  } catch {
+    return parseInboundEmailPayload({
+      fromAddress: text2.match(/From:\s*(.+)/i)?.[1],
+      subject: text2.match(/Subject:\s*(.+)/i)?.[1],
+      summary: text2
+    });
+  }
+}
+const LOOP_SENDERS = [
+  "mailer-daemon",
+  "postmaster",
+  "noreply",
+  "no-reply",
+  "donotreply"
+];
+const OUR_ADDRESSES = [
+  "hola@alarmaseniorsafe.cl",
+  "enriquecasadesign@gmail.com"
+];
+function shouldSkipAutoReply(mail) {
+  const from = mail.fromAddress.toLowerCase();
+  if (OUR_ADDRESSES.some((a) => from === a || from.endsWith(`<${a}>`))) {
+    return "own_address";
+  }
+  if (LOOP_SENDERS.some((p) => from.includes(p))) {
+    return "system_sender";
+  }
+  if (/^(re:|fw:|fwd:)\s*/i.test(mail.subject) && mail.bodyText.length < 20) {
+    return "empty_reply";
+  }
+  if (!mail.bodyText || mail.bodyText.length < 3) {
+    return "no_body";
+  }
+  const autoSubmitted = /auto-submitted|auto-replied|autoreply/i.test(mail.bodyText.slice(0, 200));
+  if (autoSubmitted) return "auto_message";
+  return null;
+}
+function verifyWebhookSecret(request) {
+  const expected = process.env.ZOHO_EMAIL_WEBHOOK_SECRET?.trim();
+  if (!expected) return true;
+  const header2 = request.headers.get("x-webhook-secret") || request.headers.get("x-zoho-webhook-secret") || request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+  const url = new URL(request.url);
+  const querySecret = url.searchParams.get("secret");
+  return header2 === expected || querySecret === expected;
+}
+function replySubject(original) {
+  const clean = original.replace(/^(re:\s*)+/i, "").trim();
+  return `Re: ${clean || "Consulta Senior Safe"}`;
+}
+const Route$n = createFileRoute("/api/public/zoho-email-webhook")({
+  server: {
+    handlers: {
+      GET: async () => new Response("Senior Safe Zoho email webhook OK", { status: 200 }),
+      POST: async ({ request }) => {
+        if (!verifyWebhookSecret(request)) {
+          return Response.json({ ok: false, error: "unauthorized" }, { status: 401 });
+        }
+        if (!getZohoSmtpConfig()) {
+          return Response.json(
+            { ok: false, error: "zoho_smtp_not_configured" },
+            { status: 503 }
+          );
+        }
+        let inbound;
+        try {
+          inbound = await parseZohoWebhookRequest(request);
+        } catch (e) {
+          console.error("[zoho-email-webhook] parse", e);
+          return Response.json({ ok: false, error: "invalid_payload" }, { status: 400 });
+        }
+        if (!inbound) {
+          return Response.json({ ok: false, error: "empty_payload" }, { status: 400 });
+        }
+        const skip = shouldSkipAutoReply(inbound);
+        if (skip) {
+          return Response.json({ ok: true, skipped: skip });
+        }
+        const to = inbound.fromAddress;
+        const question = inbound.bodyText || `Consulta sin cuerpo. Asunto: ${inbound.subject}`;
+        let aiText;
+        try {
+          aiText = await generateSeniorSafeEmailReply(question, inbound.subject);
+        } catch (e) {
+          console.error("[zoho-email-webhook] ai", e);
+          aiText = `Gracias por escribir a Senior Safe. Hemos recibido su mensaje. Para asistencia sobre contratación, instalación o funcionamiento, visite https://alarmaseniorsafe.cl o responda a ${SENIOR_SAFE_SUPPORT_EMAIL}.`;
+        }
+        const textBody = aiText;
+        const htmlBody = wrapSupportHtmlReply(aiText, inbound.fromName ?? void 0);
+        const subject = replySubject(inbound.subject);
+        try {
+          await sendSupportEmailViaZoho({
+            to,
+            subject,
+            textBody,
+            htmlBody,
+            inReplyTo: inbound.messageId,
+            references: inbound.messageId
+          });
+        } catch (e) {
+          const errMsg = String(e?.message ?? e).slice(0, 500);
+          console.error("[zoho-email-webhook] smtp", e);
+          try {
+            await supabaseAdmin.from("email_send_log").insert({
+              template_name: "zoho_support_auto",
+              recipient_email: to,
+              status: "failed",
+              error_message: errMsg,
+              metadata: {
+                subject: inbound.subject,
+                inbound_message_id: inbound.messageId
+              }
+            });
+          } catch {
+          }
+          return Response.json({ ok: false, error: "smtp_failed" }, { status: 502 });
+        }
+        try {
+          await supabaseAdmin.from("email_send_log").insert({
+            template_name: "zoho_support_auto",
+            recipient_email: to,
+            status: "sent",
+            metadata: {
+              subject,
+              inbound_subject: inbound.subject,
+              inbound_message_id: inbound.messageId,
+              bcc_audit: process.env.ZOHO_SMTP_BCC || "enriquecasadesign@gmail.com"
+            }
+          });
+        } catch {
+        }
+        try {
+          await supabaseAdmin.from("alert_logs").insert({
+            event_type: "support_email_auto_reply",
+            status: "sent",
+            metadata: {
+              to,
+              subject,
+              inbound_subject: inbound.subject
+            }
+          });
+        } catch {
+        }
+        return Response.json({
+          ok: true,
+          replied_to: to,
+          subject
+        });
+      }
+    }
+  }
+});
+const bodySchema$7 = objectType({
+  signupId: stringType().uuid(),
+  accessToken: seniorAccessTokenSchema,
+  pinHash: stringType().min(16).max(256)
+});
+const Route$m = createFileRoute("/api/public/verify-pin")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        let body;
+        try {
+          body = await request.json();
+        } catch {
+          return Response.json({ ok: false, configured: false, error: "invalid_json" }, { status: 400 });
+        }
+        const parsed = bodySchema$7.safeParse(body);
+        if (!parsed.success) {
+          return Response.json({ ok: false, configured: false, error: "invalid_payload" }, { status: 400 });
+        }
+        try {
+          await assertSeniorAccess(parsed.data.signupId, parsed.data.accessToken);
+        } catch (e) {
+          const message = e instanceof Error ? e.message : "unauthorized";
+          return Response.json({ ok: false, configured: false, error: message }, { status: 401 });
+        }
+        const stored = await readStoredPinHash(parsed.data.signupId);
+        if (!stored) {
+          return Response.json({ ok: false, configured: false });
+        }
+        return Response.json({
+          ok: stored === parsed.data.pinHash,
+          configured: true
+        });
+      }
+    }
+  }
+});
+const bodySchema$6 = objectType({
+  code: stringType().trim().min(2).max(64),
+  plan: planKeySchema.transform(normalizePlanKey),
+  periodo: periodoSchema,
+  email: stringType().trim().email().max(255).optional().or(literalType(""))
+});
+const Route$l = createFileRoute("/api/public/validate-discount")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        let body;
+        try {
+          body = await request.json();
+        } catch {
+          return Response.json({ ok: false, error: "JSON inválido." }, { status: 400 });
+        }
+        const parsed = bodySchema$6.safeParse(body);
+        if (!parsed.success) {
+          return Response.json({ ok: false, error: "Datos inválidos." }, { status: 400 });
+        }
+        try {
+          const resolved = await resolveDiscountForCheckout(
+            parsed.data.code,
+            parsed.data.plan,
+            parsed.data.periodo,
+            { email: parsed.data.email || void 0 }
+          );
+          return Response.json({
+            ok: true,
+            discount: toPublicDiscountPreview(resolved)
+          });
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "No pudimos validar el código de convenio.";
+          return Response.json({ ok: false, error: message }, { status: 400 });
+        }
+      }
+    }
+  }
+});
+function phoneLast9(phone) {
+  return phone.replace(/\D/g, "").slice(-9);
+}
+function isEmergencyAlertAckMessage(body) {
+  const t = (body || "").trim();
+  if (!t) return false;
+  const upper = t.toUpperCase().normalize("NFD").replace(new RegExp("\\p{M}", "gu"), "");
+  if (/FAMILIA\/ACK\/[A-Z0-9]+/i.test(t)) return true;
+  if (/\/a\/[a-f0-9]{12,}/i.test(t)) return true;
+  if (/\b[A-F0-9]{12,48}\b/i.test(t) && t.length < 80) return true;
+  return /^(SI|SÍ|OK|OKEY|LISTO|VISTO|ACEPTO|CONFIRMO|CONFIRMADO|RECIBIDO|RECIBIDA|RECIBI|YA RECIBI|YA LO VI|ALERTA RECIBIDA|CONFIRMACION)\b/.test(
+    upper
+  ) || /\b(CONFIRMO QUE RECIBI|YA RECIBI LA ALERTA|RECIBI LA ALERTA|VI LA ALERTA)\b/.test(upper);
+}
+function extractAckToken(body) {
+  const withId = body.match(/\/a\/([0-9a-f-]{36})\/([a-z0-9]+)/i);
+  if (withId?.[1] && withId?.[2]) {
+    return { alertId: withId[1], token: normalizeAckToken(withId[2]) };
+  }
+  const short = body.match(/\/a\/([a-z0-9]+)/i);
+  if (short?.[1] && short[1].length >= 12) return { token: normalizeAckToken(short[1]) };
+  const api = body.match(/ack-alert\/([a-z0-9]+)/i);
+  if (api?.[1]) return { token: normalizeAckToken(api[1]) };
+  const legacy = body.match(/familia\/ack\/([a-z0-9]+)/i);
+  if (legacy?.[1]) return { token: normalizeAckToken(legacy[1]) };
+  const bare = body.trim().match(/\b([a-f0-9]{12,48})\b/i);
+  return bare?.[1] ? { token: normalizeAckToken(bare[1]) } : null;
+}
+async function ackByToken(parsed, guardianName) {
+  try {
+    const result = parsed.alertId ? await acknowledgeAlertByIdAndToken(parsed.alertId, parsed.token, guardianName ?? void 0) : await acknowledgeAlertByToken(parsed.token, guardianName ?? void 0);
+    const seniorName = await fetchSeniorFirstName(result.contract_signup_id);
+    if (result.already) {
+      return "Senior Safe 🛡️\n✅ Esta alerta ya había sido confirmada. Gracias.";
+    }
+    return `Senior Safe 🛡️
+✅ Alerta confirmada. Le avisaremos a ${seniorName} que ya recibiste la notificación. Gracias.`;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "";
+    if (msg.includes("expiró")) {
+      return "Senior Safe 🛡️\nEl link de confirmación expiró. Si aún necesitas ayuda, contacta al senior directamente.";
+    }
+    return null;
+  }
+}
+async function fetchSeniorFirstName(signupId) {
+  if (!signupId) return "el usuario";
+  const { data } = await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE$1).select("nombre").eq("id", signupId).maybeSingle();
+  return data?.nombre?.split(" ")?.[0] ?? "el usuario";
+}
+async function findGuardianByPhone(phone) {
+  const last9 = phoneLast9(phone);
+  if (last9.length < 8) return null;
+  const { data: contacts } = await supabaseAdmin.from("emergency_contacts").select("id, nombre, contract_signup_id, telefono, whatsapp").eq("activo", true).limit(200);
+  return (contacts ?? []).find((c) => {
+    const t = (c.telefono || "").replace(/\D/g, "");
+    const w = (c.whatsapp || c.telefono || "").replace(/\D/g, "");
+    return t.endsWith(last9) || w.endsWith(last9);
+  }) ?? null;
+}
+async function processWhatsAppAlertAck(phone, body, options) {
+  const parsed = extractAckToken(body);
+  if (parsed) {
+    const guardian2 = await findGuardianByPhone(phone);
+    return ackByToken(parsed, guardian2?.nombre ?? null);
+  }
+  if (!options?.forceAck && !isEmergencyAlertAckMessage(body)) return null;
+  const guardian = await findGuardianByPhone(phone);
+  if (!guardian) return null;
+  const { data: alert } = await supabaseAdmin.from("alert_logs").select("id, acknowledged_at, acknowledgement_expires_at, contract_signup_id, created_at").eq("contract_signup_id", guardian.contract_signup_id).eq("event_type", "emergency_pressed").is("acknowledged_at", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  if (!alert) {
+    return "Senior Safe 🛡️\nNo hay alertas de emergencia pendientes por confirmar desde tu número. Si necesitas ayuda con el servicio, escribe tu consulta.";
+  }
+  if (alert.acknowledgement_expires_at && new Date(alert.acknowledgement_expires_at).getTime() < Date.now()) {
+    return "Senior Safe 🛡️\nLa ventana de confirmación de esta alerta expiró. Por favor contacta al usuario directamente.";
+  }
+  await supabaseAdmin.from("alert_logs").update({
+    acknowledged_at: (/* @__PURE__ */ new Date()).toISOString(),
+    acknowledgement_by_name: guardian.nombre?.slice(0, 120) ?? null
+  }).eq("id", alert.id);
+  const seniorName = await fetchSeniorFirstName(guardian.contract_signup_id);
+  const first = guardian.nombre?.split(" ")?.[0] ?? "Guardián";
+  return `Senior Safe 🛡️
+✅ Gracias ${first}, confirmamos que recibiste la alerta de ${seniorName}. Le informaremos que ya estás al tanto.`;
+}
+function inAppGuideForStep(step, signupId) {
+  switch (step) {
+    case "pending":
+    case "paid":
+      return {
+        title: "Instala la app",
+        body: "Abre el enlace de instalación en el celular del adulto mayor. Si no lo tienes, revisa tu correo o WhatsApp.",
+        cta: signupId ? "Abrir enlace de instalación" : void 0
+      };
+    case "install_link_sent":
+      return {
+        title: "Siguiente: instalar",
+        body: "Abre el enlace que te enviamos e instala Senior Safe en el teléfono. Luego vuelve aquí.",
+        cta: signupId ? "Ver enlace de instalación" : void 0
+      };
+    case "whatsapp_linked":
+      return {
+        title: "Abre la app instalada",
+        body: "Entra a Senior Safe desde el ícono en tu teléfono (no desde el navegador)."
+      };
+    case "app_opened":
+      return {
+        title: "Presiona el botón rojo una vez",
+        body: "La primera pulsación activa ubicación y WhatsApp. No avisa a tu familia."
+      };
+    case "ready":
+      return null;
+    default:
+      return null;
+  }
+}
+function installGuideActionUrl(signupId) {
+  return buildPostPaymentInstallUrl(signupId);
+}
+function whatsAppGuideForStep(step, signupId, firstName) {
+  const installUrl = buildPostPaymentInstallUrl(signupId);
+  switch (step) {
+    case "paid":
+    case "install_link_sent":
+      return `Senior Safe 🛡️
+Hola ${firstName}, tu plan está activo.
+
+1) Instala la app en el celular del adulto mayor:
+${installUrl}
+
+2) Responde cualquier mensaje por aquí para vincular alertas.
+
+Ayuda: hola@alarmaseniorsafe.cl`;
+    case "whatsapp_linked":
+      return `Senior Safe 🛡️
+✅ WhatsApp vinculado, ${firstName}.
+
+Ahora abre la app instalada en el teléfono (ícono Senior Safe).
+Guía: ${PRODUCTION_SITE_URL}/guia`;
+    case "app_opened":
+      return `Senior Safe 🛡️
+${firstName}, ya casi listo.
+
+Presiona el botón rojo UNA vez dentro de la app.
+Eso activa ubicación y WhatsApp sin enviar alertas.
+
+Después el botón funcionará en emergencias reales.`;
+    case "ready":
+      return `Senior Safe 🛡️
+✅ Todo listo, ${firstName}. Tu botón de emergencia ya puede avisar a tu familia.
+En unos días te recordaremos activar el sensor de caídas (opcional).`;
+    default:
+      return null;
+  }
+}
+function isCommercialInbox(recipientClean, commercialClean) {
+  if (!recipientClean || !commercialClean) return false;
+  if (recipientClean === commercialClean) return true;
+  const recipientDigits = recipientClean.replace(/\D/g, "");
+  const commercialDigits = commercialClean.replace(/\D/g, "");
+  return recipientDigits === commercialDigits || recipientDigits.endsWith(commercialDigits.slice(-9)) || commercialDigits.endsWith(recipientDigits.slice(-9));
+}
+async function replyCommercial(phone, message) {
+  await saveWhatsAppInboxMessage({
+    inbox: "commercial",
+    direction: "outbound",
+    peerPhone: phone,
+    body: message
+  });
+  return twimlMessage(message);
+}
+async function handleCommercialInbox(phone, rawBody, textUpper) {
+  await saveWhatsAppInboxMessage({
+    inbox: "commercial",
+    direction: "inbound",
+    peerPhone: phone,
+    body: rawBody
+  });
+  if (isOptOutMessage(textUpper)) {
+    return replyCommercial(
+      phone,
+      "Recibido. No te enviaremos más mensajes por aquí. Para consultas sobre Senior Safe, escríbenos cuando quieras."
+    );
+  }
+  const signupForAuto = await findSignupForActivation(phone);
+  if (signupForAuto && isSignupPaymentComplete(signupForAuto.payment_status) && !signupForAuto.whatsapp_activated) {
+    const activated = await markSignupWhatsAppActivated(signupForAuto.id);
+    if (activated.ok) {
+      const progress = await readInstallProgress(signupForAuto.id);
+      const first = signupForAuto.nombre?.split(/\s+/)?.[0] ?? "usuario";
+      const guide = whatsAppGuideForStep(
+        progress?.installStep ?? "whatsapp_linked",
+        signupForAuto.id,
+        first
+      );
+      if (guide) return replyCommercial(phone, guide);
+    }
+  }
+  if (isActivationKeyword(rawBody)) {
+    const activationReply = await processWhatsAppActivation(phone, rawBody);
+    if (activationReply) return replyCommercial(phone, activationReply);
+  }
+  if (rawBody.length >= 2) {
+    try {
+      const aiReply = await generateSeniorSafeWhatsAppReply(rawBody, phone);
+      return replyCommercial(phone, aiReply);
+    } catch (e) {
+      console.error("[whatsapp-webhook] commercial ai", e);
+    }
+  }
+  return replyCommercial(
+    phone,
+    `Senior Safe 🛡️
+
+¡Hola! Pregúntanos por el Plan Único ($${formatPlanPrice(PLAN.monthly)} USD/mes), instalación o cómo funciona.
+Prueba el simulador S.O.S: ${SENIOR_SAFE_SOS_SIMULATOR_URL}
+También puedes escribir a hola@alarmaseniorsafe.cl`
+  );
+}
+const Route$k = createFileRoute("/api/public/twilio-whatsapp-webhook")({
+  server: {
+    handlers: {
+      GET: async () => new Response("Senior Safe WhatsApp webhook OK", { status: 200 }),
+      POST: async ({ request }) => {
+        let from = "";
+        let to = "";
+        let body = "";
+        try {
+          const parsed = await parseTwilioInbound(request);
+          from = parsed.from;
+          to = parsed.to;
+          body = parsed.body;
+          const cleanString = (num) => num.replace(/^whatsapp:/i, "").replace(/^\+/, "").trim();
+          const recipientClean = cleanString(parsed.to || "");
+          const commercialClean = cleanString(twilioWhatsappCommercialFrom());
+          console.log("[DIAGNÓSTICO SENIOR SAFE]", {
+            recipientClean,
+            commercialClean,
+            rawTo: parsed.to
+          });
+          if (isCommercialInbox(recipientClean, commercialClean)) {
+            const phone2 = normalizeTwilioPhone(from);
+            const rawBody2 = (body || "").trim();
+            const textUpper2 = rawBody2.toUpperCase();
+            await logInbound("whatsapp_commercial_inbound", {
+              from,
+              to,
+              body: rawBody2,
+              phone: phone2,
+              recipientClean,
+              commercialClean
+            });
+            return handleCommercialInbox(phone2, rawBody2, textUpper2);
+          }
+        } catch {
+          return twimlMessage("No pudimos procesar tu mensaje. Intenta nuevamente.");
+        }
+        const phone = normalizeTwilioPhone(from);
+        const rawBody = (body || "").trim();
+        const textUpper = rawBody.toUpperCase();
+        await logInbound("whatsapp_inbound", { from, to, body: rawBody, phone, textUpper });
+        if (isOptOutMessage(textUpper)) {
+          return twimlMessage(
+            "Recibido. No te enviaremos más mensajes por aquí. Para reactivar alertas, escribe cualquier mensaje."
+          );
+        }
+        if (rawBody.length >= 1) {
+          await tryAutoActivatePaidSignup(phone);
+        }
+        if (isEmergencyAlertAckMessage(rawBody)) {
+          try {
+            const ackReply = await processWhatsAppAlertAck(phone, rawBody);
+            if (ackReply) return twimlMessage(ackReply);
+          } catch (e) {
+            console.error("[whatsapp-webhook] ack", e);
+            return twimlMessage(
+              "Senior Safe 🛡️\nRecibimos tu confirmación pero hubo un error al registrarla. Intenta de nuevo o usa el link del mensaje de alerta."
+            );
+          }
+        }
+        const signup = await findSignupByPhone(phone);
+        if (isSosMessage(textUpper)) {
+          if (!signup) {
+            return twimlMessage(
+              "Senior Safe 🛡️\nRecibimos tu SOS pero no encontramos tu cuenta. Verifica que el número coincida con el registrado al contratar."
+            );
+          }
+          try {
+            const { sendEmergencyAlert } = await import("./emergency-alert.functions-C9HDco_8.mjs");
+            const { issueSeniorAccessToken } = await import("./senior-access-auth-Bmk7iyGS.mjs").then((n) => n.f);
+            const accessToken = await issueSeniorAccessToken(signup.id);
+            await sendEmergencyAlert({ data: { signupId: signup.id, gps: null, accessToken } });
+          } catch (e) {
+            console.error("[whatsapp-webhook] sos", e);
+            try {
+              await supabaseAdmin.from("alert_logs").insert({
+                contract_signup_id: signup.id,
+                event_type: "whatsapp_sos_failed",
+                status: "failed",
+                error_message: String(e?.message ?? e).slice(0, 500)
+              });
+            } catch {
+            }
+            return twimlMessage(
+              "Senior Safe 🛡️\nNo pudimos enviar la alerta en este momento. Llama al 131 si es urgente y contacta a tus guardianes."
+            );
+          }
+          const first = signup.nombre?.split(" ")?.[0] ?? "usuario";
+          return twimlMessage(
+            `Senior Safe 🛡️
+✅ Alerta enviada, ${first}. Tus guardianes están siendo notificados por llamada, WhatsApp y SMS.`
+          );
+        }
+        if (isWhatsAppActivationMessage(textUpper)) {
+          const activationReply = await processWhatsAppActivation(phone, rawBody);
+          if (activationReply) return twimlMessage(activationReply);
+        }
+        if (rawBody.length >= 2) {
+          try {
+            const route = await classifyWhatsAppInboundMessage(rawBody);
+            if (route === "EMERGENCY_ACK") {
+              const ackReply = await processWhatsAppAlertAck(phone, rawBody, { forceAck: true });
+              const noPendingAlert = ackReply?.includes("No hay alertas de emergencia pendientes") ?? false;
+              if (ackReply && !noPendingAlert) return twimlMessage(ackReply);
+              if (!ackReply && !noPendingAlert) {
+                return twimlMessage(
+                  "Senior Safe 🛡️\nRecibimos tu mensaje. Si respondes a una alerta activa, verifica que tu número esté registrado como guardián en la familia."
+                );
+              }
+            }
+            const aiReply = await generateSeniorSafeWhatsAppReply(rawBody, phone);
+            return twimlMessage(aiReply);
+          } catch (e) {
+            console.error("[whatsapp-webhook] ai", e);
+          }
+        }
+        return twimlMessage(
+          "Senior Safe 🛡️\n\nResponde:\n• Cualquier mensaje — vincular alertas WhatsApp (tras contratar)\n• SOS — emergencia real\n• O escribe tu pregunta sobre el servicio"
+        );
+      }
+    }
+  }
+});
+function voiceTwiml(text2) {
+  return new Response(buildEmergencyVoiceTwiml(text2), {
+    status: 200,
+    headers: { "Content-Type": "text/xml; charset=utf-8" }
+  });
+}
+function normalize$1(phone) {
+  return (phone || "").replace(/[^\d+]/g, "");
+}
+async function findUserByPhone$1(phone) {
+  const last9 = phone.replace(/\D/g, "").slice(-9);
+  if (!last9) return null;
+  const { data: users } = await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE$1).select("id, nombre, telefono").limit(200);
+  return (users ?? []).find((u) => {
+    const t = (u.telefono || "").replace(/\D/g, "");
+    return t.endsWith(last9);
+  }) ?? null;
+}
+const Route$j = createFileRoute("/api/public/twilio-voice-webhook")({
+  server: {
+    handlers: {
+      GET: async () => new Response("Senior Safe Voice webhook OK", { status: 200 }),
+      POST: async ({ request }) => {
+        let from = "";
+        let callSid = "";
+        try {
+          const ct = request.headers.get("content-type") || "";
+          if (ct.includes("application/json")) {
+            const j = await request.json();
+            from = String(j.From ?? "");
+            callSid = String(j.CallSid ?? "");
+          } else {
+            const params = new URLSearchParams(await request.text());
+            from = params.get("From") ?? "";
+            callSid = params.get("CallSid") ?? "";
+          }
+        } catch {
+        }
+        const phone = normalize$1(from);
+        const user = await findUserByPhone$1(phone);
+        try {
+          await supabaseAdmin.from("alert_logs").insert({
+            contract_signup_id: user?.id ?? null,
+            event_type: "voice_inbound",
+            status: "received",
+            metadata: { from, phone, callSid, matched: !!user }
+          });
+        } catch {
+        }
+        if (!user) {
+          return voiceTwiml(
+            "Senior Safe. Este número solo recibe llamadas de usuarios registrados. Si necesita ayuda, llame al uno cuatro nueve."
+          );
+        }
+        try {
+          const { sendEmergencyAlert } = await import("./emergency-alert.functions-C9HDco_8.mjs");
+          const { issueSeniorAccessToken } = await import("./senior-access-auth-Bmk7iyGS.mjs").then((n) => n.f);
+          const accessToken = await issueSeniorAccessToken(user.id);
+          await sendEmergencyAlert({ data: { signupId: user.id, gps: null, accessToken } });
+        } catch (e) {
+          try {
+            await supabaseAdmin.from("alert_logs").insert({
+              contract_signup_id: user.id,
+              event_type: "voice_sos_failed",
+              status: "failed",
+              error_message: String(e?.message ?? e).slice(0, 500)
+            });
+          } catch {
+          }
+        }
+        const nombre = (user.nombre || "").split(" ")[0] || "";
+        return voiceTwiml(
+          `Senior Safe. Hola ${nombre}. Alerta de emergencia recibida. Sus guardianes están siendo notificados ahora. Mantenga la calma. Repito: sus guardianes están siendo notificados.`
+        );
+      }
+    }
+  }
+});
+const Route$i = createFileRoute("/api/public/twilio-status-callback")({
+  server: {
+    handlers: {
+      GET: async () => new Response("Senior Safe Twilio status callback OK", { status: 200 }),
+      POST: async ({ request }) => {
+        const url = new URL(request.url);
+        const alertId = url.searchParams.get("alertId");
+        const channel = url.searchParams.get("channel");
+        let payload = {};
+        try {
+          const ct = request.headers.get("content-type") || "";
+          if (ct.includes("application/json")) {
+            payload = await request.json();
+          } else {
+            const params = new URLSearchParams(await request.text());
+            params.forEach((v, k) => payload[k] = v);
+          }
+        } catch {
+        }
+        const sid = payload.MessageSid || payload.CallSid || null;
+        const status = payload.MessageStatus || payload.CallStatus || payload.SmsStatus || "unknown";
+        const errorCode = payload.ErrorCode || null;
+        const to = payload.To || null;
+        const from = payload.From || null;
+        const kind = payload.CallSid ? "call" : "message";
+        if (alertId && channel === "whatsapp" && status === "read") {
+          try {
+            const { data: existing } = await supabaseAdmin.from("alert_logs").select("metadata").eq("id", alertId).maybeSingle();
+            const prevMeta = existing?.metadata ?? {};
+            if (!prevMeta.whatsapp_read_at) {
+              await supabaseAdmin.from("alert_logs").update({
+                metadata: {
+                  ...prevMeta,
+                  whatsapp_read_at: (/* @__PURE__ */ new Date()).toISOString(),
+                  whatsapp_read_sid: sid,
+                  whatsapp_read_to: to
+                }
+              }).eq("id", alertId);
+            }
+          } catch {
+          }
+        }
+        try {
+          await supabaseAdmin.from("alert_logs").insert({
+            contract_signup_id: null,
+            event_type: `twilio_${kind}_status`,
+            status,
+            error_message: errorCode ? `Twilio ErrorCode ${errorCode}` : null,
+            metadata: { sid, status, errorCode, to, from, kind, alertId, channel, raw: payload }
+          });
+        } catch {
+        }
+        return new Response("ok", { status: 200 });
+      }
+    }
+  }
+});
+function normalize(phone) {
+  return (phone || "").replace(/^whatsapp:/i, "").replace(/[^\d+]/g, "");
+}
+function twiml(message) {
+  const xml = `<?xml version="1.0" encoding="UTF-8"?><Response><Message>${message.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</Message></Response>`;
+  return new Response(xml, {
+    status: 200,
+    headers: { "Content-Type": "text/xml; charset=utf-8" }
+  });
+}
+async function findUserByPhone(phone) {
+  const last9 = phone.replace(/\D/g, "").slice(-9);
+  if (!last9) return null;
+  const { data: users } = await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE).select("id, nombre, telefono").limit(200);
+  return (users ?? []).find((u) => {
+    const t = (u.telefono || "").replace(/\D/g, "");
+    return t.endsWith(last9);
+  }) ?? null;
+}
+const Route$h = createFileRoute("/api/public/twilio-sms-webhook")({
+  server: {
+    handlers: {
+      GET: async () => new Response("Senior Safe SMS webhook OK", { status: 200 }),
+      POST: async ({ request }) => {
+        let from = "";
+        let body = "";
+        try {
+          const ct = request.headers.get("content-type") || "";
+          if (ct.includes("application/json")) {
+            const j = await request.json();
+            from = String(j.From ?? "");
+            body = String(j.Body ?? "");
+          } else {
+            const params = new URLSearchParams(await request.text());
+            from = params.get("From") ?? "";
+            body = params.get("Body") ?? "";
+          }
+        } catch {
+          return twiml("No pudimos procesar tu mensaje. Intenta nuevamente.");
+        }
+        const phone = normalize(from);
+        const text2 = (body || "").trim().toUpperCase();
+        try {
+          await supabaseAdmin.from("alert_logs").insert({
+            event_type: "sms_inbound",
+            status: "received",
+            metadata: { from, body, phone, text: text2 }
+          });
+        } catch {
+        }
+        if (/^(STOP|BAJA|CANCELAR|SALIR)$/.test(text2)) {
+          return twiml("Recibido. No te enviaremos más mensajes. Para reactivar, escribe cualquier mensaje.");
+        }
+        if (body.trim().length >= 1) {
+          await tryAutoActivatePaidSignup(phone);
+        }
+        const user = await findUserByPhone(phone);
+        if (/\bSOS\b|EMERGENCIA|AYUDA/.test(text2)) {
+          if (!user) {
+            return twiml("Senior Safe 🛡️\nRecibimos tu SOS pero no encontramos tu cuenta. Verifica el número registrado en la app.");
+          }
+          try {
+            const { sendEmergencyAlert } = await import("./emergency-alert.functions-C9HDco_8.mjs");
+            const { issueSeniorAccessToken } = await import("./senior-access-auth-Bmk7iyGS.mjs").then((n) => n.f);
+            const accessToken = await issueSeniorAccessToken(user.id);
+            await sendEmergencyAlert({ data: { signupId: user.id, gps: null, accessToken } });
+          } catch (e) {
+            try {
+              await supabaseAdmin.from("alert_logs").insert({
+                contract_signup_id: user.id,
+                event_type: "sms_sos_failed",
+                status: "failed",
+                error_message: String(e?.message ?? e).slice(0, 500)
+              });
+            } catch {
+            }
+          }
+          return twiml(`Senior Safe 🛡️
+✅ Alerta enviada, ${user.nombre.split(" ")[0]}. Tus guardianes ya fueron notificados.`);
+        }
+        if (text2.includes("ACTIVAR")) {
+          const activationReply = await processWhatsAppActivation(phone, body);
+          if (activationReply) return twiml(activationReply);
+        }
+        return twiml(
+          "Senior Safe 🛡️\nResponde:\n• Cualquier mensaje — vincular alertas (tras contratar)\n• SOS — para enviar emergencia\n• BAJA — para detener mensajes"
+        );
+      }
+    }
+  }
+});
+function isAcknowledgedForCall(row) {
+  if (!row) return false;
+  if (row.acknowledged_at) return true;
+  const meta = row.metadata ?? {};
+  return typeof meta.acknowledged_at === "string" && meta.acknowledged_at.length > 0;
+}
+async function loadAlertVoiceContext(alertId) {
+  const { data: alert } = await supabaseAdmin.from("alert_logs").select("id, contract_signup_id, acknowledged_at, metadata").eq("id", alertId).maybeSingle();
+  const row = alert ?? null;
+  if (!row) return { alert: null, seniorName: "el usuario", category: null };
+  const meta = row.metadata ?? {};
+  const categoryRaw = meta.emergency_category;
+  const category = typeof categoryRaw === "string" ? categoryRaw : null;
+  const { data: user } = await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE$1).select("nombre").eq("id", row.contract_signup_id).maybeSingle();
+  return {
+    alert: row,
+    seniorName: typeof user?.nombre === "string" && user.nombre.trim() ? user.nombre.trim() : "el usuario",
+    category
+  };
+}
+async function handleEmergencyCall(request) {
+  const alertId = new URL(request.url).searchParams.get("alertId")?.trim();
+  if (!alertId) {
+    return new Response(buildEmergencyVoiceTwimlHangup(), {
+      status: 200,
+      headers: { "Content-Type": "text/xml; charset=utf-8" }
+    });
+  }
+  if (await isAlertCancelled(alertId)) {
+    return new Response(
+      buildEmergencyVoiceTwiml(
+        "La alerta de emergencia fue cancelada por el usuario. No se requiere acción."
+      ),
+      {
+        status: 200,
+        headers: { "Content-Type": "text/xml; charset=utf-8" }
+      }
+    );
+  }
+  const ctx = await loadAlertVoiceContext(alertId);
+  if (ctx.alert && isAcknowledgedForCall(ctx.alert)) {
+    return new Response(
+      buildEmergencyVoiceTwiml(
+        "La alerta de emergencia ya fue confirmada por un guardián. Gracias."
+      ),
+      {
+        status: 200,
+        headers: { "Content-Type": "text/xml; charset=utf-8" }
+      }
+    );
+  }
+  const text2 = buildEmergencyVoiceMessage(ctx.seniorName, ctx.category);
+  return new Response(buildEmergencyVoiceTwiml(text2), {
+    status: 200,
+    headers: { "Content-Type": "text/xml; charset=utf-8" }
+  });
+}
+const Route$g = createFileRoute("/api/public/twilio-emergency-call")({
+  server: {
+    handlers: {
+      GET: async ({ request }) => handleEmergencyCall(request),
+      POST: async ({ request }) => handleEmergencyCall(request)
+    }
+  }
+});
+objectType({
+  signupId: stringType().uuid()
+});
+const Route$f = createFileRoute("/api/public/send-welcome-whatsapp")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        process.env.SUPABASE_SERVICE_ROLE_KEY;
+        {
+          return Response.json({ error: "Server config error" }, { status: 500 });
+        }
+      }
+    }
+  }
+});
+const Route$e = createFileRoute("/api/public/send-welcome-trial")({
+  server: {
+    handlers: {
+      POST: async () => Response.json(
+        { error: "trial_disabled", message: "Prueba gratuita deshabilitada. Usa /checkout con Webpay." },
+        { status: 410 }
+      ),
+      GET: async () => new Response("Senior Safe welcome-trial endpoint disabled", { status: 410 })
+    }
+  }
+});
+const bodySchema$5 = objectType({
+  signupId: stringType().uuid(),
+  accessToken: seniorAccessTokenSchema,
+  pinHash: stringType().min(16).max(256)
+});
+const Route$d = createFileRoute("/api/public/save-pin")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        let body;
+        try {
+          body = await request.json();
+        } catch {
+          return Response.json({ ok: false, error: "invalid_json" }, { status: 400 });
+        }
+        const parsed = bodySchema$5.safeParse(body);
+        if (!parsed.success) {
+          return Response.json({ ok: false, error: "invalid_payload" }, { status: 400 });
+        }
+        try {
+          await assertSeniorAccess(parsed.data.signupId, parsed.data.accessToken);
+        } catch (e) {
+          const message = e instanceof Error ? e.message : "unauthorized";
+          return Response.json({ ok: false, error: message }, { status: 401 });
+        }
+        const result = await persistUserPin(parsed.data.signupId, parsed.data.pinHash);
+        return Response.json(result, { status: result.ok ? 200 : 500 });
+      }
+    }
+  }
+});
+const bodySchema$4 = objectType({
+  signupId: stringType().uuid(),
+  code: stringType().regex(/^\d{6}$/)
+});
+const Route$c = createFileRoute("/api/public/pin-reset-verify")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        let body;
+        try {
+          body = await request.json();
+        } catch {
+          return Response.json({ ok: false, error: "invalid_json" }, { status: 400 });
+        }
+        const parsed = bodySchema$4.safeParse(body);
+        if (!parsed.success) {
+          return Response.json({ ok: false, error: "invalid_payload" }, { status: 400 });
+        }
+        const result = await verifyPinResetCode(parsed.data.signupId, parsed.data.code);
+        return Response.json(result, { status: result.ok ? 200 : 400 });
+      }
+    }
+  }
+});
+const bodySchema$3 = objectType({
+  signupId: stringType().uuid()
+});
+const Route$b = createFileRoute("/api/public/pin-reset-request")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        let body;
+        try {
+          body = await request.json();
+        } catch {
+          return Response.json({ ok: false, error: "invalid_json" }, { status: 400 });
+        }
+        const parsed = bodySchema$3.safeParse(body);
+        if (!parsed.success) {
+          return Response.json({ ok: false, error: "invalid_payload" }, { status: 400 });
+        }
+        const result = await requestPinResetCode(parsed.data.signupId);
+        return Response.json(result, { status: result.ok ? 200 : 400 });
+      }
+    }
+  }
+});
+const bodySchema$2 = objectType({
+  email: stringType().email().max(255)
+});
+const Route$a = createFileRoute("/api/public/lookup-account")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        let body;
+        try {
+          body = await request.json();
+        } catch {
+          return Response.json(
+            { configured: false, user: null, contacts: [], pinConfigured: false, error: "invalid_json" },
+            { status: 400 }
+          );
+        }
+        const parsed = bodySchema$2.safeParse(body);
+        if (!parsed.success) {
+          return Response.json(
+            { configured: false, user: null, contacts: [], pinConfigured: false, error: "invalid_email" },
+            { status: 400 }
+          );
+        }
+        const result = await fetchAppConfiguration({ email: parsed.data.email });
+        const { accessToken: _token, ...safe } = result;
+        return Response.json(safe, { status: result.configured ? 200 : 404 });
+      }
+    }
+  }
+});
+const idSchema = stringType().uuid();
+const contactInput = objectType({
+  nombre: stringType().min(1).max(160),
+  telefono: stringType().min(4).max(40),
+  parentesco: stringType().min(1).max(60)
+});
+const authFields = {
+  signupId: idSchema,
+  accessToken: seniorAccessTokenSchema
+};
+const bodySchema$1 = discriminatedUnionType("action", [
+  objectType({ action: literalType("list"), ...authFields }),
+  objectType({ action: literalType("add"), ...authFields, contact: contactInput }),
+  objectType({
+    action: literalType("update"),
+    ...authFields,
+    id: idSchema,
+    contact: contactInput
+  }),
+  objectType({ action: literalType("delete"), ...authFields, id: idSchema })
+]);
+const Route$9 = createFileRoute("/api/public/family")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        let body;
+        try {
+          body = await request.json();
+        } catch {
+          return Response.json({ ok: false, error: "invalid_json" }, { status: 400 });
+        }
+        const parsed = bodySchema$1.safeParse(body);
+        if (!parsed.success) {
+          return Response.json({ ok: false, error: "invalid_payload" }, { status: 400 });
+        }
+        const data = parsed.data;
+        try {
+          await assertSeniorAccess(data.signupId, data.accessToken);
+        } catch (e) {
+          const message = e instanceof Error ? e.message : "unauthorized";
+          return Response.json({ ok: false, error: message }, { status: 401 });
+        }
+        if (data.action === "list") {
+          const contacts = await listFamilyContacts(data.signupId);
+          return Response.json({ ok: true, contacts });
+        }
+        if (data.action === "add") {
+          const result2 = await addFamilyContact(data.signupId, data.contact);
+          if (!result2.ok) {
+            return Response.json({ ok: false, error: result2.error }, { status: 400 });
+          }
+          return Response.json({ ok: true, contact: result2.contact });
+        }
+        if (data.action === "update") {
+          const result2 = await updateFamilyContact(data.signupId, data.id, data.contact);
+          if (!result2.ok) {
+            return Response.json({ ok: false, error: result2.error }, { status: 400 });
+          }
+          return Response.json({ ok: true, contact: result2.contact });
+        }
+        const result = await deleteFamilyContact(data.signupId, data.id);
+        if (!result.ok) {
+          return Response.json({ ok: false, error: result.error }, { status: 400 });
+        }
+        return Response.json({ ok: true });
+      }
+    }
+  }
+});
+const bodySchema = objectType({
+  email: stringType().email().optional(),
+  signupId: stringType().uuid().optional(),
+  force: booleanType().optional().default(true)
+});
+const Route$8 = createFileRoute("/api/cron/resend-install-instructions")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        const secret = request.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
+        const expected = process.env.CRON_SECRET?.trim();
+        if (!expected || secret !== expected) {
+          return Response.json({ ok: false, error: "unauthorized" }, { status: 401 });
+        }
+        let body;
+        try {
+          body = await request.json();
+        } catch {
+          return Response.json({ ok: false, error: "invalid_json" }, { status: 400 });
+        }
+        const parsed = bodySchema.safeParse(body);
+        if (!parsed.success) {
+          return Response.json({ ok: false, error: "invalid_payload" }, { status: 400 });
+        }
+        const { email, signupId, force } = parsed.data;
+        if (!email && !signupId) {
+          return Response.json({ ok: false, error: "email_or_signupId_required" }, { status: 400 });
+        }
+        let id = signupId ?? null;
+        if (!id && email) {
+          const { data } = await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE$1).select("id").ilike("email", email.trim()).order("created_at", { ascending: false }).limit(1).maybeSingle();
+          id = data?.id ?? null;
+        }
+        if (!id) {
+          return Response.json({ ok: false, error: "signup_not_found" }, { status: 404 });
+        }
+        if (force) {
+          const { data: signupRow } = await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE$1).select("payment_status, subscription_status, webpay_authorization_code, last_payment_at").eq("id", id).maybeSingle();
+          if (signupRow?.webpay_authorization_code && signupRow.payment_status !== "paid" && signupRow.payment_status !== "comp") {
+            await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE$1).update({
+              payment_status: "paid",
+              subscription_status: "active",
+              last_payment_at: signupRow.last_payment_at ?? (/* @__PURE__ */ new Date()).toISOString()
+            }).eq("id", id);
+          }
+        }
+        const result = await sendPostPaymentInstallNotifications(id, { force });
+        return Response.json({ ok: result.sent, signupId: id, ...result }, { status: result.sent ? 200 : 502 });
+      }
+    }
+  }
+});
+const Route$7 = createFileRoute("/api/cron/process-subscription-renewals")({
+  server: {
+    handlers: {
+      GET: async ({ request }) => {
+        if (!verifyCronSecret(request)) {
+          return new Response("Unauthorized", { status: 401 });
+        }
+        const result = await runSubscriptionRenewalJob();
+        return Response.json(result);
+      },
+      POST: async ({ request }) => {
+        if (!verifyCronSecret(request)) {
+          return new Response("Unauthorized", { status: 401 });
+        }
+        const result = await runSubscriptionRenewalJob();
+        return Response.json(result);
+      }
+    }
+  }
+});
+const Route$6 = createFileRoute("/a/$token/c")({
+  server: {
+    handlers: {
+      GET: async ({ params }) => {
+        try {
+          const result = await acknowledgeAlertByToken(params.token);
+          return new Response(
+            renderAckSuccessHtml({ token: sanitizeRouteToken(params.token), already: result.already }),
+            { status: 200, headers: { "content-type": "text/html; charset=utf-8" } }
+          );
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "Link inválido o expirado.";
+          return new Response(renderAckErrorHtml(message), {
+            status: 400,
+            headers: { "content-type": "text/html; charset=utf-8" }
+          });
+        }
+      },
+      POST: async ({ params, request }) => {
+        let nombre;
+        try {
+          const ct = request.headers.get("content-type") ?? "";
+          if (ct.includes("application/json")) {
+            const json = await request.json();
+            nombre = json.nombre?.trim();
+          } else {
+            const form = await request.formData();
+            nombre = String(form.get("nombre") ?? "").trim() || void 0;
+          }
+        } catch {
+        }
+        try {
+          const result = await acknowledgeAlertByToken(params.token, nombre);
+          return new Response(
+            renderAckSuccessHtml({
+              token: sanitizeRouteToken(params.token),
+              already: result.already,
+              nombre
+            }),
+            { status: 200, headers: { "content-type": "text/html; charset=utf-8" } }
+          );
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "Link inválido o expirado.";
+          return new Response(renderAckErrorHtml(message), {
+            status: 400,
+            headers: { "content-type": "text/html; charset=utf-8" }
+          });
+        }
+      }
+    }
+  }
+});
+const Route$5 = createFileRoute("/a/$alertId/$ackToken")({
+  server: {
+    handlers: {
+      GET: async ({ params, request }) => {
+        try {
+          const pathname = new URL(request.url).pathname;
+          const parts = pathname.split("/").filter(Boolean);
+          const alertId = parts[1] ?? params.alertId;
+          const ackToken = parts[2] ?? params.ackToken;
+          const result = await acknowledgeAlertByIdAndToken(alertId, ackToken);
+          return new Response(
+            renderAckSuccessHtml({
+              token: sanitizeRouteToken(ackToken),
+              already: result.already
+            }),
+            { status: 200, headers: { "content-type": "text/html; charset=utf-8" } }
+          );
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "Link inválido o expirado.";
+          return new Response(renderAckErrorHtml(message), {
+            status: 400,
+            headers: { "content-type": "text/html; charset=utf-8" }
+          });
+        }
+      },
+      POST: async ({ params, request }) => {
+        let nombre;
+        try {
+          const ct = request.headers.get("content-type") ?? "";
+          if (ct.includes("application/json")) {
+            const json = await request.json();
+            nombre = json.nombre?.trim();
+          } else {
+            const form = await request.formData();
+            nombre = String(form.get("nombre") ?? "").trim() || void 0;
+          }
+        } catch {
+        }
+        try {
+          const pathname = new URL(request.url).pathname;
+          const parts = pathname.split("/").filter(Boolean);
+          const alertId = parts[1] ?? params.alertId;
+          const ackToken = parts[2] ?? params.ackToken;
+          const result = await acknowledgeAlertByIdAndToken(
+            alertId,
+            ackToken,
+            nombre
+          );
+          return new Response(
+            renderAckSuccessHtml({
+              token: sanitizeRouteToken(ackToken),
+              already: result.already,
+              nombre
+            }),
+            { status: 200, headers: { "content-type": "text/html; charset=utf-8" } }
+          );
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "Link inválido o expirado.";
+          return new Response(renderAckErrorHtml(message), {
+            status: 400,
+            headers: { "content-type": "text/html; charset=utf-8" }
+          });
+        }
+      }
+    }
+  }
+});
+const SITE_NAME = "Senior Safe";
+const SUPPORT_PHONE = "+56 9 7140 4580";
+const APP_URL = "https://alarmaseniorsafe.cl/app";
+const TUTORIAL_URL = "https://alarmaseniorsafe.cl/tutorial";
+const WelcomeTrialEmail = ({ nombre, plan, trialDays = 7 }) => {
+  const firstName = nombre?.split(" ")[0] || "";
+  const planLabel = plan ? plan.charAt(0).toUpperCase() + plan.slice(1) : "Premium";
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Html, { lang: "es", dir: "ltr", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Head, {}),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Preview, { children: `Tu prueba gratuita de ${trialDays} días ya está activa` }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Body, { style: main, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Container, { style: container, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(Section, { style: header, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Heading, { style: brand, children: "Senior Safe" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Text, { style: tagline, children: "Cuidamos a quien más quieres" })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(Section, { style: card, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Heading, { style: h1, children: firstName ? `¡Bienvenido(a), ${firstName}!` : "¡Bienvenido(a) a Senior Safe!" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(Text, { style: text, children: [
+          "Tu prueba gratuita del ",
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("strong", { children: [
+            "plan ",
+            planLabel
+          ] }),
+          " ya está activa. Tienes ",
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("strong", { children: [
+            trialDays,
+            " días"
+          ] }),
+          " para configurar tu red de cuidado y proteger a tu ser querido sin ningún cobro."
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Section, { style: badge, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Text, { style: badgeText, children: [
+          "✅ Trial activo · ",
+          trialDays,
+          " días gratis"
+        ] }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Heading, { style: h2, children: "Próximos pasos" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(Text, { style: text, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "1." }),
+          " Activa tu cuenta y conecta a tus familiares.",
+          /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "2." }),
+          " Configura el botón de emergencia.",
+          /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "3." }),
+          " Realiza una prueba de alerta."
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Section, { style: ctaWrap, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { href: APP_URL, style: cta, children: "Activar mi cuenta" }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(Text, { style: small, children: [
+          "¿Necesitas ayuda? Mira el",
+          " ",
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { href: TUTORIAL_URL, style: link, children: "tutorial paso a paso" }),
+          " ",
+          "o escríbenos por WhatsApp al",
+          " ",
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { href: `https://wa.me/${SUPPORT_PHONE.replace(/\D/g, "")}`, style: link, children: SUPPORT_PHONE }),
+          "."
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Hr, { style: hr }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(Text, { style: footer, children: [
+          "Gracias por confiar en ",
+          SITE_NAME,
+          ". Estamos aquí para protegerte 24/7."
+        ] })
+      ] })
+    ] }) })
+  ] });
+};
+const template = {
+  component: WelcomeTrialEmail,
+  subject: (data) => data.nombre ? `¡Bienvenido(a) ${String(data.nombre).split(" ")[0]} a Senior Safe! Tu prueba gratuita está activa` : "¡Bienvenido(a) a Senior Safe! Tu prueba gratuita está activa",
+  displayName: "Bienvenida prueba gratuita",
+  previewData: { nombre: "María González", plan: "premium", trialDays: 7 }
+};
+const main = { backgroundColor: "#ffffff", fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif', margin: 0, padding: 0 };
+const container = { maxWidth: "560px", margin: "0 auto", padding: "32px 20px" };
+const header = { textAlign: "center", paddingBottom: "24px" };
+const brand = { fontSize: "24px", fontWeight: 700, color: "#0f4c5c", margin: 0, letterSpacing: "-0.02em" };
+const tagline = { fontSize: "13px", color: "#6b7280", margin: "4px 0 0", letterSpacing: "0.04em" };
+const card = { backgroundColor: "#ffffff", border: "1px solid #e5e7eb", borderRadius: "20px", padding: "32px 28px" };
+const h1 = { fontSize: "24px", fontWeight: 700, color: "#0f172a", margin: "0 0 12px", lineHeight: "1.2" };
+const h2 = { fontSize: "16px", fontWeight: 700, color: "#0f172a", margin: "24px 0 8px" };
+const text = { fontSize: "15px", color: "#374151", lineHeight: "1.6", margin: "0 0 12px" };
+const badge = { backgroundColor: "#ecfdf5", border: "1px solid #a7f3d0", borderRadius: "999px", padding: "10px 16px", textAlign: "center", margin: "20px 0" };
+const badgeText = { fontSize: "14px", fontWeight: 600, color: "#047857", margin: 0 };
+const ctaWrap = { textAlign: "center", margin: "24px 0 16px" };
+const cta = { backgroundColor: "#0f4c5c", color: "#ffffff", fontSize: "15px", fontWeight: 700, padding: "14px 28px", borderRadius: "999px", textDecoration: "none", display: "inline-block" };
+const link = { color: "#0f4c5c", textDecoration: "underline" };
+const small = { fontSize: "13px", color: "#6b7280", lineHeight: "1.6", margin: "12px 0 0", textAlign: "center" };
+const hr = { borderColor: "#e5e7eb", margin: "24px 0" };
+const footer = { fontSize: "12px", color: "#9ca3af", textAlign: "center", margin: 0 };
+const TEMPLATES = {
+  "welcome-trial": template
+};
+const Route$4 = createFileRoute("/lovable/email/transactional/send")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        process.env.SUPABASE_SERVICE_ROLE_KEY;
+        {
+          console.error("Missing required environment variables");
+          return Response.json(
+            { error: "Server configuration error" },
+            { status: 500 }
+          );
+        }
+      }
+    }
+  }
+});
+const Route$3 = createFileRoute("/lovable/email/transactional/preview")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        const apiKey = process.env.LOVABLE_API_KEY;
+        if (!apiKey) {
+          return Response.json(
+            { error: "Server configuration error" },
+            { status: 500 }
+          );
+        }
+        const authHeader = request.headers.get("Authorization");
+        const token = authHeader?.replace(/^Bearer\s+/i, "");
+        if (token !== apiKey) {
+          return Response.json({ error: "Unauthorized" }, { status: 401 });
+        }
+        const templateNames = Object.keys(TEMPLATES);
+        const results = [];
+        for (const name of templateNames) {
+          const entry = TEMPLATES[name];
+          const displayName = entry.displayName || name;
+          if (!entry.previewData) {
+            results.push({
+              templateName: name,
+              displayName,
+              subject: "",
+              html: "",
+              status: "preview_data_required"
+            });
+            continue;
+          }
+          try {
+            const html2 = await render(
+              reactExports.createElement(entry.component, entry.previewData)
+            );
+            const resolvedSubject = typeof entry.subject === "function" ? entry.subject(entry.previewData) : entry.subject;
+            results.push({
+              templateName: name,
+              displayName,
+              subject: resolvedSubject,
+              html: html2,
+              status: "ready"
+            });
+          } catch (err) {
+            console.error("Failed to render template for preview", {
+              template: name,
+              error: err
+            });
+            results.push({
+              templateName: name,
+              displayName,
+              subject: "",
+              html: "",
+              status: "render_failed",
+              errorMessage: err instanceof Error ? err.message : String(err)
+            });
+          }
+        }
+        return Response.json({ templates: results });
+      }
+    }
+  }
+});
+const Route$2 = createFileRoute("/lovable/email/queue/process")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        process.env.LOVABLE_API_KEY;
+        process.env.SUPABASE_SERVICE_ROLE_KEY;
+        {
+          console.error("Missing required environment variables");
+          return Response.json(
+            { error: "Server configuration error" },
+            { status: 500 }
+          );
+        }
+      }
+    }
+  }
+});
+const Route$1 = createFileRoute("/api/public/ack-alert/$token")({
+  server: {
+    handlers: {
+      GET: async ({ params, request }) => {
+        try {
+          const url = new URL(request.url);
+          const alertId = url.searchParams.get("alert") ?? url.searchParams.get("id");
+          const result = alertId ? await acknowledgeAlertByIdAndToken(alertId, params.token) : await acknowledgeAlertByToken(params.token);
+          return new Response(
+            renderAckSuccessHtml({ token: normalizeAckToken(params.token), already: result.already }),
+            { status: 200, headers: { "content-type": "text/html; charset=utf-8" } }
+          );
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "Link inválido o expirado.";
+          return new Response(renderAckErrorHtml(message), {
+            status: 400,
+            headers: { "content-type": "text/html; charset=utf-8" }
+          });
+        }
+      },
+      POST: async ({ params, request }) => {
+        let nombre;
+        try {
+          const ct = request.headers.get("content-type") ?? "";
+          if (ct.includes("application/json")) {
+            const json = await request.json();
+            nombre = json.nombre?.trim();
+          } else {
+            const form = await request.formData();
+            nombre = String(form.get("nombre") ?? "").trim() || void 0;
+          }
+        } catch {
+        }
+        try {
+          const result = await acknowledgeAlertByToken(params.token, nombre);
+          return new Response(
+            renderAckSuccessHtml({
+              token: normalizeAckToken(params.token),
+              already: result.already,
+              nombre
+            }),
+            { status: 200, headers: { "content-type": "text/html; charset=utf-8" } }
+          );
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "Link inválido o expirado.";
+          return new Response(renderAckErrorHtml(message), {
+            status: 400,
+            headers: { "content-type": "text/html; charset=utf-8" }
+          });
+        }
+      }
+    }
+  }
+});
+const Route = createFileRoute("/api/internal/emergency-cascade/$alertId")({
+  server: {
+    handlers: {
+      POST: async ({ request, params }) => {
+        if (!verifyCronSecret(request)) {
+          return new Response("Unauthorized", { status: 401 });
+        }
+        try {
+          await continueEmergencyCascade(params.alertId);
+          return Response.json({ ok: true });
+        } catch (err) {
+          console.error("[emergency-cascade]", params.alertId, err);
+          return Response.json(
+            { ok: false, error: err instanceof Error ? err.message : "cascade_failed" },
+            { status: 500 }
+          );
+        }
+      }
+    }
+  }
+});
+const UnsubscribeRoute = Route$1g.update({
+  id: "/unsubscribe",
+  path: "/unsubscribe",
+  getParentRoute: () => Route$1h
+});
+const UbicacionRoute = Route$1f.update({
+  id: "/ubicacion",
+  path: "/ubicacion",
+  getParentRoute: () => Route$1h
+});
+const TutorialRoute = Route$1e.update({
+  id: "/tutorial",
+  path: "/tutorial",
+  getParentRoute: () => Route$1h
+});
+const TerminosRoute = Route$1d.update({
+  id: "/terminos",
+  path: "/terminos",
+  getParentRoute: () => Route$1h
+});
+const SimuladorRoute = Route$1c.update({
+  id: "/simulador",
+  path: "/simulador",
+  getParentRoute: () => Route$1h
+});
+const PrivacidadRoute = Route$1b.update({
+  id: "/privacidad",
+  path: "/privacidad",
+  getParentRoute: () => Route$1h
+});
+const PlanesRoute = Route$1a.update({
+  id: "/planes",
+  path: "/planes",
+  getParentRoute: () => Route$1h
+});
+const NativeRoute = Route$19.update({
+  id: "/native",
+  path: "/native",
+  getParentRoute: () => Route$1h
+});
+const InstalarAppRoute = Route$18.update({
+  id: "/instalar-app",
+  path: "/instalar-app",
+  getParentRoute: () => Route$1h
+});
+const GuiaRoute = Route$17.update({
+  id: "/guia",
+  path: "/guia",
+  getParentRoute: () => Route$1h
+});
+const FlujoRoute = Route$16.update({
+  id: "/flujo",
+  path: "/flujo",
+  getParentRoute: () => Route$1h
+});
+const FamiliaRoute = Route$15.update({
+  id: "/familia",
+  path: "/familia",
+  getParentRoute: () => Route$1h
+});
+const DemoRoute = Route$14.update({
+  id: "/demo",
+  path: "/demo",
+  getParentRoute: () => Route$1h
+});
+const DashboardRoute = Route$13.update({
+  id: "/dashboard",
+  path: "/dashboard",
+  getParentRoute: () => Route$1h
+});
+const ComoFuncionaRoute = Route$12.update({
+  id: "/como-funciona",
+  path: "/como-funciona",
+  getParentRoute: () => Route$1h
+});
+const CheckoutRoute = Route$11.update({
+  id: "/checkout",
+  path: "/checkout",
+  getParentRoute: () => Route$1h
+});
+const BienvenidaPremiumRoute = Route$10.update({
+  id: "/bienvenida-premium",
+  path: "/bienvenida-premium",
+  getParentRoute: () => Route$1h
+});
+const AppRoute = Route$$.update({
+  id: "/app",
+  path: "/app",
+  getParentRoute: () => Route$1h
+});
+const AlarmaFamiliarRoute = Route$_.update({
+  id: "/alarma-familiar",
+  path: "/alarma-familiar",
+  getParentRoute: () => Route$1h
+});
+const AdminRoute = Route$Z.update({
+  id: "/admin",
+  path: "/admin",
+  getParentRoute: () => Route$1h
+});
+const ActivarWhatsappRoute = Route$Y.update({
+  id: "/activar-whatsapp",
+  path: "/activar-whatsapp",
+  getParentRoute: () => Route$1h
+});
+const ActivacionRoute = Route$X.update({
+  id: "/activacion",
+  path: "/activacion",
+  getParentRoute: () => Route$1h
+});
+const IndexRoute = Route$W.update({
+  id: "/",
+  path: "/",
+  getParentRoute: () => Route$1h
+});
+const DemoIndexRoute = Route$V.update({
+  id: "/",
+  path: "/",
+  getParentRoute: () => DemoRoute
+});
+const BlogIndexRoute = Route$U.update({
+  id: "/blog/",
+  path: "/blog/",
+  getParentRoute: () => Route$1h
+});
+const AdminIndexRoute = Route$T.update({
+  id: "/",
+  path: "/",
+  getParentRoute: () => AdminRoute
+});
+const WebpayRetornoRoute = Route$S.update({
+  id: "/webpay/retorno",
+  path: "/webpay/retorno",
+  getParentRoute: () => Route$1h
+});
+const OneclickRetornoRoute = Route$R.update({
+  id: "/oneclick/retorno",
+  path: "/oneclick/retorno",
+  getParentRoute: () => Route$1h
+});
+const OneclickInscripcionAbandonadaRoute = Route$Q.update({
+  id: "/oneclick/inscripcion-abandonada",
+  path: "/oneclick/inscripcion-abandonada",
+  getParentRoute: () => Route$1h
+});
+const OneclickDebitRetornoRoute = Route$P.update({
+  id: "/oneclick/debit-retorno",
+  path: "/oneclick/debit-retorno",
+  getParentRoute: () => Route$1h
+});
+const OneclickDebitRejectValidacionRoute = Route$O.update({
+  id: "/oneclick/debit-reject-validacion",
+  path: "/oneclick/debit-reject-validacion",
+  getParentRoute: () => Route$1h
+});
+const OneclickCreditRetornoRoute = Route$N.update({
+  id: "/oneclick/credit-retorno",
+  path: "/oneclick/credit-retorno",
+  getParentRoute: () => Route$1h
+});
+const FamiliaGuardianesRoute = Route$M.update({
+  id: "/guardianes",
+  path: "/guardianes",
+  getParentRoute: () => FamiliaRoute
+});
+const FamiliaDashboardRoute = Route$L.update({
+  id: "/dashboard",
+  path: "/dashboard",
+  getParentRoute: () => FamiliaRoute
+});
+const EmailUnsubscribeRoute = Route$K.update({
+  id: "/email/unsubscribe",
+  path: "/email/unsubscribe",
+  getParentRoute: () => Route$1h
+});
+const DemoReportesRoute = Route$J.update({
+  id: "/reportes",
+  path: "/reportes",
+  getParentRoute: () => DemoRoute
+});
+const DemoPresentacionRoute = Route$I.update({
+  id: "/presentacion",
+  path: "/presentacion",
+  getParentRoute: () => DemoRoute
+});
+const DemoPerfilRoute = Route$H.update({
+  id: "/perfil",
+  path: "/perfil",
+  getParentRoute: () => DemoRoute
+});
+const DemoMonitoreoRoute = Route$G.update({
+  id: "/monitoreo",
+  path: "/monitoreo",
+  getParentRoute: () => DemoRoute
+});
+const DemoMapaRoute = Route$F.update({
+  id: "/mapa",
+  path: "/mapa",
+  getParentRoute: () => DemoRoute
+});
+const DemoFlujoRoute = Route$E.update({
+  id: "/flujo",
+  path: "/flujo",
+  getParentRoute: () => DemoRoute
+});
+const DemoEjecutivoRoute = Route$D.update({
+  id: "/ejecutivo",
+  path: "/ejecutivo",
+  getParentRoute: () => DemoRoute
+});
+const DemoAnaliticaRoute = Route$C.update({
+  id: "/analitica",
+  path: "/analitica",
+  getParentRoute: () => DemoRoute
+});
+const DemoAlertasRoute = Route$B.update({
+  id: "/alertas",
+  path: "/alertas",
+  getParentRoute: () => DemoRoute
+});
+const CTokenRoute = Route$A.update({
+  id: "/c/$token",
+  path: "/c/$token",
+  getParentRoute: () => Route$1h
+});
+const BlogRevistaSeguridadDestacaLanzamientoSeniorSafeRoute = Route$z.update({
+  id: "/blog/revista-seguridad-destaca-lanzamiento-senior-safe",
+  path: "/blog/revista-seguridad-destaca-lanzamiento-senior-safe",
+  getParentRoute: () => Route$1h
+});
+const BlogComoLaIaSalvaVidasEmergenciasDomesticasRoute = Route$y.update({
+  id: "/blog/como-la-ia-salva-vidas-emergencias-domesticas",
+  path: "/blog/como-la-ia-salva-vidas-emergencias-domesticas",
+  getParentRoute: () => Route$1h
+});
+const BlogComoHablarConPadresSeguridadSinPerderIndependenciaRoute = Route$x.update({
+  id: "/blog/como-hablar-con-padres-seguridad-sin-perder-independencia",
+  path: "/blog/como-hablar-con-padres-seguridad-sin-perder-independencia",
+  getParentRoute: () => Route$1h
+});
+const BlogAlarmaSosParaAdultosMayoresQueSiRespondeRoute = Route$w.update({
+  id: "/blog/alarma-sos-para-adultos-mayores-que-si-responde",
+  path: "/blog/alarma-sos-para-adultos-mayores-que-si-responde",
+  getParentRoute: () => Route$1h
+});
+const AdminTransbankValidacionRoute = Route$v.update({
+  id: "/transbank-validacion",
+  path: "/transbank-validacion",
+  getParentRoute: () => AdminRoute
+});
+const AdminResetRoute = Route$u.update({
+  id: "/reset",
+  path: "/reset",
+  getParentRoute: () => AdminRoute
+});
+const AdminInboxRoute = Route$t.update({
+  id: "/inbox",
+  path: "/inbox",
+  getParentRoute: () => AdminRoute
+});
+const AdminDiscountsRoute = Route$s.update({
+  id: "/discounts",
+  path: "/discounts",
+  getParentRoute: () => AdminRoute
+});
+const AdminAccountsRoute = Route$r.update({
+  id: "/accounts",
+  path: "/accounts",
+  getParentRoute: () => AdminRoute
+});
+const ATokenRoute = Route$q.update({
+  id: "/a/$token",
+  path: "/a/$token",
+  getParentRoute: () => Route$1h
+});
+const LovableEmailSuppressionRoute = Route$p.update({
+  id: "/lovable/email/suppression",
+  path: "/lovable/email/suppression",
+  getParentRoute: () => Route$1h
+});
+const FamiliaAckTokenRoute = Route$o.update({
+  id: "/ack/$token",
+  path: "/ack/$token",
+  getParentRoute: () => FamiliaRoute
+});
+const ApiPublicZohoEmailWebhookRoute = Route$n.update({
+  id: "/api/public/zoho-email-webhook",
+  path: "/api/public/zoho-email-webhook",
+  getParentRoute: () => Route$1h
+});
+const ApiPublicVerifyPinRoute = Route$m.update({
+  id: "/api/public/verify-pin",
+  path: "/api/public/verify-pin",
+  getParentRoute: () => Route$1h
+});
+const ApiPublicValidateDiscountRoute = Route$l.update({
+  id: "/api/public/validate-discount",
+  path: "/api/public/validate-discount",
+  getParentRoute: () => Route$1h
+});
+const ApiPublicTwilioWhatsappWebhookRoute = Route$k.update({
+  id: "/api/public/twilio-whatsapp-webhook",
+  path: "/api/public/twilio-whatsapp-webhook",
+  getParentRoute: () => Route$1h
+});
+const ApiPublicTwilioVoiceWebhookRoute = Route$j.update({
+  id: "/api/public/twilio-voice-webhook",
+  path: "/api/public/twilio-voice-webhook",
+  getParentRoute: () => Route$1h
+});
+const ApiPublicTwilioStatusCallbackRoute = Route$i.update({
+  id: "/api/public/twilio-status-callback",
+  path: "/api/public/twilio-status-callback",
+  getParentRoute: () => Route$1h
+});
+const ApiPublicTwilioSmsWebhookRoute = Route$h.update({
+  id: "/api/public/twilio-sms-webhook",
+  path: "/api/public/twilio-sms-webhook",
+  getParentRoute: () => Route$1h
+});
+const ApiPublicTwilioEmergencyCallRoute = Route$g.update({
+  id: "/api/public/twilio-emergency-call",
+  path: "/api/public/twilio-emergency-call",
+  getParentRoute: () => Route$1h
+});
+const ApiPublicSendWelcomeWhatsappRoute = Route$f.update({
+  id: "/api/public/send-welcome-whatsapp",
+  path: "/api/public/send-welcome-whatsapp",
+  getParentRoute: () => Route$1h
+});
+const ApiPublicSendWelcomeTrialRoute = Route$e.update({
+  id: "/api/public/send-welcome-trial",
+  path: "/api/public/send-welcome-trial",
+  getParentRoute: () => Route$1h
+});
+const ApiPublicSavePinRoute = Route$d.update({
+  id: "/api/public/save-pin",
+  path: "/api/public/save-pin",
+  getParentRoute: () => Route$1h
+});
+const ApiPublicPinResetVerifyRoute = Route$c.update({
+  id: "/api/public/pin-reset-verify",
+  path: "/api/public/pin-reset-verify",
+  getParentRoute: () => Route$1h
+});
+const ApiPublicPinResetRequestRoute = Route$b.update({
+  id: "/api/public/pin-reset-request",
+  path: "/api/public/pin-reset-request",
+  getParentRoute: () => Route$1h
+});
+const ApiPublicLookupAccountRoute = Route$a.update({
+  id: "/api/public/lookup-account",
+  path: "/api/public/lookup-account",
+  getParentRoute: () => Route$1h
+});
+const ApiPublicFamilyRoute = Route$9.update({
+  id: "/api/public/family",
+  path: "/api/public/family",
+  getParentRoute: () => Route$1h
+});
+const ApiCronResendInstallInstructionsRoute = Route$8.update({
+  id: "/api/cron/resend-install-instructions",
+  path: "/api/cron/resend-install-instructions",
+  getParentRoute: () => Route$1h
+});
+const ApiCronProcessSubscriptionRenewalsRoute = Route$7.update({
+  id: "/api/cron/process-subscription-renewals",
+  path: "/api/cron/process-subscription-renewals",
+  getParentRoute: () => Route$1h
+});
+const ATokenCRoute = Route$6.update({
+  id: "/c",
+  path: "/c",
+  getParentRoute: () => ATokenRoute
+});
+const AAlertIdAckTokenRoute = Route$5.update({
+  id: "/a/$alertId/$ackToken",
+  path: "/a/$alertId/$ackToken",
+  getParentRoute: () => Route$1h
+});
+const LovableEmailTransactionalSendRoute = Route$4.update({
+  id: "/lovable/email/transactional/send",
+  path: "/lovable/email/transactional/send",
+  getParentRoute: () => Route$1h
+});
+const LovableEmailTransactionalPreviewRoute = Route$3.update({
+  id: "/lovable/email/transactional/preview",
+  path: "/lovable/email/transactional/preview",
+  getParentRoute: () => Route$1h
+});
+const LovableEmailQueueProcessRoute = Route$2.update({
+  id: "/lovable/email/queue/process",
+  path: "/lovable/email/queue/process",
+  getParentRoute: () => Route$1h
+});
+const ApiPublicAckAlertTokenRoute = Route$1.update({
+  id: "/api/public/ack-alert/$token",
+  path: "/api/public/ack-alert/$token",
+  getParentRoute: () => Route$1h
+});
+const ApiInternalEmergencyCascadeAlertIdRoute = Route.update({
+  id: "/api/internal/emergency-cascade/$alertId",
+  path: "/api/internal/emergency-cascade/$alertId",
+  getParentRoute: () => Route$1h
+});
+const AdminRouteChildren = {
+  AdminAccountsRoute,
+  AdminDiscountsRoute,
+  AdminInboxRoute,
+  AdminResetRoute,
+  AdminTransbankValidacionRoute,
+  AdminIndexRoute
+};
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren);
+const DemoRouteChildren = {
+  DemoAlertasRoute,
+  DemoAnaliticaRoute,
+  DemoEjecutivoRoute,
+  DemoFlujoRoute,
+  DemoMapaRoute,
+  DemoMonitoreoRoute,
+  DemoPerfilRoute,
+  DemoPresentacionRoute,
+  DemoReportesRoute,
+  DemoIndexRoute
+};
+const DemoRouteWithChildren = DemoRoute._addFileChildren(DemoRouteChildren);
+const FamiliaRouteChildren = {
+  FamiliaDashboardRoute,
+  FamiliaGuardianesRoute,
+  FamiliaAckTokenRoute
+};
+const FamiliaRouteWithChildren = FamiliaRoute._addFileChildren(FamiliaRouteChildren);
+const ATokenRouteChildren = {
+  ATokenCRoute
+};
+const ATokenRouteWithChildren = ATokenRoute._addFileChildren(ATokenRouteChildren);
+const rootRouteChildren = {
+  IndexRoute,
+  ActivacionRoute,
+  ActivarWhatsappRoute,
+  AdminRoute: AdminRouteWithChildren,
+  AlarmaFamiliarRoute,
+  AppRoute,
+  BienvenidaPremiumRoute,
+  CheckoutRoute,
+  ComoFuncionaRoute,
+  DashboardRoute,
+  DemoRoute: DemoRouteWithChildren,
+  FamiliaRoute: FamiliaRouteWithChildren,
+  FlujoRoute,
+  GuiaRoute,
+  InstalarAppRoute,
+  NativeRoute,
+  PlanesRoute,
+  PrivacidadRoute,
+  SimuladorRoute,
+  TerminosRoute,
+  TutorialRoute,
+  UbicacionRoute,
+  UnsubscribeRoute,
+  ATokenRoute: ATokenRouteWithChildren,
+  BlogAlarmaSosParaAdultosMayoresQueSiRespondeRoute,
+  BlogComoHablarConPadresSeguridadSinPerderIndependenciaRoute,
+  BlogComoLaIaSalvaVidasEmergenciasDomesticasRoute,
+  BlogRevistaSeguridadDestacaLanzamientoSeniorSafeRoute,
+  CTokenRoute,
+  EmailUnsubscribeRoute,
+  OneclickCreditRetornoRoute,
+  OneclickDebitRejectValidacionRoute,
+  OneclickDebitRetornoRoute,
+  OneclickInscripcionAbandonadaRoute,
+  OneclickRetornoRoute,
+  WebpayRetornoRoute,
+  BlogIndexRoute,
+  AAlertIdAckTokenRoute,
+  ApiCronProcessSubscriptionRenewalsRoute,
+  ApiCronResendInstallInstructionsRoute,
+  ApiPublicFamilyRoute,
+  ApiPublicLookupAccountRoute,
+  ApiPublicPinResetRequestRoute,
+  ApiPublicPinResetVerifyRoute,
+  ApiPublicSavePinRoute,
+  ApiPublicSendWelcomeTrialRoute,
+  ApiPublicSendWelcomeWhatsappRoute,
+  ApiPublicTwilioEmergencyCallRoute,
+  ApiPublicTwilioSmsWebhookRoute,
+  ApiPublicTwilioStatusCallbackRoute,
+  ApiPublicTwilioVoiceWebhookRoute,
+  ApiPublicTwilioWhatsappWebhookRoute,
+  ApiPublicValidateDiscountRoute,
+  ApiPublicVerifyPinRoute,
+  ApiPublicZohoEmailWebhookRoute,
+  LovableEmailSuppressionRoute,
+  ApiInternalEmergencyCascadeAlertIdRoute,
+  ApiPublicAckAlertTokenRoute,
+  LovableEmailQueueProcessRoute,
+  LovableEmailTransactionalPreviewRoute,
+  LovableEmailTransactionalSendRoute
+};
+const routeTree = Route$1h._addFileChildren(rootRouteChildren)._addFileTypes();
+const getRouter = () => {
+  const queryClient = new QueryClient();
+  const router2 = createRouter({
+    routeTree,
+    context: { queryClient },
+    scrollRestoration: true,
+    defaultPreloadStaleTime: 0
+  });
+  return router2;
+};
+const router = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  __proto__: null,
+  getRouter
+}, Symbol.toStringTag, { value: "Module" }));
+export {
+  POST as A,
+  BLOG_POSTS as B,
+  COVER$3 as C,
+  HEADLINE as D,
+  TECH_DESCRIPTION as E,
+  COVER as F,
+  Route$o as G,
+  HEADLINE$3 as H,
+  router as I,
+  POST$2 as P,
+  Route$1g as R,
+  SLUG$2 as S,
+  TECH_DESCRIPTION$3 as T,
+  Route$1f as a,
+  Route$19 as b,
+  installGuideActionUrl as c,
+  Route$18 as d,
+  Route$15 as e,
+  Route$14 as f,
+  Route$$ as g,
+  Route$V as h,
+  inAppGuideForStep as i,
+  blogPostPath as j,
+  formatBlogDate as k,
+  getBlogPostsNewestFirst as l,
+  Route$S as m,
+  logTransbankTestToken as n,
+  Route$R as o,
+  logOneclickToken as p,
+  HEADLINE$2 as q,
+  TECH_DESCRIPTION$2 as r,
+  COVER_ALT as s,
+  trackGoogleAdsSubscriptionConversion as t,
+  COVER$2 as u,
+  getBlogPost as v,
+  POST$1 as w,
+  HEADLINE$1 as x,
+  TECH_DESCRIPTION$1 as y,
+  COVER$1 as z
+};

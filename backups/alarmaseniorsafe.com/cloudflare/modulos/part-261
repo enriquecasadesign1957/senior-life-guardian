@@ -1,0 +1,116 @@
+import { r as reactExports, j as jsxRuntimeExports } from "../_libs/react.mjs";
+import { e as useNavigate } from "../_libs/tanstack__react-router.mjs";
+import { P as PostPaymentInstallScreen } from "./post-payment-install-screen-CIuEh8WZ.mjs";
+import { a as isAppInstalled, i as isNativeApp, b as buildNativeHandoffUrl } from "./device-Dq_ZTBb-.mjs";
+import { c as clearRequiresPwaInstall, b as buildAppHandoffSearch } from "./post-payment-BtVMraP6.mjs";
+import { d as Route$18 } from "./router-FK5WbXyp.mjs";
+import "./index.mjs";
+
+import "../_libs/sonner.mjs";
+
+
+
+import "../_libs/tanstack__router-core.mjs";
+import "../_libs/tanstack__history.mjs";
+import "../_libs/cookie-es.mjs";
+import "../_libs/seroval.mjs";
+import "../_libs/unenv.mjs";
+
+
+import "../_libs/seroval-plugins.mjs";
+
+
+import "../_libs/react-dom.mjs";
+import "../_libs/isbot.mjs";
+import "./button-BC9oXVxV.mjs";
+import "../_libs/radix-ui__react-slot.mjs";
+import "../_libs/radix-ui__react-compose-refs.mjs";
+import "../_libs/class-variance-authority.mjs";
+import "../_libs/clsx.mjs";
+import "./utils-H80jjgLf.mjs";
+import "../_libs/tailwind-merge.mjs";
+import "./whatsapp-activar-cta-CjTD6kty.mjs";
+import "./install-step-sync-65QKjQIB.mjs";
+import "./client.server-U_pH-Evd.mjs";
+import "../_libs/supabase__supabase-js.mjs";
+import "../_libs/supabase__postgrest-js.mjs";
+import "../_libs/supabase__realtime-js.mjs";
+import "../_libs/supabase__phoenix.mjs";
+import "../_libs/supabase__storage-js.mjs";
+import "../_libs/iceberg-js.mjs";
+import "../_libs/supabase__auth-js.mjs";
+import "../_libs/tslib.mjs";
+import "../_libs/supabase__functions-js.mjs";
+import "./signups-db-JWUtXpaW.mjs";
+import "./twilio-DNHuHEFY.mjs";
+import "./twilio-inbound-_C02bj0d.mjs";
+import "../_libs/lucide-react.mjs";
+import "./install-notify-banner-CdM3Di4q.mjs";
+import "./useServerFn-DL2oePlL.mjs";
+import "./createSsrRpc-14pD3De2.mjs";
+import "./createServerFn-CqTdkD5n.mjs";
+import "./discount-codes-BbIma2Cq.mjs";
+import "./plans-BJeLFmLc.mjs";
+import "../_libs/zod.mjs";
+import "./senior-access-auth-Bmk7iyGS.mjs";
+import "../_libs/tanstack__query-core.mjs";
+import "../_libs/tanstack__react-query.mjs";
+import "./maps-BhXedqc-.mjs";
+import "./transbank-oneclick-mall-CC5wwzFZ.mjs";
+import "../_libs/h3-v2.mjs";
+import "../_libs/rou3.mjs";
+import "../_libs/srvx.mjs";
+
+
+
+
+import "./ack-alert-hZc0eMx8.mjs";
+import "./zoho-smtp-lj0bCuK6.mjs";
+import "./account-lookup-CBKDZ0Aw.mjs";
+import "./contacts-storage-DdsYD-uQ.mjs";
+import "./phone-utils-D7EH6fht.mjs";
+import "./discount.functions-CbzrjeJP.mjs";
+import "./whatsapp-inbox-CZiWC44X.mjs";
+import "./admin-auth-5OIH6Qjw.mjs";
+import "./post-payment-install-notify-6plkg_BS.mjs";
+import "./transactional-email-html-C_kx3NhX.mjs";
+import "./emergency-cascade-continuation-BhQV3eMZ.mjs";
+import "./pin-reset-B5nhyHPX.mjs";
+import "./subscription-renewal-CVyJ9Wsj.mjs";
+import "./oneclick-renewal-charge-XKyXWH2D.mjs";
+import "../_libs/react-email__render.mjs";
+import "../_libs/prettier.mjs";
+import "../_libs/deepmerge.mjs";
+import "../_libs/react-email__html.mjs";
+import "../_libs/react-email__head.mjs";
+import "../_libs/react-email__preview.mjs";
+import "../_libs/react-email__body.mjs";
+import "../_libs/react-email__container.mjs";
+import "../_libs/react-email__section.mjs";
+import "../_libs/react-email__heading.mjs";
+import "../_libs/react-email__text.mjs";
+import "../_libs/react-email__button.mjs";
+import "../_libs/react-email__link.mjs";
+import "../_libs/react-email__hr.mjs";
+function InstalarAppPage() {
+  const search = Route$18.useSearch();
+  const navigate = useNavigate();
+  reactExports.useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (isAppInstalled()) {
+      clearRequiresPwaInstall();
+      if (isNativeApp()) {
+        window.location.href = buildNativeHandoffUrl(search.ss ?? null, "install-skip");
+        return;
+      }
+      navigate({
+        to: "/app",
+        search: buildAppHandoffSearch(search.ss ?? null)
+      });
+    }
+  }, [navigate, search.ss]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(PostPaymentInstallScreen, { signupId: search.ss ?? null, showPaymentSuccess: search.pago === "ok" });
+}
+export {
+  InstalarAppPage as component
+};

@@ -1,0 +1,1 @@
+var n={};function s(){return typeof process<"u"&&n.DEMO_MODE==="true"}function o(){return typeof window>"u"?!1:window.sessionStorage.getItem("seniorsafe_demo_presentation")==="1"}function t(e){typeof window>"u"||(e?sessionStorage.setItem("seniorsafe_demo_presentation","1"):sessionStorage.removeItem("seniorsafe_demo_presentation"))}export{o as a,s as i,t as s};

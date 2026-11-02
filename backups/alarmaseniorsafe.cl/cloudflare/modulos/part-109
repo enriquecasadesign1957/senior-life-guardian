@@ -1,0 +1,219 @@
+import { j as jsxRuntimeExports } from "../_libs/react.mjs";
+import { q as HEADLINE$2, r as TECH_DESCRIPTION$2, k as formatBlogDate, s as COVER_ALT, u as COVER$2, v as getBlogPost, S as SLUG$2 } from "./router-fGRx5M7O.mjs";
+import { L as Link } from "../_libs/tanstack__react-router.mjs";
+import { S as SiteHeader, a as SiteFooter } from "./site-layout-Drvwb4jj.mjs";
+import { W as WhatsAppFloat } from "./whatsapp-float-CfwyDlWL.mjs";
+import { f as formatPlanPrice, P as PLAN, j as checkoutUrl } from "./discount-codes-BOatiw_p.mjs";
+import { S as SENIOR_SAFE_PLAY_STORE_URL, P as PRODUCTION_SITE_URL } from "./index.mjs";
+import "../_libs/sonner.mjs";
+
+
+
+import { A as ArrowLeft, j as Clock, p as Smartphone } from "../_libs/lucide-react.mjs";
+
+import "../_libs/tanstack__query-core.mjs";
+import "../_libs/tanstack__react-query.mjs";
+import "../_libs/tanstack__router-core.mjs";
+import "../_libs/tanstack__history.mjs";
+import "../_libs/cookie-es.mjs";
+import "../_libs/seroval.mjs";
+import "../_libs/unenv.mjs";
+
+
+import "../_libs/seroval-plugins.mjs";
+
+
+import "./maps-BhXedqc-.mjs";
+import "./transbank-oneclick-mall-CC5wwzFZ.mjs";
+import "../_libs/h3-v2.mjs";
+import "../_libs/rou3.mjs";
+import "../_libs/srvx.mjs";
+
+
+
+
+import "./ack-alert-hZc0eMx8.mjs";
+import "./client.server-U_pH-Evd.mjs";
+import "../_libs/supabase__supabase-js.mjs";
+import "../_libs/supabase__postgrest-js.mjs";
+import "../_libs/supabase__realtime-js.mjs";
+import "../_libs/supabase__phoenix.mjs";
+import "../_libs/supabase__storage-js.mjs";
+import "../_libs/iceberg-js.mjs";
+import "../_libs/supabase__auth-js.mjs";
+import "../_libs/tslib.mjs";
+import "../_libs/supabase__functions-js.mjs";
+import "./twilio-DNHuHEFY.mjs";
+import "./zoho-smtp-DBq11U6O.mjs";
+import "./install-step-sync-snfezerQ.mjs";
+import "./signups-db-JWUtXpaW.mjs";
+import "./twilio-inbound-_C02bj0d.mjs";
+import "./account-lookup-BFsZGyOu.mjs";
+import "./contacts-storage-DdsYD-uQ.mjs";
+import "./phone-utils-D7EH6fht.mjs";
+import "./senior-access-auth-Bmk7iyGS.mjs";
+import "../_libs/zod.mjs";
+import "./discount.functions-D1O_Tm2i.mjs";
+import "./createSsrRpc-D8pBWdiG.mjs";
+import "./createServerFn-Bu17PEW9.mjs";
+import "./whatsapp-inbox-CZiWC44X.mjs";
+import "./admin-auth-5OIH6Qjw.mjs";
+import "./post-payment-install-notify-nTNOSfzd.mjs";
+import "./transactional-email-html-WTtLAqil.mjs";
+import "./emergency-cascade-continuation-BjATaJyT.mjs";
+import "./pin-reset-CmQ6yj5h.mjs";
+import "./tarjeta-vecino.server-s7vWwsdK.mjs";
+import "./subscription-renewal-DVQYQdbm.mjs";
+import "./oneclick-renewal-charge-cRPVjMuC.mjs";
+import "../_libs/react-email__render.mjs";
+import "../_libs/prettier.mjs";
+import "../_libs/deepmerge.mjs";
+import "../_libs/react-email__html.mjs";
+import "../_libs/react-email__head.mjs";
+import "../_libs/react-email__preview.mjs";
+import "../_libs/react-email__body.mjs";
+import "../_libs/react-email__container.mjs";
+import "../_libs/react-email__section.mjs";
+import "../_libs/react-email__heading.mjs";
+import "../_libs/react-email__text.mjs";
+import "../_libs/react-email__button.mjs";
+import "../_libs/react-email__link.mjs";
+import "../_libs/react-email__hr.mjs";
+import "../_libs/react-dom.mjs";
+import "../_libs/isbot.mjs";
+import "./demo-config-D1XL_8ap.mjs";
+const POST = getBlogPost(SLUG$2);
+const WAKEUP_DEV_URL = "https://wakeupdev.com";
+const WAKEUP_LINK_CLASS = "font-semibold underline underline-offset-2 decoration-2 hover:opacity-80 transition-opacity";
+const PETROL = "var(--brand-petrol)";
+const DEEP = "var(--brand-petrol-deep)";
+function WakeUpLink({
+  children
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: WAKEUP_DEV_URL, target: "_blank", rel: "noopener", className: WAKEUP_LINK_CLASS, style: {
+    color: PETROL
+  }, children });
+}
+function BlogArticlePage() {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-h-screen bg-background flex flex-col", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(SiteHeader, {}),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("main", { className: "flex-1", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("article", { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("header", { className: "relative overflow-hidden text-white", style: {
+        background: `linear-gradient(135deg, ${DEEP} 0%, ${PETROL} 58%, oklch(0.48 0.12 235) 100%)`
+      }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative mx-auto max-w-3xl px-6 py-12 md:py-16", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(Link, { to: "/blog", className: "mb-6 inline-flex items-center gap-2 text-sm font-semibold tracking-wide text-white/85 hover:text-white", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "h-4 w-4", "aria-hidden": true }),
+          "Volver al blog"
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mb-3 text-xs font-bold uppercase tracking-[0.18em] text-white/70", children: "Teleasistencia familiar · Inteligencia artificial" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-3xl md:text-4xl lg:text-[2.65rem] font-bold leading-tight tracking-wide", children: HEADLINE$2 }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-5 text-lg leading-relaxed tracking-wide text-white/85", children: TECH_DESCRIPTION$2 }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm tracking-wide text-white/75", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Por el Equipo de Producto Senior Safe" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { "aria-hidden": true, children: "·" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("time", { dateTime: POST.publishedAt, children: formatBlogDate(POST.publishedAt) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { "aria-hidden": true, children: "·" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "inline-flex items-center gap-1.5", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Clock, { className: "h-3.5 w-3.5", "aria-hidden": true }),
+            POST.readingMinutes,
+            " min de lectura"
+          ] })
+        ] })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mx-auto max-w-3xl px-6", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("figure", { className: "-mt-8 md:-mt-10 overflow-hidden rounded-2xl border border-border bg-white shadow-lg", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: COVER$2, alt: COVER_ALT, width: 1200, height: 675, fetchPriority: "high", decoding: "async", className: "aspect-[16/9] w-full max-h-[400px] object-cover" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("figcaption", { className: "px-4 py-3 text-center text-xs italic leading-relaxed text-muted-foreground", children: "La tecnología móvil y la IA permiten redes de protección familiar inmediatas sin estigmatizar la independencia de nuestros padres." })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-6 py-12 text-base leading-relaxed tracking-wide text-muted-foreground sm:text-lg md:py-16", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { children: [
+            "El ecosistema de la teleasistencia en Chile ha permanecido estancado durante décadas bajo un modelo costoso e ineficiente. Las empresas tradicionales atan a las familias a contratos de arriendo rígidos por un botón de pánico físico tipo collar o pulsera, cobrando mensualidades que oscilan entre los",
+            " ",
+            /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { className: "font-semibold text-foreground", children: "$30.000 y $80.000" }),
+            " pesos. Sin embargo, el verdadero problema ocurre cuando ese botón se queda sobre el velador, sin batería, o cuando la central de llamadas no responde a tiempo."
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "Hoy en día, la penetración de los teléfonos inteligentes y la flexibilidad de herramientas cotidianas como WhatsApp abren una alternativa mucho más accesible, humana y eficiente. Al transformar el celular en un nodo de protección inteligente, se elimina el costo del hardware dedicado y se empodera a los familiares como los guardianes directos del adulto mayor." }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("aside", { className: "my-10 rounded-r-2xl border border-border border-l-4 bg-muted/40 py-6 pl-6 pr-4 shadow-sm", style: {
+            borderLeftColor: PETROL
+          }, "aria-labelledby": "infraestructura-critica", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { id: "infraestructura-critica", className: "mb-4 text-2xl font-bold tracking-tight text-foreground", children: "Infraestructura crítica detrás de Senior Safe" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mb-4 text-muted-foreground", children: [
+              "Cuando el objetivo es salvar vidas, un servidor convencional que “a veces se cae” no es una opción. Un corte de hosting, una cola saturada o un centro de datos fuera de servicio en el minuto de la emergencia equivale a silencio. Por eso la teleasistencia de Senior Safe no corre sobre máquinas aisladas: las alertas se procesan en",
+              " ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { className: "font-semibold text-foreground", children: "milisegundos" }),
+              " en el borde de la red, con",
+              " ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { className: "font-semibold text-foreground", children: "edge computing" }),
+              " sobre",
+              " ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { className: "font-semibold text-foreground", children: "Cloudflare Workers" }),
+              ", de modo que la lógica de despacho se ejecuta cerca del usuario y no depende de un único rack que pueda fallar."
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mb-4 text-muted-foreground", children: [
+              "Esa misma exigencia aplica a la voz. No basta con enviar un mensaje y esperar. Es por esto que delegamos el enrutamiento de llamadas en un",
+              " ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx(WakeUpLink, { children: "sistema de monitoreo de alertas críticas" }),
+              " de nivel DevOps, con telefonía automatizada distribuida globalmente: si un nodo o un operador regional no responde, la llamada se origina desde otra región sin que la familia perciba la complejidad. El resultado es disponibilidad continua, no “mejor esfuerzo”."
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "mb-3 mt-6 text-xl font-bold tracking-tight text-foreground", children: "De la alerta a una llamada interactiva que exige confirmación" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mb-4 text-muted-foreground", children: [
+              "El mecanismo de cascada transforma una emergencia en un protocolo cerrado, no en un aviso que puede quedar sin leer. Tras SMS y WhatsApp, el sistema escala a",
+              " ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { className: "font-semibold text-foreground", children: "llamada telefónica interactiva" }),
+              ": el familiar debe",
+              " ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { className: "font-semibold text-foreground", children: "presionar 1" }),
+              " para confirmar que recibió el aviso y tomó el caso. Si no hay respuesta, si la llamada cae al buzón o si nadie marca la tecla, el motor",
+              " ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { className: "font-semibold text-foreground", children: "salta automáticamente al siguiente contacto" }),
+              " ",
+              "de la red de guardianes. No hay operador humano que se distraiga, ni lista que se quede a medias."
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-muted-foreground", children: [
+              "Esa orquestación —prioridad de contactos, timeouts, reintentos y confirmación DTMF— es lo que nos permite activar una",
+              " ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx(WakeUpLink, { children: "cascada de guardia automatizada" }),
+              " que contacta a los familiares secuencialmente sin errores humanos. WhatsApp y SMS entregan contexto y coordenadas GPS listas para abrir en Waze o Google Maps; la llamada telefónica exige un acuse de recibo inequívoco. Infraestructura de grado crítico, pensada para el segundo en que no hay segunda oportunidad."
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "Al automatizar este enrutamiento mediante flujos inteligentes, el sistema de tres botones de nuestra PWA (Salud, Accidente/Caída o Delincuencia) garantiza que la red de guardianes actúe de inmediato, coordinando la asistencia en minutos y ofreciendo una protección con corazón, transparente, sin cobros abusivos ni contratos permanentes." }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-10 rounded-3xl border border-border p-7 shadow-sm md:p-9", style: {
+            background: "linear-gradient(145deg, white 0%, color-mix(in oklab, var(--brand-petrol) 7%, white) 100%)"
+          }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-3", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Smartphone, { className: "mt-1 h-6 w-6 shrink-0", style: {
+              color: PETROL
+            }, "aria-hidden": true }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-xl font-bold tracking-wide text-foreground md:text-2xl", children: "Empieza hoy la red de cuidado" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-3 text-lg leading-relaxed tracking-wide text-muted-foreground", children: "IA, cascada multicanal, confirmación por voz y GPS navegable. Tecnología con corazón, al alcance de la familia chilena." }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-6 flex flex-wrap gap-3", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("a", { href: checkoutUrl(), className: "inline-flex items-center justify-center rounded-full px-6 py-3.5 text-base font-bold tracking-wide text-white transition hover:opacity-90", style: {
+                  background: DEEP
+                }, children: [
+                  "Contratar desde $",
+                  formatPlanPrice(PLAN.monthly),
+                  "/mes"
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: SENIOR_SAFE_PLAY_STORE_URL, target: "_blank", rel: "noopener noreferrer", className: "inline-flex items-center justify-center rounded-full border border-border bg-white px-6 py-3.5 text-base font-bold tracking-wide text-foreground transition hover:bg-muted/40", children: "Ver en Google Play" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/guia", className: "inline-flex items-center justify-center rounded-full border border-border bg-white px-6 py-3.5 text-base font-bold tracking-wide text-foreground transition hover:bg-muted/40", children: "Guía iPhone (Safari)" })
+              ] })
+            ] })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-10 text-base leading-relaxed tracking-wide text-muted-foreground", children: [
+            "Este artículo es informativo y no sustituye orientación médica ni policial de urgencia. Fuente:",
+            " ",
+            /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: `${PRODUCTION_SITE_URL}/`, className: "font-semibold underline-offset-2 hover:underline", style: {
+              color: PETROL
+            }, children: "alarmaseniorsafe.cl" }),
+            "."
+          ] })
+        ] })
+      ] })
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(SiteFooter, {}),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(WhatsAppFloat, {})
+  ] });
+}
+export {
+  BlogArticlePage as component
+};

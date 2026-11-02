@@ -1,0 +1,67 @@
+const CHECKOUT_DRAFT_KEY = "seniorsafe_checkout_draft";
+function saveCheckoutDraft(draft) {
+  if (typeof window === "undefined") return;
+  const payload = {
+    ...draft,
+    email: draft.email.trim().toLowerCase(),
+    phone: draft.phone.trim(),
+    seniorName: draft.seniorName.trim(),
+    savedAt: (/* @__PURE__ */ new Date()).toISOString()
+  };
+  try {
+    sessionStorage.setItem(CHECKOUT_DRAFT_KEY, JSON.stringify(payload));
+    localStorage.setItem(CHECKOUT_DRAFT_KEY, JSON.stringify(payload));
+  } catch {
+  }
+}
+function readCheckoutDraft() {
+  if (typeof window === "undefined") return null;
+  for (const store of [sessionStorage, localStorage]) {
+    try {
+      const raw = store.getItem(CHECKOUT_DRAFT_KEY);
+      if (!raw) continue;
+      const parsed = JSON.parse(raw);
+      if (!parsed.email || !parsed.phone || !parsed.seniorName) continue;
+      return {
+        email: String(parsed.email),
+        phone: String(parsed.phone),
+        seniorName: String(parsed.seniorName),
+        signupId: typeof parsed.signupId === "string" ? parsed.signupId : void 0,
+        savedAt: typeof parsed.savedAt === "string" ? parsed.savedAt : (/* @__PURE__ */ new Date()).toISOString()
+      };
+    } catch {
+    }
+  }
+  return null;
+}
+function clearCheckoutDraft() {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(CHECKOUT_DRAFT_KEY);
+    localStorage.removeItem(CHECKOUT_DRAFT_KEY);
+  } catch {
+  }
+}
+function hasCheckoutDraftForSignup(signupId) {
+  const draft = readCheckoutDraft();
+  if (!draft) return false;
+  if (!signupId) return true;
+  return !draft.signupId || draft.signupId === signupId;
+}
+function getServerErrorMessage(err, fallback) {
+  if (err instanceof Error && err.message) return err.message;
+  if (typeof err === "string" && err.trim()) return err;
+  if (err && typeof err === "object") {
+    const o = err;
+    if (typeof o.message === "string" && o.message.trim()) return o.message;
+    if (typeof o.error === "string" && o.error.trim()) return o.error;
+  }
+  return fallback;
+}
+export {
+  clearCheckoutDraft as c,
+  getServerErrorMessage as g,
+  hasCheckoutDraftForSignup as h,
+  readCheckoutDraft as r,
+  saveCheckoutDraft as s
+};

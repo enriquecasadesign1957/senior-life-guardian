@@ -1,0 +1,1896 @@
+globalThis.__nitro_main__ = import.meta.url;
+import "./_libs/unenv.mjs";
+
+import { H as HTTPError, d as defineLazyEventHandler, a as H3Core } from "./_libs/h3.mjs";
+import { H as HookableCore } from "./_libs/hookable.mjs";
+
+import { a as FastResponse } from "./_libs/srvx.mjs";
+
+
+import "./_libs/rou3.mjs";
+
+
+
+
+
+function lazyService(loader) {
+  let promise, mod;
+  return {
+    fetch(req) {
+      if (mod) {
+        return mod.fetch(req);
+      }
+      if (!promise) {
+        promise = loader().then((_mod) => mod = _mod.default || _mod);
+      }
+      return promise.then((mod2) => mod2.fetch(req));
+    }
+  };
+}
+const services = {
+  ["ssr"]: lazyService(() => import("./_ssr/index.mjs"))
+};
+globalThis.__nitro_vite_envs__ = services;
+const assets = {
+  "/BingSiteAuth.xml": {
+    "type": "application/xml",
+    "etag": '"56-IoeYAcETV13KlzAeP7H0FMXjM+A"',
+    "mtime": "2026-10-30T15:13:17.191Z",
+    "size": 86,
+    "path": "../client/BingSiteAuth.xml"
+  },
+  "/brochure.html": {
+    "type": "text/html; charset=utf-8",
+    "etag": '"5618-FalWcHmeSZrkQyK9LXfiyv8W03c"',
+    "mtime": "2026-10-30T15:13:17.191Z",
+    "size": 22040,
+    "path": "../client/brochure.html"
+  },
+  "/convenio-las-condes-a4.html": {
+    "type": "text/html; charset=utf-8",
+    "etag": '"1a5f-evTr8qF2hsCX54k/pexu4Tl+yik"',
+    "mtime": "2026-10-30T15:13:17.191Z",
+    "size": 6751,
+    "path": "../client/convenio-las-condes-a4.html"
+  },
+  "/convenio-las-condes-cuadrado.html": {
+    "type": "text/html; charset=utf-8",
+    "etag": '"1092-stLRZu2t/TzRDvnYBgcB887PvQQ"',
+    "mtime": "2026-10-30T15:13:17.191Z",
+    "size": 4242,
+    "path": "../client/convenio-las-condes-cuadrado.html"
+  },
+  "/convenio-las-condes-ig-anuncio.html": {
+    "type": "text/html; charset=utf-8",
+    "etag": '"b54-gqgb8zfooiytbTL7zquGdcQzrjc"',
+    "mtime": "2026-10-30T15:13:17.191Z",
+    "size": 2900,
+    "path": "../client/convenio-las-condes-ig-anuncio.html"
+  },
+  "/convenio-las-condes-banner.html": {
+    "type": "text/html; charset=utf-8",
+    "etag": '"f10-Lp8mhtrH7/ZMcbND5C1MfmKl+Pg"',
+    "mtime": "2026-10-30T15:13:17.191Z",
+    "size": 3856,
+    "path": "../client/convenio-las-condes-banner.html"
+  },
+  "/convenio-las-condes-ig-historia.html": {
+    "type": "text/html; charset=utf-8",
+    "etag": '"8d1-UW92722E31qJ/cyUYzRBkpOCR+Y"',
+    "mtime": "2026-10-30T15:13:17.191Z",
+    "size": 2257,
+    "path": "../client/convenio-las-condes-ig-historia.html"
+  },
+  "/convenio-las-condes-ig-como.html": {
+    "type": "text/html; charset=utf-8",
+    "etag": '"8f6-CnnoXW5pMNTyfEzoDCd3hl/3AKc"',
+    "mtime": "2026-10-30T15:13:17.191Z",
+    "size": 2294,
+    "path": "../client/convenio-las-condes-ig-como.html"
+  },
+  "/convenio-las-condes-ig-precios.html": {
+    "type": "text/html; charset=utf-8",
+    "etag": '"b0a-t7LXhpyEXXp67LWQBTBUb93AxTs"',
+    "mtime": "2026-10-30T15:13:17.191Z",
+    "size": 2826,
+    "path": "../client/convenio-las-condes-ig-precios.html"
+  },
+  "/flyer-cuadrado.html": {
+    "type": "text/html; charset=utf-8",
+    "etag": '"2553-uZfXC0vf9/Va1qLHg2V8iqyr+Vo"',
+    "mtime": "2026-10-30T15:13:17.191Z",
+    "size": 9555,
+    "path": "../client/flyer-cuadrado.html"
+  },
+  "/manifest.json": {
+    "type": "application/json",
+    "etag": '"62d-U97v6TKtv7p/6x7t3V7Xro6jDgA"',
+    "mtime": "2026-10-30T15:13:17.191Z",
+    "size": 1581,
+    "path": "../client/manifest.json"
+  },
+  "/offline.html": {
+    "type": "text/html; charset=utf-8",
+    "etag": '"520-Q6BRKmNSApXZnzDAIHATvAksiqU"',
+    "mtime": "2026-10-30T15:13:17.191Z",
+    "size": 1312,
+    "path": "../client/offline.html"
+  },
+  "/flyer.html": {
+    "type": "text/html; charset=utf-8",
+    "etag": '"2b58-lPvTxNMR9Q3XgdBJG6VXMy8BSM0"',
+    "mtime": "2026-10-30T15:13:17.191Z",
+    "size": 11096,
+    "path": "../client/flyer.html"
+  },
+  "/robots.txt": {
+    "type": "text/plain; charset=utf-8",
+    "etag": '"2e5-HHQr6g+k8vdaPDl5rb0VqcvT9P4"',
+    "mtime": "2026-10-30T15:13:17.195Z",
+    "size": 741,
+    "path": "../client/robots.txt"
+  },
+  "/senior-life-guardian-192.webp": {
+    "type": "image/webp",
+    "etag": '"2e96-EduSZXlC/wgWqRPhr3qoxuKfFIw"',
+    "mtime": "2026-10-30T15:13:17.195Z",
+    "size": 11926,
+    "path": "../client/senior-life-guardian-192.webp"
+  },
+  "/og-senior-safe-v2.jpg": {
+    "type": "image/jpeg",
+    "etag": '"20f62-W3Xy2pgjyCl9gRE85X4Vhb/hlIU"',
+    "mtime": "2026-10-30T15:13:17.191Z",
+    "size": 135010,
+    "path": "../client/og-senior-safe-v2.jpg"
+  },
+  "/senior-life-guardian-512.webp": {
+    "type": "image/webp",
+    "etag": '"ab34-uzzaKm5JNL2IBiDwmTCcKDspHRI"',
+    "mtime": "2026-10-30T15:13:17.195Z",
+    "size": 43828,
+    "path": "../client/senior-life-guardian-512.webp"
+  },
+  "/senior-safe-192.webp": {
+    "type": "image/webp",
+    "etag": '"2b7a-nsqNzIDOOcjSMaYivtD1ODsmkWI"',
+    "mtime": "2026-10-30T15:13:17.195Z",
+    "size": 11130,
+    "path": "../client/senior-safe-192.webp"
+  },
+  "/og-senior-safe.jpg": {
+    "type": "image/jpeg",
+    "etag": '"20f62-W3Xy2pgjyCl9gRE85X4Vhb/hlIU"',
+    "mtime": "2026-10-30T15:13:17.191Z",
+    "size": 135010,
+    "path": "../client/og-senior-safe.jpg"
+  },
+  "/simulador-senior-safe.html": {
+    "type": "text/html; charset=utf-8",
+    "etag": '"552f-bapyJrRtVSmdzFXR5yYSsgcRyrw"',
+    "mtime": "2026-10-30T15:13:17.195Z",
+    "size": 21807,
+    "path": "../client/simulador-senior-safe.html"
+  },
+  "/senior-safe-512.webp": {
+    "type": "image/webp",
+    "etag": '"a726-hZrRYRYy8Yz3+TvFSdh5/6Q58Ck"',
+    "mtime": "2026-10-30T15:13:17.195Z",
+    "size": 42790,
+    "path": "../client/senior-safe-512.webp"
+  },
+  "/sitemap.xml": {
+    "type": "application/xml",
+    "etag": '"7fa-NXFfv8lxiW3xqBJKdair76LscJI"',
+    "mtime": "2026-10-30T15:13:17.195Z",
+    "size": 2042,
+    "path": "../client/sitemap.xml"
+  },
+  "/sw.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"327-MqI0WoLOwGNsHlSNV0PU/z/tf7s"',
+    "mtime": "2026-10-30T15:13:17.195Z",
+    "size": 807,
+    "path": "../client/sw.js"
+  },
+  "/brochure/emergency-button.jpg": {
+    "type": "image/jpeg",
+    "etag": '"10d75-lqoQ66VPhFyOWoAKqK++31co4g8"',
+    "mtime": "2026-10-30T15:13:17.127Z",
+    "size": 68981,
+    "path": "../client/brochure/emergency-button.jpg"
+  },
+  "/senior-safe-icon-source.png": {
+    "type": "image/png",
+    "etag": '"dc1a1-Pl9+w7gvnoSS5CpEtOpnFW28WoM"',
+    "mtime": "2026-10-30T15:13:17.195Z",
+    "size": 901537,
+    "path": "../client/senior-safe-icon-source.png"
+  },
+  "/brochure/family-photo.jpg": {
+    "type": "image/jpeg",
+    "etag": '"14aaa-/5rD1A4FZ4Byr2CdFmIYhlC9wYQ"',
+    "mtime": "2026-10-30T15:13:17.143Z",
+    "size": 84650,
+    "path": "../client/brochure/family-photo.jpg"
+  },
+  "/brochure/hero-emotional.jpg": {
+    "type": "image/jpeg",
+    "etag": '"14adf-Vb4HvuX7aGmagScLDuW6pC2SQI4"',
+    "mtime": "2026-10-30T15:13:17.143Z",
+    "size": 84703,
+    "path": "../client/brochure/hero-emotional.jpg"
+  },
+  "/brochure/logo-senior-safe.png": {
+    "type": "image/png",
+    "etag": '"50d69-hngY+uq11/5P+Wfs4Mc+q1YYoyA"',
+    "mtime": "2026-10-30T15:13:17.143Z",
+    "size": 331113,
+    "path": "../client/brochure/logo-senior-safe.png"
+  },
+  "/brochure/senior-couple.jpg": {
+    "type": "image/jpeg",
+    "etag": '"18e6c-8EKgzHHNuIl/a3PgzCqZ5NhAktw"',
+    "mtime": "2026-10-30T15:13:17.179Z",
+    "size": 101996,
+    "path": "../client/brochure/senior-couple.jpg"
+  },
+  "/brochure/senior-phone.jpg": {
+    "type": "image/jpeg",
+    "etag": '"275c3-yLctz8A6SCcsr5E8Slju+4fbc0w"',
+    "mtime": "2026-10-30T15:13:17.179Z",
+    "size": 161219,
+    "path": "../client/brochure/senior-phone.jpg"
+  },
+  "/images/blog-alarma-sos-responde.png": {
+    "type": "image/png",
+    "etag": '"167f3-/wY10Ic3IKrwblmJAFgW0hxARp8"',
+    "mtime": "2026-10-30T15:13:17.135Z",
+    "size": 92147,
+    "path": "../client/images/blog-alarma-sos-responde.png"
+  },
+  "/images/blog-ia-teleasistencia.jpg": {
+    "type": "image/jpeg",
+    "etag": '"23eb1-EEIczfBIoDqPzBfZwFsVjlG8JWI"',
+    "mtime": "2026-10-30T15:13:17.183Z",
+    "size": 147121,
+    "path": "../client/images/blog-ia-teleasistencia.jpg"
+  },
+  "/images/blog-independencia-senior.jpg": {
+    "type": "image/jpeg",
+    "etag": '"1db31-7vZ+XKWHydKZM+qopUai+JwXGCk"',
+    "mtime": "2026-10-30T15:13:17.183Z",
+    "size": 121649,
+    "path": "../client/images/blog-independencia-senior.jpg"
+  },
+  "/images/blog-prensa-seguridad.jpg": {
+    "type": "image/jpeg",
+    "etag": '"2c2ce-/8mapMMzqMn6uqOkSf02tS4xFJk"',
+    "mtime": "2026-10-30T15:13:17.187Z",
+    "size": 180942,
+    "path": "../client/images/blog-prensa-seguridad.jpg"
+  },
+  "/images/cabecera-familia-senior.jpg": {
+    "type": "image/jpeg",
+    "etag": '"23eb1-EEIczfBIoDqPzBfZwFsVjlG8JWI"',
+    "mtime": "2026-10-30T15:13:17.191Z",
+    "size": 147121,
+    "path": "../client/images/cabecera-familia-senior.jpg"
+  },
+  "/images/deteccion-caidas-senior.jpg": {
+    "type": "image/jpeg",
+    "etag": '"23eb1-EEIczfBIoDqPzBfZwFsVjlG8JWI"',
+    "mtime": "2026-10-30T15:13:17.187Z",
+    "size": 147121,
+    "path": "../client/images/deteccion-caidas-senior.jpg"
+  },
+  "/images/hero-senior-phone.jpg": {
+    "type": "image/jpeg",
+    "etag": '"3cd34-IMMdca/4+IQxvQR1esS2DJbSV9o"',
+    "mtime": "2026-10-30T15:13:17.187Z",
+    "size": 249140,
+    "path": "../client/images/hero-senior-phone.jpg"
+  },
+  "/convenio-las-condes/ficha.pdf": {
+    "type": "application/pdf",
+    "etag": '"5f8cc-glqVhJfqAWU0EsT3u2b9R2IvNkE"',
+    "mtime": "2026-10-30T15:13:17.127Z",
+    "size": 391372,
+    "path": "../client/convenio-las-condes/ficha.pdf"
+  },
+  "/convenio-las-condes/ig-como.png": {
+    "type": "image/png",
+    "etag": '"1422a-BpTxNrIFU/KZZ9ZRgiOgjYUFl3s"',
+    "mtime": "2026-10-30T15:13:17.135Z",
+    "size": 82474,
+    "path": "../client/convenio-las-condes/ig-como.png"
+  },
+  "/convenio-las-condes/ig-anuncio.png": {
+    "type": "image/png",
+    "etag": '"63bc6-yD/CtMBr7bd6DTuq8hBxWWkuuUI"',
+    "mtime": "2026-10-30T15:13:17.135Z",
+    "size": 408518,
+    "path": "../client/convenio-las-condes/ig-anuncio.png"
+  },
+  "/convenio-las-condes/ig-historia.png": {
+    "type": "image/png",
+    "etag": '"26409-cHmfhVzZ2Z+gybTctTC2NEEpcc4"',
+    "mtime": "2026-10-30T15:13:17.135Z",
+    "size": 156681,
+    "path": "../client/convenio-las-condes/ig-historia.png"
+  },
+  "/convenio-las-condes/ig-precios.png": {
+    "type": "image/png",
+    "etag": '"1fa4c-hIIaBp6qbHZBcg1SP/1miX6rHEM"',
+    "mtime": "2026-10-30T15:13:17.139Z",
+    "size": 129612,
+    "path": "../client/convenio-las-condes/ig-precios.png"
+  },
+  "/convenio-las-condes/banner.png": {
+    "type": "image/png",
+    "etag": '"d7234-vqlVxW/dD7w5N5sRgbyLy5T0pbQ"',
+    "mtime": "2026-10-30T15:13:17.127Z",
+    "size": 881204,
+    "path": "../client/convenio-las-condes/banner.png"
+  },
+  "/convenio-las-condes/ficha.png": {
+    "type": "image/png",
+    "etag": '"8e20b-6nklSz9Ypcxy/nOTT4Hqokz2BU8"',
+    "mtime": "2026-10-30T15:13:17.135Z",
+    "size": 582155,
+    "path": "../client/convenio-las-condes/ficha.png"
+  },
+  "/convenio-las-condes/cuadrado.png": {
+    "type": "image/png",
+    "etag": '"e0a5d-nRiawxD5R16Rw4EbmV3uNqnwQxQ"',
+    "mtime": "2026-10-30T15:13:17.127Z",
+    "size": 920157,
+    "path": "../client/convenio-las-condes/cuadrado.png"
+  },
+  "/brochure/screen-alerta-multicanal.png": {
+    "type": "image/png",
+    "etag": '"15b6f8-uA7jbX0+iHgboDTvv5SP+zOHzAM"',
+    "mtime": "2026-10-30T15:13:17.179Z",
+    "size": 1423096,
+    "path": "../client/brochure/screen-alerta-multicanal.png"
+  },
+  "/brochure/screen-red-proteccion.png": {
+    "type": "image/png",
+    "etag": '"15b7ff-gXnDwWr71ZJnLn/6G4OXsxXrzpo"',
+    "mtime": "2026-10-30T15:13:17.167Z",
+    "size": 1423359,
+    "path": "../client/brochure/screen-red-proteccion.png"
+  },
+  "/brochure/screen-ubicacion-gps.png": {
+    "type": "image/png",
+    "etag": '"13c7b5-RLrDTOtmBVSF1Fo8OuGREEvZqRE"',
+    "mtime": "2026-10-30T15:13:17.159Z",
+    "size": 1296309,
+    "path": "../client/brochure/screen-ubicacion-gps.png"
+  },
+  "/brochure/screen-modo-familiar.png": {
+    "type": "image/png",
+    "etag": '"1a03f5-SkF4IkNen/eUcikmsHCxYe0szzc"',
+    "mtime": "2026-10-30T15:13:17.159Z",
+    "size": 1704949,
+    "path": "../client/brochure/screen-modo-familiar.png"
+  },
+  "/convenio-las-condes/tv-feed-1.png": {
+    "type": "image/png",
+    "etag": '"14f5c7-YyN5dI1b1iIgm/vDAHQpkVA5W40"',
+    "mtime": "2026-10-30T15:13:17.139Z",
+    "size": 1373639,
+    "path": "../client/convenio-las-condes/tv-feed-1.png"
+  },
+  "/convenio-las-condes/tv-feed-2.png": {
+    "type": "image/png",
+    "etag": '"17459-X6TTg+tSliRd60Ue+SeJ3hz5anA"',
+    "mtime": "2026-10-30T15:13:17.139Z",
+    "size": 95321,
+    "path": "../client/convenio-las-condes/tv-feed-2.png"
+  },
+  "/assets/activacion-DtqBFgK5.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"29-crG9x4dYeQi7xsfEfaRvCOejUcg"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 41,
+    "path": "../client/assets/activacion-DtqBFgK5.js"
+  },
+  "/convenio-las-condes/tv-reel-poster.jpg": {
+    "type": "image/jpeg",
+    "etag": '"465f1-HoB3wT9C8IDb7tfjcrV4/adRRdM"',
+    "mtime": "2026-10-30T15:13:17.139Z",
+    "size": 288241,
+    "path": "../client/convenio-las-condes/tv-reel-poster.jpg"
+  },
+  "/assets/activar-whatsapp-DynQQZ-C.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"ae7-Ka9fvC/stila97Kkz9QOO07Aumw"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 2791,
+    "path": "../client/assets/activar-whatsapp-DynQQZ-C.js"
+  },
+  "/assets/admin-C3e_-U6V.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"67-ipHEtlPIXRQu8nFU2I57le3+TIs"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 103,
+    "path": "../client/assets/admin-C3e_-U6V.js"
+  },
+  "/assets/activity-I2h397u0.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"f6-VsvEoidSTZZMgHU7o+Nwiaroe9k"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 246,
+    "path": "../client/assets/activity-I2h397u0.js"
+  },
+  "/assets/admin-auth-NTzgpTM4.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"2f-/AtRMhCKSP5LqjyXxq2pCPbRK/Q"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 47,
+    "path": "../client/assets/admin-auth-NTzgpTM4.js"
+  },
+  "/assets/admin.discounts-DdkRLCcR.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"1afc-T04nC8aIzRwnEeDwiVBSF9iKFrA"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 6908,
+    "path": "../client/assets/admin.discounts-DdkRLCcR.js"
+  },
+  "/assets/admin.accounts-zVnTEFim.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"1905-R3X/ij/SXPa06kH5OvJXXDNx4CE"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 6405,
+    "path": "../client/assets/admin.accounts-zVnTEFim.js"
+  },
+  "/assets/admin-pin-gate-CBMQDmv4.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"4b4-VmWrIfEch27POxyTITE1qPVyXN0"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 1204,
+    "path": "../client/assets/admin-pin-gate-CBMQDmv4.js"
+  },
+  "/assets/admin.inbox-B75dtrIz.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"1bdf-vkJ+XJGRI/pyvaaWL9kOltg3CTU"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 7135,
+    "path": "../client/assets/admin.inbox-B75dtrIz.js"
+  },
+  "/assets/admin.index-DjlP3IGw.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"9ed-m0sVihB9AzgkXMY0yYg1GMxyfOc"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 2541,
+    "path": "../client/assets/admin.index-DjlP3IGw.js"
+  },
+  "/assets/admin.reset-DCOwlUBy.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"186b-oQG2TX4rWCjFvVb/K7EVzsYNp+c"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 6251,
+    "path": "../client/assets/admin.reset-DCOwlUBy.js"
+  },
+  "/assets/admin.transbank-validacion-CRUb3DVI.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"28cb-MtDzEm7Yx3TXpuEH3410Rjbre/0"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 10443,
+    "path": "../client/assets/admin.transbank-validacion-CRUb3DVI.js"
+  },
+  "/assets/alarma-familiar-CJYzUNhZ.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"2b1a-i4hLhtfSCgaTz3Prz6+OtrJ5+Yg"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 11034,
+    "path": "../client/assets/alarma-familiar-CJYzUNhZ.js"
+  },
+  "/assets/alertas-DESxIidH.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"cf7-JLj8LPXi39mumQiFPKLFRO90KcI"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 3319,
+    "path": "../client/assets/alertas-DESxIidH.js"
+  },
+  "/assets/analitica-2crqeTax.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"34ee-N/U/tpdzEYy9u4lTbhX0KjHAIrI"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 13550,
+    "path": "../client/assets/analitica-2crqeTax.js"
+  },
+  "/assets/app-pRRVXVSj.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"c1a9-hnKyFLFDAevaU4YdkYyRRwbtvFw"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 49577,
+    "path": "../client/assets/app-pRRVXVSj.js"
+  },
+  "/assets/arrow-left-C5EufnlG.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"b1-A5A1SqPLn0qVvEYiaG3EL+I+Boo"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 177,
+    "path": "../client/assets/arrow-left-C5EufnlG.js"
+  },
+  "/assets/arrow-right-DA0P6f1U.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"b1-358uB0sDKr5KSMnF4vPzGVxnwmw"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 177,
+    "path": "../client/assets/arrow-right-DA0P6f1U.js"
+  },
+  "/assets/arrow-up-DXaCwqjE.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"1b8-mQu+vnl4rNUoFm2vx/CMD2QI9BA"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 440,
+    "path": "../client/assets/arrow-up-DXaCwqjE.js"
+  },
+  "/convenio-las-condes/tv-historia.png": {
+    "type": "image/png",
+    "etag": '"1baeac-V4GC56RWTCNJvh/zZ56mu/r/1Yw"',
+    "mtime": "2026-10-30T15:13:17.143Z",
+    "size": 1814188,
+    "path": "../client/convenio-las-condes/tv-historia.png"
+  },
+  "/assets/battery-CMATRf_i.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"cc-LhurHvJkcctg8/ajWIqeOa7NHNE"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 204,
+    "path": "../client/assets/battery-CMATRf_i.js"
+  },
+  "/assets/bell-DUnuEW-Z.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"12e-gI/nkgNxicL+cRlflYvvKk36GEM"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 302,
+    "path": "../client/assets/bell-DUnuEW-Z.js"
+  },
+  "/assets/bienvenida-premium-bD_ynkSG.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"b77-udSpNJ5c3e1e+l5LbJExDZjlRbk"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 2935,
+    "path": "../client/assets/bienvenida-premium-bD_ynkSG.js"
+  },
+  "/assets/blog.alarma-sos-para-adultos-mayores-que-si-responde-CVntwlwL.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"313e-/oGY9bygxDlJgLj4z86JPFnTa6U"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 12606,
+    "path": "../client/assets/blog.alarma-sos-para-adultos-mayores-que-si-responde-CVntwlwL.js"
+  },
+  "/assets/blog.como-la-ia-salva-vidas-emergencias-domesticas-tr_ANI6C.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"25ee-x/xWy+tWGTayhnuCm6NWI+u/IT4"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 9710,
+    "path": "../client/assets/blog.como-la-ia-salva-vidas-emergencias-domesticas-tr_ANI6C.js"
+  },
+  "/assets/blog.revista-seguridad-destaca-lanzamiento-senior-safe-DM9cWs69.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"1b5a-Ncikaq8pyQDc+bEcv9oMH07yVvc"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 7002,
+    "path": "../client/assets/blog.revista-seguridad-destaca-lanzamiento-senior-safe-DM9cWs69.js"
+  },
+  "/assets/blog.index-BI3SR7NK.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"11cf-dawWdSLLp2NuHJ4L9xFvxELGOms"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 4559,
+    "path": "../client/assets/blog.index-BI3SR7NK.js"
+  },
+  "/assets/blog.como-hablar-con-padres-seguridad-sin-perder-independencia-B2sDPWqp.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"2568-Z++bfCB9fIr9BdlKB4rGvQGL5DI"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 9576,
+    "path": "../client/assets/blog.como-hablar-con-padres-seguridad-sin-perder-independencia-B2sDPWqp.js"
+  },
+  "/assets/button-COwuS8lj.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"c03-F27oA3j++flyWsvB7YC9YzzRsXk"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 3075,
+    "path": "../client/assets/button-COwuS8lj.js"
+  },
+  "/assets/card-DN0ANbSd.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"3de-BDjOR83oNq6JwhQNqGqZ5wIiOG4"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 990,
+    "path": "../client/assets/card-DN0ANbSd.js"
+  },
+  "/assets/chevron-right-DSAAwh3i.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"8e-AyTdYmGphflI667f6ti93d86bgo"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 142,
+    "path": "../client/assets/chevron-right-DSAAwh3i.js"
+  },
+  "/assets/checkout-DvY-b5Dm.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"5513-un20oiNsbjdQQf4nzYLCOdCstVI"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 21779,
+    "path": "../client/assets/checkout-DvY-b5Dm.js"
+  },
+  "/assets/circle-alert-Dwk29xEs.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"106-nHyw1pNE/Y91cg0SO33gEem37OQ"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 262,
+    "path": "../client/assets/circle-alert-Dwk29xEs.js"
+  },
+  "/assets/circle-x-BMbmJXm3.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"d6-sH0ka/yV6jxiYVs2vXP/x49Ul4g"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 214,
+    "path": "../client/assets/circle-x-BMbmJXm3.js"
+  },
+  "/assets/circle-check-BnTtgxbA.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"b9-KOwT1JoYFOiKRGIOuLUuY63ljnA"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 185,
+    "path": "../client/assets/circle-check-BnTtgxbA.js"
+  },
+  "/assets/chart-DV1Ill0S.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"5e536-MJD3i7IVdow4GuNtzHC3E3w+Yzg"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 386358,
+    "path": "../client/assets/chart-DV1Ill0S.js"
+  },
+  "/assets/client.server-BC6JrgM7.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"32acf-rOmoVw3D8A7UCdmHQ7mkTgYEdmY"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 207567,
+    "path": "../client/assets/client.server-BC6JrgM7.js"
+  },
+  "/assets/clock-DqB8l7TF.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"b0-EN4FJLcuVKVZ3vJUx1RAVON9oko"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 176,
+    "path": "../client/assets/clock-DqB8l7TF.js"
+  },
+  "/assets/como-funciona-ComMNU_4.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"24b2-/Z5kEExMfcdgE1iVyBsXKVPaqyc"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 9394,
+    "path": "../client/assets/como-funciona-ComMNU_4.js"
+  },
+  "/assets/convenio-las-condes-GoL0K1m8.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"1d9-TETkcIHH3EgnTDuFSJ8f3vAN2A8"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 473,
+    "path": "../client/assets/convenio-las-condes-GoL0K1m8.js"
+  },
+  "/assets/createLucideIcon-Cu5nMGYM.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"4b2-ZnVYSpSqmfu23/I5ePPVpycDsyM"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 1202,
+    "path": "../client/assets/createLucideIcon-Cu5nMGYM.js"
+  },
+  "/assets/createServerFn-C9md1gPT.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"11bb-l2uwQ4ToaTQXfgb7JnsSJgFmzjc"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 4539,
+    "path": "../client/assets/createServerFn-C9md1gPT.js"
+  },
+  "/assets/credit-card-BM10pb9d.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"db-htGCLFUsTMx+Souzp5uYBLyQcys"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 219,
+    "path": "../client/assets/credit-card-BM10pb9d.js"
+  },
+  "/assets/dashboard-DtqBFgK5.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"29-crG9x4dYeQi7xsfEfaRvCOejUcg"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 41,
+    "path": "../client/assets/dashboard-DtqBFgK5.js"
+  },
+  "/assets/demo-B1XPebYE.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"13b0-Nx3IGrKP8Kyz6aIFJwZ954scp1A"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 5040,
+    "path": "../client/assets/demo-B1XPebYE.js"
+  },
+  "/assets/demo-config-4Tk8uEMi.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"16b-ejqlzgruwA0YPcWrrafACd2oZMQ"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 363,
+    "path": "../client/assets/demo-config-4Tk8uEMi.js"
+  },
+  "/assets/demo-context-B_rjpaio.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"1527-mErSzXLBIcLE7Nyry6pkMLVU7Xo"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 5415,
+    "path": "../client/assets/demo-context-B_rjpaio.js"
+  },
+  "/assets/demo-insights-chat-Brw8FPYg.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"16f7-u2BEFsckO8PafSkVc2TtIWWvjSA"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 5879,
+    "path": "../client/assets/demo-insights-chat-Brw8FPYg.js"
+  },
+  "/assets/demo-data-HZFIrA7m.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"11f1-7y4HC75QZiEzzAhSJA4gedv6EBA"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 4593,
+    "path": "../client/assets/demo-data-HZFIrA7m.js"
+  },
+  "/assets/demo-map-visual-B0B8JXP0.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"80d-IKuhKXh4uueX1oy6SK2HfyPvJAo"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 2061,
+    "path": "../client/assets/demo-map-visual-B0B8JXP0.js"
+  },
+  "/assets/demo-nav-TXxyLoe9.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"aab-EbD5dxz1Kl8VOt1eGoR/W8A0EUs"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 2731,
+    "path": "../client/assets/demo-nav-TXxyLoe9.js"
+  },
+  "/assets/demo-phone-frame-Pr3mAm2K.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"2d3-WZYF9kcpXzvKNR5lfsdCX8wXJgg"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 723,
+    "path": "../client/assets/demo-phone-frame-Pr3mAm2K.js"
+  },
+  "/assets/device-CfCLlubZ.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"581-tr1sslBiR4qx4Tjd7NsH0qGaihE"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 1409,
+    "path": "../client/assets/device-CfCLlubZ.js"
+  },
+  "/assets/dialog-Dj5yC-kv.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"6df9-tSiRkJkpmQwkKbAw3yRiWY1Sa2M"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 28153,
+    "path": "../client/assets/dialog-Dj5yC-kv.js"
+  },
+  "/assets/discount-codes-D43uEMey.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"676-etMmJizmPex699zDhFsg2A7d4oA"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 1654,
+    "path": "../client/assets/discount-codes-D43uEMey.js"
+  },
+  "/assets/download-CTI2Iyzq.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"f4-u/5BepCqyfJS358evaeWupNgYoY"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 244,
+    "path": "../client/assets/download-CTI2Iyzq.js"
+  },
+  "/assets/ejecutivo-DtCUIjcv.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"37a3-Gwq6dvoYTYR8ntrHh0BWmgKVVwY"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 14243,
+    "path": "../client/assets/ejecutivo-DtCUIjcv.js"
+  },
+  "/assets/emergency-cascade-timing-bioFKPfW.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"8e-7CZ9eyUxSNNeDzCKZDN6ts9XYYg"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 142,
+    "path": "../client/assets/emergency-cascade-timing-bioFKPfW.js"
+  },
+  "/assets/emergency-category-PmM0zU8V.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"2a5-s5+vkQzUYyojmhz03IrCVZQ8V6M"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 677,
+    "path": "../client/assets/emergency-category-PmM0zU8V.js"
+  },
+  "/assets/anciana-living-discover-pu9L8ImK.png": {
+    "type": "image/png",
+    "etag": '"3dbad7-+F3I/gdSeRBcN4iiWcNOHZbXamA"',
+    "mtime": "2026-10-30T15:13:13.283Z",
+    "size": 4045527,
+    "path": "../client/assets/anciana-living-discover-pu9L8ImK.png"
+  },
+  "/assets/external-link-COxNCU2v.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"107-/wZ7ppppy3DDZD6/0uXOlCxY1gk"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 263,
+    "path": "../client/assets/external-link-COxNCU2v.js"
+  },
+  "/assets/emergency-simulator-BKMxD8Qi.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"3eda-a+bgyd4x+TXVmq0TaJPjqj7CJHY"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 16090,
+    "path": "../client/assets/emergency-simulator-BKMxD8Qi.js"
+  },
+  "/assets/familia-D1_A9GaZ.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"1073-tPf6phd8TS8JWn9pdzlDUSE7nTE"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 4211,
+    "path": "../client/assets/familia-D1_A9GaZ.js"
+  },
+  "/assets/familia.ack._token-BHZG89pv.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"2f6-97F7PEJoO3lA7R4mueNm0o4Og00"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 758,
+    "path": "../client/assets/familia.ack._token-BHZG89pv.js"
+  },
+  "/assets/familia.dashboard-D5iUaX9g.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"262f-DeqJyc65zTqJUZ8M2G8EC1Kv0kc"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 9775,
+    "path": "../client/assets/familia.dashboard-D5iUaX9g.js"
+  },
+  "/assets/familia.guardianes-C1PU2ipR.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"24ad-3jQlf0Ppdr3uOAfZXX8q85GL3Xk"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 9389,
+    "path": "../client/assets/familia.guardianes-C1PU2ipR.js"
+  },
+  "/assets/family-photo-3l8UpZWN.jpg": {
+    "type": "image/jpeg",
+    "etag": '"14aaa-/5rD1A4FZ4Byr2CdFmIYhlC9wYQ"',
+    "mtime": "2026-10-30T15:13:13.271Z",
+    "size": 84650,
+    "path": "../client/assets/family-photo-3l8UpZWN.jpg"
+  },
+  "/convenio-las-condes/tv-reel.mp4": {
+    "type": "video/mp4",
+    "etag": '"5a7c26-/glmtOKgQtTBdSQ+n8Xgt/lOK2o"',
+    "mtime": "2026-10-30T15:13:17.151Z",
+    "size": 5930022,
+    "path": "../client/convenio-las-condes/tv-reel.mp4"
+  },
+  "/assets/family-portal.functions-DvbDJeJ7.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"27c-Wda7hTlkri2GpN3n2+6J4bz+NAM"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 636,
+    "path": "../client/assets/family-portal.functions-DvbDJeJ7.js"
+  },
+  "/assets/family-session-C_uQf2xu.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"30a-iXFkh6hGXQD7gb8rtBv45j2+p1o"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 778,
+    "path": "../client/assets/family-session-C_uQf2xu.js"
+  },
+  "/assets/file-text-BOiecgZR.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"18d-mHiEOu+vV3j5D4Bl03CWYl2B7gs"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 397,
+    "path": "../client/assets/file-text-BOiecgZR.js"
+  },
+  "/assets/flujo-BsBcMOhp.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"3a2-2aOzL5cXxJC1jCTGcfEvAtcxKIk"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 930,
+    "path": "../client/assets/flujo-BsBcMOhp.js"
+  },
+  "/assets/flujo-D45ny7xL.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"1f80-SV3/azgCXaKU2k/fal/1w0d/06A"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 8064,
+    "path": "../client/assets/flujo-D45ny7xL.js"
+  },
+  "/assets/gift-Cv6x7aLO.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"169-LqP7AcAk++j3ZrwajlCMADO3oi4"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 361,
+    "path": "../client/assets/gift-Cv6x7aLO.js"
+  },
+  "/assets/guardian-limits-Bk_LteBL.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"1a-NKKUtloJnMvTtYd5hqWsuDC1pFg"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 26,
+    "path": "../client/assets/guardian-limits-Bk_LteBL.js"
+  },
+  "/assets/guia-C-esWHjK.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"2833-crJlITk6kEKk7yFNRwz33xHtefM"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 10291,
+    "path": "../client/assets/guia-C-esWHjK.js"
+  },
+  "/assets/heart-BVZPWqp4.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"10e-3KXku3xKddP8NXHG+WQpQrtyH/0"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 270,
+    "path": "../client/assets/heart-BVZPWqp4.js"
+  },
+  "/assets/house-4UKIFXKG.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"125-ArS3NuBkbYP3Cp+tEucvnMGIcvA"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 293,
+    "path": "../client/assets/house-4UKIFXKG.js"
+  },
+  "/assets/index-BL6iIRzH.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"ecec-XjbCOdUfcMAR31loB8H0BO72IS0"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 60652,
+    "path": "../client/assets/index-BL6iIRzH.js"
+  },
+  "/assets/index-CetLQ4s1.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"10aa-t2X+13s4evOoH6NA2LIfNXA82x0"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 4266,
+    "path": "../client/assets/index-CetLQ4s1.js"
+  },
+  "/assets/index-D3KsKzkW.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"8db-iRoiXMpSg+6zZ0NiW/xtgh8rlNo"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 2267,
+    "path": "../client/assets/index-D3KsKzkW.js"
+  },
+  "/assets/index-Bw2-T8tc.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"18e-LCBONCbaC90ov3i+PBZlgpkdRKU"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 398,
+    "path": "../client/assets/index-Bw2-T8tc.js"
+  },
+  "/assets/index-CobTJpls.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"2bb-VB3Axpdvm5iMADqtjAGvZEeu5qk"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 699,
+    "path": "../client/assets/index-CobTJpls.js"
+  },
+  "/assets/index-D3VJ-btq.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"7706e-iyb0+5dsZrc7R/b75FK+3XeYFjM"',
+    "mtime": "2026-10-30T15:13:13.271Z",
+    "size": 487534,
+    "path": "../client/assets/index-D3VJ-btq.js"
+  },
+  "/assets/index-D9FTsPHV.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"7ea-Tw1JHBFymhrX1M1dUk4dU/Z1JtQ"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 2026,
+    "path": "../client/assets/index-D9FTsPHV.js"
+  },
+  "/assets/index-DOQoo1jV.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"bcd-HA2KU0k5xwWsUqcwPyM8zvvFYes"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 3021,
+    "path": "../client/assets/index-DOQoo1jV.js"
+  },
+  "/assets/input-BARhEpLZ.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"24e-F1XQFhNBK6UWOFGUy8WbykETsdw"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 590,
+    "path": "../client/assets/input-BARhEpLZ.js"
+  },
+  "/assets/instalar-app-DSOz_nLv.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"53b-nvbTHbeEpVnScnrxK8QIB8ovPRY"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 1339,
+    "path": "../client/assets/instalar-app-DSOz_nLv.js"
+  },
+  "/assets/key-round-16riG457.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"16a-f6Ulzf4xBaL3t2MYhWxW8XkQTDI"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 362,
+    "path": "../client/assets/key-round-16riG457.js"
+  },
+  "/assets/install-notify-banner-iiyUZgUU.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"58d-xE6aKuASIkMHvmCUztlZ8aDuKLA"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 1421,
+    "path": "../client/assets/install-notify-banner-iiyUZgUU.js"
+  },
+  "/assets/label-D3F-zj0M.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"3d6-oBw5/RT9WiQFnSia8YKaKfAfpXA"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 982,
+    "path": "../client/assets/label-D3F-zj0M.js"
+  },
+  "/assets/las-condes-BKScvN8B.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"2111-LVFMDtgNe2QgAMy5zcHxYGY84GI"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 8465,
+    "path": "../client/assets/las-condes-BKScvN8B.js"
+  },
+  "/assets/loader-circle-PdMaM1-x.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"97-b7b2gz7PftmX3V8KAhOPVtpOq90"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 151,
+    "path": "../client/assets/loader-circle-PdMaM1-x.js"
+  },
+  "/assets/location-map-Cr6n1TTo.css": {
+    "type": "text/css; charset=utf-8",
+    "etag": '"9f70-aSEgjLCD6y0ywPJeMR/sb28Iick"',
+    "mtime": "2026-10-30T15:13:13.271Z",
+    "size": 40816,
+    "path": "../client/assets/location-map-Cr6n1TTo.css"
+  },
+  "/assets/lock-CRysMYMI.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"d5-FoDbVDu4sfGwPjBkNP7183r50FY"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 213,
+    "path": "../client/assets/lock-CRysMYMI.js"
+  },
+  "/assets/mail-CKL_GaID.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"e1-XCJMb3z+H5fqTEa0eJ02QTbbpeM"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 225,
+    "path": "../client/assets/mail-CKL_GaID.js"
+  },
+  "/assets/map-pin-BrxI7xO_.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"10a-t8qcUqDNVuIaQcEXh9IYTw5Jsog"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 266,
+    "path": "../client/assets/map-pin-BrxI7xO_.js"
+  },
+  "/assets/message-circle-B0Picxis.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"fd-vibmNTNVmMlLkTxKWg6HUu+VxFg"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 253,
+    "path": "../client/assets/message-circle-B0Picxis.js"
+  },
+  "/assets/mapa-8NwqTnhP.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"77a-MaDwDBiU6KX7Qb6mbUVchoZDMD0"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 1914,
+    "path": "../client/assets/mapa-8NwqTnhP.js"
+  },
+  "/assets/monitoreo-BozV8GOs.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"1272-AODqXFzyU5LfOiiDGIMp77jPlQI"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 4722,
+    "path": "../client/assets/monitoreo-BozV8GOs.js"
+  },
+  "/assets/native-DRsobyk7.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"56ba-4z7ET7UJ6SNtGtj59mesVUVo3hs"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 22202,
+    "path": "../client/assets/native-DRsobyk7.js"
+  },
+  "/assets/oneclick.credit-retorno-DtqBFgK5.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"29-crG9x4dYeQi7xsfEfaRvCOejUcg"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 41,
+    "path": "../client/assets/oneclick.credit-retorno-DtqBFgK5.js"
+  },
+  "/assets/logo-senior-safe-IwV_otLv.png": {
+    "type": "image/png",
+    "etag": '"50d69-hngY+uq11/5P+Wfs4Mc+q1YYoyA"',
+    "mtime": "2026-10-30T15:13:13.271Z",
+    "size": 331113,
+    "path": "../client/assets/logo-senior-safe-IwV_otLv.png"
+  },
+  "/assets/navigation-CDWP5dWU.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"a0-qUT9MmSg5EEPWZDohcX3qExzNEQ"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 160,
+    "path": "../client/assets/navigation-CDWP5dWU.js"
+  },
+  "/assets/oneclick.debit-reject-validacion-DtqBFgK5.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"29-crG9x4dYeQi7xsfEfaRvCOejUcg"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 41,
+    "path": "../client/assets/oneclick.debit-reject-validacion-DtqBFgK5.js"
+  },
+  "/assets/oneclick.debit-retorno-DtqBFgK5.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"29-crG9x4dYeQi7xsfEfaRvCOejUcg"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 41,
+    "path": "../client/assets/oneclick.debit-retorno-DtqBFgK5.js"
+  },
+  "/assets/oneclick.functions-EOcESJmW.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"496-ry9l3AtqYFB1v96x956rPaJ7lRY"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 1174,
+    "path": "../client/assets/oneclick.functions-EOcESJmW.js"
+  },
+  "/assets/oneclick.inscripcion-abandonada-DtqBFgK5.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"29-crG9x4dYeQi7xsfEfaRvCOejUcg"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 41,
+    "path": "../client/assets/oneclick.inscripcion-abandonada-DtqBFgK5.js"
+  },
+  "/assets/oneclick.retorno-duTRO1_b.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"1e53-4Z4x8xn9MXA7VPWMxsnF9M5rHv4"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 7763,
+    "path": "../client/assets/oneclick.retorno-duTRO1_b.js"
+  },
+  "/assets/phone-C_m1xPWm.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"14e-lqPMDLM1SmZpwAo+pyT5SBFsinM"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 334,
+    "path": "../client/assets/phone-C_m1xPWm.js"
+  },
+  "/assets/perfil-51R4eAHx.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"b8b-vbfpb5GmVDlKSXOzivVJsRVK6D0"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 2955,
+    "path": "../client/assets/perfil-51R4eAHx.js"
+  },
+  "/assets/planes-CmF449oT.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"1216-A3dIXyrLO4Te3rsN0Ia3KHkPYt4"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 4630,
+    "path": "../client/assets/planes-CmF449oT.js"
+  },
+  "/assets/plus-EuM8USEC.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"a5-On6T9EcOUOEYenovFVvkhYSfUhk"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 165,
+    "path": "../client/assets/plus-EuM8USEC.js"
+  },
+  "/assets/play-DGVKdW7X.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"ca-HveI3s/lfl7KF8/Mtjexgr+LnHg"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 202,
+    "path": "../client/assets/play-DGVKdW7X.js"
+  },
+  "/assets/post-payment-install-screen-CP4nWxid.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"6c4b-NgOJvhCqm872EFb1ix6TDLmHPeA"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 27723,
+    "path": "../client/assets/post-payment-install-screen-CP4nWxid.js"
+  },
+  "/assets/post-payment-B_-v-cj1.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"c7a-d0fD6XHU2NfRa3scjDzNJ4U8vss"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 3194,
+    "path": "../client/assets/post-payment-B_-v-cj1.js"
+  },
+  "/assets/location-map-SLdgCbMU.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"1c1565-ZLQaI7iDAfH7skqlZr9N+n6Mcq8"',
+    "mtime": "2026-10-30T15:13:13.279Z",
+    "size": 1840485,
+    "path": "../client/assets/location-map-SLdgCbMU.js"
+  },
+  "/assets/presentacion-BYDEk96g.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"2f23-Q8IoG3VfEc7wZITZNwVd3y85wQ8"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 12067,
+    "path": "../client/assets/presentacion-BYDEk96g.js"
+  },
+  "/assets/privacidad-xTpfyJOJ.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"d26-jB7qcZwuQC/Fu0rViThxVg62A98"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 3366,
+    "path": "../client/assets/privacidad-xTpfyJOJ.js"
+  },
+  "/assets/radio-BpQIA7NM.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"182-ojM96qlBLAFoGOqgdQks9/jywMA"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 386,
+    "path": "../client/assets/radio-BpQIA7NM.js"
+  },
+  "/assets/refresh-cw-DsI5Tycw.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"14d-68aXC/Yv9U8KDlWPcIpH9YnFZws"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 333,
+    "path": "../client/assets/refresh-cw-DsI5Tycw.js"
+  },
+  "/assets/rotate-ccw-Bv5PbPsr.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"d4-B4E0D0quk5KZoewO14cAvtYSNGE"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 212,
+    "path": "../client/assets/rotate-ccw-Bv5PbPsr.js"
+  },
+  "/assets/reportes-D20hD99I.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"769-+5B+DKdLVJhdBlLX5ytUcXeR/KA"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 1897,
+    "path": "../client/assets/reportes-D20hD99I.js"
+  },
+  "/assets/senior-couple-D8rl0vIO.jpg": {
+    "type": "image/jpeg",
+    "etag": '"18e6c-8EKgzHHNuIl/a3PgzCqZ5NhAktw"',
+    "mtime": "2026-10-30T15:13:13.267Z",
+    "size": 101996,
+    "path": "../client/assets/senior-couple-D8rl0vIO.jpg"
+  },
+  "/assets/send-Ce0shOky.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"12e-X3h694wiWS9g8LQNE+hqhWLMmjM"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 302,
+    "path": "../client/assets/send-Ce0shOky.js"
+  },
+  "/assets/senior-phone-BwL382rv.jpg": {
+    "type": "image/jpeg",
+    "etag": '"275c3-yLctz8A6SCcsr5E8Slju+4fbc0w"',
+    "mtime": "2026-10-30T15:13:13.271Z",
+    "size": 161219,
+    "path": "../client/assets/senior-phone-BwL382rv.jpg"
+  },
+  "/assets/shield-check-DHs8kWiY.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"147-lomweFCZmkszMgi2DrJEHcst5rs"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 327,
+    "path": "../client/assets/shield-check-DHs8kWiY.js"
+  },
+  "/assets/simulador-xdlDBhdL.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"508-wJNUmu84BcrmDYqNWnLtKQ6yVhk"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 1288,
+    "path": "../client/assets/simulador-xdlDBhdL.js"
+  },
+  "/assets/shield-BMViMHOL.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"117-9OFUOnhZdwX2u4mq682Qa4LpcH4"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 279,
+    "path": "../client/assets/shield-BMViMHOL.js"
+  },
+  "/assets/site-layout-C71SxscE.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"1b90-8XTVFneoeUm1pVREvMIb5O7411o"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 7056,
+    "path": "../client/assets/site-layout-C71SxscE.js"
+  },
+  "/assets/sparkles-BMpYdT1h.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"1fa-3o6zyOv/Q77SeFmwMgD9G6MBVnI"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 506,
+    "path": "../client/assets/sparkles-BMpYdT1h.js"
+  },
+  "/assets/smartphone-D96N7r0k.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"d1-ynabiy17LskjZEEM34G3lj3G45E"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 209,
+    "path": "../client/assets/smartphone-D96N7r0k.js"
+  },
+  "/assets/star-DZ6I3OCz.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"1e4-SCNQIarO8tbu8lKS7fn7pjQrcUw"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 484,
+    "path": "../client/assets/star-DZ6I3OCz.js"
+  },
+  "/assets/screen-alerta-multicanal-DHCI8prb.png": {
+    "type": "image/png",
+    "etag": '"15b6f8-uA7jbX0+iHgboDTvv5SP+zOHzAM"',
+    "mtime": "2026-10-30T15:13:13.279Z",
+    "size": 1423096,
+    "path": "../client/assets/screen-alerta-multicanal-DHCI8prb.png"
+  },
+  "/assets/screen-ubicacion-gps-CUENCcf1.png": {
+    "type": "image/png",
+    "etag": '"13c7b5-RLrDTOtmBVSF1Fo8OuGREEvZqRE"',
+    "mtime": "2026-10-30T15:13:13.279Z",
+    "size": 1296309,
+    "path": "../client/assets/screen-ubicacion-gps-CUENCcf1.png"
+  },
+  "/assets/styles-CFUVUOVt.css": {
+    "type": "text/css; charset=utf-8",
+    "etag": '"217aa-Qe5u6jVK21fFnRkMm3JHISzpEOA"',
+    "mtime": "2026-10-30T15:13:13.271Z",
+    "size": 137130,
+    "path": "../client/assets/styles-CFUVUOVt.css"
+  },
+  "/assets/subscription-access-DnSeeSJD.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"b3f0-Ogjy9TRP6xfS9MEyPy+JQL14J/o"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 46064,
+    "path": "../client/assets/subscription-access-DnSeeSJD.js"
+  },
+  "/assets/screen-red-proteccion-DyNmjsQE.png": {
+    "type": "image/png",
+    "etag": '"15b7ff-gXnDwWr71ZJnLn/6G4OXsxXrzpo"',
+    "mtime": "2026-10-30T15:13:13.279Z",
+    "size": 1423359,
+    "path": "../client/assets/screen-red-proteccion-DyNmjsQE.png"
+  },
+  "/assets/subscription-cancellation-policy-B8WLYohs.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"206-JdosAegY07nlRhgoJZe9mgYGdhk"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 518,
+    "path": "../client/assets/subscription-cancellation-policy-B8WLYohs.js"
+  },
+  "/assets/switch-DZzj0idH.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"c5f-H/3W8gPIt2dbmRLLgPwvRA94zKg"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 3167,
+    "path": "../client/assets/switch-DZzj0idH.js"
+  },
+  "/assets/screen-modo-familiar-Di55MJBV.png": {
+    "type": "image/png",
+    "etag": '"1a03f5-SkF4IkNen/eUcikmsHCxYe0szzc"',
+    "mtime": "2026-10-30T15:13:13.279Z",
+    "size": 1704949,
+    "path": "../client/assets/screen-modo-familiar-Di55MJBV.png"
+  },
+  "/assets/tarjeta-vecino-B5ly6mcZ.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"335-KDX8RsnmZchSQHhxomNd7GH0A0M"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 821,
+    "path": "../client/assets/tarjeta-vecino-B5ly6mcZ.js"
+  },
+  "/assets/terminos-3-7Lkgf9.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"eb7-rZvrYLaSXmG5gnaERBZ0RqY0/GA"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 3767,
+    "path": "../client/assets/terminos-3-7Lkgf9.js"
+  },
+  "/assets/trust-stack-chileno-Be1B1jlB.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"615-dMff1VgA/JzovFTpn3vBeHmywD4"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 1557,
+    "path": "../client/assets/trust-stack-chileno-Be1B1jlB.js"
+  },
+  "/assets/trash-2-DCgquu3I.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"154-JhvTMGqHE/LFpdPAJx7uL7s4L4Q"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 340,
+    "path": "../client/assets/trash-2-DCgquu3I.js"
+  },
+  "/assets/triangle-alert-B0Ey1ynC.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"115-dpYwfg9JNrbgtR5E8yV3K3ED6fc"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 277,
+    "path": "../client/assets/triangle-alert-B0Ey1ynC.js"
+  },
+  "/assets/tslib.es6-CmEaCU22.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"43a-E3Kfr2k4mlZ2+rfA/RFmdMbjgcQ"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 1082,
+    "path": "../client/assets/tslib.es6-CmEaCU22.js"
+  },
+  "/assets/twilio-D1eLZn0B.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"97-Qi/bdRdNGNhSfhCWZr74apLCm1M"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 151,
+    "path": "../client/assets/twilio-D1eLZn0B.js"
+  },
+  "/assets/tutorial-CBJGufNE.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"251a-9GWFVB5M1MTqBbfne14g9CnM+w0"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 9498,
+    "path": "../client/assets/tutorial-CBJGufNE.js"
+  },
+  "/assets/unsubscribe-DGnRxkcj.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"b60-H1y6SmNXiySBvXxJC2LEJEzpmZg"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 2912,
+    "path": "../client/assets/unsubscribe-DGnRxkcj.js"
+  },
+  "/assets/ubicacion-gmXTUPrc.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"7f9-Xpw3UWBQXS3DmRg51ZDTSv7LP9o"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 2041,
+    "path": "../client/assets/ubicacion-gmXTUPrc.js"
+  },
+  "/assets/web-BtFgRi9n.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"10b9-3QclWcny9C6W+4010Yj6E9GnB+U"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 4281,
+    "path": "../client/assets/web-BtFgRi9n.js"
+  },
+  "/assets/users-WCohVCoi.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"13e-4+N19ztEoNcHkxdz/Y3u5g++7nE"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 318,
+    "path": "../client/assets/users-WCohVCoi.js"
+  },
+  "/assets/utils-DCADjnpI.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"6b9b-tSfrzcIHWeVNKawNWV0bEDmYWfc"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 27547,
+    "path": "../client/assets/utils-DCADjnpI.js"
+  },
+  "/assets/web-BuIwN4lB.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"c39-IQc7n8yAm7ThPDND/5HCGym4tkc"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 3129,
+    "path": "../client/assets/web-BuIwN4lB.js"
+  },
+  "/assets/web-CBfAiuwu.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"cc9-C8av2j69ztsTv9iPLekxZjuL+ZU"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 3273,
+    "path": "../client/assets/web-CBfAiuwu.js"
+  },
+  "/assets/webpay.functions-CyuRKriZ.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"26d-xlufK9FlVelFx36PSn0NZHLBf3g"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 621,
+    "path": "../client/assets/webpay.functions-CyuRKriZ.js"
+  },
+  "/assets/webpay.retorno-Crb4VDR_.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"1216-tBoH+zHZuHyYAGBZj/qY9I5D1pY"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 4630,
+    "path": "../client/assets/webpay.retorno-Crb4VDR_.js"
+  },
+  "/assets/whatsapp-activation-local-D2mE4nPe.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"133-Rg9PStHn+kvJF4vNRnd9VKAXYSw"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 307,
+    "path": "../client/assets/whatsapp-activation-local-D2mE4nPe.js"
+  },
+  "/assets/whatsapp-activation-button-BIEh0c0o.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"55e-CfTNQ/RfAJ+sUJ6Yp0C2/Huapaw"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 1374,
+    "path": "../client/assets/whatsapp-activation-button-BIEh0c0o.js"
+  },
+  "/assets/whatsapp-activar-cta-B4ekuxkU.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"9c5-Yc3Id1+fMM4FJPTnrjVKcAGqjKc"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 2501,
+    "path": "../client/assets/whatsapp-activar-cta-B4ekuxkU.js"
+  },
+  "/assets/whatsapp-commercial-activation-Do0D-D3H.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"ad-3ay1VUGmwwiJOeTlo7sSvqmpBwo"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 173,
+    "path": "../client/assets/whatsapp-commercial-activation-Do0D-D3H.js"
+  },
+  "/assets/whatsapp-float-Brzl_X1Z.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"5ec-u7yZCTrqoSK+9/0jhti1xPJAZBw"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 1516,
+    "path": "../client/assets/whatsapp-float-Brzl_X1Z.js"
+  },
+  "/assets/wifi-jJSuVuZG.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"124-8Hev9TeA0wyGCTJ8loC3YXdSUoU"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 292,
+    "path": "../client/assets/wifi-jJSuVuZG.js"
+  },
+  "/assets/x-CYYDUKzg.js": {
+    "type": "text/javascript; charset=utf-8",
+    "etag": '"a6-9Ouevz0aDKHkgYPn78Vdv4RbbBY"',
+    "mtime": "2026-10-30T15:13:13.275Z",
+    "size": 166,
+    "path": "../client/assets/x-CYYDUKzg.js"
+  }
+};
+const publicAssetBases = {};
+function isPublicAssetURL(id = "") {
+  if (assets[id]) {
+    return true;
+  }
+  for (const base in publicAssetBases) {
+    if (id.startsWith(base)) {
+      return true;
+    }
+  }
+  return false;
+}
+const errorHandler$1 = (error, event) => {
+  const res = defaultHandler(error, event);
+  return new FastResponse(typeof res.body === "string" ? res.body : JSON.stringify(res.body, null, 2), res);
+};
+function defaultHandler(error, event) {
+  const unhandled = error.unhandled ?? !HTTPError.isError(error);
+  const { status = 500, statusText = "" } = unhandled ? {} : error;
+  if (status === 404) {
+    const url = event.url || new URL(event.req.url);
+    const baseURL = "/";
+    if (/^\/[^/]/.test(baseURL) && !url.pathname.startsWith(baseURL)) {
+      return {
+        status: 302,
+        headers: new Headers({ location: `${baseURL}${url.pathname.slice(1)}${url.search}` })
+      };
+    }
+  }
+  const headers2 = new Headers(unhandled ? {} : error.headers);
+  headers2.set("content-type", "application/json; charset=utf-8");
+  const jsonBody = unhandled ? {
+    status,
+    unhandled: true
+  } : typeof error.toJSON === "function" ? error.toJSON() : {
+    status,
+    statusText,
+    message: error.message
+  };
+  return {
+    status,
+    statusText,
+    headers: headers2,
+    body: {
+      error: true,
+      ...jsonBody
+    }
+  };
+}
+const errorHandlers = [errorHandler$1];
+async function errorHandler(error, event) {
+  for (const handler of errorHandlers) {
+    try {
+      const response = await handler(error, event, { defaultHandler });
+      if (response) {
+        return response;
+      }
+    } catch (error2) {
+      console.error(error2);
+    }
+  }
+}
+function cloudflareWaitUntilPlugin(nitroApp) {
+  nitroApp.hooks.hook("request", (event) => {
+    const req = event.node?.req;
+    if (!req) return;
+    if (typeof req.waitUntil === "function") return;
+    const ctx = req.runtime?.cloudflare?.context;
+    if (ctx && typeof ctx.waitUntil === "function") {
+      req.waitUntil = ctx.waitUntil.bind(ctx);
+    }
+  });
+}
+const plugins = [
+  cloudflareWaitUntilPlugin
+];
+const headers = ((m) => function headersRouteRule(event) {
+  for (const [key, value] of Object.entries(m.options || {})) {
+    event.res.headers.set(key, value);
+  }
+});
+const findRouteRules = /* @__PURE__ */ (() => {
+  const $0 = [{ name: "headers", route: "/assets/**", handler: headers, options: { "cache-control": "public, max-age=31536000, immutable" } }];
+  return (m, p) => {
+    let r = [];
+    if (p.charCodeAt(p.length - 1) === 47) p = p.slice(0, -1) || "/";
+    let s = p.split("/"), l = s.length;
+    if (l > 1) {
+      if (s[1] === "assets") {
+        r.unshift({ data: $0, params: { "_": s.slice(2).join("/") } });
+      }
+    }
+    return r;
+  };
+})();
+const _lazy_e3ibdy = defineLazyEventHandler(() => import("./_chunks/ssr-renderer.mjs"));
+const findRoute = /* @__PURE__ */ (() => {
+  const data = { route: "/**", handler: _lazy_e3ibdy };
+  return ((_m, p) => {
+    return { data, params: { "_": p.slice(1) } };
+  });
+})();
+const APP_ID = "default";
+function useNitroApp() {
+  let instance = useNitroApp._instance;
+  if (instance) {
+    return instance;
+  }
+  instance = useNitroApp._instance = createNitroApp();
+  globalThis.__nitro__ = globalThis.__nitro__ || {};
+  globalThis.__nitro__[APP_ID] = instance;
+  {
+    initNitroPlugins(instance);
+  }
+  return instance;
+}
+function useNitroHooks() {
+  const nitroApp = useNitroApp();
+  const hooks = nitroApp.hooks;
+  if (hooks) {
+    return hooks;
+  }
+  return nitroApp.hooks = new HookableCore();
+}
+function createNitroApp() {
+  const hooks = new HookableCore();
+  const captureError = (error, errorCtx) => {
+    const promise = hooks.callHook("error", error, errorCtx)?.catch?.((hookError) => {
+      console.error("Error while capturing another error", hookError);
+    });
+    if (errorCtx?.event) {
+      const errors = errorCtx.event.req.context?.nitro?.errors;
+      if (errors) {
+        errors.push({
+          error,
+          context: errorCtx
+        });
+      }
+      if (promise && typeof errorCtx.event.req.waitUntil === "function") {
+        errorCtx.event.req.waitUntil(promise);
+      }
+    }
+  };
+  const h3App = createH3App({ onError(error, event) {
+    captureError(error, { event });
+    return errorHandler(error, event);
+  } });
+  {
+    h3App.config.onRequest = (event) => {
+      return hooks.callHook("request", event)?.catch?.((error) => {
+        captureError(error, {
+          event,
+          tags: ["request"]
+        });
+      });
+    };
+    h3App.config.onResponse = (res, event) => {
+      return hooks.callHook("response", res, event)?.catch?.((error) => {
+        captureError(error, {
+          event,
+          tags: ["response"]
+        });
+      });
+    };
+  }
+  let appHandler = (req) => {
+    req.context ||= {};
+    req.context.nitro = req.context.nitro || { errors: [] };
+    return h3App.fetch(req);
+  };
+  const app = {
+    fetch: appHandler,
+    h3: h3App,
+    hooks,
+    captureError
+  };
+  return app;
+}
+function initNitroPlugins(app) {
+  for (const plugin of plugins) {
+    try {
+      plugin(app);
+    } catch (error) {
+      app.captureError?.(error, { tags: ["plugin"] });
+      throw error;
+    }
+  }
+  return app;
+}
+function createH3App(config) {
+  const h3App = new H3Core(config);
+  h3App["~findRoute"] = (event) => findRoute(event.req.method, event.url.pathname);
+  {
+    h3App["~getMiddleware"] = (event, route) => {
+      const pathname = event.url.pathname;
+      const method = event.req.method;
+      const middleware = [];
+      {
+        const routeRules = getRouteRules(method, pathname);
+        event.context.routeRules = routeRules?.routeRules;
+        if (routeRules?.routeRuleMiddleware.length) {
+          middleware.push(...routeRules.routeRuleMiddleware);
+        }
+      }
+      if (route?.data?.middleware?.length) {
+        middleware.push(...route.data.middleware);
+      }
+      return middleware;
+    };
+  }
+  return h3App;
+}
+function getRouteRules(method, pathname) {
+  const m = findRouteRules(method, pathname);
+  if (!m?.length) {
+    return { routeRuleMiddleware: [] };
+  }
+  const routeRules = {};
+  for (const layer of m) {
+    for (const rule of layer.data) {
+      const currentRule = routeRules[rule.name];
+      if (currentRule) {
+        if (rule.options === false) {
+          delete routeRules[rule.name];
+          continue;
+        }
+        if (typeof currentRule.options === "object" && typeof rule.options === "object") {
+          currentRule.options = {
+            ...currentRule.options,
+            ...rule.options
+          };
+        } else {
+          currentRule.options = rule.options;
+        }
+        currentRule.route = rule.route;
+        currentRule.params = {
+          ...currentRule.params,
+          ...layer.params
+        };
+      } else if (rule.options !== false) {
+        routeRules[rule.name] = {
+          ...rule,
+          params: layer.params
+        };
+      }
+    }
+  }
+  const middleware = [];
+  const orderedRules = Object.values(routeRules).sort((a, b) => (a.handler?.order || 0) - (b.handler?.order || 0));
+  for (const rule of orderedRules) {
+    if (rule.options === false || !rule.handler) {
+      continue;
+    }
+    middleware.push(rule.handler(rule));
+  }
+  return {
+    routeRules,
+    routeRuleMiddleware: middleware
+  };
+}
+function createHandler(hooks) {
+  const nitroApp = useNitroApp();
+  const nitroHooks = useNitroHooks();
+  return {
+    async fetch(request, env, context) {
+      globalThis.__env__ = env;
+      augmentReq(request, {
+        env,
+        context
+      });
+      const ctxExt = {};
+      const url = new URL(request.url);
+      if (hooks.fetch) {
+        const res = await hooks.fetch(request, env, context, url, ctxExt);
+        if (res) {
+          return res;
+        }
+      }
+      return await nitroApp.fetch(request);
+    },
+    scheduled(controller, env, context) {
+      globalThis.__env__ = env;
+      context.waitUntil(nitroHooks.callHook("cloudflare:scheduled", {
+        controller,
+        env,
+        context
+      }) || Promise.resolve());
+    },
+    email(message, env, context) {
+      globalThis.__env__ = env;
+      context.waitUntil(nitroHooks.callHook("cloudflare:email", {
+        message,
+        event: message,
+        env,
+        context
+      }) || Promise.resolve());
+    },
+    queue(batch, env, context) {
+      globalThis.__env__ = env;
+      context.waitUntil(nitroHooks.callHook("cloudflare:queue", {
+        batch,
+        event: batch,
+        env,
+        context
+      }) || Promise.resolve());
+    },
+    tail(traces, env, context) {
+      globalThis.__env__ = env;
+      context.waitUntil(nitroHooks.callHook("cloudflare:tail", {
+        traces,
+        env,
+        context
+      }) || Promise.resolve());
+    },
+    trace(traces, env, context) {
+      globalThis.__env__ = env;
+      context.waitUntil(nitroHooks.callHook("cloudflare:trace", {
+        traces,
+        env,
+        context
+      }) || Promise.resolve());
+    }
+  };
+}
+function augmentReq(cfReq, ctx) {
+  const req = cfReq;
+  req.ip = cfReq.headers.get("cf-connecting-ip") || void 0;
+  req.runtime ??= { name: "cloudflare" };
+  req.runtime.cloudflare = {
+    ...req.runtime.cloudflare,
+    ...ctx
+  };
+  req.waitUntil = ctx.context?.waitUntil.bind(ctx.context);
+}
+const cloudflareModule = createHandler({ fetch(cfRequest, env, context, url) {
+  if (env.ASSETS && isPublicAssetURL(url.pathname)) {
+    return env.ASSETS.fetch(cfRequest);
+  }
+} });
+export {
+  cloudflareModule as default
+};

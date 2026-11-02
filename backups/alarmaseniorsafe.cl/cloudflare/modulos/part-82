@@ -1,0 +1,69 @@
+import { c as createServerRpc } from "./createServerRpc-Bn6pI9Hf.mjs";
+import { j as createServerFn } from "./createServerFn-Bu17PEW9.mjs";
+import { r as requestPinResetCode, v as verifyPinResetCode } from "./pin-reset-CmQ6yj5h.mjs";
+
+
+import "./index.mjs";
+import { o as objectType, s as stringType } from "../_libs/zod.mjs";
+import "../_libs/tanstack__router-core.mjs";
+import "../_libs/tanstack__history.mjs";
+import "../_libs/cookie-es.mjs";
+import "../_libs/seroval.mjs";
+import "../_libs/unenv.mjs";
+
+
+
+import "../_libs/seroval-plugins.mjs";
+
+
+import "./client.server-U_pH-Evd.mjs";
+import "../_libs/supabase__supabase-js.mjs";
+import "../_libs/supabase__postgrest-js.mjs";
+import "../_libs/supabase__realtime-js.mjs";
+import "../_libs/supabase__phoenix.mjs";
+import "../_libs/supabase__storage-js.mjs";
+import "../_libs/iceberg-js.mjs";
+import "../_libs/supabase__auth-js.mjs";
+import "../_libs/tslib.mjs";
+import "../_libs/supabase__functions-js.mjs";
+import "./signups-db-JWUtXpaW.mjs";
+import "./zoho-smtp-DBq11U6O.mjs";
+import "./install-step-sync-snfezerQ.mjs";
+import "./twilio-DNHuHEFY.mjs";
+import "./twilio-inbound-_C02bj0d.mjs";
+import "../_libs/h3-v2.mjs";
+import "../_libs/rou3.mjs";
+import "../_libs/srvx.mjs";
+
+
+
+
+const requestPinReset_createServerFn_handler = createServerRpc({
+  id: "0ec527a4b7421f30606b5033721bb9fa6a20b077e2afb20aa304720ec8a96406",
+  name: "requestPinReset",
+  filename: "src/lib/pin-reset.functions.ts"
+}, (opts) => requestPinReset.__executeServer(opts));
+const requestPinReset = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  signupId: stringType().uuid()
+}).parse(input)).handler(requestPinReset_createServerFn_handler, async ({
+  data
+}) => requestPinResetCode(data.signupId));
+const verifyPinReset_createServerFn_handler = createServerRpc({
+  id: "0c3e92bc1a70f27e802c02a8de9328f91018c358993d88a614988622d8329af2",
+  name: "verifyPinReset",
+  filename: "src/lib/pin-reset.functions.ts"
+}, (opts) => verifyPinReset.__executeServer(opts));
+const verifyPinReset = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  signupId: stringType().uuid(),
+  code: stringType().regex(/^\d{6}$/)
+}).parse(input)).handler(verifyPinReset_createServerFn_handler, async ({
+  data
+}) => verifyPinResetCode(data.signupId, data.code));
+export {
+  requestPinReset_createServerFn_handler,
+  verifyPinReset_createServerFn_handler
+};
