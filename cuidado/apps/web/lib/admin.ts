@@ -10,7 +10,8 @@ const COOKIE = "cuidado_admin";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
 
 export function adminSecret(): string {
-  const configured = process.env.ADMIN_SECRET?.trim();
+  const configured =
+    process.env.ADMIN_SECRET?.trim() || process.env.CREA_CLAVES_AGENCIAS?.trim();
   if (configured && configured.length >= 8) return configured;
   return "CwAdminPanel2026";
 }

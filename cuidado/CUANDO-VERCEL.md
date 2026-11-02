@@ -26,7 +26,7 @@ En Vercel van estas variables. `AUTH_SECRET`, `TOKEN_ENCRYPTION_KEY` y `CRON_SEC
 
 Lemon Squeezy ya tiene los productos. En Vercel basta con `LEMON_SQUEEZY_WEBHOOK_SECRET` (los buy URL y variant id tienen valor por defecto). En Lemon: Settings → Webhooks → URL `https://cuidadoweb.com/api/lemon/webhook`, eventos `order_created`, signing secret = esa variable.
 
-- `ADMIN_SECRET` (opcional): clave del panel `/admin/codigos` para generar códigos de agencia. Si no se define, el valor por defecto es `CwAdminPanel2026`. Cámbialo en Production.
+- `ADMIN_SECRET` o `CREA_CLAVES_AGENCIAS` (opcional): clave del panel `/admin/codigos`. Si defines cualquiera de las dos, esa es la clave de entrada. Si no hay ninguna, el valor por defecto es `CwAdminPanel2026`.
 
 Los códigos de prueba se crean en **Códigos** (`/admin/codigos`): Generar código y copiar. Cada código tiene un solo uso y 5 sitios. Ya no hace falta insertarlos a mano en Neon.
 
