@@ -4,6 +4,7 @@ import type { Json } from "@/integrations/supabase/types";
 import { normalizePlanKey } from "@/lib/plans";
 import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
 import { clearRenewalNoticeFlags } from "@/lib/subscription-renewal-flags";
+import { acceptOrReverseOneclickCharge } from "@/lib/oneclick-charge-guard";
 import {
   authorizeOneclickMallTransaction,
   generateOneclickBuyOrders,
@@ -92,10 +93,16 @@ export async function attemptOneclickRecurringCharge(
   });
 
   const primary = auth.details[0];
+  const decision = await acceptOrReverseOneclickCharge({
+    auth,
+    expectedAmount: amount,
+    mallBuyOrder,
+    storeBuyOrder,
+  });
   await supabaseAdmin
     .from("oneclick_transactions")
     .update({
-      status: auth.ok ? "AUTHORIZED" : primary?.status || "REJECTED",
+      status: decision.accept ? "AUTHORIZED" : decision.status,
       response_code: primary?.responseCode ?? null,
       authorization_code: primary?.authorizationCode ?? null,
       payment_type_code: primary?.paymentTypeCode ?? null,
@@ -103,7 +110,21 @@ export async function attemptOneclickRecurringCharge(
     })
     .eq("mall_buy_order", mallBuyOrder);
 
-  if (auth.ok) {
+  if (!decision.accept && auth.ok) {
+    await supabaseAdmin.from("oneclick_transactions").insert({
+      contract_signup_id: signup.id,
+      mall_buy_order: mallBuyOrder,
+      store_buy_order: storeBuyOrder,
+      amount: primary?.amount ?? amount,
+      operation: "refund",
+      status: decision.reversed ? "REFUNDED" : "REFUND_FAILED",
+      environment: cfg.environment,
+      response_code: primary?.responseCode ?? null,
+      raw_response: toSupabaseJson(decision.refundRaw ?? {}),
+    });
+  }
+
+  if (decision.accept) {
     const now = new Date();
     const renewal = computeRenewalDate(periodo, now);
     await supabaseAdmin
@@ -123,12 +144,12 @@ export async function attemptOneclickRecurringCharge(
   }
 
   return {
-    ok: auth.ok,
+    ok: decision.accept,
     mallBuyOrder,
     storeBuyOrder,
     amount,
     responseCode: primary?.responseCode ?? null,
     authorizationCode: primary?.authorizationCode ?? null,
-    status: primary?.status ?? null,
+    status: decision.accept ? (primary?.status ?? null) : decision.status,
   };
 }

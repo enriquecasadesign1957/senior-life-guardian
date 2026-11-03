@@ -1,15 +1,10 @@
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
-import {
-  ArrowRight,
-  CheckCircle2,
-  Loader2,
-  MessageCircle,
-  XCircle,
-} from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2, MessageCircle, XCircle } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
-import { finishOneclickCheckout } from "@/lib/oneclick.functions";
+import { abandonOneclickCheckout, finishOneclickCheckout } from "@/lib/oneclick.functions";
+import { isOneclickInscriptionAbandoned } from "@/lib/payment-guards";
 import {
   mapOneclickCheckoutToVoucher,
   ONECLICK_VALIDATION_VOUCHER,
@@ -23,10 +18,12 @@ import type { PostPaymentInstallNotifyResult } from "@/lib/post-payment-install-
 
 type SearchParams = {
   TBK_TOKEN?: string;
+  TBK_ORDEN_COMPRA?: string;
+  TBK_ID_SESION?: string;
   validacion_voucher?: "1" | "0";
 };
 
-type PageState = "loading" | "success" | "failed";
+type PageState = "loading" | "success" | "failed" | "cancelled";
 
 const DEEP = "var(--brand-petrol-deep)";
 const GREEN = "#16a34a";
@@ -71,8 +68,9 @@ function OneclickSuccessView({
 }) {
   useEffect(() => {
     if (isValidationPreview) return;
-    const transactionId =
-      String(voucher.ordenCompraMall || voucher.ordenCompraTienda || voucher.codigoAutorizacion || "").trim();
+    const transactionId = String(
+      voucher.ordenCompraMall || voucher.ordenCompraTienda || voucher.codigoAutorizacion || "",
+    ).trim();
     if (!transactionId || !signupId) return;
     const rawMonto = String(voucher.monto ?? "").replace(/[^\d]/g, "");
     const value = rawMonto ? Number(rawMonto) : null;
@@ -170,6 +168,7 @@ function OneclickSuccessView({
 function OneclickReturnPage() {
   const search = Route.useSearch();
   const finish = useServerFn(finishOneclickCheckout);
+  const abandon = useServerFn(abandonOneclickCheckout);
 
   const isValidationPreview = search.validacion_voucher === "1";
 
@@ -183,6 +182,7 @@ function OneclickReturnPage() {
     isValidationPreview ? readSignupIdFromSession() : null,
   );
   const [installNotify, setInstallNotify] = useState<PostPaymentInstallNotifyResult | null>(null);
+  const [failureCopy, setFailureCopy] = useState<string | null>(null);
 
   useEffect(() => {
     if (isValidationPreview) return;
@@ -190,6 +190,22 @@ function OneclickReturnPage() {
     let cancelled = false;
 
     (async () => {
+      if (
+        isOneclickInscriptionAbandoned({
+          tbkToken: search.TBK_TOKEN,
+          tbkOrdenCompra: search.TBK_ORDEN_COMPRA,
+          tbkIdSesion: search.TBK_ID_SESION,
+        })
+      ) {
+        if (!cancelled) setPageState("cancelled");
+        try {
+          await abandon({ data: { token: search.TBK_TOKEN! } });
+        } catch (error) {
+          console.error("[oneclick/retorno] abandon", error);
+        }
+        return;
+      }
+
       if (!search.TBK_TOKEN) {
         if (!cancelled) setPageState("failed");
         return;
@@ -227,6 +243,13 @@ function OneclickReturnPage() {
           return;
         }
 
+        if (result.status === "AMOUNT_MISMATCH") {
+          setFailureCopy(
+            result.reversed
+              ? "El monto confirmado por Transbank no coincidía con tu orden. Anulamos el cargo."
+              : "El monto confirmado por Transbank no coincidía con tu orden. No activamos la suscripción. Escríbenos por WhatsApp para revisar el cargo.",
+          );
+        }
         setPageState("failed");
       } catch (error) {
         console.error("[oneclick/retorno] finish error", error);
@@ -237,7 +260,14 @@ function OneclickReturnPage() {
     return () => {
       cancelled = true;
     };
-  }, [isValidationPreview, search.TBK_TOKEN, finish]);
+  }, [
+    isValidationPreview,
+    search.TBK_TOKEN,
+    search.TBK_ORDEN_COMPRA,
+    search.TBK_ID_SESION,
+    finish,
+    abandon,
+  ]);
 
   const resolvedVoucher = useMemo(() => {
     if (isValidationPreview) return { ...ONECLICK_VALIDATION_VOUCHER };
@@ -277,7 +307,7 @@ function OneclickReturnPage() {
               </>
             )}
 
-            {pageState === "failed" && (
+            {(pageState === "failed" || pageState === "cancelled") && (
               <>
                 <div
                   className="w-16 h-16 mx-auto rounded-full flex items-center justify-center"
@@ -286,10 +316,15 @@ function OneclickReturnPage() {
                   <XCircle className="w-10 h-10 text-destructive" />
                 </div>
                 <h1 className="mt-6 text-3xl font-bold text-foreground">
-                  No se pudo inscribir la tarjeta o cobrar
+                  {pageState === "cancelled"
+                    ? "Inscripción cancelada"
+                    : "No se pudo inscribir la tarjeta o cobrar"}
                 </h1>
                 <p className="mt-3 text-muted-foreground">
-                  Tu tarjeta no fue inscrita o el cobro fue rechazado. Puedes intentarlo nuevamente.
+                  {pageState === "cancelled"
+                    ? "No se realizó ningún cargo. Puedes intentarlo nuevamente."
+                    : (failureCopy ??
+                      "Tu tarjeta no fue inscrita o el cobro fue rechazado. Puedes intentarlo nuevamente.")}
                 </p>
                 <div className="mt-7 grid sm:grid-cols-2 gap-3">
                   <Link
@@ -322,6 +357,8 @@ function OneclickReturnPage() {
 export const Route = createFileRoute("/oneclick/retorno")({
   validateSearch: (s: Record<string, unknown>): SearchParams => ({
     TBK_TOKEN: typeof s.TBK_TOKEN === "string" ? s.TBK_TOKEN : undefined,
+    TBK_ORDEN_COMPRA: typeof s.TBK_ORDEN_COMPRA === "string" ? s.TBK_ORDEN_COMPRA : undefined,
+    TBK_ID_SESION: typeof s.TBK_ID_SESION === "string" ? s.TBK_ID_SESION : undefined,
     validacion_voucher:
       s.validacion_voucher === "1" || s.validacion_voucher === "0"
         ? s.validacion_voucher

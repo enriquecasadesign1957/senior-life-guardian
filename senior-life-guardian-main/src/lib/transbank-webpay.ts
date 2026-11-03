@@ -54,6 +54,7 @@ export type ConfirmWebpayTransactionResult = {
   authorizationCode: string | null;
   amount: number | null;
   buyOrder: string | null;
+  sessionId: string | null;
   cardLast4: string | null;
   raw: Record<string, unknown>;
 };
@@ -121,18 +122,19 @@ export function getTransbankConfig(): TransbankConfig {
     apiHost: isProd ? PRODUCTION_API_HOST : SANDBOX_API_HOST,
     commerceCode: localValidation
       ? TRANSBANK_SANDBOX_COMMERCE_CODE
-      : process.env.TRANSBANK_CC?.trim() ||
-        (isProd ? "" : TRANSBANK_SANDBOX_COMMERCE_CODE),
+      : process.env.TRANSBANK_CC?.trim() || (isProd ? "" : TRANSBANK_SANDBOX_COMMERCE_CODE),
     apiKey: localValidation
       ? TRANSBANK_SANDBOX_API_KEY
-      : process.env.TRANSBANK_API_KEY?.trim() ||
-        (isProd ? "" : TRANSBANK_SANDBOX_API_KEY),
+      : process.env.TRANSBANK_API_KEY?.trim() || (isProd ? "" : TRANSBANK_SANDBOX_API_KEY),
   };
 }
 
 /** buy_order: máx. 26, alfanumérico (requisito Transbank). */
 export function generateWebpayBuyOrder(): string {
-  const suffix = Date.now().toString(36).toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const suffix = Date.now()
+    .toString(36)
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
   return `SS${suffix}`.slice(0, 26);
 }
 
@@ -269,13 +271,10 @@ export async function confirmWebpayPlusTransaction(
   const text = await res.text();
   const body = parseJsonBody(text);
 
-  const responseCode =
-    typeof body.response_code === "number" ? body.response_code : null;
+  const responseCode = typeof body.response_code === "number" ? body.response_code : null;
   const status = typeof body.status === "string" ? body.status : "UNKNOWN";
   const approved =
-    res.ok &&
-    responseCode === 0 &&
-    (status === "AUTHORIZED" || status === "APPROVED");
+    res.ok && responseCode === 0 && (status === "AUTHORIZED" || status === "APPROVED");
 
   const cardDetail =
     body.card_detail && typeof body.card_detail === "object"
@@ -286,14 +285,43 @@ export async function confirmWebpayPlusTransaction(
     ok: approved,
     status,
     responseCode,
-    authorizationCode:
-      typeof body.authorization_code === "string" ? body.authorization_code : null,
+    authorizationCode: typeof body.authorization_code === "string" ? body.authorization_code : null,
     amount: typeof body.amount === "number" ? body.amount : null,
     buyOrder: typeof body.buy_order === "string" ? body.buy_order : null,
+    sessionId: typeof body.session_id === "string" ? body.session_id : null,
     cardLast4:
-      cardDetail && typeof cardDetail.card_number === "string"
-        ? cardDetail.card_number
-        : null,
+      cardDetail && typeof cardDetail.card_number === "string" ? cardDetail.card_number : null,
+    raw: body,
+  };
+}
+
+/** Anula un cobro Webpay Plus ya confirmado (mismo token, monto capturado). */
+export async function refundWebpayPlusTransaction(
+  token: string,
+  amount: number,
+): Promise<{ ok: boolean; type: string | null; raw: Record<string, unknown> }> {
+  const cfg = getTransbankConfig();
+  if (!cfg.commerceCode || !cfg.apiKey) {
+    throw new Error("Webpay Plus no configurado");
+  }
+  if (!Number.isInteger(amount) || amount <= 0) {
+    throw new Error("Monto inválido para anular");
+  }
+
+  enableSandboxTlsBypass(cfg);
+
+  const res = await fetch(`${cfg.apiHost}${CREATE_PATH}/${encodeURIComponent(token)}/refunds`, {
+    method: "POST",
+    headers: transbankHeaders(cfg),
+    body: JSON.stringify({ amount }),
+  });
+
+  const text = await res.text();
+  const body = parseJsonBody(text);
+
+  return {
+    ok: res.ok,
+    type: typeof body.type === "string" ? body.type : null,
     raw: body,
   };
 }
