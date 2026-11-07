@@ -217,7 +217,7 @@ const EN: GrafanaPhoneAlertsContent = {
 };
 
 const ES: GrafanaPhoneAlertsContent = {
-  h1: "Alertas de Grafana al teléfono: envía alertas de Grafana a una llamada",
+  h1: "Integración con Grafana: alertas al teléfono",
   heroSubheading:
     "Convierte alertas críticas de Grafana en llamadas con confirmación humana y escalada on-call.",
   heroLead:

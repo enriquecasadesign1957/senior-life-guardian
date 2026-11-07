@@ -4,9 +4,9 @@ import { WebhookToPhoneCallClient } from "@/components/WebhookToPhoneCallClient"
 import { buildPageMetadata, pageUrl } from "@/lib/seo";
 
 export const metadata = buildPageMetadata({
-  title: "Webhook to Phone Call for Critical Alerts | WakeUp Dev",
+  title: "Webhook a llamada para alertas críticas | WakeUp Dev",
   description:
-    "Learn how WakeUp Dev turns HTTP webhooks from monitoring systems into phone calls with human acknowledgement and escalation.",
+    "De webhook a llamada: Grafana, UptimeRobot o un POST HTTP se convierten en una llamada on-call con confirmación en el 1. Turn monitoring webhooks into phone calls.",
   path: "/webhook-to-phone-call",
 });
 

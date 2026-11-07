@@ -8,10 +8,9 @@ import {
 import { buildPageMetadata, pageUrl } from "@/lib/seo";
 
 export const metadata = buildPageMetadata({
-  title:
-    "Grafana Phone Alerts: Send Grafana Alerts to a Phone | WakeUp Dev",
+  title: "Integración con Grafana: alertas al teléfono | WakeUp Dev",
   description:
-    "Send critical Grafana alerts to a phone with WakeUp Dev. Use an HTTP webhook to trigger a call, require human ACK, and escalate if unanswered.",
+    "Integración con Grafana para alertas de voz. Un webhook HTTP dispara una llamada, pide confirmación en el 1 y escala si nadie responde. Grafana phone alerts for DevOps on-call.",
   path: "/grafana-phone-alerts",
 });
 
