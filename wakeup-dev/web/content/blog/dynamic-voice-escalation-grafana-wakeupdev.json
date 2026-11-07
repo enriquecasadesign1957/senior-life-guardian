@@ -1,0 +1,87 @@
+{
+  "slug": "dynamic-voice-escalation-grafana-wakeupdev",
+  "title": "Dynamic Voice Escalation with Grafana Webhooks and WakeUp Dev's Unlimited-Seat On-Call",
+  "description": "Learn how to use Grafana webhooks to trigger WakeUp Dev voice alerts, build dynamic escalation chains, and cut on‑call costs with unlimited seats.",
+  "keywords": [
+    "grafana",
+    "webhooks",
+    "on-call",
+    "voice-alert",
+    "cost-efficiency"
+  ],
+  "coverImage": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1600&h=900&q=80",
+  "dateIso": "2026-11-07",
+  "dateLabel": "November 7, 2026",
+  "author": "Enrique Drack",
+  "topic": "Dynamic Voice Escalation with Grafana Webhooks and WakeUp Dev's Unlimited-Seat On-Call",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Dynamic Voice Escalation with Grafana Webhooks and WakeUp Dev"
+    },
+    {
+      "type": "p",
+      "text": "On‑call fatigue is a measurable cost. Every missed or ignored alert adds to downtime and developer burnout. WakeUp Dev solves this by turning a simple Grafana webhook into a voice‑first escalation that scales without per‑seat charges."
+    },
+    {
+      "type": "h2",
+      "text": "Grafana Webhook Integration"
+    },
+    {
+      "type": "p",
+      "text": "Grafana’s alerting engine can POST a JSON payload to any URL when a rule fires. Instead of sending to PagerDuty or Opsgenie, point the webhook at WakeUp Dev’s /v1/alert endpoint. The payload is enriched with the alert name, severity, and a custom message, then wrapped in a minimal wrapper that WakeUp Dev expects."
+    },
+    {
+      "type": "code",
+      "code": "curl -X POST https://api.wakeupdev.com/v1/alert \\\n  -H \\\"Content-Type: application/json\\\" \\\n  -H \\\"x-api-key: YOUR_API_KEY\\\" \\\n  -d '{\\n  \\\"title\\\": \\\"High CPU on prod-db\\\",\\n  \\\"description\\\": \\\"CPU usage > 90% for 5 minutes\\\",\\n  \\\"severity\\\": \\\"critical\\\",\\n  \\\"tags\\\": [\\\"database\\\", \\\"cpu\\\"]\\n}'"
+    },
+    {
+      "type": "p",
+      "text": "WakeUp Dev parses the JSON, places the call on the first available seat, and plays a short prompt. The engineer can acknowledge with digit‑1; the call then hands off to the next escalation tier if needed."
+    },
+    {
+      "type": "h2",
+      "text": "Building Dynamic Escalation Chains"
+    },
+    {
+      "type": "p",
+      "text": "Because WakeUp Dev seats are unlimited, you can create a tiered chain without worrying about seat limits. Define a list of phone numbers in your Grafana alert rule and use a simple script to iterate over them:"
+    },
+    {
+      "type": "code",
+      "code": "{\\n  \\\"recipients\\\": [\\\"+15551234567\\\", \\\"+15559876543\\\", \\\"+15557654321\\\"],\\n  \\\"message\\\": \\\"Alert: {{alert.title}} – {{alert.severity}}\\\"\\n}"
+    },
+    {
+      "type": "p",
+      "text": "When the first call is answered, the engineer can ACK with digit‑1. If no ACK is received within 30 seconds, WakeUp Dev automatically dials the next number in the list. This logic lives entirely in the webhook payload, so you avoid hard‑coding multiple webhook URLs."
+    },
+    {
+      "type": "h3",
+      "text": "Benefits"
+    },
+    {
+      "type": "ul",
+      "items": [
+        "Zero per‑seat cost – Unlimited seats mean you can add new responders as your team grows.",
+        "Reduced alert fatigue – Voice ACKs are less intrusive than SMS or email, and the 30‑second timeout prevents endless ringing.",
+        "Cost‑effective – Pay only for the voice minutes you use, not for seats you don’t fill."
+      ]
+    },
+    {
+      "type": "h2",
+      "text": "Cost Comparison"
+    },
+    {
+      "type": "p",
+      "text": "| Feature | WakeUp Dev (Unlimited Seats) | Traditional Per‑Seat Tool | |---------|------------------------------|--------------------------| | Seat cost | $0 per seat | $15–$30 per seat/month | | Voice cost | Pay‑per‑minute | Included in seat fee | | Escalation flexibility | Unlimited tiers | Limited by seat count |"
+    },
+    {
+      "type": "p",
+      "text": "The total cost of ownership drops dramatically when you scale beyond a handful of responders."
+    },
+    {
+      "type": "discussion",
+      "text": "**Peer Question:** How do you currently handle escalation timeouts in your alerting pipeline, and what would be the impact of moving to a voice‑first model?"
+    }
+  ]
+}
