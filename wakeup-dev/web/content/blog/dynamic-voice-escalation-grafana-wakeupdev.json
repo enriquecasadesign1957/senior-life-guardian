@@ -33,7 +33,7 @@
     },
     {
       "type": "code",
-      "code": "curl -X POST https://api.wakeupdev.com/v1/alert \\\n  -H \\\"Content-Type: application/json\\\" \\\n  -H \\\"x-api-key: YOUR_API_KEY\\\" \\\n  -d '{\\n  \\\"title\\\": \\\"High CPU on prod-db\\\",\\n  \\\"description\\\": \\\"CPU usage > 90% for 5 minutes\\\",\\n  \\\"severity\\\": \\\"critical\\\",\\n  \\\"tags\\\": [\\\"database\\\", \\\"cpu\\\"]\\n}'"
+      "code": "curl -X POST https://api.wakeupdev.com/v1/alert \\\n  -H \"Content-Type: application/json\" \\\n  -H \"x-api-key: YOUR_API_KEY\" \\\n  -d '{\n  \"title\": \"High CPU on prod-db\",\n  \"description\": \"CPU usage > 90% for 5 minutes\",\n  \"severity\": \"critical\",\n  \"tags\": [\"database\", \"cpu\"]\n}'"
     },
     {
       "type": "p",
@@ -49,7 +49,7 @@
     },
     {
       "type": "code",
-      "code": "{\\n  \\\"recipients\\\": [\\\"+15551234567\\\", \\\"+15559876543\\\", \\\"+15557654321\\\"],\\n  \\\"message\\\": \\\"Alert: {{alert.title}} – {{alert.severity}}\\\"\\n}"
+      "code": "{\n  \"recipients\": [\"+15551234567\", \"+15559876543\", \"+15557654321\"],\n  \"message\": \"Alert: {{alert.title}} – {{alert.severity}}\"\n}"
     },
     {
       "type": "p",
