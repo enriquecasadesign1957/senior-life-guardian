@@ -5,6 +5,8 @@ export type WhatIsContent = {
   h1: string;
   lead: string;
   body: string;
+  boundaryTitle: string;
+  boundaryBody: string;
   problemTitle: string;
   problemBody: string;
   whoTitle: string;
@@ -25,8 +27,11 @@ export type WhatIsContent = {
 const EN: WhatIsContent = {
   h1: "What is WakeUp Dev?",
   lead:
-    "WakeUp Dev is a voice-first on-call alerting platform for critical technical incidents.",
+    "WakeUp Dev is voice alerts for DevOps: on-call phone calls for critical technical incidents.",
   body: `When Grafana, UptimeRobot, or any HTTP-capable monitor fires an alert, WakeUp Dev can turn that webhook into a phone call to the engineer on call—not just another push notification. The responder must press 1 to acknowledge (ACK). If nobody answers or ACKs in time, the alert escalates through your configured on-call cascade.`,
+  boundaryTitle: "What WakeUp Dev is not",
+  boundaryBody:
+    "WakeUp Dev turns Grafana, UptimeRobot, and HTTP webhooks into on-call phone calls with press-1 acknowledgement. It is not a mass-notification system, a fire voice alarm, or a public warning service.",
   problemTitle: "What problem does it solve?",
   problemBody:
     "Critical alerts sent only to Slack, email, or mobile push can be missed at 3 AM. WakeUp Dev is for teams that need a human to actually respond during incident response—not merely be notified.",
@@ -68,8 +73,11 @@ const EN: WhatIsContent = {
 const ES: WhatIsContent = {
   h1: "¿Qué es WakeUp Dev?",
   lead:
-    "WakeUp Dev es una plataforma de alertas on-call por voz para incidentes técnicos críticos.",
+    "WakeUp Dev son alertas de voz para DevOps: llamadas on-call para incidentes técnicos críticos.",
   body: `Cuando Grafana, UptimeRobot o cualquier monitor HTTP dispara una alerta, WakeUp Dev puede convertir ese webhook en una llamada al ingeniero on-call—no solo otro push. El responsable debe presionar 1 para confirmar (ACK). Si nadie contesta o confirma a tiempo, la alerta escala por la cascada on-call configurada.`,
+  boundaryTitle: "Qué no es WakeUp Dev",
+  boundaryBody:
+    "WakeUp Dev convierte webhooks de Grafana, UptimeRobot y HTTP en llamadas on-call con confirmación en el 1. No es un sistema de alerta masiva, ni una alarma de incendio, ni un aviso a la población.",
   problemTitle: "¿Qué problema resuelve?",
   problemBody:
     "Las alertas críticas solo en Slack, email o push se pueden perder a las 3 AM. WakeUp Dev es para equipos que necesitan que un humano responda de verdad durante la respuesta a incidentes—no solo que lo notifiquen.",

@@ -4,9 +4,9 @@ import { WhatIsWakeUpDevClient } from "@/components/WhatIsWakeUpDevClient";
 import { buildPageMetadata, pageUrl, SITE } from "@/lib/seo";
 
 export const metadata = buildPageMetadata({
-  title: "What is WakeUp Dev? | Voice-First On-Call Alerting",
+  title: "Qué es WakeUp Dev | Alertas de voz para DevOps",
   description:
-    "WakeUp Dev turns critical technical alerts into phone calls, requires human acknowledgement and automatically escalates unanswered incidents.",
+    "Alertas de voz para DevOps: Grafana, UptimeRobot y webhooks HTTP se vuelven llamadas on-call con confirmación en el 1. No es alerta masiva, ni alarma de incendio, ni aviso a la población.",
   path: "/what-is-wakeup-dev",
 });
 
@@ -19,7 +19,7 @@ const webPageLd = {
       url: pageUrl("/what-is-wakeup-dev"),
       name: "What is WakeUp Dev?",
       description:
-        "Voice-first on-call alerting with phone calls, human ACK, and automatic escalation.",
+        "Alertas de voz para DevOps. On-call phone calls with press-1 acknowledgement. Not mass notification, fire alarm, or public warning.",
       isPartOf: { "@id": SITE },
     },
     {
@@ -29,7 +29,7 @@ const webPageLd = {
       applicationCategory: "DeveloperApplication",
       operatingSystem: "All",
       description:
-        "Voice-first on-call alerting platform that converts monitoring webhooks into phone calls with digit-1 acknowledgement and cascade escalation.",
+        "WakeUp Dev turns Grafana, UptimeRobot, and HTTP webhooks into on-call phone calls with press-1 acknowledgement. It is not a mass-notification system, a fire voice alarm, or a public warning service.",
       featureList: [
         "HTTP webhook alert ingestion",
         "Phone call with press-1 acknowledgement",

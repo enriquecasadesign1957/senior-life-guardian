@@ -8,10 +8,9 @@ import {
 import { buildPageMetadata, pageUrl } from "@/lib/seo";
 
 export const metadata = buildPageMetadata({
-  title:
-    "UptimeRobot Phone Alerts: Send UptimeRobot Alerts to a Phone | WakeUp Dev",
+  title: "Alertas de UptimeRobot por teléfono | WakeUp Dev",
   description:
-    "Send UptimeRobot alerts to a phone with WakeUp Dev. Use an HTTP webhook to trigger a voice call, require human acknowledgement, and escalate if nobody responds.",
+    "Alertas de UptimeRobot por teléfono: el webhook se convierte en una llamada con confirmación humana y escalación. UptimeRobot phone alerts for DevOps on-call.",
   path: "/uptimerobot-phone-alerts",
 });
 

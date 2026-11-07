@@ -8,9 +8,9 @@ import {
 import { buildPageMetadata, pageUrl } from "@/lib/seo";
 
 export const metadata = buildPageMetadata({
-  title: "On-Call Escalation by Phone | Human ACK & Voice Alerts | WakeUp Dev",
+  title: "Servicio de escalación de alertas on-call | WakeUp Dev",
   description:
-    "Learn how on-call escalation works with phone alerts, human acknowledgement, and automatic escalation when nobody responds.",
+    "Servicio de escalación de alertas por teléfono para DevOps. Si nadie confirma con el 1, WakeUp Dev llama al siguiente. On-call escalation with human acknowledgement.",
   path: "/on-call-escalation",
 });
 
