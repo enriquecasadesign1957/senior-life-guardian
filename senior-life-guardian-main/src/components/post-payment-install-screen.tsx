@@ -14,6 +14,7 @@ import {
   ArrowDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { isInternational } from "@/lib/market";
 import { detectPlatform, isMobileDevice, isNativeApp, isPwaStandalone } from "@/lib/device";
 import {
   APK_DOWNLOAD_URL,
@@ -338,7 +339,7 @@ export function PostPaymentInstallScreen({
                 displaySummary.cardLast4) && (
               <div className="mt-5 text-left bg-card border border-border rounded-2xl p-4 text-sm space-y-2 shadow-sm">
                 <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                  Comprobante Webpay Plus
+                  {isInternational ? "Comprobante Lemon Squeezy" : "Comprobante Webpay Plus"}
                 </p>
                 {displaySummary.amount != null && (
                   <div className="flex justify-between gap-4">

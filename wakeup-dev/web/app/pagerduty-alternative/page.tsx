@@ -8,9 +8,9 @@ import {
 import { buildPageMetadata, pageUrl } from "@/lib/seo";
 
 export const metadata = buildPageMetadata({
-  title: "PagerDuty Alternative for Voice On-Call Alerts | WakeUp Dev",
+  title: "Alternativa a PagerDuty por voz | WakeUp Dev",
   description:
-    "Looking for a PagerDuty alternative? WakeUp Dev focuses on voice-first on-call alerts, human acknowledgement, and escalation with pay-per-alert pricing.",
+    "Alternativa a PagerDuty centrada en alertas de voz, confirmación humana y escalación, sin cobro por asiento. Voice on-call alerts priced per dispatched alert.",
   path: "/pagerduty-alternative",
 });
 

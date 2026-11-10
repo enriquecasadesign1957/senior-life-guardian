@@ -14,6 +14,7 @@ import {
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
 import { WhatsAppFloat } from "@/components/whatsapp-float";
 import { checkoutUrl, formatPlanPrice, PLAN } from "@/lib/plans";
+import { isInternational, paymentLabel } from "@/lib/market";
 import { CASCADE_MARKETING_SUMMARY } from "@/lib/emergency-cascade-timing";
 import { buildPublicPageMeta, breadcrumbJsonLd, jsonLdHeadScript } from "@/lib/seo";
 
@@ -30,7 +31,9 @@ const TESTIMONIALS: {
   {
     segments: [
       {
-        text: "Buscaba una alarma familiar para mi mamá en Villa Alemana sin pagar 30 mil al mes. Con Senior Safe ",
+        text: isInternational
+          ? "Buscaba una alarma familiar para mi mamá sin pagar 30 dólares al mes. Con Senior Safe "
+          : "Buscaba una alarma familiar para mi mamá en Villa Alemana sin pagar 30 mil al mes. Con Senior Safe ",
       },
       { text: `por $${formatPlanPrice(PLAN.monthly)} tengo la tranquilidad`, highlight: true },
       {
@@ -69,7 +72,7 @@ const TESTIMONIALS: {
 ];
 
 const TRUST_CTA_ITEMS = [
-  "Pago seguro con Transbank",
+  `Pago seguro con ${paymentLabel}`,
   "Sin contratos ni permanencia",
   "Cancela con 1 click cuando quieras",
 ] as const;
@@ -100,9 +103,12 @@ const CASCADE_STEPS = [
 export const Route = createFileRoute("/alarma-familiar")({
   head: () => {
     const page = buildPublicPageMeta({
-      title: "Alarma familiar Chile — WhatsApp, SMS y GPS desde $6.900/mes",
-      description:
-        "Seguridad del hogar con alerta familiar: comunicación en cascada por WhatsApp y SMS, geolocalización y plan desde $6.900 al mes. Sin permanencia.",
+      title: isInternational
+        ? `Alarma familiar — WhatsApp, SMS y GPS desde $${formatPlanPrice(PLAN.monthly)} USD/mes`
+        : "Alarma familiar Chile — WhatsApp, SMS y GPS desde $6.900/mes",
+      description: isInternational
+        ? `Seguridad del hogar con alerta familiar: comunicación en cascada por WhatsApp y SMS, geolocalización y plan desde $${formatPlanPrice(PLAN.monthly)} USD al mes. Sin permanencia. Pago con Lemon Squeezy.`
+        : "Seguridad del hogar con alerta familiar: comunicación en cascada por WhatsApp y SMS, geolocalización y plan desde $6.900 al mes. Sin permanencia.",
       pathname: "/alarma-familiar",
       ogTitle: "Alarma familiar — WhatsApp, SMS y GPS",
     });
@@ -236,15 +242,17 @@ function CascadeSection({ monthlyLabel }: { monthlyLabel: string }) {
       </ul>
 
       <div className="mt-6 md:mt-8 text-center px-1">
-        <Link
-          to={checkoutUrl()}
+        <a
+          href={checkoutUrl()}
           className="inline-flex items-center justify-center gap-2 w-full sm:w-auto max-w-md mx-auto px-6 py-3.5 sm:px-8 sm:py-4 rounded-full text-white text-sm sm:text-base font-bold shadow-xl hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 bg-[#00845a] hover:bg-[#006b48] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00845a]"
         >
           Contratar — {monthlyLabel}
           <ArrowRight className="w-5 h-5 shrink-0" aria-hidden />
-        </Link>
+        </a>
         <p className="mt-2 text-xs text-muted-foreground">
-          Checkout seguro: solo 3 datos y pagas con Oneclick (Transbank).
+          {isInternational
+            ? "Checkout seguro con Lemon Squeezy, en dólares."
+            : "Checkout seguro: solo 3 datos y pagas con Oneclick (Transbank)."}
         </p>
       </div>
     </section>
@@ -333,15 +341,17 @@ function AlarmaFamiliarPage() {
             Protege tu hogar por solo {monthlyLabel}
           </h2>
           <p className="text-muted-foreground text-sm sm:text-base md:text-lg mb-7 md:mb-8 leading-relaxed px-1">
-            Checkout compacto: 3 datos y pagas con Oneclick. Sin contratos amarrados.
+            {isInternational
+              ? "Pagas con Lemon Squeezy, en dólares. Sin contratos amarrados."
+              : "Checkout compacto: 3 datos y pagas con Oneclick. Sin contratos amarrados."}
           </p>
-          <Link
-            to={checkoutUrl()}
+          <a
+            href={checkoutUrl()}
             className="inline-flex items-center justify-center gap-2 w-full sm:w-auto max-w-md mx-auto px-6 py-4 sm:px-8 sm:py-4 md:px-10 md:py-5 rounded-full text-white text-sm sm:text-base md:text-lg font-bold shadow-xl hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 bg-[#00845a] hover:bg-[#006b48] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00845a]"
           >
             Ir al checkout — {monthlyLabel}
             <ArrowRight className="w-5 h-5 shrink-0" aria-hidden />
-          </Link>
+          </a>
           <ul
             className="mt-5 md:mt-6 flex flex-col sm:flex-row flex-wrap items-center justify-center gap-x-2 gap-y-2 text-xs sm:text-sm text-slate-600 leading-snug px-1"
             aria-label="Garantías de compra"

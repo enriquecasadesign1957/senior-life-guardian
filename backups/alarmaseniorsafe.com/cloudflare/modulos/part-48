@@ -1,0 +1,196 @@
+import { j as jsxRuntimeExports } from "../_libs/react.mjs";
+import { P as POST$2, H as HEADLINE$3, T as TECH_DESCRIPTION$3, k as formatBlogDate, C as COVER$3 } from "./router-FK5WbXyp.mjs";
+import { L as Link } from "../_libs/tanstack__react-router.mjs";
+import { S as SiteHeader, a as SiteFooter } from "./site-layout-BSSgEBzk.mjs";
+import { W as WhatsAppFloat } from "./whatsapp-float-CfwyDlWL.mjs";
+import { f as formatPlanPrice, P as PLAN, d as checkoutUrl } from "./plans-BJeLFmLc.mjs";
+import "./index.mjs";
+
+import "../_libs/sonner.mjs";
+
+
+import { A as ArrowLeft, am as Newspaper, j as Clock, E as ExternalLink } from "../_libs/lucide-react.mjs";
+
+import "../_libs/tanstack__query-core.mjs";
+import "../_libs/tanstack__react-query.mjs";
+import "../_libs/tanstack__router-core.mjs";
+import "../_libs/tanstack__history.mjs";
+import "../_libs/cookie-es.mjs";
+import "../_libs/seroval.mjs";
+import "../_libs/unenv.mjs";
+
+
+import "../_libs/seroval-plugins.mjs";
+
+
+import "./maps-BhXedqc-.mjs";
+import "./transbank-oneclick-mall-CC5wwzFZ.mjs";
+import "../_libs/h3-v2.mjs";
+import "../_libs/rou3.mjs";
+import "../_libs/srvx.mjs";
+
+
+
+
+import "./ack-alert-hZc0eMx8.mjs";
+import "./client.server-U_pH-Evd.mjs";
+import "../_libs/supabase__supabase-js.mjs";
+import "../_libs/supabase__postgrest-js.mjs";
+import "../_libs/supabase__realtime-js.mjs";
+import "../_libs/supabase__phoenix.mjs";
+import "../_libs/supabase__storage-js.mjs";
+import "../_libs/iceberg-js.mjs";
+import "../_libs/supabase__auth-js.mjs";
+import "../_libs/tslib.mjs";
+import "../_libs/supabase__functions-js.mjs";
+import "./twilio-DNHuHEFY.mjs";
+import "./zoho-smtp-lj0bCuK6.mjs";
+import "./install-step-sync-65QKjQIB.mjs";
+import "./signups-db-JWUtXpaW.mjs";
+import "./twilio-inbound-_C02bj0d.mjs";
+import "./account-lookup-CBKDZ0Aw.mjs";
+import "./contacts-storage-DdsYD-uQ.mjs";
+import "./phone-utils-D7EH6fht.mjs";
+import "./senior-access-auth-Bmk7iyGS.mjs";
+import "../_libs/zod.mjs";
+import "./discount-codes-BbIma2Cq.mjs";
+import "./discount.functions-CbzrjeJP.mjs";
+import "./createSsrRpc-14pD3De2.mjs";
+import "./createServerFn-CqTdkD5n.mjs";
+import "./whatsapp-inbox-CZiWC44X.mjs";
+import "./admin-auth-5OIH6Qjw.mjs";
+import "./post-payment-install-notify-6plkg_BS.mjs";
+import "./transactional-email-html-C_kx3NhX.mjs";
+import "./emergency-cascade-continuation-BhQV3eMZ.mjs";
+import "./pin-reset-B5nhyHPX.mjs";
+import "./subscription-renewal-CVyJ9Wsj.mjs";
+import "./oneclick-renewal-charge-XKyXWH2D.mjs";
+import "../_libs/react-email__render.mjs";
+import "../_libs/prettier.mjs";
+import "../_libs/deepmerge.mjs";
+import "../_libs/react-email__html.mjs";
+import "../_libs/react-email__head.mjs";
+import "../_libs/react-email__preview.mjs";
+import "../_libs/react-email__body.mjs";
+import "../_libs/react-email__container.mjs";
+import "../_libs/react-email__section.mjs";
+import "../_libs/react-email__heading.mjs";
+import "../_libs/react-email__text.mjs";
+import "../_libs/react-email__button.mjs";
+import "../_libs/react-email__link.mjs";
+import "../_libs/react-email__hr.mjs";
+import "../_libs/react-dom.mjs";
+import "../_libs/isbot.mjs";
+import "./demo-config-D1XL_8ap.mjs";
+const PRESS_URL = "https://revistaseguridad.cl/2026/07/10/tecnologia-con-corazon-lanzan-en-chile-alarma-inteligente-con-ia-para-optimizar-la-seguridad-de-los-adultos-mayores/";
+const PETROL = "var(--brand-petrol)";
+const DEEP = "var(--brand-petrol-deep)";
+function SectionTitle({
+  children
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "mt-14 first:mt-0 text-2xl md:text-3xl font-bold tracking-wide text-foreground leading-snug", children });
+}
+function P({
+  children
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-5 text-lg leading-relaxed tracking-wide text-muted-foreground", children });
+}
+function BlogArticlePage() {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-h-screen bg-background flex flex-col", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(SiteHeader, {}),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("main", { className: "flex-1", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("article", { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("header", { className: "relative overflow-hidden text-white", style: {
+        background: `linear-gradient(135deg, ${DEEP} 0%, ${PETROL} 58%, oklch(0.48 0.12 235) 100%)`
+      }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative mx-auto max-w-3xl px-6 py-12 md:py-16", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(Link, { to: "/blog", className: "mb-6 inline-flex items-center gap-2 text-sm font-semibold tracking-wide text-white/85 hover:text-white", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "h-4 w-4", "aria-hidden": true }),
+          "Volver al blog"
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mb-3 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-white/70", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Newspaper, { className: "h-3.5 w-3.5", "aria-hidden": true }),
+          POST$2.category,
+          " · Revista Seguridad & Defensa"
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-3xl md:text-4xl lg:text-[2.65rem] font-bold leading-tight tracking-wide", children: HEADLINE$3 }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mt-5 text-lg leading-relaxed tracking-wide text-white/85", children: TECH_DESCRIPTION$3 }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm tracking-wide text-white/75", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: POST$2.author }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { "aria-hidden": true, children: "·" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("time", { dateTime: POST$2.publishedAt, children: formatBlogDate(POST$2.publishedAt) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { "aria-hidden": true, children: "·" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "inline-flex items-center gap-1.5", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Clock, { className: "h-3.5 w-3.5", "aria-hidden": true }),
+            POST$2.readingMinutes,
+            " min"
+          ] })
+        ] })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mx-auto max-w-3xl px-6", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("figure", { className: "-mt-8 md:-mt-10 overflow-hidden rounded-3xl border border-border bg-white shadow-xl", children: /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: COVER$3, alt: POST$2.coverAlt, width: 1200, height: 675, fetchPriority: "high", decoding: "async", className: "aspect-[16/9] w-full object-cover" }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "py-12 md:py-16", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(P, { children: [
+            "La",
+            " ",
+            /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { className: "text-foreground font-semibold", children: "Revista Seguridad & Defensa" }),
+            ", medio líder en el sector, ha destacado a",
+            " ",
+            /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { className: "text-foreground font-semibold", children: "Senior Safe" }),
+            " en su artículo",
+            " ",
+            /* @__PURE__ */ jsxRuntimeExports.jsx("em", { className: "text-foreground", children: "“Tecnología con corazón: Lanzan en Chile alarma inteligente con IA para optimizar la seguridad de los adultos mayores”" }),
+            ". La nota resalta cómo la plataforma revoluciona la teleasistencia, ofreciendo una alternativa innovadora y accesible frente a las alarmas tradicionales y costosas."
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(SectionTitle, { children: "Innovación ante el envejecimiento poblacional" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(P, { children: "El reportaje subraya la necesidad de soluciones tecnológicas en un Chile que envejece. Senior Safe responde a este desafío transformando smartphones en guardianes autónomos, democratizando la seguridad, con un enfoque en accesibilidad y eficiencia." }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(SectionTitle, { children: "Alto rendimiento y accesibilidad" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(P, { children: [
+            "Se destaca la resiliencia de la nube, con latencias inferiores a",
+            " ",
+            /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { className: "text-foreground font-semibold", children: "1,5 segundos" }),
+            " en pruebas técnicas. Enrique Drack, fundador, enfatiza en el reportaje el propósito de ofrecer tranquilidad con un costo accesible (",
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("strong", { className: "text-foreground font-semibold", children: [
+              "$",
+              formatPlanPrice(PLAN.monthly),
+              " mensuales"
+            ] }),
+            "), eliminando contratos abusivos."
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(SectionTitle, { children: "Algoritmo en cascada y alertas inteligentes" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(P, { children: "La publicación detalla el funcionamiento del algoritmo de comunicación en cascada. Ante emergencias (salud, caídas, delincuencia), el sistema activa alertas masivas vía WhatsApp con IA, SMS y llamadas automatizadas en segundos." }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("blockquote", { className: "mt-10 rounded-3xl border border-border p-6 md:p-8 shadow-sm", style: {
+            background: "linear-gradient(145deg, white 0%, color-mix(in oklab, var(--brand-petrol) 6%, white) 100%)"
+          }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-lg leading-relaxed tracking-wide text-foreground", children: "Lee el reportaje completo y verifica la publicación original en el portal de prensa oficial:" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("a", { href: PRESS_URL, target: "_blank", rel: "noopener noreferrer", className: "mt-4 inline-flex items-center gap-2 text-lg font-bold tracking-wide underline-offset-4 hover:underline", style: {
+              color: PETROL
+            }, children: [
+              "Revista Seguridad — Lanzamiento Senior Safe",
+              /* @__PURE__ */ jsxRuntimeExports.jsx(ExternalLink, { className: "h-4 w-4 shrink-0", "aria-hidden": true })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-12 rounded-3xl border border-border p-7 md:p-9 shadow-sm", style: {
+            background: "linear-gradient(145deg, white 0%, color-mix(in oklab, var(--brand-petrol) 7%, white) 100%)"
+          }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "text-xl md:text-2xl font-bold tracking-wide text-foreground", children: "Protege a tu familia con el Plan Único" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-3 text-lg leading-relaxed tracking-wide text-muted-foreground", children: [
+              "Misma tecnología destacada por la prensa especializada: desde $",
+              formatPlanPrice(PLAN.monthly),
+              "/mes, sin permanencia."
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-6 flex flex-wrap gap-3", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: checkoutUrl(), className: "inline-flex items-center justify-center rounded-full px-6 py-3.5 text-base font-bold tracking-wide text-white transition hover:opacity-90", style: {
+                background: DEEP
+              }, children: "Contratar Senior Safe" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { to: "/blog/como-la-ia-salva-vidas-emergencias-domesticas", className: "inline-flex items-center justify-center rounded-full border border-border bg-white px-6 py-3.5 text-base font-bold tracking-wide text-foreground transition hover:bg-muted/40", children: "Cómo funciona la IA" })
+            ] })
+          ] })
+        ] })
+      ] })
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(SiteFooter, {}),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(WhatsAppFloat, {})
+  ] });
+}
+export {
+  BlogArticlePage as component
+};

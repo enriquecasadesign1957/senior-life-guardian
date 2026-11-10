@@ -59,6 +59,8 @@ export type CleanupPreview = {
   headline: string;
   detail: string;
   blocked: boolean;
+  steps: string[];
+  wins: string[];
 };
 
 export function cleanupProjection(input: {
@@ -71,31 +73,68 @@ export function cleanupProjection(input: {
   if (input.overLimit) {
     return {
       blocked: true,
-      headline: "Hay demasiada basura para quitarla de una vez.",
-      detail: "Paramos antes de las 2.000 filas o los 32 MB. No tocamos pedidos, clientes, el tema ni functions.php.",
+      headline: "Hay demasiada basura acumulada para vaciarla de un solo golpe.",
+      detail:
+        "Paramos antes de las 2.000 filas o los 32 MB para no saturar el hosting. No tocamos pedidos, clientes, el tema ni functions.php.",
+      steps: [],
+      wins: [],
     };
   }
+
+  const steps: string[] = [];
   const parts: string[] = [];
-  if (input.revisions && input.revisions > 0) parts.push(`${formatCount(input.revisions)} copias viejas`);
+  if (input.revisions && input.revisions > 0) {
+    parts.push(`${formatCount(input.revisions)} copias viejas de páginas y entradas`);
+    steps.push(
+      `Borrar una por una las ${formatCount(input.revisions)} revisiones antiguas que WordPress guardó cada vez que editaste.`,
+    );
+    steps.push("Dejar solo la versión publicada: sin borradores fantasma ni historial basura en la base.");
+  }
   if (input.expiredTransients && input.expiredTransients > 0) {
     parts.push(`${formatCount(input.expiredTransients)} datos temporales vencidos`);
+    steps.push(
+      `Vaciar ${formatCount(input.expiredTransients)} restos de caché y opciones temporales que ya caducaron y siguen ocupando filas.`,
+    );
   }
-  if (input.spamComments && input.spamComments > 0) parts.push(`${formatCount(input.spamComments)} comentarios de spam viejos`);
+  if (input.spamComments && input.spamComments > 0) {
+    parts.push(`${formatCount(input.spamComments)} comentarios de spam viejos`);
+    steps.push(
+      `Eliminar ${formatCount(input.spamComments)} comentarios de spam con más de 30 días que nadie ve y siguen hinchando la tabla.`,
+    );
+  }
+
   const size = formatBytes(input.bytes);
   if (parts.length === 0) {
     return {
       blocked: false,
-      headline: "No vimos copias viejas, datos temporales vencidos ni spam antiguo para quitar.",
+      headline: "Esta base ya está limpia: no vimos copias viejas, temporales vencidos ni spam antiguo para quitar.",
       detail: "No tocamos pedidos, clientes, el tema ni functions.php.",
+      steps: [],
+      wins: ["La base ya no arrastra ese peso muerto medido."],
     };
   }
+
   const headline = size
-    ? `Vamos a quitar ${parts.join(", ")}. Eso ocupa cerca de ${size}.`
-    : `Vamos a quitar ${parts.join(", ")}.`;
+    ? `Vamos a barrer ${parts.join(", ")}. Eso son cerca de ${size} de peso muerto saliendo de la base.`
+    : `Vamos a barrer ${parts.join(", ")} hasta dejar la base sin ese lastre.`;
+
+  const wins = [
+    "La base queda más liviana: menos filas basura en cada respaldo y en cada consulta del escritorio.",
+    "Los respaldos pesan menos y se hacen más simples de guardar.",
+    "El panel de WordPress deja de arrastrar revisiones y caché vencido que nadie usa.",
+    "Las páginas publicadas, los pedidos y el tema siguen exactamente como están.",
+  ];
+  if (size) {
+    wins.unshift(`Recuperas del orden de ${size} que hoy solo alimentan basura interna.`);
+  }
+
   return {
     blocked: false,
     headline,
-    detail: "No tocamos pedidos, clientes, el tema ni functions.php. Cuando la limpieza se aplique, se puede deshacer durante 7 días.",
+    detail:
+      "Cuando la limpieza se aplique, se puede deshacer durante 7 días. Pasado ese plazo, lo borrado no vuelve. No tocamos pedidos, clientes, el tema ni functions.php. Todavía no se ejecuta sola: primero ves el lote completo.",
+    steps,
+    wins,
   };
 }
 

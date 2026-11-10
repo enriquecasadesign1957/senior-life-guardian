@@ -1,0 +1,33 @@
+import { f as formatPlanPrice, P as PLAN } from "./discount-codes-BOatiw_p.mjs";
+import { L as LAS_CONDES_AM_CODE, a as LAS_CONDES_CODE, b as lasCondesCheckoutPath } from "./tarjeta-vecino.server-s7vWwsdK.mjs";
+const CONVENIO_LAS_CONDES = {
+  listMonthly: PLAN.monthly,
+  listYearly: PLAN.yearly,
+  vecino: {
+    code: LAS_CONDES_CODE,
+    percent: 15,
+    monthly: 5865,
+    yearly: 58650,
+    label: "Tarjeta Vecino"
+  },
+  adultoMayor: {
+    code: LAS_CONDES_AM_CODE,
+    percent: 20,
+    monthly: 5520,
+    yearly: 55200,
+    label: "Tarjeta Vecino Adulto Mayor"
+  }
+};
+const CONVENIO_LAS_CONDES_URL = "https://alarmaseniorsafe.cl/las-condes";
+function convenioPrecio(amount) {
+  return `$${formatPlanPrice(amount)}`;
+}
+function convenioCheckoutPath(code, periodo) {
+  return lasCondesCheckoutPath(code, periodo);
+}
+export {
+  CONVENIO_LAS_CONDES as C,
+  CONVENIO_LAS_CONDES_URL as a,
+  convenioCheckoutPath as b,
+  convenioPrecio as c
+};

@@ -39,6 +39,39 @@ const HOW_IT_WORKS_STEPS: MsgKey[] = [
   "howItWorksStep5",
 ];
 
+const SEARCH_LINKS: { href: string; en: string; es: string }[] = [
+  {
+    href: "/what-is-wakeup-dev",
+    en: "Voice alerts for DevOps",
+    es: "Alertas de voz para DevOps",
+  },
+  {
+    href: "/grafana-phone-alerts",
+    en: "Grafana phone alerts",
+    es: "Integración con Grafana",
+  },
+  {
+    href: "/uptimerobot-phone-alerts",
+    en: "UptimeRobot phone alerts",
+    es: "Alertas de UptimeRobot",
+  },
+  {
+    href: "/on-call-escalation",
+    en: "On-call escalation",
+    es: "Servicio de escalación de alertas",
+  },
+  {
+    href: "/pagerduty-alternative",
+    en: "PagerDuty alternative",
+    es: "Alternativa a PagerDuty",
+  },
+  {
+    href: "/webhook-to-phone-call",
+    en: "Webhook to phone call",
+    es: "Webhook a llamada",
+  },
+];
+
 const FOOTER_LINKS: { href: string; labelKey: MsgKey }[] = [
   { href: "/what-is-wakeup-dev", labelKey: "footerWhatIs" },
   { href: "/webhook-to-phone-call", labelKey: "footerHowItWorks" },
@@ -217,6 +250,31 @@ export function LandingClient({
         <p className="mt-6 max-w-2xl text-sm leading-relaxed text-zinc-500">
           {t("integrationsMention")}
         </p>
+        <nav aria-label={t("searchLinksTitle")} className="mt-10 max-w-3xl">
+          <h2 className="text-sm font-medium text-zinc-200">
+            {t("searchLinksTitle")}
+          </h2>
+          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-zinc-500">
+            {t("searchLinksBody")}
+          </p>
+          <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+            {SEARCH_LINKS.map((item) => (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className="block rounded-lg border border-zinc-800 bg-zinc-950 px-4 py-3 transition hover:border-zinc-700 hover:bg-zinc-900"
+                >
+                  <span className="block text-sm font-medium text-zinc-100">
+                    {item.en}
+                  </span>
+                  <span className="mt-0.5 block text-sm text-zinc-500" lang="es">
+                    {item.es}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </section>
 
       <section

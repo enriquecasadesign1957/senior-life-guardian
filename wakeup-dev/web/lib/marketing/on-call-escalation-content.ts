@@ -244,7 +244,7 @@ const EN: OnCallEscalationContent = {
 };
 
 const ES: OnCallEscalationContent = {
-  h1: "Escalada on-call que llega a un humano",
+  h1: "Servicio de escalación de alertas on-call",
   heroSubheading:
     "Convierte alertas críticas en llamadas, exige confirmación humana y escala automáticamente cuando nadie responde.",
   heroLead: "Una notificación no es lo mismo que una respuesta.",

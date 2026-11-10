@@ -1,0 +1,48 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+.env
+.env.*
+!.env.example
+dist
+dist-ssr
+.output
+.vinxi
+.tanstack/**
+.nitro
+*.local
+
+# Wrangler / Cloudflare
+.wrangler/
+.dev.vars
+
+# Transbank sandbox validation (tokens — no subir en repo público)
+public/oneclick-*.json
+public/oneclick-*.html
+scripts/tmp-token-aprobada.mjs
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Android / Play Store (generado en CI; keystore nunca en Git)
+android/
+*.jks
+*.keystore
+keystore.properties
+senior-safe-release.jks
+play-keystore-credentials.local.txt

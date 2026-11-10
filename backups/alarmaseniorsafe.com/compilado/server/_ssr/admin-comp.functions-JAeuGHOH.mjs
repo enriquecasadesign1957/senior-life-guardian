@@ -1,0 +1,227 @@
+import { c as createServerRpc } from "./createServerRpc-ChaSCZOg.mjs";
+import { j as createServerFn } from "./createServerFn-CqTdkD5n.mjs";
+import { a as assertAdminPin } from "./admin-auth-5OIH6Qjw.mjs";
+import { s as supabaseAdmin } from "./client.server-U_pH-Evd.mjs";
+import { C as CONTRACT_SIGNUPS_TABLE } from "./signups-db-JWUtXpaW.mjs";
+import { c as clearRenewalNoticeFlags } from "./transactional-email-html-C_kx3NhX.mjs";
+import { e as ensureFirstGuardianAfterPayment } from "./first-guardian-checkout-BEB7AGrd.mjs";
+import { s as sendPostPaymentInstallNotifications } from "./post-payment-install-notify-6plkg_BS.mjs";
+
+
+import "./index.mjs";
+import { o as objectType, s as stringType, n as numberType } from "../_libs/zod.mjs";
+import "../_libs/tanstack__router-core.mjs";
+import "../_libs/tanstack__history.mjs";
+import "../_libs/cookie-es.mjs";
+import "../_libs/seroval.mjs";
+import "../_libs/unenv.mjs";
+
+
+
+import "../_libs/seroval-plugins.mjs";
+
+
+import "../_libs/supabase__supabase-js.mjs";
+import "../_libs/supabase__postgrest-js.mjs";
+import "../_libs/supabase__realtime-js.mjs";
+import "../_libs/supabase__phoenix.mjs";
+import "../_libs/supabase__storage-js.mjs";
+import "../_libs/iceberg-js.mjs";
+import "../_libs/supabase__auth-js.mjs";
+import "../_libs/tslib.mjs";
+import "../_libs/supabase__functions-js.mjs";
+import "./zoho-smtp-lj0bCuK6.mjs";
+import "./plans-BJeLFmLc.mjs";
+import "./install-step-sync-65QKjQIB.mjs";
+import "./twilio-DNHuHEFY.mjs";
+import "./twilio-inbound-_C02bj0d.mjs";
+import "./contacts-storage-DdsYD-uQ.mjs";
+import "./phone-utils-D7EH6fht.mjs";
+import "./guardians.functions-BA585btN.mjs";
+import "./createSsrRpc-14pD3De2.mjs";
+import "./senior-access-auth-Bmk7iyGS.mjs";
+import "../_libs/h3-v2.mjs";
+import "../_libs/rou3.mjs";
+import "../_libs/srvx.mjs";
+
+
+
+
+const pinSchema = objectType({
+  pin: stringType().min(1).max(64)
+});
+const lookupSchema = pinSchema.extend({
+  email: stringType().email().optional(),
+  signupId: stringType().uuid().optional()
+});
+const grantSchema = pinSchema.extend({
+  email: stringType().email().optional(),
+  signupId: stringType().uuid().optional(),
+  reason: stringType().trim().min(3).max(500),
+  grantedBy: stringType().trim().min(1).max(120).optional(),
+  /** Meses de vigencia; null = sin fecha de fin (sin cobro automático). */
+  durationMonths: numberType().int().min(1).max(120).nullable().optional()
+});
+const revokeSchema = pinSchema.extend({
+  signupId: stringType().uuid(),
+  reason: stringType().trim().min(3).max(500).optional()
+});
+const ADMIN_ACCOUNT_SELECT = "id,nombre,email,telefono,plan,periodo,payment_status,subscription_status,renewal_date,comp_reason,comp_granted_at,comp_granted_by,discount_code,discount_percent,created_at,last_payment_at";
+function computeCompRenewalDate(durationMonths) {
+  if (durationMonths == null) return null;
+  const d = /* @__PURE__ */ new Date();
+  d.setMonth(d.getMonth() + durationMonths);
+  return d.toISOString();
+}
+async function findSignup(email, signupId) {
+  if (signupId) {
+    const {
+      data,
+      error
+    } = await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE).select(ADMIN_ACCOUNT_SELECT).eq("id", signupId).maybeSingle();
+    if (error) throw new Error(error.message);
+    return data;
+  }
+  if (email) {
+    const normalized = email.trim().toLowerCase();
+    const {
+      data,
+      error
+    } = await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE).select(ADMIN_ACCOUNT_SELECT).eq("email", normalized).order("created_at", {
+      ascending: false
+    }).limit(1).maybeSingle();
+    if (error) throw new Error(error.message);
+    return data;
+  }
+  return null;
+}
+const adminLookupAccount_createServerFn_handler = createServerRpc({
+  id: "f27efb3e2b865251959452215d37d8d60ef542512841abc03138a96ddd48e6d5",
+  name: "adminLookupAccount",
+  filename: "src/lib/admin-comp.functions.ts"
+}, (opts) => adminLookupAccount.__executeServer(opts));
+const adminLookupAccount = createServerFn({
+  method: "POST"
+}).inputValidator((input) => lookupSchema.parse(input)).handler(adminLookupAccount_createServerFn_handler, async ({
+  data
+}) => {
+  assertAdminPin(data.pin);
+  if (!data.email && !data.signupId) {
+    throw new Error("Indica email o ID de cuenta.");
+  }
+  const row = await findSignup(data.email, data.signupId);
+  if (!row) {
+    return {
+      ok: false,
+      message: "No se encontró la cuenta."
+    };
+  }
+  return {
+    ok: true,
+    account: row
+  };
+});
+const adminGrantFreeService_createServerFn_handler = createServerRpc({
+  id: "2b17e3f7112775bcb1be66d8c42d9728d38ccd49587997b6e2707f7c5b39d59c",
+  name: "adminGrantFreeService",
+  filename: "src/lib/admin-comp.functions.ts"
+}, (opts) => adminGrantFreeService.__executeServer(opts));
+const adminGrantFreeService = createServerFn({
+  method: "POST"
+}).inputValidator((input) => grantSchema.parse(input)).handler(adminGrantFreeService_createServerFn_handler, async ({
+  data
+}) => {
+  assertAdminPin(data.pin);
+  if (!data.email && !data.signupId) {
+    throw new Error("Indica email o ID de cuenta.");
+  }
+  const row = await findSignup(data.email, data.signupId);
+  if (!row) throw new Error("No se encontró la cuenta.");
+  const now = (/* @__PURE__ */ new Date()).toISOString();
+  const renewalDate = computeCompRenewalDate(data.durationMonths ?? null);
+  const {
+    error
+  } = await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE).update({
+    payment_status: "comp",
+    subscription_status: "active",
+    renewal_date: renewalDate,
+    comp_reason: data.reason,
+    comp_granted_at: now,
+    comp_granted_by: data.grantedBy?.trim() || "admin",
+    last_payment_at: null
+  }).eq("id", row.id);
+  if (error) throw new Error(error.message);
+  await clearRenewalNoticeFlags(row.id);
+  await ensureFirstGuardianAfterPayment(row.id).catch((e) => {
+    console.error("[admin/comp] first guardian:", e);
+  });
+  const installNotify = await sendPostPaymentInstallNotifications(row.id, {
+    force: true
+  }).catch((e) => {
+    console.error("[admin/comp] install notify:", e);
+    return {
+      sent: false,
+      emailSent: false,
+      whatsappSent: false,
+      smsSent: false,
+      skippedReason: "error"
+    };
+  });
+  const baseMessage = renewalDate ? `Servicio activado en gratuidad hasta ${new Date(renewalDate).toLocaleDateString("es-CL")}.` : "Servicio activado en gratuidad (sin fecha de término automática).";
+  let notifyNote = "";
+  if (installNotify.sent) {
+    const parts = [];
+    if (installNotify.emailSent) parts.push("correo");
+    if (installNotify.whatsappSent) parts.push("WhatsApp");
+    if (installNotify.smsSent) parts.push("SMS");
+    notifyNote = ` Instrucciones de instalación enviadas (${parts.join(" y ")}).`;
+  } else {
+    notifyNote = " No se pudieron enviar las instrucciones de instalación; reintenta o avisa a soporte.";
+  }
+  return {
+    ok: true,
+    signupId: row.id,
+    email: row.email,
+    message: baseMessage + notifyNote,
+    installNotify
+  };
+});
+const adminRevokeFreeService_createServerFn_handler = createServerRpc({
+  id: "55dff177ecc3a93ada34854da91b29cf509b7d27253e06022d2ab03f34020a87",
+  name: "adminRevokeFreeService",
+  filename: "src/lib/admin-comp.functions.ts"
+}, (opts) => adminRevokeFreeService.__executeServer(opts));
+const adminRevokeFreeService = createServerFn({
+  method: "POST"
+}).inputValidator((input) => revokeSchema.parse(input)).handler(adminRevokeFreeService_createServerFn_handler, async ({
+  data
+}) => {
+  assertAdminPin(data.pin);
+  const {
+    data: row,
+    error: fetchErr
+  } = await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE).select("id,email,payment_status").eq("id", data.signupId).maybeSingle();
+  if (fetchErr) throw new Error(fetchErr.message);
+  if (!row) throw new Error("Cuenta no encontrada.");
+  if (row.payment_status !== "comp") {
+    throw new Error("Esta cuenta no tiene cortesía activa (payment_status ≠ comp).");
+  }
+  const {
+    error
+  } = await supabaseAdmin.from(CONTRACT_SIGNUPS_TABLE).update({
+    payment_status: "pending",
+    subscription_status: "cancelled",
+    comp_reason: data.reason ? `Revocado: ${data.reason}` : "Revocado por administrador",
+    renewal_date: null
+  }).eq("id", data.signupId);
+  if (error) throw new Error(error.message);
+  return {
+    ok: true,
+    message: `Cortesía revocada para ${row.email}.`
+  };
+});
+export {
+  adminGrantFreeService_createServerFn_handler,
+  adminLookupAccount_createServerFn_handler,
+  adminRevokeFreeService_createServerFn_handler
+};

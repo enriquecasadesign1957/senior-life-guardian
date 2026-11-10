@@ -1,0 +1,271 @@
+import { j as jsxRuntimeExports } from "../_libs/react.mjs";
+import { L as Link } from "../_libs/tanstack__react-router.mjs";
+import { x as CASCADE_MARKETING_SUMMARY } from "./emergency-cascade-continuation-BhQV3eMZ.mjs";
+import { S as SiteHeader, a as SiteFooter } from "./site-layout-BSSgEBzk.mjs";
+import { W as WhatsAppFloat } from "./whatsapp-float-CfwyDlWL.mjs";
+import { d as checkoutUrl } from "./plans-BJeLFmLc.mjs";
+import { S as SENIOR_SAFE_PLAY_STORE_URL, e as SENIOR_SAFE_INSTALL_GUIDE_URL } from "./index.mjs";
+import { h as seniorSafeWhatsAppMeUrl } from "./twilio-DNHuHEFY.mjs";
+
+import { D as Download, c as ArrowRight, b as MessageCircle, C as CircleCheck, p as Smartphone, s as Apple, t as ArrowUp, K as KeyRound, U as Users, M as MapPin, S as Shield, B as Bell } from "../_libs/lucide-react.mjs";
+
+import "../_libs/tanstack__router-core.mjs";
+import "../_libs/tanstack__history.mjs";
+import "../_libs/cookie-es.mjs";
+import "../_libs/seroval.mjs";
+import "../_libs/unenv.mjs";
+
+
+import "../_libs/seroval-plugins.mjs";
+
+
+import "../_libs/react-dom.mjs";
+import "../_libs/isbot.mjs";
+import "./client.server-U_pH-Evd.mjs";
+import "../_libs/supabase__supabase-js.mjs";
+import "../_libs/supabase__postgrest-js.mjs";
+import "../_libs/supabase__realtime-js.mjs";
+import "../_libs/supabase__phoenix.mjs";
+import "../_libs/supabase__storage-js.mjs";
+import "../_libs/iceberg-js.mjs";
+import "../_libs/supabase__auth-js.mjs";
+import "../_libs/tslib.mjs";
+import "../_libs/supabase__functions-js.mjs";
+import "./signups-db-JWUtXpaW.mjs";
+import "./contacts-storage-DdsYD-uQ.mjs";
+import "./phone-utils-D7EH6fht.mjs";
+import "../_libs/zod.mjs";
+import "./demo-config-D1XL_8ap.mjs";
+import "../_libs/h3-v2.mjs";
+import "../_libs/rou3.mjs";
+import "../_libs/srvx.mjs";
+
+
+
+
+const PETROL = "var(--brand-petrol)";
+const DEEP = "var(--brand-petrol-deep)";
+const GREEN = "#16a34a";
+const RED = "#dc2626";
+const STEPS = [{
+  n: 1,
+  title: "Contrata el Plan Único",
+  desc: "Entra a alarmaseniorsafe.com, elige mensual o anual y paga con Lemon Squeezy. Al terminar verás un código QR o un enlace para el celular del adulto mayor.",
+  tip: "Guarda el comprobante de pago por si lo necesitas después."
+}, {
+  n: 2,
+  title: "Descarga la app en el celular (Android)",
+  desc: "En Google Play busca “Senior Safe” o abre play.google.com/store/apps/details?id=cl.alarmaseniorsafe.app. Instala e inicia sesión con el mismo correo del plan. En iPhone usa la guía Safari más abajo.",
+  tip: "La app oficial de Android ya está en Google Play."
+}, {
+  n: 3,
+  title: "Abre Senior Safe e inicia sesión",
+  desc: "Al abrir la app, inicia sesión con el correo de la cuenta. Luego crea el PIN, agrega guardianes y activa ubicación.",
+  tip: "Si ya pagaste y no encuentras la app, escríbenos por WhatsApp."
+}, {
+  n: 4,
+  title: "Configura la protección (5 minutos)",
+  desc: "Dentro de la app: crea un PIN de 4 dígitos, agrega a tus familiares guardianes, activa el GPS y el sensor de caídas, y haz una prueba segura sin alerta real.",
+  tip: `Hasta 3 guardianes. Alertas: ${CASCADE_MARKETING_SUMMARY}`
+}, {
+  n: 5,
+  title: "Activa las alertas por WhatsApp",
+  desc: "Escribe la palabra ACTIVAR al WhatsApp comercial de Senior Safe (+56 9 7140 4580). Así vinculamos tu cuenta con las notificaciones familiares.",
+  tip: "Solo necesitas hacerlo una vez después de contratar."
+}, {
+  n: 6,
+  title: "Uso diario — ya estás protegido",
+  desc: "El adulto mayor usa el botón rojo SOS si necesita ayuda. Si hay una caída, el celular vibra y suena 30 segundos: puede cancelar si está bien; si no, la familia es avisada al instante.",
+  tip: "Mantén el celular con batería y conexión a internet cuando sea posible."
+}];
+function GuiaPage() {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-h-screen bg-background text-foreground", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(SiteHeader, {}),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("main", { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "py-16 md:py-20 text-white", style: {
+        background: `linear-gradient(135deg, ${DEEP}, ${PETROL})`
+      }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-3xl mx-auto px-6 text-center", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-semibold mb-6", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "w-4 h-4" }),
+          "Guía paso a paso"
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-3xl md:text-5xl font-bold tracking-tight mb-4", children: "Cómo instalar Senior Safe en el celular del abuelo" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-lg text-white/90 leading-relaxed max-w-2xl mx-auto", children: "En Android: descarga desde Google Play. En iPhone: agrega a la pantalla de inicio con Safari. Luego conecta a la familia en pocos minutos." }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-8 flex flex-col sm:flex-row gap-3 justify-center", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("a", { href: SENIOR_SAFE_PLAY_STORE_URL, target: "_blank", rel: "noopener noreferrer", className: "inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full bg-white font-bold shadow-lg", style: {
+            color: DEEP
+          }, children: [
+            "Disponible en Google Play",
+            /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowRight, { className: "w-5 h-5" })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("a", { href: seniorSafeWhatsAppMeUrl("Hola, necesito ayuda para instalar Senior Safe"), className: "inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full font-bold ring-2 ring-white/30 text-white", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(MessageCircle, { className: "w-5 h-5" }),
+            "Ayuda por WhatsApp"
+          ] })
+        ] })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "py-14 md:py-16 bg-background", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-3xl mx-auto px-6", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-2xl md:text-3xl font-bold mb-6", children: "Antes de empezar" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "grid sm:grid-cols-2 gap-4", children: ["Un smartphone Android o iPhone compatible", "Conexión a internet (Wi‑Fi o datos móviles)", "Haber contratado el Plan Único en alarmaseniorsafe.cl", "Los teléfonos de familiares que serán guardianes"].map((item) => /* @__PURE__ */ jsxRuntimeExports.jsxs("li", { className: "flex items-start gap-3 bg-card border border-border rounded-2xl p-4 text-sm md:text-base", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { className: "w-5 h-5 shrink-0 mt-0.5", style: {
+            color: GREEN
+          } }),
+          item
+        ] }, item)) })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "py-14 md:py-16", style: {
+        background: "var(--gradient-soft)"
+      }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-3xl mx-auto px-6", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-2xl md:text-3xl font-bold mb-8 text-center", children: "Los 6 pasos" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-6", children: STEPS.map((step) => /* @__PURE__ */ jsxRuntimeExports.jsx("article", { className: "bg-card border border-border rounded-3xl p-6 md:p-8 shadow-sm", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shrink-0", style: {
+            background: DEEP
+          }, children: step.n }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "text-xl font-bold mb-2", children: step.title }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground leading-relaxed", children: step.desc }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-3 text-sm font-medium", style: {
+              color: PETROL
+            }, children: [
+              "💡 ",
+              step.tip
+            ] })
+          ] })
+        ] }) }, step.n)) })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "py-14 md:py-16 bg-background", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-4xl mx-auto px-6", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-2xl md:text-3xl font-bold mb-8 text-center", children: "Cómo instalar según tu teléfono" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid md:grid-cols-2 gap-6", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-card border border-border rounded-3xl p-6 md:p-8", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3 mb-5", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Smartphone, { className: "w-8 h-8", style: {
+                color: GREEN
+              } }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "text-xl font-bold", children: "Android" })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("ol", { className: "space-y-4 text-muted-foreground", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("li", { className: "flex gap-3", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold text-foreground", children: "1." }),
+                "Abre",
+                " ",
+                /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: SENIOR_SAFE_PLAY_STORE_URL, target: "_blank", rel: "noopener noreferrer", className: "font-semibold underline underline-offset-2", style: {
+                  color: PETROL
+                }, children: "Google Play — Senior Safe" }),
+                "."
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("li", { className: "flex gap-3", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold text-foreground", children: "2." }),
+                "Toca ",
+                /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { className: "text-foreground", children: "Instalar" }),
+                " y espera a que termine."
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("li", { className: "flex gap-3", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold text-foreground", children: "3." }),
+                "Abre la app e inicia sesión con el correo de tu plan."
+              ] })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-card border border-border rounded-3xl p-6 md:p-8", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3 mb-5", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Apple, { className: "w-8 h-8", style: {
+                color: PETROL
+              } }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "text-xl font-bold", children: "iPhone (Safari)" })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("ol", { className: "space-y-4 text-muted-foreground", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("li", { className: "flex gap-3", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold text-foreground", children: "1." }),
+                "Abre el enlace en ",
+                /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { className: "text-foreground", children: "Safari" }),
+                " (no en Chrome)."
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("li", { className: "flex gap-3 items-start", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold text-foreground shrink-0", children: "2." }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+                  "Toca el botón ",
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("strong", { className: "text-foreground inline-flex items-center gap-1", children: [
+                    "Compartir ",
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowUp, { className: "w-4 h-4" })
+                  ] }),
+                  " ",
+                  "(cuadrado con flecha hacia arriba)."
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("li", { className: "flex gap-3", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold text-foreground", children: "3." }),
+                "Elige ",
+                /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { className: "text-foreground", children: "Agregar a pantalla de inicio" }),
+                " y confirma."
+              ] })
+            ] })
+          ] })
+        ] })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "py-14 md:py-16", style: {
+        background: "var(--gradient-soft)"
+      }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-3xl mx-auto px-6", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-2xl md:text-3xl font-bold mb-6 text-center", children: "Dentro de la app" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid sm:grid-cols-2 gap-4", children: [{
+          icon: KeyRound,
+          label: "PIN de seguridad",
+          color: DEEP
+        }, {
+          icon: Users,
+          label: "Guardianes familiares",
+          color: GREEN
+        }, {
+          icon: MapPin,
+          label: "GPS activado",
+          color: "#f59e0b"
+        }, {
+          icon: Shield,
+          label: "Sensor de caídas",
+          color: PETROL
+        }, {
+          icon: Bell,
+          label: "Prueba segura (simulacro)",
+          color: RED
+        }, {
+          icon: MessageCircle,
+          label: "Activar WhatsApp (escribe ACTIVAR)",
+          color: "#25D366"
+        }].map(({
+          icon: Icon,
+          label,
+          color
+        }) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3 bg-card border border-border rounded-2xl p-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0", style: {
+            background: color
+          }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Icon, { className: "w-5 h-5" }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-semibold text-sm md:text-base", children: label })
+        ] }, label)) })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "py-14 md:py-16 bg-background", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-3xl mx-auto px-6 text-center", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-2xl md:text-3xl font-bold mb-4", children: "¿Aún no has contratado?" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground mb-8", children: "El primer paso es activar tu Plan Único. Luego sigues esta misma guía para instalar." }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col sm:flex-row gap-3 justify-center", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(Link, { to: "/checkout", search: {
+            mode: "contratar",
+            plan: "unico",
+            periodo: "mensual"
+          }, className: "inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full text-white font-bold", style: {
+            background: DEEP
+          }, children: [
+            "Contratar ahora",
+            /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowRight, { className: "w-5 h-5" })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: checkoutUrl(), className: "inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full border border-border font-semibold", children: "Ver checkout" })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-8 text-xs text-muted-foreground break-all", children: [
+          "Enlace de esta guía: ",
+          SENIOR_SAFE_INSTALL_GUIDE_URL
+        ] })
+      ] }) })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(SiteFooter, {}),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(WhatsAppFloat, {})
+  ] });
+}
+export {
+  GuiaPage as component
+};

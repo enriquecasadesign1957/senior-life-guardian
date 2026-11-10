@@ -1,0 +1,89 @@
+import { c as createServerRpc } from "./createServerRpc-ChaSCZOg.mjs";
+import { j as createServerFn } from "./createServerFn-CqTdkD5n.mjs";
+import { l as listWhatsAppThreads, a as listWhatsAppThreadMessages, b as sendWhatsAppInboxReply } from "./whatsapp-inbox-CZiWC44X.mjs";
+
+import { s as stringType, o as objectType, e as enumType } from "../_libs/zod.mjs";
+import "../_libs/tanstack__router-core.mjs";
+import "../_libs/tanstack__history.mjs";
+import "../_libs/cookie-es.mjs";
+import "../_libs/seroval.mjs";
+import "../_libs/unenv.mjs";
+
+
+
+import "../_libs/seroval-plugins.mjs";
+
+
+import "./admin-auth-5OIH6Qjw.mjs";
+import "./client.server-U_pH-Evd.mjs";
+import "../_libs/supabase__supabase-js.mjs";
+import "../_libs/supabase__postgrest-js.mjs";
+import "../_libs/supabase__realtime-js.mjs";
+import "../_libs/supabase__phoenix.mjs";
+import "../_libs/supabase__storage-js.mjs";
+import "../_libs/iceberg-js.mjs";
+import "../_libs/supabase__auth-js.mjs";
+import "../_libs/tslib.mjs";
+import "../_libs/supabase__functions-js.mjs";
+import "./twilio-DNHuHEFY.mjs";
+import "./twilio-inbound-_C02bj0d.mjs";
+import "./signups-db-JWUtXpaW.mjs";
+const pinSchema = stringType().min(4).max(64);
+const inboxListThreads_createServerFn_handler = createServerRpc({
+  id: "5e97b23f151022839e4e83bc879306130cac9f23fcccc372554b60cecb070318",
+  name: "inboxListThreads",
+  filename: "src/lib/whatsapp-inbox.functions.ts"
+}, (opts) => inboxListThreads.__executeServer(opts));
+const inboxListThreads = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  pin: pinSchema,
+  inbox: enumType(["commercial", "alerts"]).optional()
+}).parse(input)).handler(inboxListThreads_createServerFn_handler, async ({
+  data
+}) => listWhatsAppThreads(data.pin, data.inbox ?? "commercial"));
+const inboxListMessages_createServerFn_handler = createServerRpc({
+  id: "06203203de242025ec96321aee7d989524a66c68ede46fb548991a6a44060649",
+  name: "inboxListMessages",
+  filename: "src/lib/whatsapp-inbox.functions.ts"
+}, (opts) => inboxListMessages.__executeServer(opts));
+const inboxListMessages = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  pin: pinSchema,
+  peerPhone: stringType().min(8),
+  inbox: enumType(["commercial", "alerts"]).optional()
+}).parse(input)).handler(inboxListMessages_createServerFn_handler, async ({
+  data
+}) => listWhatsAppThreadMessages(data.pin, data.peerPhone, data.inbox ?? "commercial"));
+const inboxSendReply_createServerFn_handler = createServerRpc({
+  id: "6e7575f9709049c47e6d5a4a99a6fe6ef605a1ee7bcb1a6f550d344174bff5a2",
+  name: "inboxSendReply",
+  filename: "src/lib/whatsapp-inbox.functions.ts"
+}, (opts) => inboxSendReply.__executeServer(opts));
+const inboxSendReply = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  pin: pinSchema,
+  peerPhone: stringType().min(8),
+  body: stringType().min(1).max(1600),
+  inbox: enumType(["commercial", "alerts"]).optional()
+}).parse(input)).handler(inboxSendReply_createServerFn_handler, async ({
+  data
+}) => {
+  const res = await sendWhatsAppInboxReply({
+    pin: data.pin,
+    peerPhone: data.peerPhone,
+    body: data.body,
+    inbox: data.inbox
+  });
+  if (!res.ok) throw new Error(res.error ?? "No se pudo enviar.");
+  return {
+    ok: true
+  };
+});
+export {
+  inboxListMessages_createServerFn_handler,
+  inboxListThreads_createServerFn_handler,
+  inboxSendReply_createServerFn_handler
+};

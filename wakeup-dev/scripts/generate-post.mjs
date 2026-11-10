@@ -147,6 +147,15 @@ function isModelNotFound(status, body) {
   return /model_not_found|does not exist/i.test(body);
 }
 
+/** Groq json mode sometimes rejects gpt-oss output instead of returning it. */
+function isRetryableGroqFailure(status, body) {
+  if (status === 429 || status >= 500) return true;
+  return (
+    status === 400 &&
+    /json_validate_failed|Failed to validate JSON/i.test(body)
+  );
+}
+
 function modelQueue(preferred) {
   const queue = [];
   if (preferred) queue.push(preferred);
@@ -194,7 +203,12 @@ async function groqJson({
           console.warn(`Model unavailable, trying next: ${model}`);
           break;
         }
-        if (response.status === 429 || response.status >= 500) continue;
+        if (isRetryableGroqFailure(response.status, body)) {
+          console.warn(
+            `Groq ${model} attempt ${attempt}/3 rejected the draft (${response.status}). Retrying.`,
+          );
+          continue;
+        }
         throw lastError;
       }
 

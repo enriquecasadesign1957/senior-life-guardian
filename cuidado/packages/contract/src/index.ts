@@ -6,6 +6,32 @@ export const DIAGNOSIS_TTL_MS = 24 * 60 * 60 * 1000;
 export const PAIR_TTL_MS = 10 * 60 * 1000;
 export const RESCUE_WATCH_MS = 30 * 24 * 60 * 60 * 1000;
 export const WATCH_INTERVAL_MS = 15 * 60 * 1000;
+export const AGENCY_TRIAL_SEATS = 5;
+export const AGENCY_INVITE_DEFAULT_DAYS = 7;
+export const AGENCY_INVITE_DAY_OPTIONS = [1, 3, 7, 14, 30] as const;
+
+export const agencyTrialActivateSchema = z.object({
+  code: z.string().trim().min(4).max(64),
+});
+
+export const agencyTrialClaimSchema = z.object({
+  siteId: z.string().uuid(),
+});
+
+export const agencyAccountSchema = z.object({
+  email: z.string().trim().email().max(180),
+  password: z.string().min(8).max(72),
+});
+
+export const adminLoginSchema = z.object({
+  secret: z.string().trim().min(8).max(200),
+});
+
+export const adminCreateInviteSchema = z.object({
+  note: z.string().trim().max(120).optional(),
+  seats: z.number().int().min(1).max(40).optional(),
+  validDays: z.union([z.literal(1), z.literal(3), z.literal(7), z.literal(14), z.literal(30)]).optional(),
+});
 
 export const ACTION_IDS = [
   "purge_transients",
@@ -32,6 +58,15 @@ export const cleanupSimulateSchema = z.object({
   siteId: z.string().uuid(),
 });
 
+export const cleanupApplySchema = z.object({
+  siteId: z.string().uuid(),
+});
+
+export const cleanupUndoSchema = z.object({
+  siteId: z.string().uuid(),
+  batchId: z.string().uuid(),
+});
+
 export const rescueCheckoutSchema = cleanupSimulateSchema.extend({
   returnPath: z
     .string()
@@ -49,6 +84,13 @@ export const payloadBytesSchema = z.object({
   revisions: z.number().int().nonnegative(),
   expiredTransients: z.number().int().nonnegative(),
   spamComments: z.number().int().nonnegative(),
+});
+
+export const cleanupApplyResultSchema = z.object({
+  batchId: z.string().uuid(),
+  undoUntil: z.string().min(1),
+  counts: payloadCountsSchema,
+  bytes: payloadBytesSchema.optional(),
 });
 
 export const snapshotSchema = z.object({

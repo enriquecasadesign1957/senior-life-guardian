@@ -112,6 +112,8 @@
   "ackSectionBody": "Traditional notifications tell you something happened. WakeUp Dev is designed for incident response where someone needs to actually respond. A phone call can provide a more direct notification when someone may not be watching their usual alert channels; press-1 ACK confirms a human received the alert before the cascade moves on.",
   "pagerDutyLine": "WakeUp Dev is designed as a lightweight voice-first alternative for teams that need critical alerts to reach a human—not a full replacement for every on-call platform.",
   "integrationsMention": "Works with Grafana, UptimeRobot, HTTP webhooks, and your existing on-call roster for DevOps and SRE incident response.",
+  "searchLinksTitle": "Guides for these searches",
+  "searchLinksBody": "Voice alerts for DevOps, Grafana, UptimeRobot, escalation, and webhooks. Each guide is in English and Spanish.",
   "authRequired": "Sign in with GitHub to open the dashboard or subscribe to the Chile plan.",
   "authError": "Sign-in could not be completed.",
   "billingFailedSecret": "The internal billing secret does not match between the web and the API. Reload the same secret on both Workers.",

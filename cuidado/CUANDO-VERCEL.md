@@ -24,7 +24,11 @@ En Vercel van estas variables. `AUTH_SECRET`, `TOKEN_ENCRYPTION_KEY` y `CRON_SEC
 - `GOOGLE_PSI_API_KEY`: paso 3.
 - `ALLOW_PRIVATE_URLS` no se define, o queda en `false`.
 
-Stripe puede esperar. Sin `STRIPE_SECRET_KEY` el botón de $29 no cobra.
+Lemon Squeezy ya tiene los productos. En Vercel basta con `LEMON_SQUEEZY_WEBHOOK_SECRET` (los buy URL y variant id tienen valor por defecto). En Lemon: Settings → Webhooks → URL `https://cuidadoweb.com/api/lemon/webhook`, eventos `order_created`, signing secret = esa variable.
+
+- `ADMIN_SECRET` o `CREA_CLAVES_AGENCIAS` (opcional): clave del panel `/admin/codigos`. Si defines cualquiera de las dos, esa es la clave de entrada. Si no hay ninguna, el valor por defecto es `CwAdminPanel2026`.
+
+Los códigos de prueba se crean en **Códigos** (`/admin/codigos`): eliges la vigencia (1–30 días), generas y copias. Cada código tiene un solo uso, 5 sitios y fecha de vencimiento. Ya no hace falta insertarlos a mano en Neon.
 
 ## 3. PageSpeed
 
@@ -52,7 +56,7 @@ En tu máquina, dentro de `cuidado`, con la misma `DATABASE_URL` directa:
 npm run db:migrate
 ```
 
-Eso aplica `0000_init.sql`, `0001_site_probe.sql` y `0002_rescue_checkout.sql`.
+Eso aplica hasta `0007_agency_code_expires.sql` (vigencia de códigos de agencia).
 
 ## 6. Dominio
 
@@ -65,4 +69,4 @@ Eso aplica `0000_init.sql`, `0001_site_probe.sql` y `0002_rescue_checkout.sql`.
 
 1. Abre `https://cuidadoweb.com`.
 2. Pega una dirección pública y pide el diagnóstico.
-3. El botón de $29 debe decir que falta Stripe y que no se ha cobrado nada.
+3. El botón de $29 debe abrir el checkout de Lemon Squeezy (Rescate). El de $19 abre el Plan Cuidado.

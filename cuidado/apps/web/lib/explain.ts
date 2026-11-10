@@ -25,7 +25,7 @@ export function formatCount(value: number): string {
 export function templateSummary(issues: Array<Pick<DraftFinding, "plainTitle">>): string {
   const titles = issues.map((issue) => issue.plainTitle).slice(0, 3);
   if (titles.length === 0) return "Tu página cargó y no vimos un problema urgente en el celular.";
-  const text = `Esto es lo que vimos: ${titles.join(". ")}.`;
+  const text = `Atención: esto es lo que está frenando o hinchando tu WordPress ahora mismo. ${titles.join(". ")}.`;
   return text.length <= 400 ? text : `${text.slice(0, 397)}...`;
 }
 
@@ -148,9 +148,11 @@ export function buildDrafts(input: {
       code: "post_revisions",
       severity: input.revisions > 100 ? "high" : "medium",
       count: input.revisions,
-      plainTitle: `Tienes ${formatCount(input.revisions)} copias viejas de tus páginas`,
-      whatItMeans: "WordPress guarda una copia cada vez que editas. Esas copias ocupan la base de datos.",
-      ifIgnored: "El escritorio y las copias de seguridad se ponen más lentos.",
+      plainTitle: `Tienes ${formatCount(input.revisions)} copias viejas de tus páginas hinchando la base`,
+      whatItMeans:
+        "WordPress guarda una copia cada vez que editas un título, un párrafo o un botón. Esas revisiones ya no se ven en la web pública, pero siguen ocupando filas, alargando respaldos y haciendo más pesado el escritorio.",
+      ifIgnored:
+        "Cada edición nueva suma más basura. Los respaldos engordan, el panel se siente más torpe y la base arrastra historial que nadie consulta.",
       actionId: "purge_revisions",
     });
   }
@@ -159,9 +161,11 @@ export function buildDrafts(input: {
       code: "expired_transients",
       severity: "low",
       count: input.expiredTransients,
-      plainTitle: `Hay ${formatCount(input.expiredTransients)} datos temporales vencidos`,
-      whatItMeans: "Son restos de caché que ya no usa el sitio.",
-      ifIgnored: "La base sigue cargando información que no sirve.",
+      plainTitle: `Hay ${formatCount(input.expiredTransients)} datos temporales vencidos todavía guardados`,
+      whatItMeans:
+        "Son restos mínimos de caché y opciones temporales que ya caducaron: plugins y el propio WordPress los dejaron y nadie los limpia solo.",
+      ifIgnored:
+        "Aunque cada uno sea chico, juntos hinchan tablas, ensucian respaldos y obligan a la base a mirar basura que ya no sirve.",
       actionId: "purge_transients",
     });
   }
@@ -170,9 +174,11 @@ export function buildDrafts(input: {
       code: "spam_comments",
       severity: "medium",
       count: input.spamComments,
-      plainTitle: `Tienes ${formatCount(input.spamComments)} comentarios de spam viejos`,
-      whatItMeans: "Están en la carpeta de spam desde hace más de 30 días.",
-      ifIgnored: "Siguen ocupando espacio aunque nadie los ve.",
+      plainTitle: `Tienes ${formatCount(input.spamComments)} comentarios de spam viejos ocupando espacio`,
+      whatItMeans:
+        "Llevan más de 30 días en spam: no aparecen en la web, pero cada uno sigue siendo una fila en la base.",
+      ifIgnored:
+        "El spam viejo no trae clientes: solo peso muerto en respaldos, búsquedas del panel y tablas de comentarios.",
       actionId: "purge_spam",
     });
   }

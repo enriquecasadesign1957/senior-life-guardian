@@ -25,6 +25,10 @@ test("1.240 copias se ven saturadas y el tamaño solo sale si lo medimos", () =>
   assert.match(preview.headline, /1\.240 copias viejas/);
   assert.match(preview.headline, /12 comentarios de spam viejos/);
   assert.match(preview.headline, /45 MB/);
+  assert.match(preview.detail, /7 días/);
+  assert.match(preview.detail, /no vuelve/);
+  assert.ok(preview.steps.length >= 2);
+  assert.ok(preview.wins.length >= 2);
   assert.doesNotMatch(preview.headline, /borrador/i);
   const unknownSize = cleanupProjection({
     revisions: 10,

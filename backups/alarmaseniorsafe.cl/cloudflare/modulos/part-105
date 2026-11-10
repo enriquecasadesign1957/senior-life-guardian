@@ -1,0 +1,41 @@
+import { c as createSsrRpc } from "./createSsrRpc-D8pBWdiG.mjs";
+import { j as createServerFn } from "./createServerFn-Bu17PEW9.mjs";
+import { s as seniorAccessTokenSchema } from "./senior-access-auth-Bmk7iyGS.mjs";
+import { o as objectType, s as stringType } from "../_libs/zod.mjs";
+const requestFamilyCode = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  telefono: stringType().min(4).max(40)
+}).parse(input)).handler(createSsrRpc("59cf47dfae0d7055f2567c51206e3f0457c054d7b0dee31000b52891a5c191bc"));
+const verifyFamilyCode = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  telefono: stringType().min(4).max(40),
+  code: stringType().regex(/^\d{6}$/)
+}).parse(input)).handler(createSsrRpc("deecda74f761541032cc7e293870367b07f97fbfe4a2e51c2765350c8af2b5ce"));
+const sessionSchema = objectType({
+  family_member_id: stringType().uuid(),
+  contract_signup_id: stringType().uuid(),
+  session_token: seniorAccessTokenSchema
+});
+const getFamilyDashboard = createServerFn({
+  method: "POST"
+}).inputValidator((input) => sessionSchema.parse(input)).handler(createSsrRpc("8e226ea55e96811ba5254acae56d8c9f16fd4522a02c63de440fa788d9d8d003"));
+createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  token: stringType().min(16).max(128),
+  nombre: stringType().max(120).optional()
+}).parse(input)).handler(createSsrRpc("ea9e4068ab84a430a3cca3fc91b7eb8019aee8b419ca7a5a85c557a842cf8692"));
+const checkLastAlertAck = createServerFn({
+  method: "POST"
+}).inputValidator((input) => objectType({
+  signupId: stringType().uuid(),
+  accessToken: seniorAccessTokenSchema
+}).parse(input)).handler(createSsrRpc("1ea406a33b201149b7a61f13a2d5fcdf1ac6e42bcc5209a63310d0cf935b3b87"));
+export {
+  checkLastAlertAck as c,
+  getFamilyDashboard as g,
+  requestFamilyCode as r,
+  verifyFamilyCode as v
+};

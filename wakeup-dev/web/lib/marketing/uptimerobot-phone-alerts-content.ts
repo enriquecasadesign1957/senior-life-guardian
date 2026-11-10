@@ -232,7 +232,7 @@ const EN: UptimeRobotPhoneAlertsContent = {
 };
 
 const ES: UptimeRobotPhoneAlertsContent = {
-  h1: "Alertas de UptimeRobot al teléfono: envía alertas de UptimeRobot a una llamada",
+  h1: "Alertas de UptimeRobot por teléfono",
   heroSubheading:
     "Convierte alertas críticas de UptimeRobot en llamadas con confirmación humana y escalada on-call.",
   heroLead:

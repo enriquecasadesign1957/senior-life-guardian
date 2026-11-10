@@ -5,12 +5,15 @@ import {
   Sparkles, Users, Bell, CheckCircle2, Loader2, ArrowRight, Heart,
 } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
+import { isInternational } from "@/lib/market";
 
 export const Route = createFileRoute("/flujo")({
   head: () => ({
     meta: [
       { title: "Flujo de activación — Senior Safe" },
-      { name: "description", content: "Mira cómo Senior Safe activa tu protección: pago Webpay, cuenta, entrenamiento simulado y onboarding." },
+      { name: "description", content: isInternational
+        ? "Mira cómo Senior Safe activa tu protección: pago con Lemon Squeezy, cuenta, entrenamiento simulado y onboarding."
+        : "Mira cómo Senior Safe activa tu protección: pago Webpay, cuenta, entrenamiento simulado y onboarding." },
     ],
   }),
   component: FlujoPage,
@@ -26,7 +29,7 @@ type Phase = "activando" | "configurando" | "protegido";
 
 const STEPS = [
   { icon: CreditCard, color: DEEP,    title: "Contratas tu plan",            desc: "Activas el Plan Único Senior Safe en el sitio." },
-  { icon: ShieldCheck, color: PETROL, title: "Webpay confirma el pago",      desc: "Pago seguro en pesos chilenos." },
+  { icon: ShieldCheck, color: PETROL, title: isInternational ? "Lemon Squeezy confirma el pago" : "Webpay confirma el pago", desc: isInternational ? "Pago seguro en dólares." : "Pago seguro en pesos chilenos." },
   { icon: UserPlus,   color: PETROL,  title: "Cuenta creada automáticamente",desc: "Sin formularios complejos." },
   { icon: Clock,      color: AMBER,   title: "Mock de entrenamiento",        desc: "Practica el botón de pánico sin alertas reales." },
   { icon: Mail,       color: AMBER,   title: "Email de bienvenida enviado",  desc: "Recibes accesos e instrucciones." },
@@ -172,7 +175,7 @@ function FlujoPage() {
               <p className="mt-2 text-white/85">Senior Safe activo · 24/7 · Sin permanencia.</p>
               <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
                 <Link to="/checkout" search={{ mode: "contratar", plan: "unico", periodo: "mensual" }} className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full bg-white font-bold shadow-lg hover:scale-[1.02] transition" style={{ color: DEEP }}>
-                  Contratar con Webpay
+                  Contratar con {isInternational ? "Lemon Squeezy" : "Webpay"}
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link to="/familia" className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full border-2 border-white/40 text-white font-bold hover:bg-white/10 transition">

@@ -27,9 +27,9 @@ function landingQueryFromSearchParams(
 }
 
 export const metadata = buildPageMetadata({
-  title: "WakeUp Dev — Voice-first on-call alerting",
+  title: "WakeUp Dev — Alertas de voz para DevOps",
   description:
-    "Critical alerts from Grafana, UptimeRobot, and HTTP webhooks become phone calls with press-1 acknowledgement and automatic escalation. 5 free voice alerts with GitHub.",
+    "Alertas de voz para DevOps y SRE. Grafana, UptimeRobot y webhooks HTTP se vuelven llamadas con confirmación en el 1 y escalación on-call. Critical alerts become phone calls. 5 free voice alerts.",
   path: "/",
 });
 
@@ -43,13 +43,15 @@ const softwareApplicationLd = {
       "@id": SITE,
       name: "WakeUp Dev",
       url: SITE,
+      description:
+        "Alertas de voz para DevOps. WakeUp Dev turns Grafana, UptimeRobot, and HTTP webhooks into on-call phone calls with press-1 acknowledgement. It is not a mass-notification system, a fire voice alarm, or a public warning service.",
       operatingSystem: "All",
       applicationCategory: "DeveloperApplication",
       featureList: [
-        "Webhook Grafana/UptimeRobot convertido en llamada de voz.",
-        "TwiML: Gather, ACK con dígito 1 y bucles de repetición de voz.",
-        "Cascada on-call automatizada.",
-        "CSV roster/turnos: import con preview y reemplazo atómico.",
+        "Grafana and UptimeRobot webhooks become phone calls.",
+        "Press 1 to acknowledge. Unanswered calls escalate.",
+        "On-call cascade across roster, shifts, or the emergency number.",
+        "CSV roster and shift import.",
       ],
       offers: [
         {

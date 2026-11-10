@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { jsonError } from "@/lib/http";
 import { ApiError } from "@/lib/errors";
 import { requireUserId } from "@/lib/session";
+import { isWatchActive } from "@/lib/watch";
 
 export const runtime = "nodejs";
 
@@ -43,7 +44,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     const inventory = (latest?.summary as { inventory?: Inventory } | null)?.inventory;
     return NextResponse.json({
       simulated: true,
-      needsPayment: site.plan === "none",
+      needsPayment: !isWatchActive({ plan: site.plan, watchUntil: site.watchUntil }, new Date()),
       measured: Boolean(inventory),
       batchId: randomUUID(),
       actions: ["purge_transients", "purge_revisions", "purge_spam"],

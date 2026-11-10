@@ -1,4 +1,5 @@
 import {
+  boolean,
   index,
   integer,
   jsonb,
@@ -19,12 +20,29 @@ export const scanStatus = pgEnum("scan_status", ["queued", "running", "ready", "
 export const findingSeverity = pgEnum("finding_severity", ["low", "medium", "high"]);
 export const findingSource = pgEnum("finding_source", ["template", "model"]);
 
+export const agencyInviteCodes = pgTable("agency_invite_codes", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  code: text("code").notNull().unique(),
+  seats: integer("seats").default(5).notNull(),
+  maxUses: integer("max_uses").default(1).notNull(),
+  usedCount: integer("used_count").default(0).notNull(),
+  note: text("note"),
+  expiresAt: timestamp("expires_at", tz),
+  createdAt: timestamp("created_at", tz).defaultNow().notNull(),
+});
+
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name"),
   email: text("email").notNull().unique(),
   emailVerified: timestamp("email_verified", tz),
   image: text("image"),
+  agencyTrialSeats: integer("agency_trial_seats").default(0).notNull(),
+  agencyTrialActivatedAt: timestamp("agency_trial_activated_at", tz),
+  agencyTrialCodeId: uuid("agency_trial_code_id").references(() => agencyInviteCodes.id, {
+    onDelete: "set null",
+  }),
+  passwordHash: text("password_hash"),
   createdAt: timestamp("created_at", tz).defaultNow().notNull(),
 });
 
@@ -76,6 +94,7 @@ export const sites = pgTable(
     baseUrl: text("base_url").notNull(),
     status: siteStatus("status").default("pending").notNull(),
     plan: sitePlan("plan").default("none").notNull(),
+    agencySeat: boolean("agency_seat").default(false).notNull(),
     watchUntil: timestamp("watch_until", tz),
     rescueCheckoutId: text("rescue_checkout_id").unique(),
     connectedAt: timestamp("connected_at", tz),
@@ -142,4 +161,29 @@ export const findings = pgTable(
     createdAt: timestamp("created_at", tz).defaultNow().notNull(),
   },
   (table) => [index("findings_scan_run").on(table.scanRunId)],
+);
+
+export const cleanupBatchStatus = pgEnum("cleanup_batch_status", ["applied", "undone"]);
+
+export const cleanupBatches = pgTable(
+  "cleanup_batches",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    siteId: uuid("site_id")
+      .notNull()
+      .references(() => sites.id, { onDelete: "cascade" }),
+    pluginBatchId: text("plugin_batch_id").notNull().unique(),
+    status: cleanupBatchStatus("status").default("applied").notNull(),
+    revisions: integer("revisions").default(0).notNull(),
+    expiredTransients: integer("expired_transients").default(0).notNull(),
+    spamComments: integer("spam_comments").default(0).notNull(),
+    bytes: integer("bytes").default(0).notNull(),
+    appliedAt: timestamp("applied_at", tz).defaultNow().notNull(),
+    undoUntil: timestamp("undo_until", tz).notNull(),
+    undoneAt: timestamp("undone_at", tz),
+  },
+  (table) => [
+    index("cleanup_batches_site_applied").on(table.siteId, table.appliedAt),
+    index("cleanup_batches_site_undo").on(table.siteId, table.undoUntil),
+  ],
 );

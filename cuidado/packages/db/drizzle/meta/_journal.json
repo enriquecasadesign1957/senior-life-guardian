@@ -22,6 +22,41 @@
       "when": 1792711482684,
       "tag": "0002_rescue_checkout",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793720000000,
+      "tag": "0003_cleanup_batches",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793730000000,
+      "tag": "0004_agency_trial",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793740000000,
+      "tag": "0005_agency_account",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793750000000,
+      "tag": "0006_agency_code_note",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793760000000,
+      "tag": "0007_agency_code_expires",
+      "breakpoints": true
     }
   ]
 }

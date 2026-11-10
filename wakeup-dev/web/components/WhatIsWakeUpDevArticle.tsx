@@ -10,6 +10,10 @@ export function WhatIsWakeUpDevArticle({ content: c }: { content: WhatIsContent 
       </h1>
       <p className="mt-6 text-lg leading-relaxed text-zinc-300">{c.lead}</p>
       <p className="mt-4 text-base leading-relaxed text-zinc-400">{c.body}</p>
+      <section className="mt-8 rounded-xl border border-zinc-800 bg-zinc-900/40 p-5">
+        <h2 className="text-lg font-semibold text-zinc-50">{c.boundaryTitle}</h2>
+        <p className="mt-2 text-sm leading-relaxed text-zinc-400">{c.boundaryBody}</p>
+      </section>
 
       <section className="mt-12">
         <h2 className="text-2xl font-semibold text-zinc-50">{c.problemTitle}</h2>

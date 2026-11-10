@@ -15,13 +15,16 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
-  title: "WakeUp Dev — Voice-first on-call alerting",
+  title: "WakeUp Dev — Alertas de voz para DevOps",
   description:
-    "Turn critical Grafana, UptimeRobot, and HTTP webhook alerts into phone calls with human acknowledgement and automatic escalation. Start free with 5 voice alerts.",
+    "Alertas de voz para DevOps y SRE: Grafana, UptimeRobot y webhooks HTTP se vuelven llamadas con confirmación en el 1. Not a mass-notification or fire-alarm system.",
+  verification: {
+    google: "ciRyBlAs47bLhpzWXXccWP8zW9TLWvrG4qnQ7FaonKM",
+  },
   openGraph: {
-    title: "WakeUp Dev — Voice-first on-call alerting",
+    title: "WakeUp Dev — Alertas de voz para DevOps",
     description:
-      "Webhook → phone call → press 1 to ACK → escalation. Built for DevOps and SRE on-call.",
+      "Grafana, UptimeRobot y webhooks HTTP se vuelven llamadas con confirmación en el 1. On-call voice alerts for DevOps and SRE.",
     url: SITE,
     siteName: "WakeUp Dev",
     locale: "en_US",
@@ -31,9 +34,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "WakeUp Dev — Voice-first on-call alerting",
+    title: "WakeUp Dev — Alertas de voz para DevOps",
     description:
-      "Critical alerts become phone calls. Human ACK. Automatic on-call escalation.",
+      "Alertas de voz para DevOps. Critical alerts become phone calls with press-1 acknowledgement.",
     images: [OG_IMAGE.url],
   },
   icons: {

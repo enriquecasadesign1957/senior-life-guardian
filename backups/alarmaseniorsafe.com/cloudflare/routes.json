@@ -1,0 +1,19 @@
+{
+  "result": [
+    {
+      "id": "fa363cde61394620852fe66ef137a8c0",
+      "pattern": "www.alarmaseniorsafe.com/*",
+      "script": "alarmaseniorsafe-com",
+      "request_limit_fail_open": false
+    },
+    {
+      "id": "5005f4ffa04c43c6ad05402c541de7a4",
+      "pattern": "alarmaseniorsafe.com/*",
+      "script": "alarmaseniorsafe-com",
+      "request_limit_fail_open": false
+    }
+  ],
+  "success": true,
+  "errors": [],
+  "messages": []
+}

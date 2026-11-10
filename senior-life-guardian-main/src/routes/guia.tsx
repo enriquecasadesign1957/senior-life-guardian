@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { isInternational } from "@/lib/market";
 import { CASCADE_MARKETING_SUMMARY } from "@/lib/emergency-cascade-timing";
 import {
   ArrowRight,
@@ -26,7 +27,9 @@ export const Route = createFileRoute("/guia")({
     const page = buildPublicPageMeta({
       title: "Cómo instalar Senior Safe en el celular del abuelo — Guía paso a paso",
       description:
-        "Cómo instalar Senior Safe: Google Play en Android, guía iPhone, guardianes, WhatsApp, GPS y botón SOS. Chile.",
+        isInternational
+          ? "Cómo instalar Senior Safe: Google Play en Android, guía iPhone, guardianes, WhatsApp, GPS y botón SOS. Latinoamérica."
+          : "Cómo instalar Senior Safe: Google Play en Android, guía iPhone, guardianes, WhatsApp, GPS y botón SOS. Chile.",
       pathname: "/guia",
       ogTitle: "Instalar Senior Safe en el celular del abuelo",
     });
@@ -55,7 +58,9 @@ const STEPS = [
   {
     n: 1,
     title: "Contrata el Plan Único",
-    desc: "Entra a alarmaseniorsafe.cl, elige mensual o anual y paga con Webpay Plus. Al terminar verás un código QR o un enlace para el celular del adulto mayor.",
+    desc: isInternational
+      ? "Entra a alarmaseniorsafe.com, elige mensual o anual y paga con Lemon Squeezy. Al terminar verás un código QR o un enlace para el celular del adulto mayor."
+      : "Entra a alarmaseniorsafe.cl, elige mensual o anual y paga con Webpay Plus. Al terminar verás un código QR o un enlace para el celular del adulto mayor.",
     tip: "Guarda el comprobante de pago por si lo necesitas después.",
   },
   {

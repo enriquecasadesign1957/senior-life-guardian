@@ -2,6 +2,8 @@
 
 WakeUp Dev is a voice-first on-call alerting platform that turns critical technical alerts into phone calls and requires explicit human acknowledgement.
 
+WakeUp Dev is voice alerts for DevOps (alertas de voz para DevOps). It turns Grafana, UptimeRobot, and HTTP webhooks into on-call phone calls with press-1 acknowledgement. It is not a mass-notification system, a fire voice alarm, or a public warning service.
+
 ## What problem it solves
 
 Monitoring systems can fire alerts through push, email, or chat. Those channels are easy to miss during sleep, travel, or high-noise environments. WakeUp Dev is built for incidents where someone needs to actually respond—not just receive a notification.

@@ -1,4 +1,5 @@
 import { PRODUCTION_SITE_URL, SENIOR_SAFE_INSTALL_GUIDE_URL } from "@/lib/app-url";
+import { SUPPORT_EMAIL } from "@/lib/market";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { markInstallWhatsAppLinked } from "@/lib/install-step-sync";
 import { CONTRACT_SIGNUPS_TABLE } from "@/lib/signups-db";
@@ -149,7 +150,7 @@ export async function processWhatsAppActivation(
   const normalizedPhone = normalizeTwilioPhone(phone);
   const result = await markSignupWhatsAppActivated(signup.id);
   if (!result.ok && !result.already) {
-    return "Senior Safe 🛡️\nNo pudimos vincular WhatsApp. Intenta de nuevo o escribe a hola@alarmaseniorsafe.cl";
+    return `Senior Safe 🛡️\nNo pudimos vincular WhatsApp. Intenta de nuevo o escribe a ${SUPPORT_EMAIL}`;
   }
 
   if (normalizedPhone && normalizedPhone !== signup.telefono) {

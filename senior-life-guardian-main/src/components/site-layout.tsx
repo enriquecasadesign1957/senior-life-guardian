@@ -5,6 +5,7 @@ import logo from "@/assets/logo-senior-safe.png";
 import { PLAN_KEY } from "@/lib/plans";
 import { isDemoMode } from "@/lib/demo/demo-config";
 import { SENIOR_SAFE_PLAY_STORE_URL } from "@/lib/app-url";
+import { SITE_ORIGIN, SUPPORT_EMAIL, isInternational } from "@/lib/market";
 
 const defaultCheckoutSearch = {
   mode: "contratar" as const,
@@ -98,8 +99,8 @@ export function SiteFooter() {
             Tecnología con corazón. Cuidando a quienes nos cuidaron toda la vida.
           </p>
           <div className="mt-5 space-y-2 text-sm text-white/85">
-            <div className="flex items-center gap-2"><Globe className="w-4 h-4" /><span>alarmaseniorsafe.cl</span></div>
-            <div className="flex items-center gap-2"><Mail className="w-4 h-4" /><span>hola@alarmaseniorsafe.cl</span></div>
+            <div className="flex items-center gap-2"><Globe className="w-4 h-4" /><span>{SITE_ORIGIN.replace("https://", "")}</span></div>
+            <a className="flex items-center gap-2 hover:text-white" href={`mailto:${SUPPORT_EMAIL}`}><Mail className="w-4 h-4" /><span>{SUPPORT_EMAIL}</span></a>
           </div>
         </div>
         <div>
@@ -110,7 +111,9 @@ export function SiteFooter() {
             <li><Link to="/como-funciona" className="text-white/85 hover:text-white">Cómo funciona</Link></li>
             <li><a href="/#planes" className="text-white/85 hover:text-white">Planes</a></li>
             <li><Link to="/guia" className="text-white/85 hover:text-white">Guía de instalación</Link></li>
-            <li><Link to="/las-condes" className="text-white/85 hover:text-white">Convenio Las Condes</Link></li>
+            {isInternational ? null : (
+              <li><Link to="/las-condes" className="text-white/85 hover:text-white">Convenio Las Condes</Link></li>
+            )}
             <li><Link to="/blog" className="text-white/85 hover:text-white">Blog</Link></li>
             <li>
               <a
@@ -137,7 +140,7 @@ export function SiteFooter() {
       <div className="border-t border-white/10">
         <div className="max-w-6xl mx-auto px-6 py-5 flex flex-col md:flex-row justify-between gap-2 text-sm text-white/60">
           <span className="flex items-center gap-2"><Shield className="w-4 h-4" /> © 2026 Alarma Senior Safe. Todos los derechos reservados.</span>
-          <span>Hecho en Chile · Soporte 24/7</span>
+          <span>{isInternational ? "Latinoamérica · Soporte 24/7" : "Hecho en Chile · Soporte 24/7"}</span>
         </div>
       </div>
     </footer>

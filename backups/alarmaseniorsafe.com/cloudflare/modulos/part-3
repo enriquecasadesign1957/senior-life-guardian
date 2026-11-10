@@ -1,0 +1,62 @@
+import { r as reactExports, j as jsxRuntimeExports } from "../_libs/react.mjs";
+import { i as isWhatsAppActivatedLocally, W as WHATSAPP_ACTIVATED_EVENT, a as WHATSAPP_ACTIVATED_STORAGE_KEY } from "./whatsapp-activation-local-CXNPbGDY.mjs";
+import { h as whatsAppActivarUrl } from "./install-step-sync-65QKjQIB.mjs";
+import { C as CircleCheck, b as MessageCircle } from "../_libs/lucide-react.mjs";
+function WhatsAppActivationButton({
+  className = "",
+  fullWidth = true,
+  hideWhenActivated = true
+}) {
+  const [activated, setActivated] = reactExports.useState(() => isWhatsAppActivatedLocally());
+  reactExports.useEffect(() => {
+    const sync = () => setActivated(isWhatsAppActivatedLocally());
+    sync();
+    window.addEventListener(WHATSAPP_ACTIVATED_EVENT, sync);
+    const onStorage = (e) => {
+      if (e.key === WHATSAPP_ACTIVATED_STORAGE_KEY) sync();
+    };
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener(WHATSAPP_ACTIVATED_EVENT, sync);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
+  if (activated && hideWhenActivated) return null;
+  const base = "inline-flex items-center justify-center gap-3 rounded-2xl text-lg sm:text-xl font-bold shadow-lg hover:scale-[1.02] active:scale-100 transition px-6 py-4";
+  const width = fullWidth ? "w-full" : "";
+  if (activated) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "a",
+      {
+        href: whatsAppActivarUrl(),
+        target: "_blank",
+        rel: "noopener noreferrer",
+        "aria-label": "WhatsApp ya activado — revisar en WhatsApp",
+        className: `${base} ${width} ${className} text-white`,
+        style: { background: "#16a34a", minHeight: 64 },
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { className: "w-7 h-7" }),
+          "✅ WhatsApp activado"
+        ]
+      }
+    );
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "a",
+    {
+      href: whatsAppActivarUrl(),
+      target: "_blank",
+      rel: "noopener noreferrer",
+      "aria-label": "Vincular WhatsApp con Senior Safe",
+      className: `${base} ${width} ${className} text-white`,
+      style: { background: "#25D366", minHeight: 64 },
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(MessageCircle, { className: "w-7 h-7", fill: "white" }),
+        "📲 Vincular WhatsApp"
+      ]
+    }
+  );
+}
+export {
+  WhatsAppActivationButton as W
+};
