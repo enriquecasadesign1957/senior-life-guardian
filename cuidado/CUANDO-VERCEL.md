@@ -2,7 +2,7 @@
 
 No publicar CuidadoWeb en el Pages `senior-life-guardian.pages.dev`. No tocar los Workers de `alarmaseniorsafe.cl`, `alarmaseniorsafe.com`, `wakeupdev.com` ni `api.wakeupdev.com`.
 
-La raíz del repositorio tiene un `vercel.json` que publica un solo servicio, `cuidadoweb`, desde `cuidado/apps/web`. Todo el tráfico público entra por `/`. El cron de `/api/watch` cada 15 minutos está en ese mismo archivo y solo despliega en el plan Pro. `senior-life-guardian-main` y `wakeup-dev/web` no forman parte de este proyecto.
+La raíz del repositorio tiene un `vercel.json` que publica un solo servicio, `cuidadoweb`, desde `cuidado/apps/web`. Todo el tráfico público entra por `/`. El cron de `/api/watch` corre una vez al día (`0 14 * * *`) para que el deploy pase en Hobby; en Pro se puede volver a `*/15 * * * *`. `senior-life-guardian-main` y `wakeup-dev/web` no forman parte de este proyecto.
 
 ## 1. Neon
 
@@ -40,7 +40,7 @@ Los códigos de prueba se crean en **Códigos** (`/admin/codigos`): eliges la vi
 
 ## 4. Vercel
 
-1. La cuenta tiene que estar en Pro. Hobby rechaza el cron de 15 minutos y no cubre un sitio que cobra.
+1. Hobby acepta el cron diario actual. Pro hace falta solo si quieres vigilancia cada 15 minutos o un sitio que cobra con margen.
 2. En Spend Management, deja el gasto extra en $0.
 3. Importa el repositorio `enriquecasadesign1957/senior-life-guardian`. La pantalla deja la rama en `main`. Esa rama ya contiene CuidadoWeb.
 4. Deja el directorio raíz en `./`. El `vercel.json` de la raíz publica solo el servicio `cuidadoweb`.
