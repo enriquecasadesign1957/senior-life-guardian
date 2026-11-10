@@ -3,6 +3,7 @@ import post_dynamic_voice_escalation_grafana_wakeupdev from "../../content/blog/
 import post_eliminating_per_seat_costs_with_wakeup_devs_unlimited_seat_on_call from "../../content/blog/eliminating-per-seat-costs-with-wakeup-devs-unlimited-seat-on-call.json";
 import post_optimizing_grafana_alert_routing from "../../content/blog/optimizing-grafana-alert-routing.json";
 import post_reducing_alert_fatigue_voice_ack_grafana_webhooks from "../../content/blog/reducing-alert-fatigue-voice-ack-grafana-webhooks.json";
+import post_unifying_grafana_uptimerobot_webhooks_unlimited_seat_on_call from "../../content/blog/unifying-grafana-uptimerobot-webhooks-unlimited-seat-on-call.json";
 import post_uptimerobot_webhook_wakeupdev_voice_escalation from "../../content/blog/uptimerobot-webhook-wakeupdev-voice-escalation.json";
 import post_uptimerobot_webhooks_to_wakeup_dev_zero_downtime_alerting from "../../content/blog/uptimerobot-webhooks-to-wakeup-dev-zero-downtime-alerting.json";
 import post_uptimerobot_webhooks_wakeupdev_zero_fatigue from "../../content/blog/uptimerobot-webhooks-wakeupdev-zero-fatigue.json";
@@ -13,6 +14,7 @@ export const generatedPosts: GeneratedPost[] = [
   post_eliminating_per_seat_costs_with_wakeup_devs_unlimited_seat_on_call as GeneratedPost,
   post_optimizing_grafana_alert_routing as GeneratedPost,
   post_reducing_alert_fatigue_voice_ack_grafana_webhooks as GeneratedPost,
+  post_unifying_grafana_uptimerobot_webhooks_unlimited_seat_on_call as GeneratedPost,
   post_uptimerobot_webhook_wakeupdev_voice_escalation as GeneratedPost,
   post_uptimerobot_webhooks_to_wakeup_dev_zero_downtime_alerting as GeneratedPost,
   post_uptimerobot_webhooks_wakeupdev_zero_fatigue as GeneratedPost,
