@@ -1,0 +1,68 @@
+{
+  "slug": "unifying-grafana-uptimerobot-webhooks-unlimited-seat-on-call",
+  "title": "Unifying Grafana and UptimeRobot Webhooks for Unlimited-Seat On‑Call with WakeUp Dev",
+  "description": "Learn how to combine Grafana and UptimeRobot webhooks to trigger WakeUp Dev alerts, eliminate per‑seat costs, and reduce alert fatigue with voice ACKs.",
+  "keywords": [
+    "on-call",
+    "grafana",
+    "uptimerobot",
+    "alerting",
+    "voice",
+    "costs"
+  ],
+  "coverImage": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1600&h=900&q=80",
+  "dateIso": "2026-11-10",
+  "dateLabel": "November 10, 2026",
+  "author": "Enrique Drack",
+  "topic": "Unifying Grafana and UptimeRobot Webhooks for Unlimited-Seat On‑Call with WakeUp Dev",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Integration with Grafana"
+    },
+    {
+      "type": "p",
+      "text": "Grafana can send alerts to any HTTP endpoint. Configure the webhook to point at WakeUp Dev's POST /v1/alert endpoint and include your x‑api‑key header."
+    },
+    {
+      "type": "h2",
+      "text": "Integration with UptimeRobot"
+    },
+    {
+      "type": "p",
+      "text": "UptimeRobot also supports webhooks. Use the same endpoint and key so both services funnel into the same on‑call stream."
+    },
+    {
+      "type": "h2",
+      "text": "Unified Routing and Cost Savings"
+    },
+    {
+      "type": "p",
+      "text": "By routing both Grafana and UptimeRobot alerts through WakeUp Dev you:"
+    },
+    {
+      "type": "ul",
+      "items": [
+        "eliminate per‑seat billing – seats are unlimited",
+        "reduce alert fatigue with a single voice ACK workflow",
+        "keep all alert metadata in one place for audit and analysis"
+      ]
+    },
+    {
+      "type": "h2",
+      "text": "Example POST /v1/alert"
+    },
+    {
+      "type": "code",
+      "code": "curl -X POST https://api.wakeupdev.com/v1/alert \\\n  -H \\\"x-api-key: YOUR_API_KEY\\\" \\\n  -H \\\"Content-Type: application/json\\\" \\\n  -d '{\n  \\\"source\\\": \\\"grafana\\\",\n  \\\"severity\\\": \\\"critical\\\",\n  \\\"title\\\": \\\"CPU usage > 90%\\\",\n  \\\"message\\\": \\\"Instance i-1234 is over 90% CPU.\\\",\n  \\\"tags\\\": [\\\"cpu\\\", \\\"production\\\"]\n}'"
+    },
+    {
+      "type": "p",
+      "text": "The response will trigger a voice cascade to the on‑call roster. The first person to press 1 acknowledges the alert, ending the call for the rest."
+    },
+    {
+      "type": "discussion",
+      "text": "How do you currently handle alert fatigue in your on‑call rotation?"
+    }
+  ]
+}
