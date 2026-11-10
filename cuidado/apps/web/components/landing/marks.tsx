@@ -13,13 +13,13 @@ export function Checks({ items }: { items: string[] }) {
   );
 }
 
-export function Limits({ items }: { items: string[] }) {
+export function Limits({ items, noLabel = "No" }: { items: string[]; noLabel?: string }) {
   return (
     <ul className="space-y-3">
       {items.map((item) => (
         <li key={item} className="flex gap-3 text-base">
           <span className="font-medium text-stone-400" aria-hidden>
-            No
+            {noLabel}
           </span>
           <span>{item}</span>
         </li>

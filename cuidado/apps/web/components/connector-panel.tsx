@@ -1,16 +1,18 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { useLanguage } from "@/components/language-provider";
+
 const TOKEN = /^[a-f0-9]{32}$/;
 
 export function ConnectorPanel() {
+  const { t } = useLanguage();
   const [url, setUrl] = useState("");
   const [pairCode, setPairCode] = useState("");
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
   const [awaitingSiteId, setAwaitingSiteId] = useState<string | null>(null);
-  const ownApp = isCuidadoWebUrl(url);
-  const uploadHref = !ownApp ? uploadLink(url) : null;
+  const uploadHref = uploadLink(url);
   const tokenReady = TOKEN.test(pairCode);
   const tokenDirty = pairCode.length > 0;
 
@@ -24,7 +26,7 @@ export function ConnectorPanel() {
         const body = (await response.json()) as { status?: string };
         if (cancelled || body.status !== "connected") return;
         window.clearInterval(timer);
-        setMessage("Sitio conectado. Abriendo el informe…");
+        setMessage(t("connectorConnectedOpening"));
         const diagnosed = await fetch("/api/diagnose", {
           method: "POST",
           headers: { "content-type": "application/json" },
@@ -44,15 +46,11 @@ export function ConnectorPanel() {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [awaitingSiteId, url]);
+  }, [awaitingSiteId, url, t]);
 
   async function pair(event: FormEvent) {
     event.preventDefault();
     if (!tokenReady) return;
-    if (ownApp || isCuidadoWebUrl(url)) {
-      setMessage("Pon la URL de tu WordPress (ej. https://www.casadesign.cl), no cuidadoweb.com.");
-      return;
-    }
     setPending(true);
     setMessage("");
     setAwaitingSiteId(null);
@@ -64,15 +62,12 @@ export function ConnectorPanel() {
       });
       const body = await response.json();
       if (!response.ok) {
-        setMessage(body?.error?.message ?? "No pudimos conectar el sitio.");
+        setMessage(body?.error?.message ?? t("connectorError"));
         return;
       }
       if (body.status === "awaiting_plugin") {
         setAwaitingSiteId(body.siteId);
-        setMessage(
-          body.message ??
-            "En WordPress abre Ajustes → Cuidado Conector y pulsa Completar conexión.",
-        );
+        setMessage(body.message ?? t("connectorAwaiting"));
         return;
       }
       const diagnosed = await fetch("/api/diagnose", {
@@ -82,12 +77,12 @@ export function ConnectorPanel() {
       });
       const scan = await diagnosed.json();
       if (!diagnosed.ok) {
-        setMessage("El sitio quedó conectado. El informe no pudo medirse ahora.");
+        setMessage(t("connectorConnectedNoScan"));
         return;
       }
       window.location.href = `/informe/${scan.scanId}?siteId=${body.siteId}`;
     } catch {
-      setMessage("No pudimos conectar el sitio.");
+      setMessage(t("connectorError"));
     } finally {
       setPending(false);
     }
@@ -95,67 +90,57 @@ export function ConnectorPanel() {
 
   return (
     <div>
-      <h2 className="font-display text-3xl tracking-tight text-ink">Para limpiar o vigilar, conecta el sitio</h2>
-      <p className="mt-2 text-sm text-stone-600">El diagnóstico gratis no necesita plugin. La limpieza sí.</p>
+      <h2 className="font-display text-3xl tracking-tight text-ink">{t("connectorTitle")}</h2>
+      <p className="mt-2 text-sm text-stone-600">{t("connectorLead")}</p>
       <ol className="mt-5 space-y-6">
         <li>
-          <Step n="1" title="Descarga el conector" />
+          <Step n="1" title={t("connectorStep1")} />
           <a
             href="/cuidado-conector.zip"
             className="mt-3 flex w-full items-center justify-center rounded-2xl bg-ink px-5 py-4 text-base font-medium text-white"
           >
-            Descargar Cuidado Conector
+            {t("connectorDownload")}
           </a>
         </li>
         <li>
-          <Step n="2" title="Escribe la URL de tu WordPress" />
-          <p className="mt-2 text-sm text-stone-600">
-            Es la dirección de tu sitio en internet, la misma que abre el visitante. Ejemplo:{" "}
-            <span className="font-medium text-ink">https://www.casadesign.cl</span>. No pongas cuidadoweb.com.
-          </p>
-          <div className="mt-3">
-            <label className="block text-sm font-medium" htmlFor="connector-url">
-              URL de tu WordPress
-            </label>
-            <input
-              id="connector-url"
-              name="url"
-              value={url}
-              onChange={(event) => setUrl(event.target.value)}
-              placeholder="https://www.casadesign.cl"
-              autoComplete="url"
-              className="mt-1 w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-base"
-              required
-            />
-            {ownApp ? (
-              <p className="mt-2 text-sm text-red-800" role="alert">
-                Eso es CuidadoWeb. Pon la URL de tu WordPress.
-              </p>
-            ) : null}
-          </div>
-          <p className="mt-3 text-sm text-stone-600">Luego en WordPress: Plugins → Subir plugin → Instalar ahora → Activar.</p>
+          <Step n="2" title={t("connectorStep2")} />
+          <p className="mt-2 text-sm text-stone-600">{t("connectorStep2Body")}</p>
           {uploadHref ? (
             <a className="mt-2 inline-block text-sm underline decoration-stone-400 underline-offset-2" href={uploadHref}>
-              Abrir “Subir plugin” en tu WordPress
+              {t("connectorOpenUpload")}
             </a>
-          ) : null}
+          ) : (
+            <p className="mt-2 text-sm text-stone-500">{t("connectorPasteUrlHint")}</p>
+          )}
         </li>
         <li>
-          <Step n="3" title="Pega el código de 10 minutos" />
-          <p className="mt-2 text-sm text-stone-600">
-            En tu WordPress: Ajustes → Cuidado Conector → Generar código. Pégalo aquí.
-          </p>
+          <Step n="3" title={t("connectorStep3")} />
           <form onSubmit={pair} className="mt-3 space-y-3">
             <div>
+              <label className="block text-sm font-medium" htmlFor="connector-url">
+                {t("connectorSiteLabel")}
+              </label>
+              <input
+                id="connector-url"
+                name="url"
+                value={url}
+                onChange={(event) => setUrl(event.target.value)}
+                placeholder={t("analyzePlaceholder")}
+                autoComplete="url"
+                className="mt-1 w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-base"
+                required
+              />
+            </div>
+            <div>
               <label className="block text-sm font-medium" htmlFor="pair-code">
-                Código del plugin
+                {t("connectorCodeLabel")}
               </label>
               <input
                 id="pair-code"
                 name="pairCode"
                 value={pairCode}
                 onChange={(event) => setPairCode(event.target.value.toLowerCase().replace(/\s+/g, ""))}
-                placeholder="32 letras y números"
+                placeholder={t("connectorCodePlaceholder")}
                 autoComplete="one-time-code"
                 aria-invalid={tokenDirty && !tokenReady}
                 className={`mt-1 w-full rounded-2xl border px-4 py-3 font-mono text-sm ${
@@ -164,14 +149,14 @@ export function ConnectorPanel() {
                 pattern="[a-f0-9]{32}"
                 required
               />
-              {tokenReady ? <p className="mt-2 text-sm text-pine">Código con la forma correcta.</p> : null}
+              {tokenReady ? <p className="mt-2 text-sm text-pine">{t("connectorCodeOk")}</p> : null}
             </div>
             <button
               type="submit"
-              disabled={pending || !tokenReady || ownApp}
+              disabled={pending || !tokenReady}
               className="rounded-full bg-pine px-5 py-3 text-sm font-medium text-white disabled:opacity-60"
             >
-              {pending ? "Conectando…" : "Conectar sitio"}
+              {pending ? t("connectorPending") : t("connectorSubmit")}
             </button>
           </form>
         </li>
@@ -181,9 +166,7 @@ export function ConnectorPanel() {
           {message}
         </p>
       ) : null}
-      {awaitingSiteId ? (
-        <p className="mt-2 text-sm text-stone-500">Esperando a que pulses Completar conexión en WordPress…</p>
-      ) : null}
+      {awaitingSiteId ? <p className="mt-2 text-sm text-stone-500">{t("connectorWaiting")}</p> : null}
     </div>
   );
 }
@@ -195,22 +178,6 @@ function Step({ n, title }: { n: string; title: string }) {
       <h3 className="text-base">{title}</h3>
     </div>
   );
-}
-
-function isCuidadoWebUrl(value: string): boolean {
-  try {
-    const withScheme = /^https?:\/\//i.test(value) ? value : `https://${value}`;
-    const hostname = new URL(withScheme).hostname.toLowerCase();
-    return (
-      hostname === "cuidadoweb.com" ||
-      hostname === "www.cuidadoweb.com" ||
-      hostname.endsWith(".cuidadoweb.com") ||
-      hostname.endsWith("-cuidado-web.vercel.app") ||
-      hostname === "cuidadoweb.vercel.app"
-    );
-  } catch {
-    return false;
-  }
 }
 
 function uploadLink(value: string): string | null {
