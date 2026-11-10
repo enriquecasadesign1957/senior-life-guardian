@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Outfit } from "next/font/google";
 import type { ReactNode } from "react";
+import { LanguageProvider } from "@/components/language-provider";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
@@ -34,9 +35,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es" className={`${display.variable} ${sans.variable}`}>
       <body className="min-h-screen bg-paper font-sans text-ink antialiased">
-        <SiteHeader />
-        <main>{children}</main>
-        <SiteFooter />
+        <LanguageProvider>
+          <SiteHeader />
+          <main>{children}</main>
+          <SiteFooter />
+        </LanguageProvider>
       </body>
     </html>
   );
