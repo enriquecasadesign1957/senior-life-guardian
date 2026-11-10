@@ -2,6 +2,25 @@
 
 No publicar CuidadoWeb en el Pages `senior-life-guardian.pages.dev`. No tocar los Workers de `alarmaseniorsafe.cl`, `alarmaseniorsafe.com`, `wakeupdev.com` ni `api.wakeupdev.com`.
 
+## Por qué a veces “se mezcla” con Senior Safe
+
+Todo vive en el **mismo repo GitHub** `senior-life-guardian`:
+
+| Producto | Carpeta | Hosting |
+|----------|---------|---------|
+| CuidadoWeb | `cuidado/` | **Vercel** → cuidadoweb.com |
+| Alarma Senior Safe | `senior-life-guardian-main/` | **Cloudflare** Workers/Pages |
+| WakeUpDev | `wakeup-dev/` | otro deploy |
+
+Si un PR solo cambia Senior Safe (p. ej. GTM, Las Condes), GitHub igual notifica al proyecto Vercel `cuidadoweb` porque está conectado al repo entero. Por eso viste comentarios de `vercel[bot]` y el error de **Hobby** (cron `*/15`) en un PR que no era de CuidadoWeb.
+
+Mitigación en `vercel.json` de la raíz:
+
+- Cron diario (`0 14 * * *`) para que Hobby pueda publicar.
+- `ignoreCommand`: Vercel **omite** el build si el commit no toca `cuidado/` ni `vercel.json`.
+
+Los mails viejos del PR #17 son de cuando aún estaba el cron `*/15`. Production actual ya no usa ese schedule.
+
 La raíz del repositorio tiene un `vercel.json` que publica un solo servicio, `cuidadoweb`, desde `cuidado/apps/web`. Todo el tráfico público entra por `/`. El cron de `/api/watch` corre una vez al día (`0 14 * * *`) para que el deploy pase en Hobby; en Pro se puede volver a `*/15 * * * *`. `senior-life-guardian-main` y `wakeup-dev/web` no forman parte de este proyecto.
 
 ## 1. Neon
@@ -45,8 +64,9 @@ Los códigos de prueba se crean en **Códigos** (`/admin/codigos`): eliges la vi
 3. Importa el repositorio `enriquecasadesign1957/senior-life-guardian`. La pantalla deja la rama en `main`. Esa rama ya contiene CuidadoWeb.
 4. Deja el directorio raíz en `./`. El `vercel.json` de la raíz publica solo el servicio `cuidadoweb`.
 5. Nombre del proyecto: `cuidadoweb`.
-6. Pega las variables del paso 2 en Production.
-7. Deploy.
+6. Confirma que el Ignored Build Step / `ignoreCommand` del `vercel.json` esté activo (solo construye si cambió `cuidado/` o `vercel.json`).
+7. Pega las variables del paso 2 en Production.
+8. Deploy.
 
 ## 5. Tablas
 
