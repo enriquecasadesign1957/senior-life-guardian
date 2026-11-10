@@ -459,6 +459,10 @@ export type Database = {
           webpay_session_id: string | null
           webpay_token: string | null
           whatsapp_activated: boolean
+          tarjeta_vecino_rut: string | null
+          tarjeta_vecino_estado: string | null
+          tarjeta_vecino_tipo: string | null
+          tarjeta_vecino_checked_at: string | null
         }
         Insert: {
           created_at?: string
@@ -500,6 +504,10 @@ export type Database = {
           webpay_session_id?: string | null
           webpay_token?: string | null
           whatsapp_activated?: boolean
+          tarjeta_vecino_rut?: string | null
+          tarjeta_vecino_estado?: string | null
+          tarjeta_vecino_tipo?: string | null
+          tarjeta_vecino_checked_at?: string | null
         }
         Update: {
           created_at?: string
@@ -541,6 +549,10 @@ export type Database = {
           webpay_session_id?: string | null
           webpay_token?: string | null
           whatsapp_activated?: boolean
+          tarjeta_vecino_rut?: string | null
+          tarjeta_vecino_estado?: string | null
+          tarjeta_vecino_tipo?: string | null
+          tarjeta_vecino_checked_at?: string | null
         }
         Relationships: []
       }

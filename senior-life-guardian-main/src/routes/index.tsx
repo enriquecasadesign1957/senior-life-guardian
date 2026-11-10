@@ -46,6 +46,7 @@ import {
 } from "@/lib/seo";
 import { CANCELLATION_POLICY_SUMMARY } from "@/lib/subscription-cancellation-policy";
 import { SENIOR_SAFE_PLAY_STORE_URL } from "@/lib/app-url";
+import { CONVENIO_LAS_CONDES, convenioPrecio } from "@/lib/convenio-las-condes";
 import { isInternational, paymentLabel, SUPPORT_EMAIL } from "@/lib/market";
 
 export const Route = createFileRoute("/")({
@@ -264,6 +265,49 @@ const QUE_ES_BENEFITS = [
   "Red de respuesta activa en <3 segundos",
   "Cobertura nacional sin zonas ciegas",
 ] as const;
+
+function ConvenioLasCondes() {
+  const offer = CONVENIO_LAS_CONDES;
+  return (
+    <section className="bg-white border-b border-border">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 flex flex-col md:flex-row md:items-center gap-4 md:justify-between">
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="flex items-center gap-2.5 shrink-0">
+            <img
+              src="/convenio-las-condes/logo-tarjeta-vecino.svg"
+              alt="Tarjeta Vecino"
+              className="h-11 w-auto rounded-lg px-2.5 py-1.5"
+              style={{ background: "#07261F" }}
+            />
+            <img
+              src="/convenio-las-condes/escudo-las-condes.webp"
+              alt="Municipalidad de Las Condes"
+              className="h-12 w-auto"
+            />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-bold uppercase tracking-[0.16em]" style={{ color: DEEP }}>
+              Tarjeta Vecino · Las Condes
+            </p>
+            <p className="mt-1 font-bold text-foreground">
+              {convenioPrecio(offer.adultoMayor.monthly)} al mes con Tarjeta Vecino Adulto Mayor, o {convenioPrecio(offer.vecino.monthly)} con Tarjeta Vecino
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Aplicación en el celular, con botón de emergencia y aviso a hasta 3 familiares.
+            </p>
+          </div>
+        </div>
+        <Link
+          to="/las-condes"
+          className="inline-flex items-center justify-center px-5 py-3 rounded-full text-white text-sm font-semibold shrink-0"
+          style={{ background: DEEP }}
+        >
+          Ver convenio
+        </Link>
+      </div>
+    </section>
+  );
+}
 
 function QueEs() {
   return (
@@ -1329,6 +1373,7 @@ function Landing() {
       <SiteHeader />
       <main>
         <Hero />
+        {isInternational ? null : <ConvenioLasCondes />}
         <QueEs />
         <ComunicacionRedundanteBento />
         <AlarmaAdultosMayoresChile />

@@ -38,6 +38,10 @@ const CLARITY_HEAD_SNIPPET = `(function(c,l,a,r,i,t,y){
 
 const GA4_INIT_SNIPPET = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA4_MEASUREMENT_ID}',{send_page_view:false,anonymize_ip:true});gtag('config','${GOOGLE_ADS_ID}');`;
 
+/** Contenedor nuevo de Google Tag Manager. La cuenta AW-18237846093 vive dentro de este contenedor. */
+const GTM_CONTAINER_ID = "GTM-5JKV3P88";
+const GTM_INIT_SNIPPET = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());`;
+
 // Parchea fetch para APK (Capacitor / file://). En preview de Lovable y
 // localhost NO se activa para evitar CORS. Se ejecuta dentro de useEffect
 // (ver RootComponent) para no interferir con la evaluación del módulo durante SSR.
@@ -187,6 +191,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es-CL">
       <head>
+        <script async src={`https://www.googletagmanager.com/gtm.js?id=${GTM_CONTAINER_ID}`} />
+        <script
+          type="text/javascript"
+          dangerouslySetInnerHTML={{ __html: GTM_INIT_SNIPPET }}
+        />
         <HeadContent />
         <script
           type="text/javascript"
