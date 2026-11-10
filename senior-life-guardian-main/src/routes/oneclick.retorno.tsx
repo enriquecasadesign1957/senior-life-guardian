@@ -82,6 +82,25 @@ function OneclickSuccessView({
       transactionId,
       signupId,
     });
+
+    if (typeof window.gtag === "function") {
+      const newAdsKey = `seniorsafe_ads_aw18237846093:${transactionId}`;
+      let alreadySent = false;
+      try {
+        alreadySent = localStorage.getItem(newAdsKey) === "1";
+        if (!alreadySent) localStorage.setItem(newAdsKey, "1");
+      } catch {
+        /* el navegador puede bloquear localStorage */
+      }
+      if (!alreadySent) {
+        window.gtag("event", "conversion", {
+          send_to: "AW-18237846093",
+          value: 6900.0,
+          currency: "CLP",
+          transaction_id: transactionId,
+        });
+      }
+    }
   }, [
     isValidationPreview,
     voucher.monto,
