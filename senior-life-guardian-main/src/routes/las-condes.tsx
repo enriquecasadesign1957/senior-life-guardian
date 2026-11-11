@@ -5,7 +5,6 @@ import { buildPublicPageMeta } from "@/lib/seo";
 import { PLAN_KEY } from "@/lib/plans";
 import {
   CONVENIO_LAS_CONDES,
-  convenioCheckoutPath,
   convenioPrecio,
 } from "@/lib/convenio-las-condes";
 
@@ -137,9 +136,6 @@ function OfferCard({
           Anual
         </Link>
       </div>
-      <p className="mt-4 text-xs text-muted-foreground break-all">
-        alarmaseniorsafe.cl{convenioCheckoutPath(code, "mensual")}
-      </p>
     </article>
   );
 }
