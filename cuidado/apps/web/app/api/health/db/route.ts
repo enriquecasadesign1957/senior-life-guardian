@@ -27,7 +27,7 @@ ALTER TABLE "sites" ADD COLUMN IF NOT EXISTS "plan_renewal_at" timestamp with ti
 /**
  * Smoke de conectividad Postgres sin filtrar secretos.
  * GET /api/health/db
- * GET /api/health/db?repair=1  → aplica 0008 idempotente (tbk_*/payment_intents)
+ * GET /api/health/db?repair=1  → aplica 0008 idempotente (tbk columns + payment_intents)
  */
 export async function GET(request: Request): Promise<NextResponse> {
   const raw = process.env.DATABASE_URL;
