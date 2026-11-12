@@ -84,8 +84,9 @@ function assertUsableDatabaseUrl(info: DatabaseUrlInfo): void {
 
 function poolOptions(connectionString: string, info: DatabaseUrlInfo) {
   const onVercel = Boolean(process.env.VERCEL);
-  // En serverless conviene pocas conexiones; session pooler las retiene por instancia.
-  const max = onVercel ? 1 : 10;
+  // withUrlLock retiene 1 conexión en transacción mientras fn() usa getDb()
+  // (otra del pool). Con max:1 eso hace deadlock/timeout en /api/diagnose.
+  const max = onVercel ? 3 : 10;
   const options: ConstructorParameters<typeof Pool>[0] = {
     connectionString,
     max,
