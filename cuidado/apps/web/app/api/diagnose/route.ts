@@ -45,10 +45,9 @@ export async function POST(request: Request): Promise<NextResponse> {
 }
 
 async function claimScan(requestedUrl: string, userId: string): Promise<Claim> {
-  return withUrlLock(requestedUrl, async () => {
-    const db = getDb();
+  return withUrlLock(requestedUrl, async (db) => {
     const now = new Date();
-    const site = await connectedSite(userId, requestedUrl);
+    const site = await connectedSite(db, userId, requestedUrl);
     const readyRows = await db
       .select()
       .from(scanRuns)
@@ -107,7 +106,7 @@ async function finishScan(scanId: string, requestedUrl: string, userId: string, 
     const db = getDb();
     const metrics = await metricsFor(donorId, requestedUrl);
     const probe = await probeSite(requestedUrl);
-    const site = await connectedSite(userId, requestedUrl);
+    const site = await connectedSite(getDb(), userId, requestedUrl);
     const plugin = await pluginInventory(requestedUrl, site?.id);
     const explained = await explainFindings(
       buildDrafts({
@@ -216,9 +215,13 @@ async function metricsFor(donorId: string | null, requestedUrl: string): Promise
   }
 }
 
-async function connectedSite(userId: string, requestedUrl: string) {
+async function connectedSite(
+  db: ReturnType<typeof getDb>,
+  userId: string,
+  requestedUrl: string,
+) {
   return (
-    await getDb()
+    await db
       .select()
       .from(sites)
       .where(and(eq(sites.userId, userId), eq(sites.baseUrl, requestedUrl), eq(sites.status, "connected")))

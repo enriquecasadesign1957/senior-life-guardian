@@ -34,8 +34,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     const secret = newSiteSecret();
     const sealed = encryptSecret(secret);
 
-    const paired = await withUrlLock(baseUrl, async () => {
-      const db = getDb();
+    const paired = await withUrlLock(baseUrl, async (db) => {
       const saved = await db
         .insert(sites)
         .values({
