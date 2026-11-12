@@ -68,11 +68,11 @@ DATABASE_URL="$SUPABASE_DATABASE_URL" npm run db:migrate
 ### 4. Cutover Vercel
 
 1. Vercel → proyecto `cuidadoweb` → Settings → Environment Variables.
-2. Edita **Production** `DATABASE_URL` → URI **Session pooler** del panel Supabase (`:5432`, user `postgres.<ref>`, `sslmode=require`). **No** uses la directa `db.*` (IPv6).
-3. Pega la URI **tal cual** del panel (no re-encodes la password a mano).
+2. Edita **Production** `DATABASE_URL` → URI **Session pooler** del panel Supabase (`:5432`, user `postgres.<ref>`). **No** uses la directa `db.*` (IPv6).
+3. Pega la URI **tal cual** del panel (no re-encodes la password a mano). Si `node-pg` falla con `SELF_SIGNED_CERT_IN_CHAIN`, usa `sslmode=no-verify` **o** despliega el cliente con `ssl: { rejectUnauthorized: false }` y vuelve a `sslmode=require`.
 4. Redeploy Production (obligatorio tras cambiar un secret env).
 5. Smoke:
-   - `GET https://cuidadoweb.com/api/health/db` → `ok: true`, `mode: "session-pooler"`
+   - `GET https://cuidadoweb.com/api/health/db` → `ok: true`, `mode: "session-pooler"` (tras merge del hardening)
    - Landing + diagnóstico de un sitio
    - Login agencia / código
    - Informe + Lemon (intl) o Transbank (cl)

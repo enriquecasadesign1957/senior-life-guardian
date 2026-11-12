@@ -42,8 +42,14 @@ if (isTransactionPooler) {
   );
 }
 
-if (!raw.includes("sslmode=require") && !raw.includes("sslmode=verify-full")) {
-  warnings.push("Añade ?sslmode=require al final de la URI.");
+if (
+  !raw.includes("sslmode=require") &&
+  !raw.includes("sslmode=verify-full") &&
+  !raw.includes("sslmode=no-verify")
+) {
+  warnings.push(
+    "Añade ?sslmode=require (o no-verify si node-pg falla con SELF_SIGNED_CERT_IN_CHAIN hasta desplegar ssl.rejectUnauthorized=false).",
+  );
 }
 
 if (isDirectSupabase) {

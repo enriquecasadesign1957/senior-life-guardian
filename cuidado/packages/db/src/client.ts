@@ -92,8 +92,9 @@ function poolOptions(connectionString: string, info: DatabaseUrlInfo) {
     idleTimeoutMillis: onVercel ? 5_000 : 20_000,
     connectionTimeoutMillis: 10_000,
   };
-  // sslmode=require en la URI suele bastar; en algunos runtimes Supabase
-  // falla el handshake si no forzamos TLS en el cliente.
+  // Supabase (pooler) a veces presenta cadena que node-pg 8 marca como
+  // SELF_SIGNED_CERT_IN_CHAIN. Forzamos TLS sin verificar CA para no depender
+  // de sslmode=no-verify en la URI de Vercel.
   if (info.provider === "supabase") {
     options.ssl = { rejectUnauthorized: false };
   }
