@@ -3,7 +3,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { CheckCircle2, XCircle, Loader2, MessageCircle } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-layout";
-import { confirmWebpayTransaction, mockApproveWebpay } from "@/lib/webpay.functions";
+import {
+  abandonWebpayCheckout,
+  confirmWebpayTransaction,
+  mockApproveWebpay,
+} from "@/lib/webpay.functions";
 import { markRequiresPwaInstall, persistSignupHandoff } from "@/lib/post-payment";
 import { PostPaymentInstallScreen } from "@/components/post-payment-install-screen";
 import type { PostPaymentInstallNotifyResult } from "@/lib/post-payment-install-notify";
@@ -18,7 +22,11 @@ type SearchParams = {
 /** Imprime token_ws en la terminal del servidor (dev) para el formulario de validación Transbank. */
 function logTransbankTestToken(token_ws: string | undefined | null) {
   if (!token_ws) return;
-  console.log("\n===== TOKEN TRANSBANK DE PRUEBA =====\n", token_ws, "\n====================================\n");
+  console.log(
+    "\n===== TOKEN TRANSBANK DE PRUEBA =====\n",
+    token_ws,
+    "\n====================================\n",
+  );
 }
 
 export const Route = createFileRoute("/webpay/retorno")({
@@ -29,10 +37,7 @@ export const Route = createFileRoute("/webpay/retorno")({
     TBK_ID_SESION: typeof s.TBK_ID_SESION === "string" ? s.TBK_ID_SESION : undefined,
   }),
   head: () => ({
-    meta: [
-      { title: "Confirmando pago — Senior Safe" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "Confirmando pago — Senior Safe" }, { name: "robots", content: "noindex" }],
   }),
   server: {
     handlers: {
@@ -62,6 +67,7 @@ const GREEN = "#16a34a";
 function WebpayReturnPage() {
   const search = Route.useSearch();
   const confirm = useServerFn(confirmWebpayTransaction);
+  const abandon = useServerFn(abandonWebpayCheckout);
 
   const [state, setState] = useState<"loading" | "success" | "failed" | "cancelled">("loading");
   const [info, setInfo] = useState<{
@@ -73,6 +79,7 @@ function WebpayReturnPage() {
   const [mockBusy, setMockBusy] = useState(false);
   const [signupId, setSignupId] = useState<string | null>(null);
   const [installNotify, setInstallNotify] = useState<PostPaymentInstallNotifyResult | null>(null);
+  const [failureCopy, setFailureCopy] = useState<string | null>(null);
   const mockApprove = useServerFn(mockApproveWebpay);
 
   const readSignupId = (): string | null => {
@@ -95,13 +102,18 @@ function WebpayReturnPage() {
         const raw = sessionStorage.getItem("seniorsafe_user");
         if (raw) {
           const u = JSON.parse(raw);
-          sessionStorage.setItem("seniorsafe_user", JSON.stringify({
-            ...u,
-            purchase_mode: "contratar",
-            subscription_status: "active",
-          }));
+          sessionStorage.setItem(
+            "seniorsafe_user",
+            JSON.stringify({
+              ...u,
+              purchase_mode: "contratar",
+              subscription_status: "active",
+            }),
+          );
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
       setSignupId(readSignupId());
       setInstallNotify(r.installNotify ?? null);
       markRequiresPwaInstall();
@@ -120,6 +132,16 @@ function WebpayReturnPage() {
       // Cancelación o timeout: Webpay envía TBK_TOKEN sin token_ws
       if (!search.token_ws && search.TBK_TOKEN) {
         if (!cancelled) setState("cancelled");
+        try {
+          await abandon({
+            data: {
+              token: search.TBK_TOKEN,
+              buyOrder: search.TBK_ORDEN_COMPRA,
+            },
+          });
+        } catch (error) {
+          console.error("[webpay/retorno] abandon", error);
+        }
         return;
       }
       if (!search.token_ws) {
@@ -148,19 +170,31 @@ function WebpayReturnPage() {
               const raw = sessionStorage.getItem("seniorsafe_user");
               if (raw) {
                 const u = JSON.parse(raw);
-                sessionStorage.setItem("seniorsafe_user", JSON.stringify({
-                  ...u,
-                  purchase_mode: "contratar",
-                  subscription_status: "active",
-                }));
+                sessionStorage.setItem(
+                  "seniorsafe_user",
+                  JSON.stringify({
+                    ...u,
+                    purchase_mode: "contratar",
+                    subscription_status: "active",
+                  }),
+                );
               }
-            } catch { /* ignore */ }
+            } catch {
+              /* ignore */
+            }
           }
           setSignupId(resolvedId);
           setInstallNotify(r.installNotify ?? null);
           markRequiresPwaInstall();
           setState("success");
         } else {
+          if (r.status === "AMOUNT_MISMATCH") {
+            setFailureCopy(
+              r.reversed
+                ? "El monto confirmado por Transbank no coincidía con tu orden. Anulamos el cargo."
+                : "El monto confirmado por Transbank no coincidía con tu orden. No activamos la suscripción. Escríbenos por WhatsApp para revisar el cargo.",
+            );
+          }
           setState("failed");
         }
       } catch (e) {
@@ -168,8 +202,10 @@ function WebpayReturnPage() {
         if (!cancelled) setState("failed");
       }
     })();
-    return () => { cancelled = true; };
-  }, [search.token_ws, search.TBK_TOKEN, confirm]);
+    return () => {
+      cancelled = true;
+    };
+  }, [search.token_ws, search.TBK_TOKEN, search.TBK_ORDEN_COMPRA, confirm, abandon]);
 
   if (state === "success") {
     return (
@@ -199,7 +235,10 @@ function WebpayReturnPage() {
 
             {(state === "failed" || state === "cancelled") && (
               <>
-                <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center" style={{ background: "color-mix(in oklab, #dc2626 12%, white)" }}>
+                <div
+                  className="w-16 h-16 mx-auto rounded-full flex items-center justify-center"
+                  style={{ background: "color-mix(in oklab, #dc2626 12%, white)" }}
+                >
                   <XCircle className="w-10 h-10 text-destructive" />
                 </div>
                 <h1 className="mt-6 text-3xl font-bold text-foreground">
@@ -208,11 +247,17 @@ function WebpayReturnPage() {
                 <p className="mt-3 text-muted-foreground">
                   {state === "cancelled"
                     ? "No se realizó ningún cargo. Puedes intentarlo nuevamente."
-                    : "Tu tarjeta no fue cobrada. Inténtalo otra vez o contáctanos por WhatsApp."}
+                    : (failureCopy ??
+                      "Tu tarjeta no fue cobrada. Inténtalo otra vez o contáctanos por WhatsApp.")}
                 </p>
 
                 <div className="mt-7 grid sm:grid-cols-2 gap-3">
-                  <Link to="/checkout" search={{ mode: "contratar" } as any} className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full text-white font-bold shadow-xl" style={{ background: DEEP }}>
+                  <Link
+                    to="/checkout"
+                    search={{ mode: "contratar" } as never}
+                    className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full text-white font-bold shadow-xl"
+                    style={{ background: DEEP }}
+                  >
                     Reintentar pago
                   </Link>
                   <a
@@ -237,9 +282,17 @@ function WebpayReturnPage() {
                       onClick={handleMockApprove}
                       disabled={mockBusy}
                       className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full border-2 font-semibold disabled:opacity-60"
-                      style={{ borderColor: GREEN, color: GREEN, background: "color-mix(in oklab, #16a34a 6%, white)" }}
+                      style={{
+                        borderColor: GREEN,
+                        color: GREEN,
+                        background: "color-mix(in oklab, #16a34a 6%, white)",
+                      }}
                     >
-                      {mockBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                      {mockBusy ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="w-4 h-4" />
+                      )}
                       {mockBusy ? "Aprobando…" : "Aprobar manualmente (dev)"}
                     </button>
                   </div>

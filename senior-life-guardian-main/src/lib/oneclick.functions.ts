@@ -9,6 +9,7 @@ import { sendPostPaymentInstallNotifications } from "@/lib/post-payment-install-
 import { markInstallPaid } from "@/lib/install-step-sync";
 import { ensureFirstGuardianAfterPayment } from "@/lib/first-guardian-checkout";
 import { attemptOneclickRecurringCharge } from "@/lib/oneclick-renewal-charge";
+import { acceptOrReverseOneclickCharge } from "@/lib/oneclick-charge-guard";
 import {
   authorizeOneclickMallTransaction,
   buildOneclickReturnUrl,
@@ -34,10 +35,17 @@ const VALIDATION_REJECT_AMOUNT = 10_000_000;
 const VALIDATION_APPROVED_AMOUNT = 6900;
 const VALIDATION_TEST_EMAIL = "enriquecasadesign@gmail.com";
 
-function generateValidationBuyOrders(prefix: string): { mallBuyOrder: string; storeBuyOrder: string } {
-  const suffix = Date.now().toString(36).toUpperCase().replace(/[^A-Z0-9]/g, "").slice(-8);
-  let mallBuyOrder = `${prefix}${suffix}`.slice(0, 26);
-  let storeBuyOrder = `${mallBuyOrder}S`.slice(0, 26);
+function generateValidationBuyOrders(prefix: string): {
+  mallBuyOrder: string;
+  storeBuyOrder: string;
+} {
+  const suffix = Date.now()
+    .toString(36)
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(-8);
+  const mallBuyOrder = `${prefix}${suffix}`.slice(0, 26);
+  const storeBuyOrder = `${mallBuyOrder}S`.slice(0, 26);
   if (storeBuyOrder === mallBuyOrder) {
     return generateOneclickBuyOrders();
   }
@@ -120,16 +128,6 @@ function computeRenewalDate(periodo: "mensual" | "anual", from = new Date()): Da
   return renewal;
 }
 
-/** Monto fijo de prueba producci?n (Transbank pide ~$50). Quitar env tras validar. */
-function resolveProdTestCheckoutAmount(): number | null {
-  if (getOneclickMallConfig().environment !== "production") return null;
-  const raw = process.env.TRANSBANK_PROD_TEST_AMOUNT?.trim();
-  if (!raw) return null;
-  const amount = Number.parseInt(raw, 10);
-  if (!Number.isInteger(amount) || amount < 50) return null;
-  return amount;
-}
-
 /** Inicia inscripci?n Oneclick Mall + registra orden de primer cobro. */
 export const initOneclickCheckout = createServerFn({ method: "POST" })
   .inputValidator((input) =>
@@ -143,7 +141,9 @@ export const initOneclickCheckout = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     if (!isOneclickMallPaymentEnabled()) {
-      throw new Error("Oneclick Mall no est? habilitado. Configura TRANSBANK_PAYMENT_MODE=oneclick_mall.");
+      throw new Error(
+        "Oneclick Mall no est? habilitado. Configura TRANSBANK_PAYMENT_MODE=oneclick_mall.",
+      );
     }
 
     const cfg = getOneclickMallConfig();
@@ -158,13 +158,13 @@ export const initOneclickCheckout = createServerFn({ method: "POST" })
 
     if (signupErr) throw signupErr;
     if (!signup) {
-      throw new Error("No encontramos tu registro de contrataci?n. Vuelve a completar el checkout.");
+      throw new Error(
+        "No encontramos tu registro de contrataci?n. Vuelve a completar el checkout.",
+      );
     }
     const periodo = (signup.periodo as "mensual" | "anual") || data.periodo;
     const plan = normalizePlanKey(signup.plan || data.plan);
-    let amount = await resolveChargeAmountForSignup(signup, plan, periodo);
-    const prodTestAmount = resolveProdTestCheckoutAmount();
-    if (prodTestAmount != null) amount = prodTestAmount;
+    const amount = await resolveChargeAmountForSignup(signup, plan, periodo);
     const username = generateOneclickUsername(data.signupId);
     const { mallBuyOrder, storeBuyOrder } = generateOneclickBuyOrders();
     const responseUrl = buildOneclickReturnUrl();
@@ -233,9 +233,7 @@ export const initOneclickCheckout = createServerFn({ method: "POST" })
 
 /** Finaliza inscripci?n y autoriza el primer cobro (checkout). */
 export const finishOneclickCheckout = createServerFn({ method: "POST" })
-  .inputValidator((input) =>
-    z.object({ token: z.string().min(8).max(128) }).parse(input),
-  )
+  .inputValidator((input) => z.object({ token: z.string().min(8).max(128) }).parse(input))
   .handler(async ({ data }) => {
     const cfg = getOneclickMallConfig();
 
@@ -289,13 +287,15 @@ export const finishOneclickCheckout = createServerFn({ method: "POST" })
             payment_status: "failed",
             subscription_status: "payment_failed",
           })
-          .eq("id", signup.id);
+          .eq("id", signup.id)
+          .neq("payment_status", "paid");
       }
       return {
         ok: false,
         status: "INSCRIPTION_FAILED",
         responseCode: finish.responseCode,
         signupId: signup?.id ?? null,
+        reversed: false,
       };
     }
 
@@ -321,10 +321,16 @@ export const finishOneclickCheckout = createServerFn({ method: "POST" })
     });
 
     const primary = auth.details[0];
+    const decision = await acceptOrReverseOneclickCharge({
+      auth,
+      expectedAmount: amount,
+      mallBuyOrder,
+      storeBuyOrder,
+    });
     await supabaseAdmin
       .from("oneclick_transactions")
       .update({
-        status: auth.ok ? "AUTHORIZED" : primary?.status || "REJECTED",
+        status: decision.accept ? "AUTHORIZED" : decision.status,
         response_code: primary?.responseCode ?? null,
         authorization_code: primary?.authorizationCode ?? null,
         payment_type_code: primary?.paymentTypeCode ?? null,
@@ -332,9 +338,23 @@ export const finishOneclickCheckout = createServerFn({ method: "POST" })
       })
       .eq("mall_buy_order", mallBuyOrder);
 
+    if (!decision.accept && auth.ok) {
+      await supabaseAdmin.from("oneclick_transactions").insert({
+        contract_signup_id: signup.id,
+        mall_buy_order: mallBuyOrder,
+        store_buy_order: storeBuyOrder,
+        amount: primary?.amount ?? amount,
+        operation: "refund",
+        status: decision.reversed ? "REFUNDED" : "REFUND_FAILED",
+        environment: cfg.environment,
+        response_code: primary?.responseCode ?? null,
+        raw_response: toSupabaseJson(decision.refundRaw ?? {}),
+      });
+    }
+
     let installNotify: Awaited<ReturnType<typeof sendPostPaymentInstallNotifications>> | undefined;
 
-    if (auth.ok && signup.id) {
+    if (decision.accept && signup.id) {
       await recordDiscountRedemption({
         discount_code_id: signup.discount_code_id ?? null,
         payment_status: signup.payment_status ?? null,
@@ -381,12 +401,13 @@ export const finishOneclickCheckout = createServerFn({ method: "POST" })
           subscription_status: "payment_failed",
           webpay_response_code: primary?.responseCode ?? null,
         })
-        .eq("id", signup.id);
+        .eq("id", signup.id)
+        .neq("payment_status", "paid");
     }
 
     return {
-      ok: auth.ok,
-      status: primary?.status ?? "UNKNOWN",
+      ok: decision.accept,
+      status: decision.accept ? (primary?.status ?? "AUTHORIZED") : decision.status,
       responseCode: primary?.responseCode ?? null,
       authorizationCode: primary?.authorizationCode ?? null,
       amount,
@@ -395,7 +416,41 @@ export const finishOneclickCheckout = createServerFn({ method: "POST" })
       cardLast4: auth.cardLast4 ?? finish.cardLast4,
       signupId: signup.id,
       installNotify,
+      reversed: decision.reversed,
     };
+  });
+
+/** El usuario abandonó la inscripción. No se llama a finish ni se cobra. */
+export const abandonOneclickCheckout = createServerFn({ method: "POST" })
+  .inputValidator((input) => z.object({ token: z.string().min(8).max(128) }).parse(input))
+  .handler(async ({ data }) => {
+    const { data: signup } = await supabaseAdmin
+      .from(CONTRACT_SIGNUPS_TABLE)
+      .select("id,payment_status,subscription_status,oneclick_mall_buy_order")
+      .eq("oneclick_inscription_token", data.token)
+      .maybeSingle();
+
+    if (!signup) return { ok: true, found: false };
+    if (isSignupPaidAndActive(signup)) return { ok: true, alreadyPaid: true };
+
+    await supabaseAdmin
+      .from(CONTRACT_SIGNUPS_TABLE)
+      .update({
+        payment_status: "cancelled",
+        oneclick_inscription_status: "abandoned",
+      })
+      .eq("id", signup.id)
+      .neq("payment_status", "paid");
+
+    if (signup.oneclick_mall_buy_order) {
+      await supabaseAdmin
+        .from("oneclick_transactions")
+        .update({ status: "ABANDONED" })
+        .eq("mall_buy_order", signup.oneclick_mall_buy_order)
+        .eq("status", "INSCRIPTION_STARTED");
+    }
+
+    return { ok: true, found: true };
   });
 
 /** Prueba validaci?n Transbank: authorize cr?dito aprobado ($6.900, 1 cuota). */
@@ -494,7 +549,9 @@ export const authorizeOneclickRenewal = createServerFn({ method: "POST" })
 
 export const statusOneclickPayment = createServerFn({ method: "POST" })
   .inputValidator((input) =>
-    z.object({ mallBuyOrder: z.string().min(4).max(26), pin: z.string().min(1).max(64) }).parse(input),
+    z
+      .object({ mallBuyOrder: z.string().min(4).max(26), pin: z.string().min(1).max(64) })
+      .parse(input),
   )
   .handler(async ({ data }) => {
     assertAdminPin(data.pin);

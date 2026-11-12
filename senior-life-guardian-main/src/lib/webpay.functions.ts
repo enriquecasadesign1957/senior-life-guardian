@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { assertAdminPin } from "@/lib/admin-auth";
+import { gatewayChargeMatches } from "@/lib/payment-guards";
 import { normalizePlanKey, planKeySchema, periodoSchema } from "@/lib/plans";
 import { recordDiscountRedemption, resolveChargeAmountForSignup } from "@/lib/discount.functions";
 import { CONTRACT_SIGNUPS_TABLE, isSignupPaidAndActive } from "@/lib/signups-db";
@@ -7,6 +9,7 @@ import {
   buildWebpayReturnUrl,
   confirmWebpayPlusTransaction,
   createWebpayPlusTransaction,
+  refundWebpayPlusTransaction,
   generateWebpayBuyOrder,
   generateWebpaySessionId,
   getTransbankConfig,
@@ -30,11 +33,13 @@ function toSupabaseJson(value: Record<string, unknown>): Json {
  */
 export const initWebpayTransaction = createServerFn({ method: "POST" })
   .inputValidator((input) =>
-    z.object({
-      signupId: z.string().uuid(),
-      plan: planKeySchema,
-      periodo: periodoSchema,
-    }).parse(input),
+    z
+      .object({
+        signupId: z.string().uuid(),
+        plan: planKeySchema,
+        periodo: periodoSchema,
+      })
+      .parse(input),
   )
   .handler(async ({ data }) => {
     const cfg = getTransbankConfig();
@@ -49,13 +54,15 @@ export const initWebpayTransaction = createServerFn({ method: "POST" })
 
     if (signupErr) throw signupErr;
     if (!signup) {
-      throw new Error("No encontramos tu registro de contratación. Vuelve a completar el checkout.");
+      throw new Error(
+        "No encontramos tu registro de contratación. Vuelve a completar el checkout.",
+      );
     }
 
     const periodo = (signup.periodo as "mensual" | "anual") || data.periodo;
     const plan = normalizePlanKey(signup.plan || data.plan);
 
-    let amount = await resolveChargeAmountForSignup(signup, plan, periodo);
+    const amount = await resolveChargeAmountForSignup(signup, plan, periodo);
     const buyOrder = generateWebpayBuyOrder();
     const sessionId = generateWebpaySessionId(data.signupId);
     const returnUrl = buildWebpayReturnUrl();
@@ -68,7 +75,7 @@ export const initWebpayTransaction = createServerFn({ method: "POST" })
       status: "INITIATED",
       environment: cfg.environment,
     });
-    
+
     if (txInsertErr) {
       console.error("[webpay] error webpay_transactions insert:", txInsertErr);
       throw new Error(`No se pudo registrar la orden de pago: ${txInsertErr.message}`);
@@ -130,29 +137,93 @@ export const initWebpayTransaction = createServerFn({ method: "POST" })
  * Se ejecuta cuando Transbank nos devuelve al usuario con el token de pago exitoso o rechazado.
  */
 export const confirmWebpayTransaction = createServerFn({ method: "POST" })
-  .inputValidator((input) =>
-    z.object({ token: z.string().min(8).max(128) }).parse(input),
-  )
+  .inputValidator((input) => z.object({ token: z.string().min(8).max(128) }).parse(input))
   .handler(async ({ data }) => {
-    const result = await confirmWebpayPlusTransaction(data.token);
-
     const { data: tx } = await supabaseAdmin
       .from("webpay_transactions")
-      .select("id, contract_signup_id, buy_order")
+      .select("id, contract_signup_id, buy_order, session_id, amount, card_last4")
       .eq("token", data.token)
       .maybeSingle();
+
+    if (tx?.contract_signup_id) {
+      const { data: existing } = await supabaseAdmin
+        .from(CONTRACT_SIGNUPS_TABLE)
+        .select(
+          "payment_status,subscription_status,webpay_authorization_code,webpay_amount,webpay_response_code",
+        )
+        .eq("id", tx.contract_signup_id)
+        .maybeSingle();
+
+      if (existing && isSignupPaidAndActive(existing)) {
+        await ensureFirstGuardianAfterPayment(tx.contract_signup_id).catch((e) => {
+          console.error("[webpay] first guardian (alreadyActive):", e);
+        });
+        return {
+          ok: true,
+          status: "AUTHORIZED",
+          responseCode: existing.webpay_response_code ?? 0,
+          authorizationCode: existing.webpay_authorization_code ?? null,
+          amount: existing.webpay_amount ?? tx.amount,
+          buyOrder: tx.buy_order,
+          cardLast4: tx.card_last4,
+          signupId: tx.contract_signup_id,
+          alreadyConfirmed: true,
+          reversed: false,
+        };
+      }
+    }
+
+    const result = await confirmWebpayPlusTransaction(data.token);
+
+    let approved = result.ok;
+    let status = result.status;
+    let reversed = false;
+
+    if (approved) {
+      const match = gatewayChargeMatches({
+        expectedAmount: tx?.amount ?? 0,
+        returnedAmount: result.amount,
+        orders: [{ expected: tx?.buy_order ?? "", returned: result.buyOrder }],
+        expectedSessionId: tx?.session_id,
+        returnedSessionId: result.sessionId,
+      });
+      if (!tx || !match.ok) {
+        approved = false;
+        status = "AMOUNT_MISMATCH";
+        const refundAmount =
+          typeof result.amount === "number" && result.amount > 0
+            ? result.amount
+            : (tx?.amount ?? 0);
+        if (refundAmount > 0) {
+          try {
+            const refund = await refundWebpayPlusTransaction(data.token, refundAmount);
+            reversed = refund.ok;
+            if (!refund.ok) {
+              console.error("[webpay] anulación por monto distinto falló", {
+                buyOrder: tx?.buy_order ?? result.buyOrder,
+                refundAmount,
+                reason: match.ok ? "order" : match.reason,
+              });
+            }
+          } catch (error) {
+            console.error("[webpay] anulación por monto distinto", {
+              buyOrder: tx?.buy_order ?? result.buyOrder,
+              error,
+            });
+          }
+        }
+      }
+    }
 
     await supabaseAdmin
       .from("webpay_transactions")
       .update({
-        status: result.ok ? "AUTHORIZED" : result.status || "REJECTED",
+        status: approved ? "AUTHORIZED" : status || "REJECTED",
         response_code: result.responseCode,
         authorization_code: result.authorizationCode,
         card_last4: result.cardLast4,
         payment_type_code:
-          typeof result.raw.payment_type_code === "string"
-            ? result.raw.payment_type_code
-            : null,
+          typeof result.raw.payment_type_code === "string" ? result.raw.payment_type_code : null,
         raw_response: toSupabaseJson(result.raw),
       })
       .eq("token", data.token);
@@ -162,30 +233,13 @@ export const confirmWebpayTransaction = createServerFn({ method: "POST" })
     if (tx?.contract_signup_id) {
       const { data: signup } = await supabaseAdmin
         .from(CONTRACT_SIGNUPS_TABLE)
-        .select("periodo,payment_status,subscription_status,discount_code_id,webpay_authorization_code")
+        .select(
+          "periodo,payment_status,subscription_status,discount_code_id,webpay_authorization_code",
+        )
         .eq("id", tx.contract_signup_id)
         .maybeSingle();
 
-      const alreadyActive = signup ? isSignupPaidAndActive(signup) : false;
-
-      if (alreadyActive) {
-        await ensureFirstGuardianAfterPayment(tx.contract_signup_id).catch((e) => {
-          console.error("[webpay] first guardian (alreadyActive):", e);
-        });
-        return {
-          ok: true,
-          status: result.status || "AUTHORIZED",
-          responseCode: result.responseCode ?? signup?.webpay_response_code ?? 0,
-          authorizationCode: result.authorizationCode ?? signup?.webpay_authorization_code ?? null,
-          amount: result.amount,
-          buyOrder: result.buyOrder ?? tx?.buy_order ?? null,
-          cardLast4: result.cardLast4,
-          signupId: tx.contract_signup_id,
-          alreadyConfirmed: true,
-        };
-      }
-
-      if (result.ok) {
+      if (approved) {
         await recordDiscountRedemption({
           discount_code_id: signup?.discount_code_id ?? null,
           payment_status: signup?.payment_status ?? null,
@@ -235,13 +289,14 @@ export const confirmWebpayTransaction = createServerFn({ method: "POST" })
             subscription_status: "payment_failed",
             webpay_response_code: result.responseCode,
           })
-          .eq("id", tx.contract_signup_id);
+          .eq("id", tx.contract_signup_id)
+          .neq("payment_status", "paid");
       }
     }
 
     return {
-      ok: result.ok,
-      status: result.status,
+      ok: approved,
+      status,
       responseCode: result.responseCode,
       authorizationCode: result.authorizationCode,
       amount: result.amount,
@@ -249,6 +304,7 @@ export const confirmWebpayTransaction = createServerFn({ method: "POST" })
       cardLast4: result.cardLast4,
       signupId: tx?.contract_signup_id ?? null,
       installNotify,
+      reversed,
     };
   });
 
@@ -258,10 +314,12 @@ export const confirmWebpayTransaction = createServerFn({ method: "POST" })
  */
 export const mockApproveWebpay = createServerFn({ method: "POST" })
   .inputValidator((input) =>
-    z.object({
-      signupId: z.string().uuid().optional(),
-      token: z.string().min(4).max(128).optional(),
-    }).parse(input),
+    z
+      .object({
+        signupId: z.string().uuid().optional(),
+        token: z.string().min(4).max(128).optional(),
+      })
+      .parse(input),
   )
   .handler(async ({ data }) => {
     const cfg = getTransbankConfig();
@@ -272,8 +330,12 @@ export const mockApproveWebpay = createServerFn({ method: "POST" })
       throw new Error("Se requiere signupId o token.");
     }
 
-    let tx: { id: string; contract_signup_id: string | null; buy_order: string; amount: number } | null =
-      null;
+    let tx: {
+      id: string;
+      contract_signup_id: string | null;
+      buy_order: string;
+      amount: number;
+    } | null = null;
     if (data.token) {
       const { data: row } = await supabaseAdmin
         .from("webpay_transactions")
@@ -385,10 +447,12 @@ export const activateSubscription = createServerFn({ method: "POST" })
         signupId: z.string().uuid(),
         periodo: z.enum(["mensual", "anual"]),
         authorizationCode: z.string().max(64).optional(),
+        pin: z.string().min(1).max(64),
       })
       .parse(input),
   )
   .handler(async ({ data }) => {
+    assertAdminPin(data.pin);
     const now = new Date();
     const renewal = new Date(now);
     if (data.periodo === "anual") renewal.setFullYear(renewal.getFullYear() + 1);
@@ -444,4 +508,67 @@ export const cancelSubscription = createServerFn({ method: "POST" })
       .eq("id", data.signupId);
     if (error) throw error;
     return { ok: true };
+  });
+
+/** Webpay devolvió TBK_TOKEN sin token_ws: el usuario canceló. No se confirma ni se cobra. */
+export const abandonWebpayCheckout = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z
+      .object({
+        token: z.string().min(8).max(128).optional(),
+        buyOrder: z.string().min(1).max(64).optional(),
+      })
+      .refine((value) => Boolean(value.token || value.buyOrder), {
+        message: "Falta el token o la orden de compra",
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    let tx: { id: string; contract_signup_id: string | null; status: string } | null = null;
+
+    if (data.buyOrder) {
+      const { data: row } = await supabaseAdmin
+        .from("webpay_transactions")
+        .select("id, contract_signup_id, status")
+        .eq("buy_order", data.buyOrder)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      tx = row ?? null;
+    }
+    if (!tx && data.token) {
+      const { data: row } = await supabaseAdmin
+        .from("webpay_transactions")
+        .select("id, contract_signup_id, status")
+        .eq("token", data.token)
+        .maybeSingle();
+      tx = row ?? null;
+    }
+
+    if (!tx) return { ok: true, found: false };
+    if (tx.status === "AUTHORIZED") return { ok: true, alreadyPaid: true };
+
+    if (tx.contract_signup_id) {
+      const { data: signup } = await supabaseAdmin
+        .from(CONTRACT_SIGNUPS_TABLE)
+        .select("payment_status,subscription_status")
+        .eq("id", tx.contract_signup_id)
+        .maybeSingle();
+      if (signup && isSignupPaidAndActive(signup)) return { ok: true, alreadyPaid: true };
+    }
+
+    await supabaseAdmin.from("webpay_transactions").update({ status: "ABORTED" }).eq("id", tx.id);
+
+    if (!tx.contract_signup_id) return { ok: true, found: true };
+
+    await supabaseAdmin
+      .from(CONTRACT_SIGNUPS_TABLE)
+      .update({
+        payment_status: "cancelled",
+        subscription_status: "pending_payment",
+      })
+      .eq("id", tx.contract_signup_id)
+      .neq("payment_status", "paid");
+
+    return { ok: true, found: true };
   });
