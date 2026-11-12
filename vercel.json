@@ -1,12 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- ./cuidado ./vercel.json",
   "services": {
     "cuidadoweb": {
       "root": "cuidado/apps/web",
       "framework": "nextjs",
       "installCommand": "npm install --prefix ../..",
-      "buildCommand": "npm run build --prefix ../.. --workspace @cuidado/web"
+      "buildCommand": "npm run build --prefix ../.. --workspace @cuidado/web",
+      "ignoreCommand": "git diff --quiet HEAD^ HEAD -- ./cuidado ./vercel.json"
     }
   },
   "rewrites": [
