@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { rememberPagoReturn } from "@/components/payment-return";
+import { currentPayMarket, PayMarketToggle } from "@/components/pay-market-toggle";
+import { followCheckout, type CheckoutStartBody } from "@/lib/checkout-client";
 import { cleanupProjection, type CleanupPreview } from "@/lib/panel";
-import { isAllowedCheckoutUrl } from "@/lib/rescue";
 
 type SimulateBody = {
   needsPayment?: boolean;
@@ -87,13 +88,15 @@ export function CleanupPanel({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           siteId,
-          returnPath: /^\/informe\/[0-9a-f-]{36}$/i.test(window.location.pathname) ? window.location.pathname : undefined,
+          market: currentPayMarket(),
+          returnPath: /^\/informe\/[0-9a-f-]{36}$/i.test(window.location.pathname)
+            ? window.location.pathname
+            : undefined,
         }),
       });
-      const body = (await response.json()) as { url?: string; error?: { message?: string } };
-      if (typeof body.url === "string" && isAllowedCheckoutUrl(body.url) && siteId) {
+      const body = (await response.json()) as CheckoutStartBody;
+      if (siteId && followCheckout(body)) {
         rememberPagoReturn(siteId);
-        window.location.assign(body.url);
         return;
       }
       setMessage(body?.error?.message ?? "El cobro de $29 no se abrió. No se ha cobrado nada.");
@@ -178,7 +181,8 @@ export function CleanupPanel({
           ) : null}
           <p className="text-sm text-stone-600">{preview.detail}</p>
           {preview.blocked ? null : needsPayment ? (
-            <div>
+            <div className="space-y-4">
+              <PayMarketToggle />
               <button
                 type="button"
                 onClick={pay}
@@ -187,7 +191,7 @@ export function CleanupPanel({
               >
                 Optimizar base de datos ahora
               </button>
-              <p className="mt-2 text-xs text-stone-500">Se puede deshacer durante 7 días. El pago único es de $29.</p>
+              <p className="mt-2 text-xs text-stone-500">Se puede deshacer durante 7 días.</p>
             </div>
           ) : (
             <div>

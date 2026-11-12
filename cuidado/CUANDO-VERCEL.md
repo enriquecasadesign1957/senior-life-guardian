@@ -43,7 +43,15 @@ En Vercel van estas variables. `AUTH_SECRET`, `TOKEN_ENCRYPTION_KEY` y `CRON_SEC
 - `GOOGLE_PSI_API_KEY`: paso 3.
 - `ALLOW_PRIVATE_URLS` no se define, o queda en `false`.
 
-Lemon Squeezy ya tiene los productos. En Vercel basta con `LEMON_SQUEEZY_WEBHOOK_SECRET` (los buy URL y variant id tienen valor por defecto). En Lemon: Settings → Webhooks → URL `https://cuidadoweb.com/api/lemon/webhook`, eventos `order_created`, signing secret = esa variable.
+Lemon Squeezy ya tiene los productos (pago internacional). En Vercel basta con `LEMON_SQUEEZY_WEBHOOK_SECRET` (los buy URL y variant id tienen valor por defecto). En Lemon: Settings → Webhooks → URL `https://cuidadoweb.com/api/lemon/webhook`, eventos `order_created`, signing secret = esa variable.
+
+### Transbank Chile
+En el informe el usuario elige **Chile · Transbank** o **Internacional · Lemon**.
+- Rescate Chile → Webpay Plus (`TRANSBANK_CC` + `TRANSBANK_API_KEY`)
+- Plan Chile → Oneclick Mall (`TRANSBANK_ONECLICK_MALL_CC`, `TRANSBANK_ONECLICK_STORE_CC`, `TRANSBANK_ONECLICK_API_KEY`); si faltan, cae a Webpay del primer mes
+- Montos fijos CLP: `TRANSBANK_RESCATE_CLP` (default 27000), `TRANSBANK_PLAN_CLP` (default 18000)
+- `TRANSBANK_ENVIRONMENT=sandbox|production`
+- SQL Neon: aplicar `0008_payment_intents.sql`
 
 - `ADMIN_SECRET` o `CREA_CLAVES_AGENCIAS` (opcional): clave del panel `/admin/codigos`. Si defines cualquiera de las dos, esa es la clave de entrada. Si no hay ninguna, el valor por defecto es `CwAdminPanel2026`.
 

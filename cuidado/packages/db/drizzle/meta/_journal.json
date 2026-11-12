@@ -57,6 +57,13 @@
       "when": 1793760000000,
       "tag": "0007_agency_code_expires",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794500000000,
+      "tag": "0008_payment_intents",
+      "breakpoints": true
     }
   ]
 }
