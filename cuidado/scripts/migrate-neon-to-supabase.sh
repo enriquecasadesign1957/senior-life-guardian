@@ -107,32 +107,55 @@ ORIG_TABLES="$(psql "$NEON_DATABASE_URL" -Atc "SELECT count(*) FROM information_
 echo "    public tables (Neon): $ORIG_TABLES"
 
 echo "==> pg_restore → Supabase…"
-# --clean no: destino debe estar vacío o casi vacío (proyecto nuevo).
-pg_restore --dbname="$SUPABASE_DATABASE_URL" --no-owner --no-acl --verbose "$DUMP" \
-  || {
-    # pg_restore devuelve 1 con warnings menores (p.ej. comments); re-verificar tablas
-    echo "pg_restore terminó con código $?; revisando tablas…"
-  }
+# Destino = proyecto nuevo vacío. Exit 1 de pg_restore suele ser warning (ACL/owner);
+# exit >=2 es error duro. Siempre verificamos tablas y filas abajo.
+set +e
+pg_restore --dbname="$SUPABASE_DATABASE_URL" --no-owner --no-acl --verbose "$DUMP"
+RESTORE_RC=$?
+set -e
+echo "    pg_restore exit=$RESTORE_RC"
+if [[ "$RESTORE_RC" -ge 2 ]]; then
+  echo "pg_restore falló con código $RESTORE_RC." >&2
+  exit 1
+fi
+if [[ "$RESTORE_RC" -eq 1 ]]; then
+  echo "    (warnings de pg_restore; se validan tablas/filas a continuación)"
+fi
 
 DEST_TABLES="$(psql "$SUPABASE_DATABASE_URL" -Atc "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';")"
 echo "    public tables (Supabase): $DEST_TABLES"
 
-if [[ "$DUMP_MODE" != "schema" && "$DEST_TABLES" -lt 1 ]]; then
+if [[ "$DEST_TABLES" -lt 1 ]]; then
   echo "El destino no tiene tablas públicas. Falló la restauración." >&2
   exit 1
 fi
 
-echo "==> Conteos de filas (muestra)…"
-psql "$SUPABASE_DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
-SELECT 'users' AS t, count(*)::text AS n FROM users
-UNION ALL SELECT 'sites', count(*)::text FROM sites
-UNION ALL SELECT 'scan_runs', count(*)::text FROM scan_runs
-UNION ALL SELECT 'agency_invite_codes', count(*)::text FROM agency_invite_codes
-ORDER BY 1;
-SQL
+if [[ "$DUMP_MODE" != "data" && "$DEST_TABLES" -ne "$ORIG_TABLES" ]]; then
+  echo "Conteo de tablas no coincide: Neon=$ORIG_TABLES Supabase=$DEST_TABLES" >&2
+  exit 1
+fi
+
+if [[ "$DUMP_MODE" != "schema" ]]; then
+  echo "==> Comparando conteos de filas (Neon vs Supabase)…"
+  COUNT_SQL="SELECT 'users' AS t, count(*)::bigint AS n FROM users
+UNION ALL SELECT 'sites', count(*) FROM sites
+UNION ALL SELECT 'scan_runs', count(*) FROM scan_runs
+UNION ALL SELECT 'agency_invite_codes', count(*) FROM agency_invite_codes
+ORDER BY 1;"
+  ORIG_COUNTS="$(psql "$NEON_DATABASE_URL" -Atc "$COUNT_SQL")"
+  DEST_COUNTS="$(psql "$SUPABASE_DATABASE_URL" -Atc "$COUNT_SQL")"
+  echo "    Neon:"
+  echo "$ORIG_COUNTS" | sed 's/^/      /'
+  echo "    Supabase:"
+  echo "$DEST_COUNTS" | sed 's/^/      /'
+  if [[ "$ORIG_COUNTS" != "$DEST_COUNTS" ]]; then
+    echo "Los conteos de filas no coinciden. No marques el cutover como listo." >&2
+    exit 1
+  fi
+fi
 
 echo
-echo "Listo. Dump en: $DUMP"
+echo "OK restore verificado. Dump en: $DUMP"
 echo "Siguiente:"
 echo "  1. DATABASE_URL=<URI directa Supabase> npm run db:migrate   # no-op si el dump traía drizzle meta"
 echo "  2. Validar: DATABASE_URL=... node scripts/check-database-url.mjs"
