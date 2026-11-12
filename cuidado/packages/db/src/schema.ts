@@ -97,6 +97,9 @@ export const sites = pgTable(
     agencySeat: boolean("agency_seat").default(false).notNull(),
     watchUntil: timestamp("watch_until", tz),
     rescueCheckoutId: text("rescue_checkout_id").unique(),
+    tbkUser: text("tbk_user"),
+    tbkUsername: text("tbk_username"),
+    planRenewalAt: timestamp("plan_renewal_at", tz),
     connectedAt: timestamp("connected_at", tz),
     lastProbeStatus: integer("last_probe_status"),
     lastProbeAt: timestamp("last_probe_at", tz),
@@ -105,6 +108,25 @@ export const sites = pgTable(
   },
   (table) => [unique("sites_user_base_url").on(table.userId, table.baseUrl)],
 );
+
+export const paymentIntents = pgTable("payment_intents", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  purpose: text("purpose").notNull(),
+  siteId: uuid("site_id")
+    .notNull()
+    .references(() => sites.id, { onDelete: "cascade" }),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  provider: text("provider").notNull(),
+  buyOrder: text("buy_order").notNull().unique(),
+  amountClp: integer("amount_clp"),
+  status: text("status").default("pending").notNull(),
+  tbkToken: text("tbk_token"),
+  tbkUser: text("tbk_user"),
+  createdAt: timestamp("created_at", tz).defaultNow().notNull(),
+  paidAt: timestamp("paid_at", tz),
+});
 
 export const siteSecrets = pgTable("site_secrets", {
   id: uuid("id").defaultRandom().primaryKey(),

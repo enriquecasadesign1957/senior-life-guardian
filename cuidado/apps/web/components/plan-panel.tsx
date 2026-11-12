@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { rememberPagoReturn } from "@/components/payment-return";
-import { isAllowedCheckoutUrl } from "@/lib/rescue";
+import { currentPayMarket, PayMarketToggle } from "@/components/pay-market-toggle";
+import { followCheckout, type CheckoutStartBody } from "@/lib/checkout-client";
 
 export function PlanPanel({ siteId }: { siteId: string }) {
   const [message, setMessage] = useState("");
@@ -17,15 +18,15 @@ export function PlanPanel({ siteId }: { siteId: string }) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           siteId,
+          market: currentPayMarket(),
           returnPath: /^\/informe\/[0-9a-f-]{36}$/i.test(window.location.pathname)
             ? window.location.pathname
             : undefined,
         }),
       });
-      const body = (await response.json()) as { url?: string; error?: { message?: string } };
-      if (typeof body.url === "string" && isAllowedCheckoutUrl(body.url)) {
+      const body = (await response.json()) as CheckoutStartBody;
+      if (followCheckout(body)) {
         rememberPagoReturn(siteId);
-        window.location.assign(body.url);
         return;
       }
       setMessage(body?.error?.message ?? "El cobro de $19 no se abrió. No se ha cobrado nada.");
@@ -40,8 +41,11 @@ export function PlanPanel({ siteId }: { siteId: string }) {
     <div className="rounded-2xl border border-stone-200 bg-white p-6">
       <h2 className="text-2xl">Plan Cuidado</h2>
       <p className="mt-2 text-stone-700">
-        Vigilancia cada 15 minutos y una limpieza automática al mes. $19 al mes. Cancela cuando quieras.
+        Vigilancia y una limpieza automática al mes. Cancela cuando quieras.
       </p>
+      <div className="mt-4">
+        <PayMarketToggle />
+      </div>
       <button
         type="button"
         onClick={pay}

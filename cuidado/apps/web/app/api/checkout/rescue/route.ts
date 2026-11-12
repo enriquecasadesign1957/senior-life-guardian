@@ -1,49 +1,28 @@
-import { and, eq } from "drizzle-orm";
 import { rescueCheckoutSchema } from "@cuidado/contract";
-import { getDb, sites, users } from "@cuidado/db";
 import { NextResponse } from "next/server";
 import { jsonError } from "@/lib/http";
-import { ApiError } from "@/lib/errors";
-import { buildLemonCheckoutUrl } from "@/lib/lemon-checkout";
+import { resolvePayMarket } from "@/lib/market";
 import { requireUserId } from "@/lib/session";
+import { startCheckout } from "@/lib/start-checkout";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request): Promise<NextResponse> {
   try {
-    const input = rescueCheckoutSchema.parse(await request.json());
+    const raw = (await request.json()) as Record<string, unknown>;
+    const input = rescueCheckoutSchema.parse(raw);
     const userId = await requireUserId();
-    const site = (
-      await getDb()
-        .select({ id: sites.id, plan: sites.plan })
-        .from(sites)
-        .where(and(eq(sites.id, input.siteId), eq(sites.userId, userId), eq(sites.status, "connected")))
-        .limit(1)
-    )[0];
-    if (!site) {
-      throw new ApiError("SITE_REQUIRED", "Primero conecta el sitio con el código del plugin.", 409);
-    }
-    if (site.plan !== "none") {
-      throw new ApiError("ALREADY_COVERED", "Este sitio ya tiene un plan. No hace falta el pago de $29.", 409);
-    }
-
-    const user = (
-      await getDb().select({ email: users.email }).from(users).where(eq(users.id, userId)).limit(1)
-    )[0];
-    const url = buildLemonCheckoutUrl({
-      purpose: "rescue",
-      siteId: site.id,
-      userId,
-      email: user?.email,
+    const market = resolvePayMarket({
+      cookieHeader: request.headers.get("cookie"),
+      prefer: typeof raw.market === "string" ? raw.market : null,
     });
-    if (!url) {
-      throw new ApiError(
-        "CHECKOUT_UNAVAILABLE",
-        "Falta el enlace de Lemon Squeezy. Todavía no se ha cobrado nada.",
-        501,
-      );
-    }
-    return NextResponse.json({ url });
+    const result = await startCheckout({
+      purpose: "rescue",
+      siteId: input.siteId,
+      userId,
+      market,
+    });
+    return NextResponse.json(result);
   } catch (error) {
     return jsonError(error);
   }
