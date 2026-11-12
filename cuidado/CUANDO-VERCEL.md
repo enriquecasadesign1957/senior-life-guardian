@@ -17,25 +17,27 @@ Si un PR solo cambia Senior Safe (p. ej. GTM, Las Condes), GitHub igual notifica
 Mitigación en `vercel.json` de la raíz:
 
 - Cron diario (`0 14 * * *`) para que Hobby pueda publicar.
-- `ignoreCommand`: Vercel **omite** el build si el commit no toca `cuidado/` ni `vercel.json`.
+- `ignoreCommand` bajo `services.cuidadoweb` (anclado al root del repo con `git rev-parse --show-toplevel`): Vercel **omite** el build si el commit no toca `cuidado/` ni `vercel.json`. No puede ir al top-level junto con `services`.
 
 Los mails viejos del PR #17 son de cuando aún estaba el cron `*/15`. Production actual ya no usa ese schedule.
 
 La raíz del repositorio tiene un `vercel.json` que publica un solo servicio, `cuidadoweb`, desde `cuidado/apps/web`. Todo el tráfico público entra por `/`. El cron de `/api/watch` corre una vez al día (`0 14 * * *`) para que el deploy pase en Hobby; en Pro se puede volver a `*/15 * * * *`. `senior-life-guardian-main` y `wakeup-dev/web` no forman parte de este proyecto.
 
-## 1. Neon
+## 1. Postgres (Supabase — proyecto `cuidadoweb`)
 
-1. Entra en [neon.tech](https://neon.tech) y crea un proyecto llamado `cuidado`.
-2. Si aparece la región, elige São Paulo.
-3. Abre la cadena de conexión y desactiva el modo pooled. El host no debe contener `-pooler`.
-4. Copia la URI. Tiene que terminar en `sslmode=require`.
+CuidadoWeb ya no usa Neon. Usa un **proyecto Supabase propio** (no el de Alarma ni el de WakeUp). Detalle del cutover: [`MIGRATE-NEON-SUPABASE.md`](./MIGRATE-NEON-SUPABASE.md).
+
+1. En [supabase.com](https://supabase.com) crea el proyecto `cuidadoweb`.
+2. Settings → Database → Connection string → para **Vercel** elige **Session pooler** (`aws-0-*.pooler.supabase.com:5432`, user `postgres.<ref>`). Direct (`db.*`) es IPv6-only en free y Vercel no llega.
+3. No uses Transaction pooler (`:6543`): el diagnóstico necesita `pg_advisory_xact_lock`.
+4. La URI debe terminar en `sslmode=require`.
 5. Guárdala para Vercel. No la subas a Git.
 
 ## 2. Claves de la aplicación
 
 En Vercel van estas variables. `AUTH_SECRET`, `TOKEN_ENCRYPTION_KEY` y `CRON_SECRET` ya se generaron para este proyecto. Si se perdieron, crea otra de cada una con `openssl rand -base64 32`. No reutilices una clave distinta para las tres.
 
-- `DATABASE_URL`: la URI directa de Neon.
+- `DATABASE_URL`: URI **Session pooler** Supabase (`*.pooler.supabase.com:5432`, user `postgres.<ref>`). No Direct `db.*` en Vercel.
 - `AUTH_SECRET`
 - `TOKEN_ENCRYPTION_KEY`
 - `CRON_SECRET`
@@ -51,11 +53,11 @@ En el informe el usuario elige **Chile · Transbank** o **Internacional · Lemon
 - Plan Chile → Oneclick Mall (`TRANSBANK_ONECLICK_MALL_CC`, `TRANSBANK_ONECLICK_STORE_CC`, `TRANSBANK_ONECLICK_API_KEY`); si faltan, cae a Webpay del primer mes
 - Montos fijos CLP: `TRANSBANK_RESCATE_CLP` (default 27000), `TRANSBANK_PLAN_CLP` (default 18000)
 - `TRANSBANK_ENVIRONMENT=sandbox|production`
-- SQL Neon: aplicar `0008_payment_intents.sql`
+- SQL: aplicar `0008_payment_intents.sql` (ya incluido en `npm run db:migrate`)
 
 - `ADMIN_SECRET` o `CREA_CLAVES_AGENCIAS` (opcional): clave del panel `/admin/codigos`. Si defines cualquiera de las dos, esa es la clave de entrada. Si no hay ninguna, el valor por defecto es `CwAdminPanel2026`.
 
-Los códigos de prueba se crean en **Códigos** (`/admin/codigos`): eliges la vigencia (1–30 días), generas y copias. Cada código tiene un solo uso, 5 sitios y fecha de vencimiento. Ya no hace falta insertarlos a mano en Neon.
+Los códigos de prueba se crean en **Códigos** (`/admin/codigos`): eliges la vigencia (1–30 días), generas y copias. Cada código tiene un solo uso, 5 sitios y fecha de vencimiento. Ya no hace falta insertarlos a mano en la base.
 
 ## 3. PageSpeed
 

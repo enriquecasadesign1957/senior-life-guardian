@@ -15,7 +15,13 @@ export function jsonError(error: unknown): NextResponse {
       { status: 400 },
     );
   }
-  logError("unhandled", { name: error instanceof Error ? error.name : "unknown" });
+  const err = error instanceof Error ? error : undefined;
+  const pg = error as { code?: string; severity?: string } | undefined;
+  logError("unhandled", {
+    name: err?.name ?? "unknown",
+    message: err?.message?.slice(0, 200) ?? "unknown",
+    code: typeof pg?.code === "string" ? pg.code : undefined,
+  });
   return NextResponse.json(
     { error: { code: "INTERNAL", message: "No pudimos completar eso." } },
     { status: 500 },
