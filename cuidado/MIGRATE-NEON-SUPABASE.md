@@ -4,10 +4,19 @@ Proyecto **nuevo** en Supabase, separado de Alarma y WakeUp. Misma app, mismo Dr
 
 ## Por qué no el pooler :6543
 
-El diagnóstico toma `pg_advisory_xact_lock` (`apps/web/lib/locks.ts`). En Vercel usa:
+El diagnóstico toma `pg_advisory_xact_lock` (`apps/web/lib/locks.ts`).
 
-- **URI directa** `postgresql://postgres:…@db.<ref>.supabase.co:5432/postgres?sslmode=require` (preferida), o
-- **Session pooler** `…@aws-0-<region>.pooler.supabase.com:5432/postgres?sslmode=require`
+### Qué URI usar dónde
+
+| Entorno | URI | Motivo |
+|---------|-----|--------|
+| **Vercel Production / Preview** | **Session pooler** `:5432` — host `aws-0-<region>.pooler.supabase.com`, user `postgres.<ref>` | El host directo `db.*` es **solo IPv6** en free; las functions de Vercel son IPv4 → `ENETUNREACH` / 500 |
+| Migraciones / `pg_dump` desde máquina con IPv6 o add-on IPv4 | Directa `db.<ref>.supabase.co:5432`, user `postgres` | Admin / dump |
+| Nunca | Transaction pooler `:6543` / `pgbouncer=true` | Rompe `pg_advisory_xact_lock` |
+
+Session pooler (ejemplo de forma, sin password):
+
+`postgresql://postgres.<ref>:…@aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=require`
 
 No uses Transaction pooler (`:6543` / `pgbouncer=true`).
 
@@ -59,14 +68,16 @@ DATABASE_URL="$SUPABASE_DATABASE_URL" npm run db:migrate
 ### 4. Cutover Vercel
 
 1. Vercel → proyecto `cuidadoweb` → Settings → Environment Variables.
-2. Edita **Production** `DATABASE_URL` → URI directa Supabase.
-3. Redeploy Production (o “Redeploy” del último deployment).
-4. Smoke test en `https://cuidadoweb.com`:
+2. Edita **Production** `DATABASE_URL` → URI **Session pooler** del panel Supabase (`:5432`, user `postgres.<ref>`). **No** uses la directa `db.*` (IPv6).
+3. Pega la URI **tal cual** del panel (no re-encodes la password a mano). Si `node-pg` falla con `SELF_SIGNED_CERT_IN_CHAIN`, usa `sslmode=no-verify` **o** despliega el cliente con `ssl: { rejectUnauthorized: false }` y vuelve a `sslmode=require`.
+4. Redeploy Production (obligatorio tras cambiar un secret env).
+5. Smoke:
+   - `GET https://cuidadoweb.com/api/health/db` → `ok: true`, `mode: "session-pooler"` (tras merge del hardening)
    - Landing + diagnóstico de un sitio
    - Login agencia / código
    - Informe + Lemon (intl) o Transbank (cl)
    - `/admin/codigos` si usas admin
-5. Confirma que el cron `/api/watch` del día siguiente corre (logs Vercel).
+6. Confirma que el cron `/api/watch` del día siguiente corre (logs Vercel).
 
 ### 5. Cierre Neon
 

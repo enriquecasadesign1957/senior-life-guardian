@@ -28,7 +28,7 @@ La raíz del repositorio tiene un `vercel.json` que publica un solo servicio, `c
 CuidadoWeb ya no usa Neon. Usa un **proyecto Supabase propio** (no el de Alarma ni el de WakeUp). Detalle del cutover: [`MIGRATE-NEON-SUPABASE.md`](./MIGRATE-NEON-SUPABASE.md).
 
 1. En [supabase.com](https://supabase.com) crea el proyecto `cuidadoweb`.
-2. Settings → Database → Connection string → **Direct** (`db.<ref>.supabase.co:5432`).
+2. Settings → Database → Connection string → para **Vercel** elige **Session pooler** (`aws-0-*.pooler.supabase.com:5432`, user `postgres.<ref>`). Direct (`db.*`) es IPv6-only en free y Vercel no llega.
 3. No uses Transaction pooler (`:6543`): el diagnóstico necesita `pg_advisory_xact_lock`.
 4. La URI debe terminar en `sslmode=require`.
 5. Guárdala para Vercel. No la subas a Git.
@@ -37,7 +37,7 @@ CuidadoWeb ya no usa Neon. Usa un **proyecto Supabase propio** (no el de Alarma 
 
 En Vercel van estas variables. `AUTH_SECRET`, `TOKEN_ENCRYPTION_KEY` y `CRON_SECRET` ya se generaron para este proyecto. Si se perdieron, crea otra de cada una con `openssl rand -base64 32`. No reutilices una clave distinta para las tres.
 
-- `DATABASE_URL`: la URI directa de Supabase (`db.*.supabase.co:5432`).
+- `DATABASE_URL`: URI **Session pooler** Supabase (`*.pooler.supabase.com:5432`, user `postgres.<ref>`). No Direct `db.*` en Vercel.
 - `AUTH_SECRET`
 - `TOKEN_ENCRYPTION_KEY`
 - `CRON_SECRET`

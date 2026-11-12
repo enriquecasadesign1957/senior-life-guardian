@@ -42,8 +42,29 @@ if (isTransactionPooler) {
   );
 }
 
-if (!raw.includes("sslmode=require") && !raw.includes("sslmode=verify-full")) {
-  warnings.push("Añade ?sslmode=require al final de la URI.");
+if (
+  !raw.includes("sslmode=require") &&
+  !raw.includes("sslmode=verify-full") &&
+  !raw.includes("sslmode=no-verify")
+) {
+  warnings.push(
+    "Añade ?sslmode=require (o no-verify si node-pg falla con SELF_SIGNED_CERT_IN_CHAIN hasta desplegar ssl.rejectUnauthorized=false).",
+  );
+}
+
+if (isDirectSupabase) {
+  warnings.push(
+    "URI directa Supabase (db.*) es IPv6-only en el plan free. En Vercel/IPv4 usa Session pooler :5432 con user postgres.<ref>.",
+  );
+}
+
+if (isSessionPooler) {
+  const user = decodeURIComponent(parsed.username || "");
+  if (user === "postgres" || !user.includes(".")) {
+    errors.push(
+      "Session pooler requiere usuario postgres.<project-ref> (no solo postgres). Copia la URI del panel Supabase → Session pooler.",
+    );
+  }
 }
 
 if (isNeon) {
