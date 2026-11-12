@@ -46,6 +46,21 @@ if (!raw.includes("sslmode=require") && !raw.includes("sslmode=verify-full")) {
   warnings.push("Añade ?sslmode=require al final de la URI.");
 }
 
+if (isDirectSupabase) {
+  warnings.push(
+    "URI directa Supabase (db.*) es IPv6-only en el plan free. En Vercel/IPv4 usa Session pooler :5432 con user postgres.<ref>.",
+  );
+}
+
+if (isSessionPooler) {
+  const user = decodeURIComponent(parsed.username || "");
+  if (user === "postgres" || !user.includes(".")) {
+    errors.push(
+      "Session pooler requiere usuario postgres.<project-ref> (no solo postgres). Copia la URI del panel Supabase → Session pooler.",
+    );
+  }
+}
+
 if (isNeon) {
   warnings.push(
     "Sigue apuntando a Neon. Tras el cutover debe ser Supabase (proyecto cuidadoweb).",
