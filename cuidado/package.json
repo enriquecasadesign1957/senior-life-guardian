@@ -11,6 +11,8 @@
     "test": "npm run test --workspace @cuidado/web",
     "plugin:zip": "node scripts/zip-plugin.mjs",
     "db:generate": "npm run generate --workspace @cuidado/db",
-    "db:migrate": "npm run migrate --workspace @cuidado/db"
+    "db:migrate": "npm run migrate --workspace @cuidado/db",
+    "db:check-url": "node scripts/check-database-url.mjs",
+    "db:migrate-neon-supabase": "bash scripts/migrate-neon-to-supabase.sh"
   }
 }
