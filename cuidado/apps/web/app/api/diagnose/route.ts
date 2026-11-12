@@ -1,5 +1,4 @@
 import { and, desc, eq, gt, lte } from "drizzle-orm";
-import { ZodError } from "zod";
 import { DIAGNOSIS_TTL_MS, diagnoseRequestSchema } from "@cuidado/contract";
 import { findings, getDb, scanRuns, siteSecrets, sites } from "@cuidado/db";
 import { NextResponse } from "next/server";
@@ -41,30 +40,6 @@ export async function POST(request: Request): Promise<NextResponse> {
     }
     return NextResponse.json({ scanId, url: requestedUrl, reused: false });
   } catch (error) {
-    // Temporal: exponer detalle seguro para diagnosticar 500 en Production.
-    if (!(error instanceof ApiError) && !(error instanceof ZodError)) {
-      const err = error as Error & { code?: string };
-      console.error(
-        JSON.stringify({
-          event: "diagnose_unhandled",
-          name: err?.name,
-          code: err?.code,
-          message: typeof err?.message === "string" ? err.message.slice(0, 300) : "unknown",
-        }),
-      );
-      return NextResponse.json(
-        {
-          error: {
-            code: "INTERNAL",
-            message: "No pudimos completar eso.",
-            detail: typeof err?.message === "string" ? err.message.slice(0, 200) : "unknown",
-            name: err?.name ?? "unknown",
-            pgCode: typeof err?.code === "string" ? err.code : undefined,
-          },
-        },
-        { status: 500 },
-      );
-    }
     return jsonError(error);
   }
 }
