@@ -1,19 +1,15 @@
 import { createHash } from "node:crypto";
-import { getPool } from "@cuidado/db";
+import { sql } from "drizzle-orm";
+import { getDb, type Database } from "@cuidado/db";
 
-export async function withUrlLock<T>(url: string, fn: () => Promise<T>): Promise<T> {
-  const client = await getPool().connect();
+/**
+ * Serializa trabajo por URL con pg_advisory_xact_lock en la misma
+ * transacción/conexión que usa el callback (evita deadlock del pool).
+ */
+export async function withUrlLock<T>(url: string, fn: (db: Database) => Promise<T>): Promise<T> {
   const key = createHash("sha256").update(url).digest().readInt32BE(0);
-  try {
-    await client.query("BEGIN");
-    await client.query("SELECT pg_advisory_xact_lock($1)", [key]);
-    const result = await fn();
-    await client.query("COMMIT");
-    return result;
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  } finally {
-    client.release();
-  }
+  return getDb().transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(${key})`);
+    return fn(tx as unknown as Database);
+  });
 }

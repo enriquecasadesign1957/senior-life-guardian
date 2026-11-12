@@ -39,7 +39,12 @@ export async function assertPublicUrl(input: string): Promise<URL> {
     throw new ApiError("URL_BLOCKED", "Esa dirección no se puede revisar desde aquí.", 400);
   }
   if (!literal) {
-    const records = await lookup(url.hostname, { all: true, verbatim: true });
+    let records: { address: string; family: number }[];
+    try {
+      records = await lookup(url.hostname, { all: true, verbatim: true });
+    } catch {
+      throw new ApiError("URL_BLOCKED", "Esa dirección no se puede revisar desde aquí.", 400);
+    }
     if (records.length === 0 || records.some((record) => isPrivateAddress(record.address))) {
       throw new ApiError("URL_BLOCKED", "Esa dirección no se puede revisar desde aquí.", 400);
     }
