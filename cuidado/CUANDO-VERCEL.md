@@ -17,7 +17,7 @@ Si un PR solo cambia Senior Safe (p. ej. GTM, Las Condes), GitHub igual notifica
 Mitigación en `vercel.json` de la raíz:
 
 - Cron diario (`0 14 * * *`) para que Hobby pueda publicar.
-- `ignoreCommand` bajo `services.cuidadoweb`: Vercel **omite** el build si el commit no toca `cuidado/` ni `vercel.json` (no puede ir al top-level junto con `services`).
+- `ignoreCommand` bajo `services.cuidadoweb` (anclado al root del repo con `git rev-parse --show-toplevel`): Vercel **omite** el build si el commit no toca `cuidado/` ni `vercel.json`. No puede ir al top-level junto con `services`.
 
 Los mails viejos del PR #17 son de cuando aún estaba el cron `*/15`. Production actual ya no usa ese schedule.
 
