@@ -180,9 +180,7 @@ export default async function InformePage({ params, searchParams }: PageProps) {
           </a>
         </div>
       ) : null}
-      {summary?.wordpress !== false && (!site || !isWatchActive(site, now)) ? (
-        <HirePanel initialUrl={scan.requestedUrl} />
-      ) : null}
+      {!site || !isWatchActive(site, now) ? <HirePanel initialUrl={scan.requestedUrl} /> : null}
 
       {!gate ? (
         <section className="grid gap-4 sm:grid-cols-3">
