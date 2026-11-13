@@ -4,6 +4,7 @@ import { isAllowedCheckoutUrl } from "@/lib/rescue";
 
 export type CheckoutStartBody = {
   url?: string;
+  siteId?: string;
   provider?: "lemon" | "transbank_webpay" | "transbank_oneclick";
   token?: string;
   error?: { message?: string };

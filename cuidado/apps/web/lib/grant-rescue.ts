@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { getDb, sites } from "@cuidado/db";
 import { rescueWatchUntil } from "./watch";
 
@@ -31,7 +31,7 @@ export async function grantPaidRescue(input: {
         and(
           eq(sites.id, input.siteId),
           eq(sites.userId, input.userId),
-          eq(sites.status, "connected"),
+          inArray(sites.status, ["pending", "connected"]),
           eq(sites.plan, "none"),
         ),
       )
@@ -46,7 +46,13 @@ export async function grantPaidRescue(input: {
     await db
       .select({ plan: sites.plan, watchUntil: sites.watchUntil, checkoutId: sites.rescueCheckoutId })
       .from(sites)
-      .where(and(eq(sites.id, input.siteId), eq(sites.userId, input.userId), eq(sites.status, "connected")))
+      .where(
+        and(
+          eq(sites.id, input.siteId),
+          eq(sites.userId, input.userId),
+          inArray(sites.status, ["pending", "connected"]),
+        ),
+      )
       .limit(1)
   )[0];
   if (!existing || existing.plan === "none") return { status: "rejected" };

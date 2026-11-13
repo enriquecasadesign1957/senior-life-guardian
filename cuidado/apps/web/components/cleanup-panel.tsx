@@ -187,9 +187,10 @@ export function CleanupPanel({
                 type="button"
                 onClick={pay}
                 disabled={pending}
-                className="rounded-full bg-pine px-6 py-4 text-base font-medium text-white disabled:opacity-60"
+                className="w-full rounded-2xl bg-[#9f3a45] px-6 py-5 text-left text-lg font-semibold text-white disabled:opacity-60"
               >
-                Optimizar base de datos ahora
+                <span className="block">{pending ? "Abriendo el cobro…" : "Contratar Rescate"}</span>
+                <span className="mt-1 block text-sm font-medium text-white/90">$27.000 · $29 USD</span>
               </button>
               <p className="mt-2 text-xs text-stone-500">Se puede deshacer durante 7 días.</p>
             </div>

@@ -8,6 +8,7 @@ import {
 } from "@/components/cleanup-undo";
 import { AgencySeatClaim } from "@/components/agency-seat-claim";
 import { IncidentNotice } from "@/components/incident-notice";
+import { HirePanel } from "@/components/hire-panel";
 import { PlanPanel } from "@/components/plan-panel";
 import { ReliefCompare } from "@/components/relief-compare";
 import { OutsideRepair } from "@/components/outside-repair";
@@ -167,6 +168,19 @@ export default async function InformePage({ params, searchParams }: PageProps) {
       </div>
 
       <ScoreMeter score={gate ? null : scan.performanceScore} gate={gate} />
+
+      {site && site.status === "pending" && isWatchActive(site, now) ? (
+        <div className="rounded-3xl bg-pine px-6 py-8 text-white">
+          <p className="font-display text-3xl tracking-tight">El plan ya está pagado</p>
+          <p className="mt-3 text-base leading-relaxed text-white/90">
+            Quedó ligado a {site.baseUrl}. Instala el conector para aplicar la limpieza o la vigilancia.
+          </p>
+          <a href="/#conector" className="mt-5 inline-flex rounded-full bg-white px-5 py-3 text-sm font-medium text-pine">
+            Instalar el conector
+          </a>
+        </div>
+      ) : null}
+      {!site || !isWatchActive(site, now) ? <HirePanel initialUrl={scan.requestedUrl} /> : null}
 
       {!gate ? (
         <section className="grid gap-4 sm:grid-cols-3">

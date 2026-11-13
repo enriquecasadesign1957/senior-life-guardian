@@ -67,12 +67,18 @@ export const cleanupUndoSchema = z.object({
   batchId: z.string().uuid(),
 });
 
-export const rescueCheckoutSchema = cleanupSimulateSchema.extend({
-  returnPath: z
-    .string()
-    .regex(/^\/informe\/[0-9a-fA-F-]{36}$/)
-    .optional(),
-});
+export const rescueCheckoutSchema = z
+  .object({
+    siteId: z.string().uuid().optional(),
+    url: z.string().trim().min(4).max(300).optional(),
+    returnPath: z
+      .string()
+      .regex(/^\/informe\/[0-9a-fA-F-]{36}$/)
+      .optional(),
+  })
+  .refine((value) => Boolean(value.siteId || (value.url && value.url.trim().length >= 4)), {
+    message: "Escribe la dirección del sitio.",
+  });
 
 export const payloadCountsSchema = z.object({
   revisions: z.number().int().nonnegative(),

@@ -54,11 +54,15 @@ export function PayMarketToggle({ className = "" }: { className?: string }) {
           Internacional · Lemon
         </button>
       </div>
-      <p className="mt-3 text-xs leading-5 text-stone-600">
-        {market === "cl"
-          ? `Chile: Rescate ${formatClp(RESCATE_CLP_DEFAULT)} · Plan ${formatClp(PLAN_CLP_DEFAULT)}/mes (Webpay / Oneclick).`
-          : "Internacional: Rescate $29 USD · Plan $19 USD/mes (Lemon Squeezy)."}
-      </p>
+      <div className="mt-3 space-y-1 text-xs leading-5">
+        <p className={market === "cl" ? "font-medium text-ink" : "text-stone-500"}>
+          Chile · Transbank: Rescate {formatClp(RESCATE_CLP_DEFAULT)} · Plan {formatClp(PLAN_CLP_DEFAULT)}/mes (Webpay /
+          Oneclick).
+        </p>
+        <p className={market === "intl" ? "font-medium text-ink" : "text-stone-500"}>
+          Internacional · Lemon: Rescate $29 USD · Plan $19 USD/mes (Lemon Squeezy).
+        </p>
+      </div>
     </div>
   );
 }
