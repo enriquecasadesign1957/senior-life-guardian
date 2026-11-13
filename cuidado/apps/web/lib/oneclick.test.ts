@@ -5,10 +5,10 @@ import { oneclickEmailForUser, oneclickUsernameForUser } from "./oneclick-user";
 test("Oneclick no manda el correo sintético de la sesión", () => {
   assert.equal(
     oneclickEmailForUser("session-11111111-2222-3333-4444-555555555555@users.cuidadoweb.invalid"),
-    "hola@cuidadoweb.com",
+    "enriquecasadesign@gmail.com",
   );
-  assert.equal(oneclickEmailForUser("  "), "hola@cuidadoweb.com");
-  assert.equal(oneclickEmailForUser(null), "hola@cuidadoweb.com");
+  assert.equal(oneclickEmailForUser("  "), "enriquecasadesign@gmail.com");
+  assert.equal(oneclickEmailForUser(null), "enriquecasadesign@gmail.com");
 });
 
 test("Oneclick conserva un correo real", () => {

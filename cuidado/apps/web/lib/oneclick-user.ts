@@ -1,5 +1,5 @@
 const ANON_EMAIL_SUFFIX = "@users.cuidadoweb.invalid";
-const ONECLICK_FALLBACK_EMAIL = "hola@cuidadoweb.com";
+const ONECLICK_FALLBACK_EMAIL = "enriquecasadesign@gmail.com";
 
 /** Transbank rechaza el correo sintético de la sesión anónima. */
 export function oneclickEmailForUser(email: string | null | undefined): string {
