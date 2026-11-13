@@ -50,9 +50,10 @@ export function PlanPanel({ siteId }: { siteId: string }) {
         type="button"
         onClick={pay}
         disabled={pending}
-        className="mt-4 rounded-full bg-pine px-6 py-4 text-base font-medium text-white disabled:opacity-60"
+        className="mt-4 w-full rounded-2xl bg-ink px-6 py-5 text-left text-lg font-semibold text-white disabled:opacity-60"
       >
-        {pending ? "Abriendo el cobro…" : "Activar Plan Cuidado"}
+        <span className="block">{pending ? "Abriendo el cobro…" : "Activar Plan"}</span>
+        <span className="mt-1 block text-sm font-medium text-white/80">$18.000/mes · $19 USD/mes</span>
       </button>
       {message ? (
         <p className="mt-4 text-sm text-stone-700" role="status">

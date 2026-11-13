@@ -7,7 +7,7 @@ import { ConnectorPanel } from "@/components/connector-panel";
 import { Checks, Limits } from "@/components/landing/marks";
 import { WhatHappened } from "@/components/landing/what-happened";
 import { useLanguage } from "@/components/language-provider";
-import { PayMarketToggle } from "@/components/pay-market-toggle";
+import { HirePanel } from "@/components/hire-panel";
 import type { MsgKey } from "@/lib/i18n";
 
 const partnerMailto =
@@ -157,8 +157,8 @@ export function LandingClient() {
                 <p className="font-display text-4xl">$29</p>
                 <p className="text-sm text-stone-600">{t("rescueOnce")}</p>
                 <a
-                  href="#conector"
-                  className="mt-6 inline-block rounded-full bg-pine px-5 py-3 text-sm font-medium text-white"
+                  href="#contratar"
+                  className="mt-6 inline-block rounded-2xl bg-[#9f3a45] px-6 py-5 text-lg font-semibold text-white"
                 >
                   {t("rescueCta")}
                 </a>
@@ -209,13 +209,19 @@ export function LandingClient() {
                 <p className="text-sm text-stone-300">{t("planLabel")}</p>
                 <p className="font-display text-5xl">$19</p>
                 <p className="text-sm text-stone-300">{t("heroMonth")}</p>
-                <a href="#conector" className="mt-6 inline-block rounded-full bg-white px-5 py-3 text-sm font-medium text-ink">
+                <a href="#contratar" className="mt-6 inline-block rounded-2xl bg-white px-6 py-5 text-lg font-semibold text-ink">
                   {t("planCta")}
                 </a>
                 <p className="mt-3 max-w-sm text-xs leading-5 text-stone-300">{t("planHireHint")}</p>
               </div>
             </article>
           </div>
+        </div>
+      </section>
+
+      <section className="border-y border-stone-200 bg-paper">
+        <div className="mx-auto max-w-3xl px-6 py-16">
+          <HirePanel />
         </div>
       </section>
 
@@ -230,7 +236,6 @@ export function LandingClient() {
             <figcaption className="mt-3 text-sm text-stone-500">{t("connectorCaption")}</figcaption>
           </figure>
           <div className="space-y-6">
-            <PayMarketToggle />
             <ConnectorPanel />
           </div>
         </div>

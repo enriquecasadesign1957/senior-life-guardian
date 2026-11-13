@@ -18,7 +18,7 @@ export async function grantPaidCuidado(input: {
       and(
         eq(sites.id, input.siteId),
         eq(sites.userId, input.userId),
-        eq(sites.status, "connected"),
+        inArray(sites.status, ["pending", "connected"]),
         inArray(sites.plan, ["none", "rescue"]),
       ),
     )
@@ -29,7 +29,13 @@ export async function grantPaidCuidado(input: {
     await db
       .select({ plan: sites.plan })
       .from(sites)
-      .where(and(eq(sites.id, input.siteId), eq(sites.userId, input.userId), eq(sites.status, "connected")))
+      .where(
+        and(
+          eq(sites.id, input.siteId),
+          eq(sites.userId, input.userId),
+          inArray(sites.status, ["pending", "connected"]),
+        ),
+      )
       .limit(1)
   )[0];
   if (!existing) return { status: "rejected" };

@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { getDb, scanRuns, sites } from "@cuidado/db";
 import { isWatchActive } from "./watch";
 
@@ -41,9 +41,10 @@ export async function findPagoInformeHref(input: {
       plan: sites.plan,
       watchUntil: sites.watchUntil,
       status: sites.status,
+      baseUrl: sites.baseUrl,
     })
     .from(sites)
-    .where(and(eq(sites.userId, input.userId), eq(sites.status, "connected")));
+    .where(and(eq(sites.userId, input.userId), inArray(sites.status, ["pending", "connected"])));
 
   const active = owned.filter((site) => {
     if (input.purpose === "cuidado") return site.plan === "cuidado" && isWatchActive(site, now);
@@ -75,6 +76,16 @@ export async function findPagoInformeHref(input: {
       .orderBy(desc(scanRuns.createdAt))
       .limit(1)
   )[0];
-  if (!latest) return null;
-  return `/informe/${latest.id}?siteId=${site.id}`;
+  if (latest) return `/informe/${latest.id}?siteId=${site.id}`;
+
+  const byUrl = (
+    await db
+      .select({ id: scanRuns.id })
+      .from(scanRuns)
+      .where(and(eq(scanRuns.requestedUrl, site.baseUrl), eq(scanRuns.status, "ready")))
+      .orderBy(desc(scanRuns.createdAt))
+      .limit(1)
+  )[0];
+  if (!byUrl) return `/#conector`;
+  return `/informe/${byUrl.id}?siteId=${site.id}`;
 }
