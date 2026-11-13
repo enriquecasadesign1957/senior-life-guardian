@@ -5,79 +5,8 @@ import { buildPublicPageMeta } from "@/lib/seo";
 import { PLAN_KEY } from "@/lib/plans";
 import {
   CONVENIO_LAS_CONDES,
-  CONVENIO_LAS_CONDES_URL,
-  convenioCheckoutPath,
   convenioPrecio,
 } from "@/lib/convenio-las-condes";
-
-const GRAPHICS = [
-  {
-    src: "/convenio-las-condes/banner.png",
-    title: "Banner para web",
-    detail: "1200 × 628 px",
-    href: "/convenio-las-condes/banner.png",
-  },
-  {
-    src: "/convenio-las-condes/cuadrado.png",
-    title: "Pieza para redes",
-    detail: "1080 × 1080 px",
-    href: "/convenio-las-condes/cuadrado.png",
-  },
-  {
-    src: "/convenio-las-condes/ficha.png",
-    title: "Ficha para imprimir",
-    detail: "Ficha A4",
-    href: "/convenio-las-condes/ficha.png",
-  },
-] as const;
-
-const PLANTILLA = [
-  {
-    src: "/convenio-las-condes/tv-feed-1.png",
-    title: "Lámina 1",
-    detail: "Feed 1080 × 1350",
-    href: "/convenio-las-condes/tv-feed-1.png",
-  },
-  {
-    src: "/convenio-las-condes/tv-feed-2.png",
-    title: "Lámina 2",
-    detail: "Feed 1080 × 1350",
-    href: "/convenio-las-condes/tv-feed-2.png",
-  },
-  {
-    src: "/convenio-las-condes/tv-historia.png",
-    title: "Historia",
-    detail: "1080 × 1920",
-    href: "/convenio-las-condes/tv-historia.png",
-  },
-] as const;
-
-const INSTAGRAM = [
-  {
-    src: "/convenio-las-condes/ig-anuncio.png",
-    title: "Anuncio",
-    detail: "Feed 1080 × 1350",
-    href: "/convenio-las-condes/ig-anuncio.png",
-  },
-  {
-    src: "/convenio-las-condes/ig-precios.png",
-    title: "Precios",
-    detail: "Feed 1080 × 1350",
-    href: "/convenio-las-condes/ig-precios.png",
-  },
-  {
-    src: "/convenio-las-condes/ig-como.png",
-    title: "Qué es",
-    detail: "Feed 1080 × 1350",
-    href: "/convenio-las-condes/ig-como.png",
-  },
-  {
-    src: "/convenio-las-condes/ig-historia.png",
-    title: "Historia",
-    detail: "1080 × 1920",
-    href: "/convenio-las-condes/ig-historia.png",
-  },
-] as const;
 
 export const Route = createFileRoute("/las-condes")({
   head: () =>
@@ -150,60 +79,6 @@ function LasCondesPage() {
             <Step n="3" title="La familia recibe el aviso" text="Hasta 3 familiares, por WhatsApp, SMS y llamada." />
           </div>
         </section>
-
-        <section className="max-w-6xl mx-auto px-6 py-12 md:py-16">
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Material para difundir el convenio</h2>
-          <p className="mt-3 text-muted-foreground max-w-2xl">
-            Estas piezas se pueden enviar a la Municipalidad de Las Condes y usar en la web. El enlace público es {CONVENIO_LAS_CONDES_URL}.
-          </p>
-          <h3 className="mt-8 text-lg font-bold">Plantilla oficial Tarjeta Vecino</h3>
-          <p className="mt-2 text-sm text-muted-foreground max-w-2xl">
-            Categoría Salud. Lámina 1, lámina 2 e historia, listas para la Municipalidad.
-          </p>
-          <div className="mt-4 grid md:grid-cols-3 gap-6">
-            {PLANTILLA.map((item) => (
-              <GraphicCard key={item.src} item={item} />
-            ))}
-          </div>
-          <h3 className="mt-10 text-lg font-bold">Reel</h3>
-          <p className="mt-2 text-sm text-muted-foreground max-w-2xl">
-            1080 × 1920, unos 20 segundos. Anuncia el convenio. La música se agrega al publicarlo.
-          </p>
-          <figure className="mt-4 max-w-sm">
-            <video
-              src="/convenio-las-condes/tv-reel.mp4"
-              poster="/convenio-las-condes/tv-reel-poster.jpg"
-              controls
-              playsInline
-              preload="metadata"
-              className="w-full rounded-3xl bg-black"
-            />
-            <figcaption className="mt-3">
-              <div className="font-bold">Convenio Tarjeta Vecino</div>
-              <div className="text-sm text-muted-foreground">1080 × 1920</div>
-              <a
-                href="/convenio-las-condes/tv-reel.mp4"
-                download
-                className="inline-block mt-3 text-sm font-semibold underline"
-                style={{ color: "var(--brand-petrol-deep)" }}
-              >
-                Descargar
-              </a>
-            </figcaption>
-          </figure>
-          <h3 className="mt-10 text-lg font-bold">Instagram</h3>
-          <div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {INSTAGRAM.map((item) => (
-              <GraphicCard key={item.src} item={item} />
-            ))}
-          </div>
-          <h3 className="mt-10 text-lg font-bold">Municipalidad y web</h3>
-          <div className="mt-4 grid md:grid-cols-3 gap-6">
-            {GRAPHICS.map((item) => (
-              <GraphicCard key={item.src} item={item} />
-            ))}
-          </div>
-        </section>
       </main>
       <SiteFooter />
       <WhatsAppFloat />
@@ -261,25 +136,7 @@ function OfferCard({
           Anual
         </Link>
       </div>
-      <p className="mt-4 text-xs text-muted-foreground break-all">
-        alarmaseniorsafe.cl{convenioCheckoutPath(code, "mensual")}
-      </p>
     </article>
-  );
-}
-
-function GraphicCard({ item }: { item: { src: string; title: string; detail: string; href: string } }) {
-  return (
-    <figure className="rounded-3xl border border-border overflow-hidden bg-card shadow-sm">
-      <img src={item.src} alt={item.title} className="w-full h-auto bg-[#0d4f5c]" />
-      <figcaption className="p-4">
-        <div className="font-bold">{item.title}</div>
-        <div className="text-sm text-muted-foreground">{item.detail}</div>
-        <a href={item.href} download className="inline-block mt-3 text-sm font-semibold underline" style={{ color: "var(--brand-petrol-deep)" }}>
-          Descargar
-        </a>
-      </figcaption>
-    </figure>
   );
 }
 
