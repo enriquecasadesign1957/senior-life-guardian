@@ -3,6 +3,7 @@ import { getDb, paymentIntents, sites, users } from "@cuidado/db";
 import { ApiError } from "@/lib/errors";
 import { buildLemonCheckoutUrl, type LemonPurpose } from "@/lib/lemon-checkout";
 import { planAmountClp, rescueAmountClp, type PayMarket } from "@/lib/market";
+import { oneclickEmailForUser, oneclickUsernameForUser } from "@/lib/oneclick-user";
 import { isOneclickConfigured, startOneclickInscription } from "@/lib/transbank-oneclick";
 import {
   createWebpayPlusTransaction,
@@ -160,7 +161,7 @@ async function startOneclickPlan(input: {
       .where(eq(users.id, input.userId))
       .limit(1)
   )[0];
-  const email = user?.email || "hola@cuidadoweb.com";
+  const email = oneclickEmailForUser(user?.email);
   const username = oneclickUsernameForUser(input.userId);
   const amount = planAmountClp();
   const buyOrder = generateWebpayBuyOrder("CWO");
@@ -192,6 +193,4 @@ async function startOneclickPlan(input: {
   return { provider: "transbank_oneclick", url: started.urlWebpay, token: started.token };
 }
 
-export function oneclickUsernameForUser(userId: string): string {
-  return `cw${userId.replace(/-/g, "").slice(0, 12)}`;
-}
+export { oneclickEmailForUser, oneclickUsernameForUser };
