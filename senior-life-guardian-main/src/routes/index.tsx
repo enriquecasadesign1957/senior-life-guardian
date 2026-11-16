@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { isDemoMode } from "@/lib/demo/demo-config";
 import {
   Shield, MessageCircle, MapPin, CheckCircle2,
@@ -48,6 +50,7 @@ import { CANCELLATION_POLICY_SUMMARY } from "@/lib/subscription-cancellation-pol
 import { SENIOR_SAFE_PLAY_STORE_URL } from "@/lib/app-url";
 import { CONVENIO_LAS_CONDES, convenioPrecio } from "@/lib/convenio-las-condes";
 import { isInternational, paymentLabel, SUPPORT_EMAIL } from "@/lib/market";
+import { getProdTestCheckoutAmount } from "@/lib/oneclick.functions";
 
 export const Route = createFileRoute("/")({
   head: () => {
@@ -1363,6 +1366,42 @@ function Field({ label, type = "text", placeholder, value, onChange }: { label: 
   );
 }
 
+function TrialMonthBanner() {
+  const loadTestCharge = useServerFn(getProdTestCheckoutAmount);
+  const [amount, setAmount] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (isInternational) return;
+    let active = true;
+    void loadTestCharge()
+      .then((result) => {
+        if (active) setAmount(result.amount);
+      })
+      .catch(() => {
+        if (active) setAmount(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [loadTestCharge]);
+
+  if (amount == null) return null;
+
+  return (
+    <a
+      href={checkoutUrl()}
+      className="block bg-[#f59e0b] px-4 py-4 text-center text-[#1c1408] hover:brightness-105 md:py-5"
+    >
+      <span className="block text-2xl font-extrabold tracking-tight md:text-4xl">
+        Primer mes de prueba solo ${formatPlanPrice(amount)}
+      </span>
+      <span className="mt-1 block text-base font-semibold md:text-xl">
+        Plan mensual, anual, Tarjeta Vecino y Gold Mayor
+      </span>
+    </a>
+  );
+}
+
 function Landing() {
   if (isDemoMode()) {
     return <Navigate to="/demo" search={{ institucion: "las-condes" }} replace />;
@@ -1371,6 +1410,7 @@ function Landing() {
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
       <SiteHeader />
+      <TrialMonthBanner />
       <main>
         <Hero />
         {isInternational ? null : <ConvenioLasCondes />}

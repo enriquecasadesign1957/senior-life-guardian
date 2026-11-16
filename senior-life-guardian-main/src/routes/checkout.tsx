@@ -529,6 +529,12 @@ function CheckoutPage() {
             <h1 className="mt-5 text-3xl md:text-5xl font-bold tracking-tight text-foreground leading-[1.1]">
               Contrata Senior Safe
             </h1>
+            {testCharge != null && (
+              <p className="mt-6 text-2xl md:text-4xl font-extrabold leading-tight tracking-tight text-foreground">
+                <span className="block text-[#b45309]">Oferta de tiempo limitado.</span>
+                El primer cobro es de prueba de ${fmt(testCharge)} en el plan mensual, el anual, Tarjeta Vecino y Gold Mayor. Desde la siguiente renovación se cobra el valor del plan que te corresponda.
+              </p>
+            )}
             <p className="mt-4 text-base md:text-lg text-muted-foreground">
               Pagas con Oneclick (Transbank). Si contrata un familiar, su teléfono recibe las alertas.
               Si contrata el adulto mayor, ese teléfono queda en la app y se pide el número de un guardián.
@@ -778,15 +784,10 @@ function CheckoutPage() {
                     <p className="font-semibold text-foreground">
                       Al pagar autorizas los cobros automáticos de tu suscripción
                     </p>
-                    {testCharge != null && (
-                      <p className="font-semibold text-foreground">
-                        El primer mes es un cobro de prueba de ${fmt(testCharge)}. Desde la siguiente renovación se cobra el valor del plan (${fmt(price)} {yearly ? "al año" : "al mes"}).
-                      </p>
-                    )}
                     <ul className="space-y-2 list-disc pl-4">
                       {(testCharge != null
                         ? [
-                            `Al inscribir tu tarjeta en Transbank Oneclick pagas $${fmt(testCharge)} como cobro de prueba del primer mes. Si marcas la casilla opcional, autorizas a Senior Safe a debitar automáticamente el valor del plan ($${fmt(price)} ${yearly ? "al año" : "al mes"}) en cada renovación.`,
+                            `Al inscribir tu tarjeta en Transbank Oneclick pagas $${fmt(testCharge)} como cobro de prueba del primer período, en el plan mensual, el anual, Tarjeta Vecino o Gold Mayor. Si marcas la casilla opcional, autorizas a Senior Safe a debitar automáticamente el valor del plan que te corresponda ($${fmt(price)} ${yearly ? "al año" : "al mes"}) en cada renovación.`,
                           ]
                         : RECURRING_BILLING_DISCLOSURE_BULLETS
                       ).map((line) => (
