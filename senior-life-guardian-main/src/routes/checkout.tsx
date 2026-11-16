@@ -1,12 +1,11 @@
-import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { z } from "zod";
 import {
-  Shield, Lock, CreditCard, Clock, CheckCircle2, ArrowRight,
-  Bell, MapPin, MessageCircle, Users, Heart, Loader2, AlertCircle, Tag, X,
+  Lock, CreditCard, CheckCircle2, Loader2, AlertCircle, Tag,
 } from "lucide-react";
-import { SiteHeader, SiteFooter } from "@/components/site-layout";
+import { SiteHeader } from "@/components/site-layout";
 import { createPurchaseSignup } from "@/lib/purchase-signup.functions";
 import { validateDiscountViaApi } from "@/lib/validate-discount-api";
 import { initOneclickCheckout } from "@/lib/oneclick.functions";
@@ -18,7 +17,6 @@ import { saveCheckoutDraft } from "@/lib/checkout-draft";
 import {
   PLAN,
   PLAN_KEY,
-  annualSavingsClp,
   formatPlanPrice,
   normalizePlanKey,
   planKeySchema,
@@ -26,7 +24,6 @@ import {
 } from "@/lib/plans";
 import { WhatsAppFloat } from "@/components/whatsapp-float";
 import { toast } from "sonner";
-import { CANCELLATION_POLICY_BULLETS } from "@/lib/subscription-cancellation-policy";
 import {
   RECURRING_BILLING_DISCLOSURE_BULLETS,
   RECURRING_BILLING_DISCLOSURE_FOOTER,
@@ -99,11 +96,8 @@ function CheckoutRoute() {
 }
 
 
-const PETROL = "var(--brand-petrol)";
 const DEEP = "var(--brand-petrol-deep)";
 const GREEN = "#16a34a";
-
-const CHECKOUT_FEATURE_ICONS = [Bell, MessageCircle, MapPin, Users, Heart, Clock, Shield] as const;
 
 const phoneField = z
   .string()
@@ -194,7 +188,6 @@ function CheckoutPage() {
 
   const listPrice = yearly ? PLAN.yearly : PLAN.monthly;
   const price = appliedDiscount?.finalPrice ?? listPrice;
-  const savings = useMemo(() => annualSavingsClp(), []);
   const planKey = PLAN_KEY;
   const periodo = yearly ? "anual" : "mensual";
 
@@ -525,7 +518,7 @@ function CheckoutPage() {
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-[1fr_420px] gap-8">
+          <div className="max-w-xl mx-auto">
               {/* FORM */}
               <form onSubmit={onSubmit} className="bg-card border border-border rounded-3xl p-6 md:p-8 shadow-sm space-y-7">
                 <div>
@@ -829,10 +822,6 @@ function CheckoutPage() {
                   </p>
                 )}
 
-                <p className="text-center text-xs text-muted-foreground -mt-2">
-                  Al continuar aceptas los <Link to="/terminos" className="underline">Términos</Link> y la <Link to="/privacidad" className="underline">Política de privacidad</Link>.
-                </p>
-
                 {!import.meta.env.PROD && (
                   <div className="mt-4 pt-5 border-t border-dashed border-border">
                     <div className="flex items-center justify-between mb-2">
@@ -860,104 +849,9 @@ function CheckoutPage() {
                   </div>
                 )}
               </form>
-
-              {/* SUMMARY */}
-              <aside className="space-y-5 lg:sticky lg:top-24 self-start">
-                <div className="bg-card border border-border rounded-3xl p-6 md:p-7 shadow-sm">
-                  <div className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground mb-2">Resumen</div>
-                  <div className="flex items-baseline justify-between">
-                    <h3 className="text-xl font-bold text-foreground">{PLAN.displayName}</h3>
-                    <span
-                      className="text-xs px-2.5 py-1 rounded-full font-semibold"
-                      style={{ background: "color-mix(in oklab, #16a34a 14%, white)", color: GREEN }}
-                    >
-                      Pago previo obligatorio
-                    </span>
-                  </div>
-
-                  <div className="mt-5 flex items-baseline gap-1.5 flex-wrap">
-                    {appliedDiscount && (
-                      <span className="text-lg text-muted-foreground line-through mr-1">${fmt(listPrice)}</span>
-                    )}
-                    <span className="text-4xl font-bold tracking-tight text-foreground">${fmt(price)}</span>
-                    <span className="text-muted-foreground text-sm">/{yearly ? "año" : "mes"}</span>
-                  </div>
-                  {appliedDiscount && (
-                    <div className="mt-2 text-sm font-semibold" style={{ color: GREEN }}>
-                      Convenio {appliedDiscount.code}: −{appliedDiscount.percentOff}% (−${fmt(appliedDiscount.discountAmount)})
-                    </div>
-                  )}
-                  {yearly && (
-                    <div className="mt-1 text-sm font-semibold" style={{ color: GREEN }}>
-                      {PLAN.yearlySavingsLabel} (${fmt(savings)} menos que 12 meses)
-                    </div>
-                  )}
-
-                  <div
-                    className="mt-5 p-4 rounded-2xl border"
-                    style={{
-                      borderColor: "color-mix(in oklab, #16a34a 30%, white)",
-                      background: "color-mix(in oklab, #16a34a 6%, white)",
-                    }}
-                  >
-                    <div className="flex items-start gap-3">
-                      <Shield className="w-5 h-5 mt-0.5 shrink-0" style={{ color: GREEN }} />
-                      <div className="text-sm text-foreground leading-relaxed">
-                        <strong>Acceso tras confirmar el pago en Transbank.</strong>
-                        <br />
-                        <span className="text-muted-foreground">
-                          Luego practicas el botón de emergencia en modo simulación (sin Twilio).
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-5">
-                    <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Incluye</div>
-                    <ul className="space-y-2.5">
-                      {PLAN.features.map((label, i) => {
-                        const Icon = CHECKOUT_FEATURE_ICONS[i] ?? CheckCircle2;
-                        return (
-                        <li key={label} className="flex items-start gap-3 text-sm text-foreground">
-                          <Icon className="w-4 h-4 mt-0.5 shrink-0" style={{ color: PETROL }} />
-                          <span>{label}</span>
-                        </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                </div>
-
-                {/* Trust */}
-                <div className="bg-card border border-border rounded-3xl p-6 grid grid-cols-2 gap-4 shadow-sm">
-                  <Trust icon={CreditCard} title="Oneclick" sub="Pago en CLP" />
-                  <Trust icon={Lock} title="SSL 256-bit" sub="Datos cifrados" />
-                  <Trust icon={MessageCircle} title="Soporte 24/7" sub="WhatsApp directo" />
-                  <Trust icon={X} title="Sin permanencia" sub="Sin cargo extra al cancelar" />
-                </div>
-
-                <div className="bg-card border border-border rounded-3xl p-6 shadow-sm">
-                  <div className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground mb-3">
-                    Cancelación y reembolsos
-                  </div>
-                  <ul className="space-y-2.5 text-sm text-muted-foreground leading-relaxed list-disc pl-4">
-                    {CANCELLATION_POLICY_BULLETS.map((line) => (
-                      <li key={line}>{line}</li>
-                    ))}
-                  </ul>
-                  <p className="mt-4 text-xs text-muted-foreground">
-                    Al continuar aceptas esta política y nuestros{" "}
-                    <Link to="/terminos" className="font-semibold underline" style={{ color: DEEP }}>
-                      Términos y Condiciones
-                    </Link>
-                    .
-                  </p>
-                </div>
-              </aside>
             </div>
         </div>
       </main>
-      <SiteFooter />
       <WhatsAppFloat />
     </div>
   );
@@ -979,20 +873,6 @@ function Field({
         className={`w-full px-4 py-3 rounded-xl border bg-background text-foreground text-base outline-none transition focus:border-foreground/40 ${error ? "border-destructive" : "border-border"}`}
       />
       {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
-    </div>
-  );
-}
-
-function Trust({ icon: Icon, title, sub }: { icon: typeof Shield; title: string; sub: string }) {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "color-mix(in oklab, var(--brand-petrol) 10%, white)", color: DEEP }}>
-        <Icon className="w-5 h-5" />
-      </div>
-      <div className="min-w-0">
-        <div className="text-sm font-bold text-foreground truncate">{title}</div>
-        <div className="text-[11px] text-muted-foreground truncate">{sub}</div>
-      </div>
     </div>
   );
 }
