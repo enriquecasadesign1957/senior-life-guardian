@@ -8,7 +8,7 @@ import {
 import { SiteHeader } from "@/components/site-layout";
 import { createPurchaseSignup } from "@/lib/purchase-signup.functions";
 import { validateDiscountViaApi } from "@/lib/validate-discount-api";
-import { initOneclickCheckout } from "@/lib/oneclick.functions";
+import { getProdTestCheckoutAmount, initOneclickCheckout } from "@/lib/oneclick.functions";
 import { redirectToOneclickInscription } from "@/lib/oneclick-redirect";
 import { initWebpayTransaction, mockApproveWebpay } from "@/lib/webpay.functions";
 import { redirectToWebpayPlus } from "@/lib/webpay-redirect";
@@ -157,6 +157,7 @@ function CheckoutPage() {
   const initWebpay = useServerFn(initWebpayTransaction);
   const initOneclick = useServerFn(initOneclickCheckout);
   const mockApprove = useServerFn(mockApproveWebpay);
+  const loadTestCharge = useServerFn(getProdTestCheckoutAmount);
 
   const [yearly, setYearly] = useState(search.periodo === "anual");
   const [form, setForm] = useState({
@@ -182,12 +183,28 @@ function CheckoutPage() {
   const [vecinoError, setVecinoError] = useState<string | null>(null);
   const [vecinoAlternateCode, setVecinoAlternateCode] = useState<string | null>(null);
   const [vecinoLoading, setVecinoLoading] = useState(false);
+  const [testCharge, setTestCharge] = useState<number | null>(null);
   const discountRequestRef = useRef(0);
   const urlCodigoAppliedRef = useRef(false);
   const discountEmailRef = useRef("");
 
   const listPrice = yearly ? PLAN.yearly : PLAN.monthly;
   const price = appliedDiscount?.finalPrice ?? listPrice;
+  const payNow = testCharge ?? price;
+
+  useEffect(() => {
+    let active = true;
+    void loadTestCharge()
+      .then((result) => {
+        if (active) setTestCharge(result.amount);
+      })
+      .catch(() => {
+        if (active) setTestCharge(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [loadTestCharge]);
   const planKey = PLAN_KEY;
   const periodo = yearly ? "anual" : "mensual";
 
@@ -761,8 +778,18 @@ function CheckoutPage() {
                     <p className="font-semibold text-foreground">
                       Al pagar autorizas los cobros automáticos de tu suscripción
                     </p>
+                    {testCharge != null && (
+                      <p className="font-semibold text-foreground">
+                        El primer mes es un cobro de prueba de ${fmt(testCharge)}. Desde la siguiente renovación se cobra el valor del plan (${fmt(price)} {yearly ? "al año" : "al mes"}).
+                      </p>
+                    )}
                     <ul className="space-y-2 list-disc pl-4">
-                      {RECURRING_BILLING_DISCLOSURE_BULLETS.map((line) => (
+                      {(testCharge != null
+                        ? [
+                            `Al inscribir tu tarjeta en Transbank Oneclick pagas $${fmt(testCharge)} como cobro de prueba del primer mes. Si marcas la casilla opcional, autorizas a Senior Safe a debitar automáticamente el valor del plan ($${fmt(price)} ${yearly ? "al año" : "al mes"}) en cada renovación.`,
+                          ]
+                        : RECURRING_BILLING_DISCLOSURE_BULLETS
+                      ).map((line) => (
                         <li key={line}>{line}</li>
                       ))}
                     </ul>
@@ -811,7 +838,7 @@ function CheckoutPage() {
                   ) : (
                     <>
                       <CreditCard className="w-5 h-5" />
-                      Pagar con Oneclick · ${fmt(price)}
+                      Pagar con Oneclick · ${fmt(payNow)}
                     </>
                   )}
                 </button>

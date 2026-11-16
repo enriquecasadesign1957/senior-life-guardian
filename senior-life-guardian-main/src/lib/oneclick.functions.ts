@@ -121,7 +121,7 @@ function computeRenewalDate(periodo: "mensual" | "anual", from = new Date()): Da
 }
 
 /** Monto fijo de prueba producci?n (Transbank pide ~$50). Quitar env tras validar. */
-function resolveProdTestCheckoutAmount(): number | null {
+export function resolveProdTestCheckoutAmount(): number | null {
   if (getOneclickMallConfig().environment !== "production") return null;
   const raw = process.env.TRANSBANK_PROD_TEST_AMOUNT?.trim();
   if (!raw) return null;
@@ -129,6 +129,11 @@ function resolveProdTestCheckoutAmount(): number | null {
   if (!Number.isInteger(amount) || amount < 50) return null;
   return amount;
 }
+
+/** El checkout muestra este monto solo cuando el primer cobro real es el de prueba. */
+export const getProdTestCheckoutAmount = createServerFn({ method: "GET" }).handler(async () => {
+  return { amount: resolveProdTestCheckoutAmount() };
+});
 
 /** Inicia inscripci?n Oneclick Mall + registra orden de primer cobro. */
 export const initOneclickCheckout = createServerFn({ method: "POST" })
