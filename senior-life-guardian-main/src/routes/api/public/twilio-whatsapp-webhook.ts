@@ -19,6 +19,7 @@ import {
 } from "@/lib/twilio-inbound";
 import { isEmergencyAlertAckMessage, processWhatsAppAlertAck } from "@/lib/whatsapp-alert-ack";
 import { saveWhatsAppInboxMessage } from "@/lib/whatsapp-inbox";
+import { notifyWhatsAppInquiry } from "@/lib/admin-activity-notice";
 import {
   processWhatsAppActivation,
   tryAutoActivatePaidSignup,
@@ -75,6 +76,7 @@ async function handleCommercialInbox(
     peerPhone: phone,
     body: rawBody,
   });
+  await notifyWhatsAppInquiry({ phone, message: rawBody });
 
   if (isOptOutMessage(textUpper)) {
     return replyCommercial(

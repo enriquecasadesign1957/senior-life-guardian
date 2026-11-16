@@ -21,6 +21,7 @@ import { SAME_PHONE_GUARDIAN_MESSAGE, sameUserPhone } from "@/lib/phone-utils";
 import { RECURRING_BILLING_CONSENT_VERSION } from "@/lib/recurring-billing-consent";
 import { consultarTarjetaVecino } from "@/lib/tarjeta-vecino.server";
 import { lasCondesTier, parseChileanRut } from "@/lib/tarjeta-vecino";
+import { notifyNewAccount } from "@/lib/admin-activity-notice";
 import type { Database } from "@/integrations/supabase/types";
 
 type SignupInsert = Database["public"]["Tables"]["contract_signups"]["Insert"];
@@ -191,7 +192,18 @@ export const createPurchaseSignup = createServerFn({ method: "POST" })
     const inserted = await writeSignup("insert", null, payload, tarjetaVecino);
     if (!inserted) throw new Error("No pudimos crear la orden de compra.");
 
-    await savePendingFirstGuardian(inserted.id, guardianForCheckout(data));
+    const guardian = guardianForCheckout(data);
+    await savePendingFirstGuardian(inserted.id, guardian);
+    await notifyNewAccount({
+      nombre: data.nombre,
+      email,
+      telefono: data.telefono,
+      plan: data.plan,
+      periodo: data.periodo,
+      discountCode: rawCode,
+      contractor: data.contractor,
+      guardianPhone: guardian.telefono,
+    });
 
     return { signup: inserted, created: true };
   });
