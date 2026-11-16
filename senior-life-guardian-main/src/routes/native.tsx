@@ -599,7 +599,7 @@ function NativeApp() {
         </div>
         <h1 className="text-3xl font-extrabold mb-2">Senior Safe</h1>
         <p className="text-white/80 text-center mb-8 max-w-xs">
-          Ingresa el correo con el que te registraste en alarmaseniorsafe.cl
+          La familia escribe una vez el correo del plan. Después solo queda el botón rojo.
         </p>
         <div className="w-full max-w-sm space-y-3">
           <Label htmlFor="email" className="text-white/90">Correo registrado</Label>
@@ -660,14 +660,6 @@ function NativeApp() {
         </div>
       </header>
 
-      {!guideDismissed && installStep !== "ready" && (
-        <InstallStepGuideBanner
-          step={installStep}
-          signupId={userId}
-          onDismiss={() => setGuideDismissed(true)}
-        />
-      )}
-
       <main className="flex-1 flex flex-col px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] max-w-md mx-auto w-full">
         {/* Estado */}
         <section
@@ -680,57 +672,21 @@ function NativeApp() {
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <div>
-              <div className="text-2xl font-bold leading-tight">Protección activa 24/7</div>
+              <div className="text-2xl font-bold leading-tight">Listo</div>
               <div className="text-sm text-white/90">
-                {familyCount > 0 ? `${familyCount} guardián${familyCount === 1 ? "" : "es"} conectado${familyCount === 1 ? "" : "s"}` : "Sin guardianes configurados"}
+                {contacts[0]?.nombre && contacts[0].nombre !== "Familiar"
+                  ? `Si pides ayuda, avisamos a ${contacts[0].nombre}.`
+                  : "Si pides ayuda, avisamos a tu familia."}
               </div>
             </div>
           </div>
-          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-            <button
-              type="button"
-              onClick={() => requestGps(true)}
-              className="inline-flex items-center gap-1.5 underline-offset-2 hover:underline"
-              aria-label={gpsOk ? "GPS activo" : "Activar GPS"}
-            >
-              <MapPin className="w-4 h-4" /> GPS {gpsOk ? "activo" : "tocar para activar"}
-            </button>
-            {fallMotionSupported ? (
-              <button
-                type="button"
-                onClick={handleFallPermission}
-                className="inline-flex items-center gap-1.5 underline-offset-2 hover:underline"
-                aria-label={fallMonitoring ? "Sensor de caídas activo" : "Activar sensor de caídas"}
-              >
-                <Activity className="w-4 h-4" />
-                Caídas {fallMonitoring ? "activo" : fallNeedsPermission ? "tocar para activar" : "inactivo"}
-              </button>
-            ) : (
-              <span className="inline-flex items-center gap-1.5 opacity-80">
-                <Activity className="w-4 h-4" /> Caídas no disponible
-              </span>
-            )}
-            <span className="inline-flex items-center gap-1.5">
-              <Users className="w-4 h-4" /> {familyCount}
-            </span>
-          </div>
-          {fallMotionSupported && (
-            <button
-              type="button"
-              onClick={probarCuentaRegresiva}
-              className="mt-3 text-xs text-white/85 underline underline-offset-2"
-            >
-              Probar cuenta regresiva (simulación)
-            </button>
-          )}
         </section>
 
         {/* BOTÓN EMERGENCIA */}
         <div className="flex-1 flex flex-col items-center justify-center py-2">
           {!sosGpsPrimed && (
             <p className="mb-3 text-center text-sm font-semibold text-red-700 max-w-[20rem]">
-              Primera pulsación: activa ubicación
-              {fallMotionSupported ? " y caídas" : ""} y WhatsApp (sin avisar a nadie).
+              La primera vez solo enciende la ubicación. No avisa a nadie.
             </p>
           )}
           <button
@@ -754,42 +710,27 @@ function NativeApp() {
             {familyCount > 0 ? (
               <>Avisaremos a <strong className="text-foreground">{familyCount} guardián{familyCount === 1 ? "" : "es"}</strong> con tu ubicación.</>
             ) : (
-              <>Configura tus guardianes en alarmaseniorsafe.cl</>
+              <>Tu familia recibe el aviso en su celular.</>
             )}
           </p>
         </div>
 
-        {/* BOTÓN ESTOY BIEN — flujo independiente (NO emergencia, NO llamadas, NO escalamiento) */}
-        <button
-          type="button"
-          disabled={!userId || wellnessBusy}
-          onClick={async () => {
-            if (!userId) return;
-            setWellnessBusy(true);
-            // GPS opcional, sin bloquear si falla o no se otorga.
-            try {
-              const gps = await getCurrentCoords({ highAccuracy: false, timeoutMs: 4000, maximumAgeMs: 60_000 });
-              const res = await sendWellness({
-                data: { signupId: userId, accessToken: requireSeniorAccessToken(userId), gps },
-              });
-              if (res.recipients === 0) {
-                toast.success("Marcado como: Estoy bien 💚", { description: "No hay guardianes configurados." });
-              } else {
-                toast.success("Estoy bien 💚 — aviso enviado", {
-                  description: `Tus ${res.recipients} guardián${res.recipients === 1 ? "" : "es"} recibirá${res.recipients === 1 ? "" : "n"} un mensaje informativo.`,
-                });
-              }
-            } catch (e: any) {
-              toast.error("No se pudo enviar el aviso", { description: e?.message ?? "Reintenta." });
-            } finally {
-              setWellnessBusy(false);
-            }
-          }}
-          className="mt-4 w-full h-16 rounded-2xl text-white text-lg font-bold flex items-center justify-center gap-2 shadow-lg active:scale-[0.98] transition disabled:opacity-60"
-          style={{ background: GREEN }}
-        >
-          {wellnessBusy ? <Loader2 className="w-6 h-6 animate-spin" /> : <><Heart className="w-6 h-6" /> Estoy bien</>}
-        </button>
+        {fallMotionSupported && fallNeedsPermission && (
+          <section aria-label="Detección de caídas" className="bg-card border border-border rounded-3xl p-5 mt-5 shadow-sm">
+            <h2 className="text-lg font-bold text-foreground">Detección de caídas</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Toca una vez para que el celular pueda avisar si hay una caída.
+            </p>
+            <button
+              type="button"
+              onClick={() => void handleFallPermission()}
+              className="mt-4 w-full py-4 rounded-2xl text-white font-bold"
+              style={{ background: DEEP }}
+            >
+              Activar
+            </button>
+          </section>
+        )}
 
         {/* Banner ack: tu familia ya fue notificada (no bloqueante) */}
         {ackInfo && (
@@ -806,28 +747,6 @@ function NativeApp() {
           </div>
         )}
 
-        <button
-          type="button"
-          onClick={openPinAndFamily}
-          className="mt-3 w-full h-12 rounded-2xl text-white text-sm font-semibold flex items-center justify-center gap-2 shadow-md"
-          style={{ background: DEEP }}
-        >
-          <KeyRound className="w-4 h-4" /> {pinConfigured ? "PIN y familiares" : "Crear PIN y agregar familiares"}
-        </button>
-        {pinConfigured && (
-          <p className="mt-2 text-xs text-muted-foreground text-center">
-            Si olvidaste tu PIN, elige «Olvidé mi PIN» dentro del diálogo para recibir un código por correo.
-          </p>
-        )}
-
-        {/* Guardianes: gestión en /app con token senior (no portal familia OTP) */}
-        <button
-          type="button"
-          onClick={goToFamilyAdmin}
-          className="mt-2 w-full h-12 rounded-2xl border text-foreground text-sm font-semibold flex items-center justify-center gap-2 bg-white/70"
-        >
-          <Users className="w-4 h-4" /> Mis Guardianes
-        </button>
       </main>
 
 
@@ -951,17 +870,6 @@ function NativeApp() {
         />
       )}
 
-      <PinGateDialog
-        open={pinGateOpen}
-        signupId={userId}
-        pinConfigured={pinConfigured}
-        onClose={() => setPinGateOpen(false)}
-        onPinConfigured={() => setPinConfigured(true)}
-        onSuccess={() => {
-          setPinGateOpen(false);
-          goToFamilyAdmin();
-        }}
-      />
     </div>
   );
 }

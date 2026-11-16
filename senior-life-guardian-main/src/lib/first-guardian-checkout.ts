@@ -159,8 +159,35 @@ export async function createFirstGuardianAfterPayment(
   return { ok: true, created: true };
 }
 
+/** Si el checkout no trajo otro guardián, quien pagó queda como el primero. */
+async function rememberPayerAsGuardian(signupId: string): Promise<void> {
+  const existing = await listFamilyContacts(signupId);
+  if (existing.length > 0) return;
+  if (await readPendingFirstGuardian(signupId)) return;
+
+  const { data: signup, error } = await supabaseAdmin
+    .from(CONTRACT_SIGNUPS_TABLE)
+    .select("telefono")
+    .eq("id", signupId)
+    .maybeSingle();
+  if (error) {
+    console.error("[rememberPayerAsGuardian]", error.message);
+    return;
+  }
+
+  const telefono = signup?.telefono?.trim() ?? "";
+  if (telefono.length < 8) return;
+
+  await savePendingFirstGuardian(signupId, {
+    nombre: "Familiar",
+    telefono,
+    parentesco: "Familiar",
+  });
+}
+
 /** Idempotente: asegura guardián del checkout tras pago (incluye reintentos / alreadyActive). */
 export async function ensureFirstGuardianAfterPayment(signupId: string): Promise<void> {
+  await rememberPayerAsGuardian(signupId);
   const result = await createFirstGuardianAfterPayment(signupId);
   if (!result.ok && result.skipped !== "no_pending_guardian") {
     throw new Error(result.skipped ?? "first_guardian_failed");

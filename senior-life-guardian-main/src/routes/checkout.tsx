@@ -480,8 +480,8 @@ function CheckoutPage() {
               Contrata Senior Safe
             </h1>
             <p className="mt-4 text-base md:text-lg text-muted-foreground">
-              Solo 3 datos y pagas con Oneclick (Transbank) en menos de 30 segundos. El guardián se
-              inscribe después del pago.
+              Solo 3 datos y pagas con Oneclick (Transbank). Quien paga queda como primer guardián.
+              En el celular del adulto mayor solo queda el botón rojo.
             </p>
           </div>
 
@@ -549,7 +549,7 @@ function CheckoutPage() {
                 <div>
                   <label className="text-sm font-bold text-foreground mb-1 block">3. Datos para pagar e instalar</label>
                   <p className="text-xs text-muted-foreground mb-3">
-                    Solo 3 datos. Guardián y dirección se completan después del pago (menos de 1 minuto).
+                    El teléfono de quien paga recibe las alertas. Otros familiares se agregan después, desde su propio celular.
                   </p>
                   <div className="space-y-4">
                     <Field

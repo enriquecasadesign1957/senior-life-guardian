@@ -16,11 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { isInternational } from "@/lib/market";
 import { detectPlatform, isMobileDevice, isNativeApp, isPwaStandalone } from "@/lib/device";
-import {
-  APK_DOWNLOAD_URL,
-  buildNativeHandoffUrl,
-  markAndroidApkAcknowledged,
-} from "@/lib/install-config";
+import { buildNativeHandoffUrl, markAndroidApkAcknowledged } from "@/lib/install-config";
 import {
   ensureInstallPromptCapture,
   getCapturedInstallPrompt,
@@ -38,7 +34,7 @@ import {
 } from "@/lib/post-payment";
 import { WhatsAppActivarCta } from "@/components/whatsapp-activar-cta";
 import { InstallNotifyBanner } from "@/components/install-notify-banner";
-import { PostPaymentProfileForm } from "@/components/post-payment-profile-form";
+import { SENIOR_SAFE_PLAY_STORE_URL } from "@/lib/app-url";
 import type { PostPaymentInstallNotifyResult } from "@/lib/post-payment-install-notify";
 
 const DEEP = "var(--brand-petrol-deep)";
@@ -231,22 +227,14 @@ export function PostPaymentInstallScreen({
     persistSignupHandoff(id, showPaymentSuccess ? { subscription_status: "active" } : undefined);
     clearRequiresPwaInstall();
 
-    // Android + APK: no abrir el panel web en el navegador (confunde con la app real).
     if (platform.isAndroid && !simulateIos && !isPwaStandalone() && !isNativeApp()) {
       markAndroidApkAcknowledged();
-      toast.success("Abre Senior Safe desde el ícono en tu pantalla de inicio.");
       window.location.href = buildNativeHandoffUrl(id, "postpay");
       return;
     }
 
-    // iPhone PWA: entrar directo, sin modo entrenamiento (pruebas opcionales después).
-    if (effectiveIsIOS) {
-      navigate({ to: "/app", search: buildAppHandoffSearch(id, { training: false }) });
-      return;
-    }
-
-    navigate({ to: "/app", search: buildAppHandoffSearch(id, { training: true }) });
-  }, [navigate, signupId, showPaymentSuccess, platform.isAndroid, simulateIos, effectiveIsIOS]);
+    navigate({ to: "/app", search: buildAppHandoffSearch(id, { training: false }) });
+  }, [navigate, signupId, showPaymentSuccess, platform.isAndroid, simulateIos]);
 
   const handleInstallClick = async () => {
     setInstalling(true);
@@ -256,9 +244,8 @@ export function PostPaymentInstallScreen({
         setShowIosGuide(true);
         return;
       }
-      // Android: APK real (misma ruta que InstallAppModal — evita confundir web con app).
       if (platform.isAndroid && !simulateIos) {
-        window.location.assign(APK_DOWNLOAD_URL);
+        window.open(SENIOR_SAFE_PLAY_STORE_URL, "_blank", "noopener,noreferrer");
         setShowAndroidGuide(true);
         return;
       }
@@ -273,11 +260,6 @@ export function PostPaymentInstallScreen({
     } finally {
       setInstalling(false);
     }
-  };
-
-  const handleAndroidApkInstalled = () => {
-    markAndroidApkAcknowledged();
-    setInstalled(true);
   };
 
   return (
@@ -399,10 +381,6 @@ export function PostPaymentInstallScreen({
             : "pb-10"
         }`}
       >
-        {showPaymentSuccess && (
-          <PostPaymentProfileForm signupId={signupId} />
-        )}
-
         {showPaymentSuccess && !seniorSimpleMode && (
           <div className="mb-6 space-y-4">
             <InstallNotifyBanner notify={installNotify} />
@@ -427,7 +405,6 @@ export function PostPaymentInstallScreen({
             needsSafariOnIos={needsSafariOnIos}
             onInstall={handleInstallClick}
             onContinue={continueToApp}
-            onAndroidApkInstalled={handleAndroidApkInstalled}
           />
         ) : (
           <DesktopInstallPanel installPageUrl={installPageUrl} qrSrc={qrImageUrl(installPageUrl)} />
@@ -709,7 +686,6 @@ function MobileInstallPanel({
   needsSafariOnIos,
   onInstall,
   onContinue,
-  onAndroidApkInstalled,
 }: {
   installed: boolean;
   installing: boolean;
@@ -722,7 +698,6 @@ function MobileInstallPanel({
   needsSafariOnIos: boolean;
   onInstall: () => void;
   onContinue: () => void;
-  onAndroidApkInstalled: () => void;
 }) {
   if (installed) {
     return (
@@ -802,7 +777,7 @@ function MobileInstallPanel({
               <>
                 <Download className="w-7 h-7 mr-2" />
                 {isAndroid
-                  ? "Descargar mi app"
+                  ? "Instalar desde Google Play"
                   : isIOS
                     ? "Ver los 3 pasos"
                     : "Instalar aplicación"}
@@ -812,14 +787,14 @@ function MobileInstallPanel({
 
           {seniorSimpleMode && isAndroid && !showAndroidGuide && (
             <p className="text-center text-lg text-foreground font-medium">
-              Luego abre el archivo descargado y toca Instalar.
+              Se abre Google Play. Después vuelve aquí y toca el botón rojo.
             </p>
           )}
 
           {!seniorSimpleMode && (
             <p className="text-center text-base text-muted-foreground leading-relaxed">
               {isAndroid
-                ? "Se descargará el archivo APK. Instálalo y luego confirma abajo."
+                ? "Se abre Google Play. Instala Senior Safe y luego abre el botón rojo."
                 : hasDeferredPrompt
                   ? "Toca el botón y confirma «Instalar» en el mensaje del navegador."
                   : "Si no aparece el mensaje automático, sigue la guía paso a paso debajo."}
@@ -841,30 +816,20 @@ function MobileInstallPanel({
       {showAndroidGuide && !isIOS && (
         <div className="rounded-2xl border-2 p-4 space-y-3" style={{ borderColor: PETROL }}>
           <div className="font-bold flex items-center gap-2 text-lg">
-            <Smartphone className="w-5 h-5" /> {seniorSimpleMode ? "Último paso" : "Instalar APK en Android"}
+            <Smartphone className="w-5 h-5" /> {seniorSimpleMode ? "Último paso" : "Instalar en Android"}
           </div>
           <ol className="space-y-2 list-decimal list-inside text-foreground leading-relaxed text-base">
-            {seniorSimpleMode ? (
-              <>
-                <li>Abre <b>SeniorSafe.apk</b> cuando termine la descarga.</li>
-                <li>Si pregunta, permite instalar desde Chrome.</li>
-                <li>Toca <b>Instalar</b> y abre la app desde el ícono.</li>
-              </>
-            ) : (
-              <>
-                <li>Cuando termine la descarga, abre el archivo <b>SeniorSafe.apk</b>.</li>
-                <li>Si el teléfono lo pide, permite <b>Instalar apps desconocidas</b> para Chrome.</li>
-                <li>Toca <b>Instalar</b> y abre Senior Safe desde el ícono nuevo.</li>
-              </>
-            )}
+            <li>En Google Play toca <b>Instalar</b>.</li>
+            <li>Cuando termine, vuelve a esta pantalla.</li>
+            <li>Toca <b>Abrir el botón rojo</b>.</li>
           </ol>
           {isAndroid && (
             <Button
-              onClick={onAndroidApkInstalled}
+              onClick={onContinue}
               className="w-full h-14 text-lg font-bold rounded-xl"
               style={{ background: DEEP, color: "white" }}
             >
-              Ya instalé la app
+              Abrir el botón rojo
             </Button>
           )}
         </div>
@@ -881,11 +846,9 @@ function DesktopInstallPanel({
   qrSrc: string;
 }) {
   const steps = [
-    "Abre el enlace en el celular del adulto mayor (puedes copiarlo o reenviarlo por WhatsApp).",
-    "Se abrirá alarmaseniorsafe.cl con tu cuenta ya activa.",
-    "En Android: pulsa «Descargar Senior Safe (Android)» e instala el APK.",
-    "En iPhone: sigue los pasos para agregar a la pantalla de inicio.",
-    "Abre Senior Safe desde el ícono — el botón rojo ya está listo.",
+    "Abre el enlace en el celular del adulto mayor.",
+    "En Android se abre Google Play. En iPhone son 3 toques en Safari.",
+    "Al abrir Senior Safe, el adulto mayor solo ve el botón rojo.",
   ];
 
   const copyLink = async () => {
