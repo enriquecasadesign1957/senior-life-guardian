@@ -18,6 +18,7 @@ import { sendPostPaymentInstallNotifications } from "@/lib/post-payment-install-
 import { ensureFirstGuardianAfterPayment } from "@/lib/first-guardian-checkout";
 import { markInstallPaid } from "@/lib/install-step-sync";
 import { deleteOneclickMallInscription } from "@/lib/transbank-oneclick-mall";
+import { resolveProdTestCheckoutAmount } from "@/lib/oneclick.functions";
 
 /** Serializa la respuesta cruda de Transbank al tipo Json de Supabase. */
 function toSupabaseJson(value: Record<string, unknown>): Json {
@@ -56,6 +57,8 @@ export const initWebpayTransaction = createServerFn({ method: "POST" })
     const plan = normalizePlanKey(signup.plan || data.plan);
 
     let amount = await resolveChargeAmountForSignup(signup, plan, periodo);
+    const prodTestAmount = resolveProdTestCheckoutAmount();
+    if (prodTestAmount != null) amount = prodTestAmount;
     const buyOrder = generateWebpayBuyOrder();
     const sessionId = generateWebpaySessionId(data.signupId);
     const returnUrl = buildWebpayReturnUrl();

@@ -5,7 +5,6 @@ import {
   ArrowRight,
   CheckCircle2,
   Download,
-  KeyRound,
   MapPin,
   MessageCircle,
   Shield,
@@ -57,41 +56,23 @@ const RED = "#dc2626";
 const STEPS = [
   {
     n: 1,
-    title: "Contrata el Plan Único",
+    title: "La familia contrata",
     desc: isInternational
-      ? "Entra a alarmaseniorsafe.com, elige mensual o anual y paga con Lemon Squeezy. Al terminar verás un código QR o un enlace para el celular del adulto mayor."
-      : "Entra a alarmaseniorsafe.cl, elige mensual o anual y paga con Webpay Plus. Al terminar verás un código QR o un enlace para el celular del adulto mayor.",
-    tip: "Guarda el comprobante de pago por si lo necesitas después.",
+      ? "Entra a alarmaseniorsafe.com, elige mensual o anual y paga con Lemon Squeezy. El teléfono de quien paga queda como primer guardián y recibe las alertas."
+      : "Entra a alarmaseniorsafe.cl, elige mensual o anual y paga con Oneclick. Si contrata un familiar, su teléfono recibe las alertas. Si contrata el adulto mayor, ese teléfono queda en la app y debe indicar otro número, el de un guardián.",
+    tip: "Otros familiares se agregan después desde el portal de la familia, en su propio celular.",
   },
   {
     n: 2,
-    title: "Descarga la app en el celular (Android)",
-    desc: "En Google Play busca “Senior Safe” o abre play.google.com/store/apps/details?id=cl.alarmaseniorsafe.app. Instala e inicia sesión con el mismo correo del plan. En iPhone usa la guía Safari más abajo.",
-    tip: "La app oficial de Android ya está en Google Play.",
+    title: "Instala en el celular del adulto mayor",
+    desc: "Abre el enlace del pago en ese celular. En Android se abre Google Play. En iPhone, Safari pide 3 toques: Compartir, Añadir a inicio, Añadir.",
+    tip: "Si abres la app de Google Play por primera vez, la familia entra una vez con el correo del plan.",
   },
   {
     n: 3,
-    title: "Abre Senior Safe e inicia sesión",
-    desc: "Al abrir la app, inicia sesión con el correo de la cuenta. Luego crea el PIN, agrega guardianes y activa ubicación.",
-    tip: "Si ya pagaste y no encuentras la app, escríbenos por WhatsApp.",
-  },
-  {
-    n: 4,
-    title: "Configura la protección (5 minutos)",
-    desc: "Dentro de la app: crea un PIN de 4 dígitos, agrega a tus familiares guardianes, activa el GPS y el sensor de caídas, y haz una prueba segura sin alerta real.",
-    tip: `Hasta 3 guardianes. Alertas: ${CASCADE_MARKETING_SUMMARY}`,
-  },
-  {
-    n: 5,
-    title: "Activa las alertas por WhatsApp",
-    desc: 'Escribe la palabra ACTIVAR al WhatsApp comercial de Senior Safe (+56 9 7140 4580). Así vinculamos tu cuenta con las notificaciones familiares.',
-    tip: "Solo necesitas hacerlo una vez después de contratar.",
-  },
-  {
-    n: 6,
-    title: "Uso diario — ya estás protegido",
-    desc: "El adulto mayor usa el botón rojo SOS si necesita ayuda. Si hay una caída, el celular vibra y suena 30 segundos: puede cancelar si está bien; si no, la familia es avisada al instante.",
-    tip: "Mantén el celular con batería y conexión a internet cuando sea posible.",
+    title: "El adulto mayor aprende el botón rojo",
+    desc: "La primera pulsación solo enciende la ubicación y no avisa a nadie. Después, el botón pide ayuda de verdad. Si hay una caída, el celular vibra y suena 30 segundos antes de avisar.",
+    tip: `Alertas: ${CASCADE_MARKETING_SUMMARY}`,
   },
 ];
 
@@ -146,7 +127,7 @@ function GuiaPage() {
                 "Un smartphone Android o iPhone compatible",
                 "Conexión a internet (Wi‑Fi o datos móviles)",
                 "Haber contratado el Plan Único en alarmaseniorsafe.cl",
-                "Los teléfonos de familiares que serán guardianes",
+                "El teléfono de quien va a recibir la primera alerta",
               ].map((item) => (
                 <li
                   key={item}
@@ -162,7 +143,7 @@ function GuiaPage() {
 
         <section className="py-14 md:py-16" style={{ background: "var(--gradient-soft)" }}>
           <div className="max-w-3xl mx-auto px-6">
-            <h2 className="text-2xl md:text-3xl font-bold mb-8 text-center">Los 6 pasos</h2>
+            <h2 className="text-2xl md:text-3xl font-bold mb-8 text-center">Los 3 pasos</h2>
             <div className="space-y-6">
               {STEPS.map((step) => (
                 <article
@@ -220,7 +201,7 @@ function GuiaPage() {
                   </li>
                   <li className="flex gap-3">
                     <span className="font-bold text-foreground">3.</span>
-                    Abre la app e inicia sesión con el correo de tu plan.
+                    Vuelve al enlace y abre el botón rojo. Si entras por la app de Play, la familia escribe una vez el correo del plan.
                   </li>
                 </ol>
               </div>
@@ -259,12 +240,10 @@ function GuiaPage() {
             <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center">Dentro de la app</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               {[
-                { icon: KeyRound, label: "PIN de seguridad", color: DEEP },
-                { icon: Users, label: "Guardianes familiares", color: GREEN },
-                { icon: MapPin, label: "GPS activado", color: "#f59e0b" },
-                { icon: Shield, label: "Sensor de caídas", color: PETROL },
-                { icon: Bell, label: "Prueba segura (simulacro)", color: RED },
-                { icon: MessageCircle, label: 'Activar WhatsApp (escribe ACTIVAR)', color: "#25D366" },
+                { icon: Bell, label: "Botón rojo de emergencia", color: RED },
+                { icon: MapPin, label: "Ubicación al pedir ayuda", color: "#f59e0b" },
+                { icon: Shield, label: "Detección de caídas", color: PETROL },
+                { icon: Users, label: "La familia administra los contactos", color: GREEN },
               ].map(({ icon: Icon, label, color }) => (
                 <div
                   key={label}

@@ -1,15 +1,14 @@
-import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { z } from "zod";
 import {
-  Shield, Lock, CreditCard, Clock, CheckCircle2, ArrowRight,
-  Bell, MapPin, MessageCircle, Users, Heart, Loader2, AlertCircle, Tag, X,
+  Lock, CreditCard, CheckCircle2, Loader2, AlertCircle, Tag,
 } from "lucide-react";
-import { SiteHeader, SiteFooter } from "@/components/site-layout";
+import { SiteHeader } from "@/components/site-layout";
 import { createPurchaseSignup } from "@/lib/purchase-signup.functions";
 import { validateDiscountViaApi } from "@/lib/validate-discount-api";
-import { initOneclickCheckout } from "@/lib/oneclick.functions";
+import { getProdTestCheckoutAmount, initOneclickCheckout } from "@/lib/oneclick.functions";
 import { redirectToOneclickInscription } from "@/lib/oneclick-redirect";
 import { initWebpayTransaction, mockApproveWebpay } from "@/lib/webpay.functions";
 import { redirectToWebpayPlus } from "@/lib/webpay-redirect";
@@ -18,7 +17,6 @@ import { saveCheckoutDraft } from "@/lib/checkout-draft";
 import {
   PLAN,
   PLAN_KEY,
-  annualSavingsClp,
   formatPlanPrice,
   normalizePlanKey,
   planKeySchema,
@@ -26,7 +24,6 @@ import {
 } from "@/lib/plans";
 import { WhatsAppFloat } from "@/components/whatsapp-float";
 import { toast } from "sonner";
-import { CANCELLATION_POLICY_BULLETS } from "@/lib/subscription-cancellation-policy";
 import {
   RECURRING_BILLING_DISCLOSURE_BULLETS,
   RECURRING_BILLING_DISCLOSURE_FOOTER,
@@ -44,6 +41,7 @@ import {
   parseChileanRut,
 } from "@/lib/tarjeta-vecino";
 import { getServerErrorMessage } from "@/lib/server-error-message";
+import { SAME_PHONE_GUARDIAN_MESSAGE, sameUserPhone } from "@/lib/phone-utils";
 import { buildPrivatePageMeta } from "@/lib/seo";
 import { isInternational } from "@/lib/market";
 import { LemonCheckoutPage } from "@/components/lemon-checkout-page";
@@ -98,11 +96,8 @@ function CheckoutRoute() {
 }
 
 
-const PETROL = "var(--brand-petrol)";
 const DEEP = "var(--brand-petrol-deep)";
 const GREEN = "#16a34a";
-
-const CHECKOUT_FEATURE_ICONS = [Bell, MessageCircle, MapPin, Users, Heart, Clock, Shield] as const;
 
 const phoneField = z
   .string()
@@ -111,12 +106,47 @@ const phoneField = z
   .max(20)
   .regex(/^[0-9+\s-]+$/, "Solo números");
 
-/** Checkout slim: solo 3 campos críticos antes de Oneclick. */
-const schema = z.object({
-  email: z.string().trim().email("Correo inválido").max(255),
-  phone: phoneField,
-  name: z.string().trim().min(2, "Ingresa el nombre del adulto mayor").max(100),
-});
+/** Checkout slim: datos de pago y, si contrata el adulto mayor, el teléfono del guardián. */
+const schema = z
+  .object({
+    email: z.string().trim().email("Correo inválido").max(255),
+    phone: phoneField,
+    name: z.string().trim().min(2, "Ingresa el nombre del adulto mayor").max(100),
+    contractor: z.enum(["familia", "adulto"]),
+    guardianPhone: z.string().trim().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.contractor !== "adulto") return;
+    const guardian = data.guardianPhone ?? "";
+    const parsed = phoneField.safeParse(guardian);
+    if (!parsed.success) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: parsed.error.issues[0]?.message ?? "Ingresa el teléfono de quien recibe la ayuda.",
+        path: ["guardianPhone"],
+      });
+      return;
+    }
+    if (sameUserPhone(data.phone, guardian)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: SAME_PHONE_GUARDIAN_MESSAGE,
+        path: ["guardianPhone"],
+      });
+    }
+  });
+
+function purchaseGuardian(data: z.infer<typeof schema>) {
+  const telefono = data.contractor === "adulto" ? data.guardianPhone!.trim() : data.phone.trim();
+  return {
+    contractor: data.contractor,
+    firstGuardian: {
+      nombre: "Familiar",
+      telefono,
+      parentesco: "Familiar",
+    },
+  };
+}
 
 const fmt = formatPlanPrice;
 
@@ -127,12 +157,15 @@ function CheckoutPage() {
   const initWebpay = useServerFn(initWebpayTransaction);
   const initOneclick = useServerFn(initOneclickCheckout);
   const mockApprove = useServerFn(mockApproveWebpay);
+  const loadTestCharge = useServerFn(getProdTestCheckoutAmount);
 
   const [yearly, setYearly] = useState(search.periodo === "anual");
   const [form, setForm] = useState({
     email: "",
     phone: "",
     name: "",
+    contractor: "familia" as "familia" | "adulto",
+    guardianPhone: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -150,13 +183,28 @@ function CheckoutPage() {
   const [vecinoError, setVecinoError] = useState<string | null>(null);
   const [vecinoAlternateCode, setVecinoAlternateCode] = useState<string | null>(null);
   const [vecinoLoading, setVecinoLoading] = useState(false);
+  const [testCharge, setTestCharge] = useState<number | null>(null);
   const discountRequestRef = useRef(0);
   const urlCodigoAppliedRef = useRef(false);
   const discountEmailRef = useRef("");
 
   const listPrice = yearly ? PLAN.yearly : PLAN.monthly;
   const price = appliedDiscount?.finalPrice ?? listPrice;
-  const savings = useMemo(() => annualSavingsClp(), []);
+  const payNow = testCharge ?? price;
+
+  useEffect(() => {
+    let active = true;
+    void loadTestCharge()
+      .then((result) => {
+        if (active) setTestCharge(result.amount);
+      })
+      .catch(() => {
+        if (active) setTestCharge(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [loadTestCharge]);
   const planKey = PLAN_KEY;
   const periodo = yearly ? "anual" : "mensual";
 
@@ -307,6 +355,7 @@ function CheckoutPage() {
         discountCode: appliedDiscount?.code ?? "",
         tarjetaVecinoRut: parsedVecinoRut?.formatted ?? "",
         recurringBillingConsent: true,
+        ...purchaseGuardian(r.data),
       } });
 
       saveCheckoutDraft({
@@ -369,6 +418,7 @@ function CheckoutPage() {
       discountCode: appliedDiscount?.code ?? "",
       tarjetaVecinoRut: vecinoVerified ? parsedVecinoRut?.formatted ?? "" : "",
       recurringBillingConsent: true,
+      ...purchaseGuardian(r.data),
     };
 
     try {
@@ -479,13 +529,19 @@ function CheckoutPage() {
             <h1 className="mt-5 text-3xl md:text-5xl font-bold tracking-tight text-foreground leading-[1.1]">
               Contrata Senior Safe
             </h1>
+            {testCharge != null && (
+              <p className="mt-6 text-2xl md:text-4xl font-extrabold leading-tight tracking-tight text-foreground">
+                <span className="block text-[#b45309]">Oferta de tiempo limitado.</span>
+                El primer cobro es de prueba de ${fmt(testCharge)} en el plan mensual, el anual, Tarjeta Vecino y Gold Mayor. Desde la siguiente renovación se cobra el valor del plan que te corresponda.
+              </p>
+            )}
             <p className="mt-4 text-base md:text-lg text-muted-foreground">
-              Solo 3 datos y pagas con Oneclick (Transbank) en menos de 30 segundos. El guardián se
-              inscribe después del pago.
+              Pagas con Oneclick (Transbank). Si contrata un familiar, su teléfono recibe las alertas.
+              Si contrata el adulto mayor, ese teléfono queda en la app y se pide el número de un guardián.
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-[1fr_420px] gap-8">
+          <div className="max-w-xl mx-auto">
               {/* FORM */}
               <form onSubmit={onSubmit} className="bg-card border border-border rounded-3xl p-6 md:p-8 shadow-sm space-y-7">
                 <div>
@@ -549,8 +605,41 @@ function CheckoutPage() {
                 <div>
                   <label className="text-sm font-bold text-foreground mb-1 block">3. Datos para pagar e instalar</label>
                   <p className="text-xs text-muted-foreground mb-3">
-                    Solo 3 datos. Guardián y dirección se completan después del pago (menos de 1 minuto).
+                    {form.contractor === "adulto"
+                      ? "El teléfono del adulto mayor queda en la app. La ayuda llega a otro número."
+                      : "El teléfono de quien paga recibe las alertas. Otros familiares se agregan después, desde su propio celular."}
                   </p>
+                  <fieldset className="mb-4">
+                    <legend className="text-xs font-semibold text-muted-foreground mb-2">¿Quién contrata?</legend>
+                    <div className="grid sm:grid-cols-2 gap-2">
+                      <label className={`flex items-start gap-2 rounded-xl border px-3 py-3 cursor-pointer ${form.contractor === "familia" ? "border-foreground" : "border-border"}`}>
+                        <input
+                          type="radio"
+                          name="contractor"
+                          className="mt-1"
+                          checked={form.contractor === "familia"}
+                          onChange={() => setForm({ ...form, contractor: "familia" })}
+                        />
+                        <span>
+                          <span className="block text-sm font-bold text-foreground">Un familiar</span>
+                          <span className="block text-xs text-muted-foreground">Su teléfono recibe las alertas.</span>
+                        </span>
+                      </label>
+                      <label className={`flex items-start gap-2 rounded-xl border px-3 py-3 cursor-pointer ${form.contractor === "adulto" ? "border-foreground" : "border-border"}`}>
+                        <input
+                          type="radio"
+                          name="contractor"
+                          className="mt-1"
+                          checked={form.contractor === "adulto"}
+                          onChange={() => setForm({ ...form, contractor: "adulto" })}
+                        />
+                        <span>
+                          <span className="block text-sm font-bold text-foreground">El adulto mayor</span>
+                          <span className="block text-xs text-muted-foreground">Su teléfono queda en la app.</span>
+                        </span>
+                      </label>
+                    </div>
+                  </fieldset>
                   <div className="space-y-4">
                     <Field
                       label="Email del comprador / pagador"
@@ -562,13 +651,33 @@ function CheckoutPage() {
                       placeholder="tu@email.cl"
                     />
                     <Field
-                      label="Teléfono / WhatsApp del comprador"
+                      label={form.contractor === "adulto" ? "Teléfono del adulto mayor" : "Teléfono / WhatsApp del comprador"}
                       name="phone"
                       value={form.phone}
                       onChange={(v) => setForm({ ...form, phone: v })}
                       error={errors.phone}
                       placeholder="+56 9 ..."
                     />
+                    {form.contractor === "adulto" && (
+                      <div>
+                        <Field
+                          label="Teléfono de quien recibe la ayuda"
+                          name="guardianPhone"
+                          value={form.guardianPhone}
+                          onChange={(v) => setForm({ ...form, guardianPhone: v })}
+                          error={
+                            errors.guardianPhone ||
+                            (sameUserPhone(form.phone, form.guardianPhone) ? SAME_PHONE_GUARDIAN_MESSAGE : undefined)
+                          }
+                          placeholder="+56 9 ..."
+                        />
+                        {!errors.guardianPhone && !sameUserPhone(form.phone, form.guardianPhone) && (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Este número recibe la ayuda. No puede ser el mismo teléfono del usuario.
+                          </p>
+                        )}
+                      </div>
+                    )}
                     <Field
                       label="Nombre completo del adulto mayor"
                       name="name"
@@ -676,7 +785,12 @@ function CheckoutPage() {
                       Al pagar autorizas los cobros automáticos de tu suscripción
                     </p>
                     <ul className="space-y-2 list-disc pl-4">
-                      {RECURRING_BILLING_DISCLOSURE_BULLETS.map((line) => (
+                      {(testCharge != null
+                        ? [
+                            `Al inscribir tu tarjeta en Transbank Oneclick pagas $${fmt(testCharge)} como cobro de prueba del primer período, en el plan mensual, el anual, Tarjeta Vecino o Gold Mayor. Si marcas la casilla opcional, autorizas a Senior Safe a debitar automáticamente el valor del plan que te corresponda ($${fmt(price)} ${yearly ? "al año" : "al mes"}) en cada renovación.`,
+                          ]
+                        : RECURRING_BILLING_DISCLOSURE_BULLETS
+                      ).map((line) => (
                         <li key={line}>{line}</li>
                       ))}
                     </ul>
@@ -725,7 +839,7 @@ function CheckoutPage() {
                   ) : (
                     <>
                       <CreditCard className="w-5 h-5" />
-                      Pagar con Oneclick · ${fmt(price)}
+                      Pagar con Oneclick · ${fmt(payNow)}
                     </>
                   )}
                 </button>
@@ -735,10 +849,6 @@ function CheckoutPage() {
                     Verifica la Tarjeta Vecino para habilitar el pago con este convenio.
                   </p>
                 )}
-
-                <p className="text-center text-xs text-muted-foreground -mt-2">
-                  Al continuar aceptas los <Link to="/terminos" className="underline">Términos</Link> y la <Link to="/privacidad" className="underline">Política de privacidad</Link>.
-                </p>
 
                 {!import.meta.env.PROD && (
                   <div className="mt-4 pt-5 border-t border-dashed border-border">
@@ -767,104 +877,9 @@ function CheckoutPage() {
                   </div>
                 )}
               </form>
-
-              {/* SUMMARY */}
-              <aside className="space-y-5 lg:sticky lg:top-24 self-start">
-                <div className="bg-card border border-border rounded-3xl p-6 md:p-7 shadow-sm">
-                  <div className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground mb-2">Resumen</div>
-                  <div className="flex items-baseline justify-between">
-                    <h3 className="text-xl font-bold text-foreground">{PLAN.displayName}</h3>
-                    <span
-                      className="text-xs px-2.5 py-1 rounded-full font-semibold"
-                      style={{ background: "color-mix(in oklab, #16a34a 14%, white)", color: GREEN }}
-                    >
-                      Pago previo obligatorio
-                    </span>
-                  </div>
-
-                  <div className="mt-5 flex items-baseline gap-1.5 flex-wrap">
-                    {appliedDiscount && (
-                      <span className="text-lg text-muted-foreground line-through mr-1">${fmt(listPrice)}</span>
-                    )}
-                    <span className="text-4xl font-bold tracking-tight text-foreground">${fmt(price)}</span>
-                    <span className="text-muted-foreground text-sm">/{yearly ? "año" : "mes"}</span>
-                  </div>
-                  {appliedDiscount && (
-                    <div className="mt-2 text-sm font-semibold" style={{ color: GREEN }}>
-                      Convenio {appliedDiscount.code}: −{appliedDiscount.percentOff}% (−${fmt(appliedDiscount.discountAmount)})
-                    </div>
-                  )}
-                  {yearly && (
-                    <div className="mt-1 text-sm font-semibold" style={{ color: GREEN }}>
-                      {PLAN.yearlySavingsLabel} (${fmt(savings)} menos que 12 meses)
-                    </div>
-                  )}
-
-                  <div
-                    className="mt-5 p-4 rounded-2xl border"
-                    style={{
-                      borderColor: "color-mix(in oklab, #16a34a 30%, white)",
-                      background: "color-mix(in oklab, #16a34a 6%, white)",
-                    }}
-                  >
-                    <div className="flex items-start gap-3">
-                      <Shield className="w-5 h-5 mt-0.5 shrink-0" style={{ color: GREEN }} />
-                      <div className="text-sm text-foreground leading-relaxed">
-                        <strong>Acceso tras confirmar el pago en Transbank.</strong>
-                        <br />
-                        <span className="text-muted-foreground">
-                          Luego practicas el botón de emergencia en modo simulación (sin Twilio).
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-5">
-                    <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Incluye</div>
-                    <ul className="space-y-2.5">
-                      {PLAN.features.map((label, i) => {
-                        const Icon = CHECKOUT_FEATURE_ICONS[i] ?? CheckCircle2;
-                        return (
-                        <li key={label} className="flex items-start gap-3 text-sm text-foreground">
-                          <Icon className="w-4 h-4 mt-0.5 shrink-0" style={{ color: PETROL }} />
-                          <span>{label}</span>
-                        </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                </div>
-
-                {/* Trust */}
-                <div className="bg-card border border-border rounded-3xl p-6 grid grid-cols-2 gap-4 shadow-sm">
-                  <Trust icon={CreditCard} title="Oneclick" sub="Pago en CLP" />
-                  <Trust icon={Lock} title="SSL 256-bit" sub="Datos cifrados" />
-                  <Trust icon={MessageCircle} title="Soporte 24/7" sub="WhatsApp directo" />
-                  <Trust icon={X} title="Sin permanencia" sub="Sin cargo extra al cancelar" />
-                </div>
-
-                <div className="bg-card border border-border rounded-3xl p-6 shadow-sm">
-                  <div className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground mb-3">
-                    Cancelación y reembolsos
-                  </div>
-                  <ul className="space-y-2.5 text-sm text-muted-foreground leading-relaxed list-disc pl-4">
-                    {CANCELLATION_POLICY_BULLETS.map((line) => (
-                      <li key={line}>{line}</li>
-                    ))}
-                  </ul>
-                  <p className="mt-4 text-xs text-muted-foreground">
-                    Al continuar aceptas esta política y nuestros{" "}
-                    <Link to="/terminos" className="font-semibold underline" style={{ color: DEEP }}>
-                      Términos y Condiciones
-                    </Link>
-                    .
-                  </p>
-                </div>
-              </aside>
             </div>
         </div>
       </main>
-      <SiteFooter />
       <WhatsAppFloat />
     </div>
   );
@@ -886,20 +901,6 @@ function Field({
         className={`w-full px-4 py-3 rounded-xl border bg-background text-foreground text-base outline-none transition focus:border-foreground/40 ${error ? "border-destructive" : "border-border"}`}
       />
       {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
-    </div>
-  );
-}
-
-function Trust({ icon: Icon, title, sub }: { icon: typeof Shield; title: string; sub: string }) {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "color-mix(in oklab, var(--brand-petrol) 10%, white)", color: DEEP }}>
-        <Icon className="w-5 h-5" />
-      </div>
-      <div className="min-w-0">
-        <div className="text-sm font-bold text-foreground truncate">{title}</div>
-        <div className="text-[11px] text-muted-foreground truncate">{sub}</div>
-      </div>
     </div>
   );
 }

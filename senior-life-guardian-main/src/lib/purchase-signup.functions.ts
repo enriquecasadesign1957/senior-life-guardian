@@ -17,9 +17,11 @@ import {
   contractSignupPendingPayload,
   isSignupPaidAndActive,
 } from "@/lib/signups-db";
+import { SAME_PHONE_GUARDIAN_MESSAGE, sameUserPhone } from "@/lib/phone-utils";
 import { RECURRING_BILLING_CONSENT_VERSION } from "@/lib/recurring-billing-consent";
 import { consultarTarjetaVecino } from "@/lib/tarjeta-vecino.server";
 import { lasCondesTier, parseChileanRut } from "@/lib/tarjeta-vecino";
+import { notifyNewAccount } from "@/lib/admin-activity-notice";
 import type { Database } from "@/integrations/supabase/types";
 
 type SignupInsert = Database["public"]["Tables"]["contract_signups"]["Insert"];
@@ -41,9 +43,22 @@ function isMissingTarjetaVecinoColumn(message: string): boolean {
   );
 }
 
+function guardianForCheckout(data: {
+  contractor: "familia" | "adulto";
+  telefono: string;
+  firstGuardian?: PendingFirstGuardian;
+}): PendingFirstGuardian {
+  if (data.contractor === "adulto" && data.firstGuardian) return data.firstGuardian;
+  return {
+    nombre: "Familiar",
+    telefono: data.telefono.trim(),
+    parentesco: "Familiar",
+  };
+}
+
 /**
  * Crea un registro de contratación directa (Plan Único) antes de iniciar Webpay/Oneclick.
- * Guardián y dirección son opcionales (se completan post-pago).
+ * Siempre guarda el primer guardián: el otro número si contrata el adulto mayor, o el teléfono de quien paga si contrata un familiar.
  * Por defecto registra consentimiento de cobros recurrentes (Oneclick).
  */
 export const createPurchaseSignup = createServerFn({ method: "POST" })
@@ -59,6 +74,7 @@ export const createPurchaseSignup = createServerFn({ method: "POST" })
         discountCode: z.string().trim().max(64).optional().or(z.literal("")),
         tarjetaVecinoRut: z.string().trim().max(16).optional().or(z.literal("")),
         recurringBillingConsent: z.boolean().optional().default(true),
+        contractor: z.enum(["familia", "adulto"]).optional().default("familia"),
         firstGuardian: z
           .object({
             nombre: z.string().trim().min(2).max(100),
@@ -66,6 +82,24 @@ export const createPurchaseSignup = createServerFn({ method: "POST" })
             parentesco: z.string().trim().min(2).max(40),
           })
           .optional(),
+      })
+      .superRefine((data, ctx) => {
+        if (data.contractor !== "adulto") return;
+        if (!data.firstGuardian) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Ingresa el teléfono de quien recibe la ayuda.",
+            path: ["firstGuardian"],
+          });
+          return;
+        }
+        if (sameUserPhone(data.telefono, data.firstGuardian.telefono)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: SAME_PHONE_GUARDIAN_MESSAGE,
+            path: ["firstGuardian", "telefono"],
+          });
+        }
       })
       .parse(input),
   )
@@ -151,18 +185,25 @@ export const createPurchaseSignup = createServerFn({ method: "POST" })
 
       const updated = await writeSignup("update", existing.id, updatePayload, tarjetaVecino);
       const signup = updated ?? existing;
-      if (data.firstGuardian) {
-        await savePendingFirstGuardian(signup.id, data.firstGuardian as PendingFirstGuardian);
-      }
+      await savePendingFirstGuardian(signup.id, guardianForCheckout(data));
       return { signup, created: false, alreadyPaid };
     }
 
     const inserted = await writeSignup("insert", null, payload, tarjetaVecino);
     if (!inserted) throw new Error("No pudimos crear la orden de compra.");
 
-    if (data.firstGuardian) {
-      await savePendingFirstGuardian(inserted.id, data.firstGuardian as PendingFirstGuardian);
-    }
+    const guardian = guardianForCheckout(data);
+    await savePendingFirstGuardian(inserted.id, guardian);
+    await notifyNewAccount({
+      nombre: data.nombre,
+      email,
+      telefono: data.telefono,
+      plan: data.plan,
+      periodo: data.periodo,
+      discountCode: rawCode,
+      contractor: data.contractor,
+      guardianPhone: guardian.telefono,
+    });
 
     return { signup: inserted, created: true };
   });

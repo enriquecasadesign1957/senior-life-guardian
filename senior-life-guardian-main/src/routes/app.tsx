@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { isInternational } from "@/lib/market";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { useServerFn } from "@tanstack/react-start";
@@ -632,7 +631,7 @@ function AppHome() {
         } else if (res?.status === "delivered" || (res?.status === "partial" && smsSent > 0)) {
           toast.success("Alerta enviada a tu familia.");
         } else if (res?.status === "partial") toast.warning("Alerta enviada parcialmente.");
-        else if (res?.status === "no_recipients") toast.error("No hay guardianes configurados. Agrega uno en Administrar familiares.");
+        else if (res?.status === "no_recipients") toast.error("Todavía no hay un familiar para avisar.");
         else if (res?.error === "subscription_inactive") {
           toast.error(res?.message ?? "Tu suscripción no está activa.");
         } else if ((res?.results?.length ?? 0) === 0) toast.error("No se pudo contactar a ningún guardián. Revisa que tengan teléfono válido.");
@@ -771,7 +770,7 @@ function AppHome() {
         </div>
         <h1 className="text-3xl font-extrabold mb-2">Senior Safe</h1>
         <p className="text-white/80 text-center mb-8 max-w-xs">
-          Ingresa el correo con el que te registraste en alarmaseniorsafe.cl
+          La familia escribe una vez el correo del plan. Después solo queda el botón rojo.
         </p>
         <div className="w-full max-w-sm space-y-3">
           <Label htmlFor="app-email" className="text-white/90">Correo registrado</Label>
@@ -826,16 +825,7 @@ function AppHome() {
         </div>
       </header>
 
-      {!guideDismissed && installStep !== "ready" && (
-        <InstallStepGuideBanner
-          step={installStep}
-          signupId={userId}
-          onDismiss={() => setGuideDismissed(true)}
-        />
-      )}
-
       <main className="flex-1 flex flex-col px-5 pb-6 max-w-md mx-auto w-full">
-        {/* Status banner */}
         <section
           aria-label="Estado actual"
           className="rounded-3xl p-5 mb-6 text-white shadow-xl"
@@ -846,131 +836,21 @@ function AppHome() {
               <CheckCircle2 className="w-8 h-8" aria-hidden="true" />
             </div>
             <div>
-              <div className="text-2xl font-bold leading-tight">Estás segura</div>
+              <div className="text-2xl font-bold leading-tight">Listo</div>
               <div className="text-sm text-white/90">
-                {familyCount > 0 ? "Red familiar configurada" : "Aún sin familiares conectados"}
+                {contacts[0]?.nombre && contacts[0].nombre !== "Familiar"
+                  ? `Si pides ayuda, avisamos a ${contacts[0].nombre}.`
+                  : "Si pides ayuda, avisamos a tu familia."}
               </div>
             </div>
           </div>
-          {userId && fallMotionSupported && (
-            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-              <button
-                type="button"
-                onClick={handleFallPermission}
-                className="inline-flex items-center gap-1.5 underline-offset-2 hover:underline"
-              >
-                <Activity className="w-4 h-4" />
-                Caídas {fallMonitoring ? "activo" : "tocar para activar"}
-              </button>
-              <button
-                type="button"
-                onClick={probarCuentaRegresiva}
-                className="underline underline-offset-2 text-white/85"
-              >
-                Probar simulación
-              </button>
-            </div>
-          )}
         </section>
-
-        {/* Install app banner — visible only when not installed */}
-        {!isInstalled && (
-          <section aria-label="Descargar la app" className="mb-5">
-            <button
-              type="button"
-              onClick={() => setInstallOpen(true)}
-              className="w-full rounded-3xl p-5 text-white text-left shadow-xl active:scale-[0.99] transition focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300"
-              style={{ background: `linear-gradient(135deg, ${GREEN}, #15803d)` }}
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
-                  <Download className="w-7 h-7" aria-hidden="true" />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-xl font-extrabold leading-tight">📲 DESCARGAR APP SENIOR SAFE</div>
-                  <div className="text-sm text-white/95 mt-1">
-                    Instala Senior Safe para acceso rápido y alertas más confiables.
-                  </div>
-                </div>
-              </div>
-            </button>
-          </section>
-        )}
-
-
-
-        {accountConfigured && (
-          <section aria-label="Configuración recuperada" className="bg-card border-2 rounded-3xl p-5 mb-4 shadow-sm" style={{ borderColor: GREEN }}>
-            <div className="flex items-start gap-3">
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shrink-0" style={{ background: GREEN }}>
-                <Shield className="w-6 h-6" aria-hidden="true" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-foreground leading-tight">Tu cuenta ya está configurada</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Cargamos tu nombre, familiares, PIN, WhatsApp y avance de activación. No debes comenzar de nuevo.
-                </p>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {accountConfigured &&
-          ((sosGpsPrimed && !gpsAllowed) ||
-            !notificationsAllowed ||
-            !batteryChecked ||
-            (sosGpsPrimed && fallNeedsPermission) ||
-            (sosGpsPrimed && !fallMotionSupported)) && (
-          <section aria-label="Permisos del teléfono" className="bg-card border border-border rounded-3xl p-4 mb-5 shadow-sm">
-            <h2 className="font-bold text-foreground text-lg mb-1">Solo faltan permisos del teléfono</h2>
-            <p className="text-sm text-muted-foreground mb-3">
-              {sosGpsPrimed
-                ? "Son necesarios para protegerte en emergencias."
-                : "La ubicación y el sensor de caídas se activan con la primera pulsación del botón rojo."}
-            </p>
-            <div className="space-y-2">
-              {sosGpsPrimed && !gpsAllowed && (
-                <PermissionButton icon={MapPin} label="Activar GPS" done={gpsAllowed} onClick={requestGps} />
-              )}
-              <PermissionButton icon={Bell} label="Activar notificaciones" done={notificationsAllowed} onClick={requestNotifications} />
-              {sosGpsPrimed && fallMotionSupported && fallNeedsPermission && (
-                <PermissionButton
-                  icon={Activity}
-                  label="Activar sensor de caídas"
-                  done={fallMonitoring}
-                  onClick={handleFallPermission}
-                />
-              )}
-              {sosGpsPrimed && !fallMotionSupported && (
-                <p className="text-sm text-amber-700 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-                  Este dispositivo no permite detección automática de caídas en el navegador. Usa el botón de emergencia.
-                </p>
-              )}
-              <PermissionButton icon={Battery} label="Revisar batería / segundo plano" done={batteryChecked} onClick={markBatteryReady} />
-            </div>
-            {fallMonitoring && (
-              <button
-                type="button"
-                onClick={probarCuentaRegresiva}
-                className="mt-3 w-full text-sm font-semibold text-muted-foreground underline underline-offset-2"
-              >
-                Probar cuenta regresiva de caída (simulación, no envía alerta)
-              </button>
-            )}
-          </section>
-        )}
 
         {/* Botón de emergencia */}
         <div className="flex-1 flex flex-col items-center justify-center py-4">
           {!sosGpsPrimed && (
             <p className="mb-3 text-center text-sm font-semibold text-red-700 max-w-[20rem]">
-              Primera pulsación: activa ubicación
-              {fallMotionSupported ? " y caídas" : ""} y WhatsApp (sin avisar a nadie).
-            </p>
-          )}
-          {sosGpsPrimed && trainingPending && !trainingDone && (
-            <p className="mb-3 text-center text-sm font-semibold text-amber-700 max-w-[22rem]">
-              Siguiente pulsación: simulación (sin avisar a nadie). Luego el botón será real.
+              La primera vez solo enciende la ubicación. No avisa a nadie.
             </p>
           )}
           <button
@@ -996,154 +876,31 @@ function AppHome() {
             ) : alertFamilyCount > 0 ? (
               <>Avisaremos a <strong className="text-foreground">{alertFamilyCount} guardián{alertFamilyCount === 1 ? "" : "es"}</strong> (SMS, WhatsApp y llamada escalonada).</>
             ) : (
-              <>Agrega un familiar en <strong className="text-foreground">Tu red familiar</strong> para que reciba tus alertas.</>
+              <>Tu familia recibe el aviso en su celular.</>
             )}
           </p>
 
         </div>
 
-        {/* GPS card */}
-        <section aria-label="Tu ubicación actual" className="bg-card border border-border rounded-3xl overflow-hidden mb-4 shadow-sm">
-          <div
-            className="relative h-32"
-            style={{
-              background:
-                "radial-gradient(circle at 50% 60%, rgba(16,185,129,0.25), transparent 60%), repeating-linear-gradient(0deg, rgba(15,76,98,0.06) 0 1px, transparent 1px 24px), repeating-linear-gradient(90deg, rgba(15,76,98,0.06) 0 1px, transparent 1px 24px), linear-gradient(180deg, #f1f5f9, #e2e8f0)",
-            }}
-            aria-hidden="true"
-          >
-            <div className="absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 bg-white/80" />
-            <div className="absolute inset-y-0 left-1/2 w-1.5 -translate-x-1/2 bg-white/80" />
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-              <span className="absolute inset-0 -m-3 rounded-full animate-ping" style={{ background: "rgba(34,197,94,0.45)" }} />
-              <span className="relative flex w-7 h-7 rounded-full items-center justify-center text-white shadow-lg" style={{ background: GREEN }}>
-                <MapPin className="w-4 h-4" />
-              </span>
-            </div>
-          </div>
-          <div className="p-4 flex items-center gap-3">
-            <span className="w-11 h-11 rounded-xl flex items-center justify-center text-white shrink-0" style={{ background: PETROL }}>
-              <Navigation className="w-5 h-5" aria-hidden="true" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">GPS activo</div>
-              <div className="text-lg font-bold text-foreground truncate">{isInternational ? "En casa" : "En casa · Las Condes"}</div>
-              <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                <Clock className="w-3 h-3" aria-hidden="true" /> Actualizado hace 1 min
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Family card */}
-        <section aria-label="Familiares conectados" className="bg-card border border-border rounded-3xl p-4 mb-5 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Users className="w-5 h-5" style={{ color: DEEP }} aria-hidden="true" />
-              <h2 className="font-bold text-foreground text-base">Tu red familiar</h2>
-            </div>
-            {familyCount > 0 && (
-              <span className="text-xs font-bold text-white px-2.5 py-1 rounded-full" style={{ background: GREEN }}>
-                {familyCount} conectado{familyCount === 1 ? "" : "s"}
-              </span>
-            )}
-          </div>
-
-          {loadingContacts ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
-              <Loader2 className="w-4 h-4 animate-spin" /> Cargando familiares…
-            </div>
-          ) : familyCount === 0 ? (
-            <div className="text-sm text-muted-foreground py-2">
-              Aún no has agregado familiares. {pinConfigured ? "Usa “Administrar familiares” para añadirlos." : "Primero crea tu PIN de seguridad (botón de abajo)."}
-            </div>
-          ) : (
-            <ul className="space-y-2">
-              {contacts.map((f, i) => (
-                <li key={f.id} className="flex items-center gap-3 py-1.5">
-                  <span
-                    aria-hidden="true"
-                    className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-lg shrink-0"
-                    style={{ background: colorFor(i) }}
-                  >
-                    {initialOf(f.nombre)}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-base font-bold text-foreground leading-tight truncate">{f.nombre}</div>
-                    <div className="text-sm text-muted-foreground truncate">{f.parentesco} · recibe WhatsApp</div>
-                  </div>
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: GREEN }} aria-label="En línea" />
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {!pinConfigured && userId && (
+        {fallMotionSupported && fallNeedsPermission && (
+          <section aria-label="Detección de caídas" className="bg-card border border-border rounded-3xl p-5 mt-5 shadow-sm">
+            <h2 className="text-lg font-bold text-foreground">Detección de caídas</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Toca una vez para que el celular pueda avisar si hay una caída.
+            </p>
             <button
               type="button"
-              onClick={() => setPinGateOpen(true)}
-              className="mt-3 w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-2xl text-white font-bold text-sm shadow-md"
+              onClick={() => void handleFallPermission()}
+              className="mt-4 w-full py-4 rounded-2xl text-white font-bold"
               style={{ background: DEEP }}
             >
-              <KeyRound className="w-4 h-4" /> Crear PIN de seguridad (4 dígitos)
+              Activar
             </button>
-          )}
+          </section>
+        )}
 
-          <button
-            type="button"
-            onClick={requestManage}
-            disabled={!userId}
-            className={`w-full inline-flex items-center justify-center gap-2 py-3 rounded-2xl border border-border text-foreground font-bold text-sm hover:bg-muted transition disabled:opacity-50 ${pinConfigured ? "mt-3" : "mt-2"}`}
-          >
-            <KeyRound className="w-4 h-4" /> Administrar familiares
-          </button>
-          <p className="mt-2 text-[11px] text-muted-foreground text-center">
-            {pinConfigured
-              ? "Para editar tu red pediremos tu PIN. La emergencia nunca pide PIN."
-              : "Crea tu PIN una vez; luego podrás agregar y editar familiares."}
-          </p>
-        </section>
-
-        <div className="mb-5">
-          <WhatsAppActivationButton />
-        </div>
-
-        <nav aria-label="Navegación principal" className="grid grid-cols-3 gap-2 bg-card rounded-3xl p-2 border border-border shadow-sm">
-          <NavItem icon={Home} label="Inicio" active />
-          <NavItem icon={Heart} label="Familia" onClick={requestManage} />
-          <NavItem icon={Settings} label="Ajustes" onClick={requestManage} />
-        </nav>
-
-        <Link to="/" className="text-center text-sm text-muted-foreground mt-4 hover:text-foreground underline-offset-4 hover:underline">
-          Volver al sitio web
-        </Link>
       </main>
 
-      {/* PIN gate */}
-      <PinGateDialog
-        open={pinGateOpen}
-        signupId={userId}
-        pinConfigured={pinConfigured}
-        onClose={() => setPinGateOpen(false)}
-        onPinConfigured={() => {
-          setPinConfigured(true);
-          try {
-            const raw = localStorage.getItem("seniorsafe_progress");
-            const prog = raw ? JSON.parse(raw) : {};
-            localStorage.setItem("seniorsafe_progress", JSON.stringify({ ...prog, pin: true }));
-          } catch { /* ignore */ }
-        }}
-        onSuccess={() => { setPinUnlocked(true); setPinGateOpen(false); setManageOpen(true); }}
-      />
-
-      {/* Manage family */}
-      <ManageFamilyDialog
-        open={manageOpen}
-        onClose={() => setManageOpen(false)}
-        signupId={userId}
-        contacts={contacts}
-        setContacts={setContacts}
-      />
 
       {/* Emergency overlay */}
       {stage !== "idle" && (
@@ -1307,7 +1064,7 @@ function AppHome() {
                   {alertSummary?.training
                     ? `Simulaste el flujo completo. En una emergencia real: ${CASCADE_MARKETING_SUMMARY}`
                     : alertSummary?.status === "no_recipients" || (alertSummary && alertSummary.total === 0)
-                      ? "No encontramos guardianes para avisar. Ve a Administrar familiares y agrega al menos uno con teléfono +56 9…"
+                      ? "Todavía no hay un familiar para avisar. Quien contrató puede agregarlo desde su celular."
                       : alertSummary && alertSummary.delivered > 0
                         ? `${alertSummary.delivered} de ${alertSummary.total} SMS enviados. WhatsApp y llamada se enviaron si nadie confirmó.`
                         : alertSummary
@@ -1316,11 +1073,10 @@ function AppHome() {
                 </p>
 
                 <div className="mt-5 rounded-2xl bg-muted p-4 text-left">
-                  <div className="flex items-center gap-2 text-sm font-bold text-foreground mb-1">
+                  <div className="flex items-center gap-2 text-sm font-bold text-foreground">
                     <MapPin className="w-4 h-4" style={{ color: GREEN }} aria-hidden="true" />
-                    Compartiste tu ubicación
+                    Tu familia recibió la ubicación del celular.
                   </div>
-                  <div className="text-sm text-muted-foreground">{isInternational ? "En casa" : "En casa · Las Condes"}</div>
                 </div>
 
                 <button
