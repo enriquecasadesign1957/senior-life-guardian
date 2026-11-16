@@ -42,9 +42,22 @@ function isMissingTarjetaVecinoColumn(message: string): boolean {
   );
 }
 
+function guardianForCheckout(data: {
+  contractor: "familia" | "adulto";
+  telefono: string;
+  firstGuardian?: PendingFirstGuardian;
+}): PendingFirstGuardian {
+  if (data.contractor === "adulto" && data.firstGuardian) return data.firstGuardian;
+  return {
+    nombre: "Familiar",
+    telefono: data.telefono.trim(),
+    parentesco: "Familiar",
+  };
+}
+
 /**
  * Crea un registro de contratación directa (Plan Único) antes de iniciar Webpay/Oneclick.
- * Guardián y dirección son opcionales (se completan post-pago).
+ * Siempre guarda el primer guardián: el otro número si contrata el adulto mayor, o el teléfono de quien paga si contrata un familiar.
  * Por defecto registra consentimiento de cobros recurrentes (Oneclick).
  */
 export const createPurchaseSignup = createServerFn({ method: "POST" })
@@ -171,18 +184,14 @@ export const createPurchaseSignup = createServerFn({ method: "POST" })
 
       const updated = await writeSignup("update", existing.id, updatePayload, tarjetaVecino);
       const signup = updated ?? existing;
-      if (data.firstGuardian) {
-        await savePendingFirstGuardian(signup.id, data.firstGuardian as PendingFirstGuardian);
-      }
+      await savePendingFirstGuardian(signup.id, guardianForCheckout(data));
       return { signup, created: false, alreadyPaid };
     }
 
     const inserted = await writeSignup("insert", null, payload, tarjetaVecino);
     if (!inserted) throw new Error("No pudimos crear la orden de compra.");
 
-    if (data.firstGuardian) {
-      await savePendingFirstGuardian(inserted.id, data.firstGuardian as PendingFirstGuardian);
-    }
+    await savePendingFirstGuardian(inserted.id, guardianForCheckout(data));
 
     return { signup: inserted, created: true };
   });

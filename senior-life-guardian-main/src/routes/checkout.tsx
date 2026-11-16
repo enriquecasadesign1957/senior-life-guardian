@@ -143,12 +143,12 @@ const schema = z
   });
 
 function purchaseGuardian(data: z.infer<typeof schema>) {
-  if (data.contractor !== "adulto") return { contractor: "familia" as const };
+  const telefono = data.contractor === "adulto" ? data.guardianPhone!.trim() : data.phone.trim();
   return {
-    contractor: "adulto" as const,
+    contractor: data.contractor,
     firstGuardian: {
       nombre: "Familiar",
-      telefono: data.guardianPhone!.trim(),
+      telefono,
       parentesco: "Familiar",
     },
   };
