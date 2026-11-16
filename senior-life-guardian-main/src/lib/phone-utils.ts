@@ -39,6 +39,16 @@ export function phoneLookupCandidates(raw: string | null | undefined): string[] 
   return [...out];
 }
 
+export const SAME_PHONE_GUARDIAN_MESSAGE =
+  "No puede ser el mismo teléfono del usuario. Cámbialo al número de un guardián.";
+
+/** Compara los últimos 9 dígitos para detectar el mismo móvil chileno. */
+export function sameUserPhone(a: string, b: string): boolean {
+  const left = a.replace(/\D/g, "").slice(-9);
+  const right = b.replace(/\D/g, "").slice(-9);
+  return left.length >= 8 && left === right;
+}
+
 /** Filtro PostgREST `or=(telefono.eq.X,whatsapp.eq.X,...)` para columnas de teléfono. */
 export function buildPhoneColumnOrFilter(
   columns: string[],

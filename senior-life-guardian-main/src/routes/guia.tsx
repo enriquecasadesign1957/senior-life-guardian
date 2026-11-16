@@ -59,7 +59,7 @@ const STEPS = [
     title: "La familia contrata",
     desc: isInternational
       ? "Entra a alarmaseniorsafe.com, elige mensual o anual y paga con Lemon Squeezy. El teléfono de quien paga queda como primer guardián y recibe las alertas."
-      : "Entra a alarmaseniorsafe.cl, elige mensual o anual y paga con Oneclick. El teléfono de quien paga queda como primer guardián y recibe las alertas.",
+      : "Entra a alarmaseniorsafe.cl, elige mensual o anual y paga con Oneclick. Si contrata un familiar, su teléfono recibe las alertas. Si contrata el adulto mayor, ese teléfono queda en la app y debe indicar otro número, el de un guardián.",
     tip: "Otros familiares se agregan después desde el portal de la familia, en su propio celular.",
   },
   {

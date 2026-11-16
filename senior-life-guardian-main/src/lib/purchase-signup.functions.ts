@@ -17,6 +17,7 @@ import {
   contractSignupPendingPayload,
   isSignupPaidAndActive,
 } from "@/lib/signups-db";
+import { SAME_PHONE_GUARDIAN_MESSAGE, sameUserPhone } from "@/lib/phone-utils";
 import { RECURRING_BILLING_CONSENT_VERSION } from "@/lib/recurring-billing-consent";
 import { consultarTarjetaVecino } from "@/lib/tarjeta-vecino.server";
 import { lasCondesTier, parseChileanRut } from "@/lib/tarjeta-vecino";
@@ -59,6 +60,7 @@ export const createPurchaseSignup = createServerFn({ method: "POST" })
         discountCode: z.string().trim().max(64).optional().or(z.literal("")),
         tarjetaVecinoRut: z.string().trim().max(16).optional().or(z.literal("")),
         recurringBillingConsent: z.boolean().optional().default(true),
+        contractor: z.enum(["familia", "adulto"]).optional().default("familia"),
         firstGuardian: z
           .object({
             nombre: z.string().trim().min(2).max(100),
@@ -66,6 +68,24 @@ export const createPurchaseSignup = createServerFn({ method: "POST" })
             parentesco: z.string().trim().min(2).max(40),
           })
           .optional(),
+      })
+      .superRefine((data, ctx) => {
+        if (data.contractor !== "adulto") return;
+        if (!data.firstGuardian) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Ingresa el teléfono de quien recibe la ayuda.",
+            path: ["firstGuardian"],
+          });
+          return;
+        }
+        if (sameUserPhone(data.telefono, data.firstGuardian.telefono)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: SAME_PHONE_GUARDIAN_MESSAGE,
+            path: ["firstGuardian", "telefono"],
+          });
+        }
       })
       .parse(input),
   )

@@ -44,6 +44,7 @@ import {
   parseChileanRut,
 } from "@/lib/tarjeta-vecino";
 import { getServerErrorMessage } from "@/lib/server-error-message";
+import { SAME_PHONE_GUARDIAN_MESSAGE, sameUserPhone } from "@/lib/phone-utils";
 import { buildPrivatePageMeta } from "@/lib/seo";
 import { isInternational } from "@/lib/market";
 import { LemonCheckoutPage } from "@/components/lemon-checkout-page";
@@ -111,12 +112,47 @@ const phoneField = z
   .max(20)
   .regex(/^[0-9+\s-]+$/, "Solo números");
 
-/** Checkout slim: solo 3 campos críticos antes de Oneclick. */
-const schema = z.object({
-  email: z.string().trim().email("Correo inválido").max(255),
-  phone: phoneField,
-  name: z.string().trim().min(2, "Ingresa el nombre del adulto mayor").max(100),
-});
+/** Checkout slim: datos de pago y, si contrata el adulto mayor, el teléfono del guardián. */
+const schema = z
+  .object({
+    email: z.string().trim().email("Correo inválido").max(255),
+    phone: phoneField,
+    name: z.string().trim().min(2, "Ingresa el nombre del adulto mayor").max(100),
+    contractor: z.enum(["familia", "adulto"]),
+    guardianPhone: z.string().trim().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.contractor !== "adulto") return;
+    const guardian = data.guardianPhone ?? "";
+    const parsed = phoneField.safeParse(guardian);
+    if (!parsed.success) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: parsed.error.issues[0]?.message ?? "Ingresa el teléfono de quien recibe la ayuda.",
+        path: ["guardianPhone"],
+      });
+      return;
+    }
+    if (sameUserPhone(data.phone, guardian)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: SAME_PHONE_GUARDIAN_MESSAGE,
+        path: ["guardianPhone"],
+      });
+    }
+  });
+
+function purchaseGuardian(data: z.infer<typeof schema>) {
+  if (data.contractor !== "adulto") return { contractor: "familia" as const };
+  return {
+    contractor: "adulto" as const,
+    firstGuardian: {
+      nombre: "Familiar",
+      telefono: data.guardianPhone!.trim(),
+      parentesco: "Familiar",
+    },
+  };
+}
 
 const fmt = formatPlanPrice;
 
@@ -133,6 +169,8 @@ function CheckoutPage() {
     email: "",
     phone: "",
     name: "",
+    contractor: "familia" as "familia" | "adulto",
+    guardianPhone: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -307,6 +345,7 @@ function CheckoutPage() {
         discountCode: appliedDiscount?.code ?? "",
         tarjetaVecinoRut: parsedVecinoRut?.formatted ?? "",
         recurringBillingConsent: true,
+        ...purchaseGuardian(r.data),
       } });
 
       saveCheckoutDraft({
@@ -369,6 +408,7 @@ function CheckoutPage() {
       discountCode: appliedDiscount?.code ?? "",
       tarjetaVecinoRut: vecinoVerified ? parsedVecinoRut?.formatted ?? "" : "",
       recurringBillingConsent: true,
+      ...purchaseGuardian(r.data),
     };
 
     try {
@@ -480,8 +520,8 @@ function CheckoutPage() {
               Contrata Senior Safe
             </h1>
             <p className="mt-4 text-base md:text-lg text-muted-foreground">
-              Solo 3 datos y pagas con Oneclick (Transbank). Quien paga queda como primer guardián.
-              En el celular del adulto mayor solo queda el botón rojo.
+              Pagas con Oneclick (Transbank). Si contrata un familiar, su teléfono recibe las alertas.
+              Si contrata el adulto mayor, ese teléfono queda en la app y se pide el número de un guardián.
             </p>
           </div>
 
@@ -549,8 +589,41 @@ function CheckoutPage() {
                 <div>
                   <label className="text-sm font-bold text-foreground mb-1 block">3. Datos para pagar e instalar</label>
                   <p className="text-xs text-muted-foreground mb-3">
-                    El teléfono de quien paga recibe las alertas. Otros familiares se agregan después, desde su propio celular.
+                    {form.contractor === "adulto"
+                      ? "El teléfono del adulto mayor queda en la app. La ayuda llega a otro número."
+                      : "El teléfono de quien paga recibe las alertas. Otros familiares se agregan después, desde su propio celular."}
                   </p>
+                  <fieldset className="mb-4">
+                    <legend className="text-xs font-semibold text-muted-foreground mb-2">¿Quién contrata?</legend>
+                    <div className="grid sm:grid-cols-2 gap-2">
+                      <label className={`flex items-start gap-2 rounded-xl border px-3 py-3 cursor-pointer ${form.contractor === "familia" ? "border-foreground" : "border-border"}`}>
+                        <input
+                          type="radio"
+                          name="contractor"
+                          className="mt-1"
+                          checked={form.contractor === "familia"}
+                          onChange={() => setForm({ ...form, contractor: "familia" })}
+                        />
+                        <span>
+                          <span className="block text-sm font-bold text-foreground">Un familiar</span>
+                          <span className="block text-xs text-muted-foreground">Su teléfono recibe las alertas.</span>
+                        </span>
+                      </label>
+                      <label className={`flex items-start gap-2 rounded-xl border px-3 py-3 cursor-pointer ${form.contractor === "adulto" ? "border-foreground" : "border-border"}`}>
+                        <input
+                          type="radio"
+                          name="contractor"
+                          className="mt-1"
+                          checked={form.contractor === "adulto"}
+                          onChange={() => setForm({ ...form, contractor: "adulto" })}
+                        />
+                        <span>
+                          <span className="block text-sm font-bold text-foreground">El adulto mayor</span>
+                          <span className="block text-xs text-muted-foreground">Su teléfono queda en la app.</span>
+                        </span>
+                      </label>
+                    </div>
+                  </fieldset>
                   <div className="space-y-4">
                     <Field
                       label="Email del comprador / pagador"
@@ -562,13 +635,33 @@ function CheckoutPage() {
                       placeholder="tu@email.cl"
                     />
                     <Field
-                      label="Teléfono / WhatsApp del comprador"
+                      label={form.contractor === "adulto" ? "Teléfono del adulto mayor" : "Teléfono / WhatsApp del comprador"}
                       name="phone"
                       value={form.phone}
                       onChange={(v) => setForm({ ...form, phone: v })}
                       error={errors.phone}
                       placeholder="+56 9 ..."
                     />
+                    {form.contractor === "adulto" && (
+                      <div>
+                        <Field
+                          label="Teléfono de quien recibe la ayuda"
+                          name="guardianPhone"
+                          value={form.guardianPhone}
+                          onChange={(v) => setForm({ ...form, guardianPhone: v })}
+                          error={
+                            errors.guardianPhone ||
+                            (sameUserPhone(form.phone, form.guardianPhone) ? SAME_PHONE_GUARDIAN_MESSAGE : undefined)
+                          }
+                          placeholder="+56 9 ..."
+                        />
+                        {!errors.guardianPhone && !sameUserPhone(form.phone, form.guardianPhone) && (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Este número recibe la ayuda. No puede ser el mismo teléfono del usuario.
+                          </p>
+                        )}
+                      </div>
+                    )}
                     <Field
                       label="Nombre completo del adulto mayor"
                       name="name"
