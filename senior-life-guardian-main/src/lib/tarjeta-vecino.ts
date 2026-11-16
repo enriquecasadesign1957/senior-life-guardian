@@ -8,6 +8,10 @@
 export const LAS_CONDES_CODE = "VECINO-LASCONDES";
 export const LAS_CONDES_AM_CODE = "VECINO-LASCONDES-AM";
 export const LAS_CONDES_CHECKOUT_ORIGIN = "https://alarmaseniorsafe.cl";
+/** Cuerpo del RUT, sin dígito verificador. Por debajo de este valor se asume Adulto Mayor si el portal no trae tipo. */
+const ADULTO_MAYOR_RUT_BODY_MAX = 8_000_000;
+export const LAS_CONDES_AM_RUT_RESCUE_MESSAGE =
+  "¡Beneficio Gold Mayor Activado! Tarjeta Vecino validada manualmente por rango de edad.";
 
 export type LasCondesTier = "general" | "adulto_mayor";
 
@@ -173,12 +177,19 @@ export type LasCondesDecision = {
   alternateUrl?: string;
 };
 
+function rutBodyQualifiesAsAdultoMayor(rutBody: string | undefined): boolean {
+  if (!rutBody || !/^\d{7,8}$/.test(rutBody)) return false;
+  return Number(rutBody) < ADULTO_MAYOR_RUT_BODY_MAX;
+}
+
 export function decideLasCondesDiscount(input: {
   tier: LasCondesTier;
   periodo: "mensual" | "anual";
   found?: boolean;
   estado?: string | null;
   tipo?: string | null;
+  /** Cuerpo numérico del RUT, sin puntos ni dígito verificador. */
+  rutBody?: string;
 }): LasCondesDecision {
   const estado = (input.estado ?? "").trim();
   const tipo = (input.tipo ?? "").trim();
@@ -199,6 +210,16 @@ export function decideLasCondesDiscount(input: {
   }
 
   if (input.tier === "adulto_mayor" && !adultoMayor) {
+    if (tipoLabel === "SIN_DATO" && rutBodyQualifiesAsAdultoMayor(input.rutBody)) {
+      return {
+        activo: true,
+        adultoMayor: true,
+        eligible: true,
+        estado,
+        tipo,
+        message: LAS_CONDES_AM_RUT_RESCUE_MESSAGE,
+      };
+    }
     const alternateCode = LAS_CONDES_CODE;
     return {
       activo: true,

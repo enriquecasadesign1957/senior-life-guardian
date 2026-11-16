@@ -78,6 +78,7 @@ export async function consultarTarjetaVecino(
       found: mapped.found,
       estado: mapped.estado,
       tipo: mapped.tipo,
+      rutBody: rut.split("-")[0],
     });
   } catch (err) {
     if (err instanceof TarjetaVecinoPortalError) throw err;

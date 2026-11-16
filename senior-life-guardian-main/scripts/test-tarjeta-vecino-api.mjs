@@ -75,6 +75,46 @@ check(
   !decision15sobre20.eligible && decision15sobre20.alternateCode === "VECINO-LASCONDES",
 );
 
+const sinDatoBajo = decideLasCondesDiscount({
+  tier: "adulto_mayor",
+  periodo: "mensual",
+  found: false,
+  estado: "VIGENTE",
+  tipo: "",
+  rutBody: "7999999",
+});
+check(
+  "SIN_DATO con RUT bajo activa el 20%",
+  sinDatoBajo.eligible &&
+    sinDatoBajo.adultoMayor &&
+    !sinDatoBajo.alternateCode &&
+    sinDatoBajo.message.startsWith("¡Beneficio Gold Mayor Activado!"),
+);
+
+const sinDatoAlto = decideLasCondesDiscount({
+  tier: "adulto_mayor",
+  periodo: "mensual",
+  found: false,
+  estado: "VIGENTE",
+  tipo: "SIN_DATO",
+  rutBody: "8000000",
+});
+check(
+  "SIN_DATO con RUT desde 8000000 sigue en el 15%",
+  !sinDatoAlto.eligible && sinDatoAlto.alternateCode === "VECINO-LASCONDES",
+);
+
+const sinDatoResidente = decideLasCondesDiscount({
+  tier: "adulto_mayor",
+  periodo: "mensual",
+  ...vigente,
+  rutBody: "1234567",
+});
+check(
+  "un tipo explícito no usa el rescate por RUT",
+  !sinDatoResidente.eligible && sinDatoResidente.alternateCode === "VECINO-LASCONDES",
+);
+
 check(
   "sin vecino no está activo",
   mapOficialTarjetaVecino(null).estado === "" && mapOficialTarjetaVecino(null).found === false,
