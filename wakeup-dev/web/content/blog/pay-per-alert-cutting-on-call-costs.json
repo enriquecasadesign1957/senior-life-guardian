@@ -1,0 +1,71 @@
+{
+  "slug": "pay-per-alert-cutting-on-call-costs",
+  "title": "Pay‑Per‑Alert: Cutting On‑Call Costs with WakeUp Dev’s Unlimited‑Seat Model",
+  "description": "Explore how WakeUp Dev’s pay‑per‑alert model eliminates per‑seat fees, reduces overhead, and keeps on‑call teams lean without sacrificing coverage.",
+  "keywords": [
+    "oncall",
+    "cost",
+    "pay-per-alert",
+    "unlimited-seats",
+    "voice-alerts"
+  ],
+  "coverImage": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1600&h=900&q=80",
+  "dateIso": "2026-11-24",
+  "dateLabel": "November 24, 2026",
+  "author": "Enrique Drack",
+  "topic": "Pay‑Per‑Alert: Cutting On‑Call Costs with WakeUp Dev’s Unlimited‑Seat Model",
+  "blocks": [
+    {
+      "type": "h2",
+      "text": "Cost Comparison"
+    },
+    {
+      "type": "p",
+      "text": "Per‑seat licensing forces teams to pay for every on‑call member, even when the seat sits idle. For a 20‑person squad that’s 20 × $X/month, a cost that scales linearly with team size."
+    },
+    {
+      "type": "h2",
+      "text": "How Pay‑Per‑Alert Works"
+    },
+    {
+      "type": "p",
+      "text": "WakeUp Dev removes the per‑seat burden by charging only for the voice alerts that actually reach a responder. Each alert is a single API call to POST https://api.wakeupdev.com/v1/alert with your x‑api‑key. The cost is proportional to the number of alerts, not the number of seats."
+    },
+    {
+      "type": "ul",
+      "items": [
+        "Unlimited seats: add or remove team members without changing the bill.",
+        "Pay‑per‑alert: $0.02 per voice alert delivered.",
+        "No per‑seat tax: the platform’s pricing model is flat across all seats."
+      ]
+    },
+    {
+      "type": "h2",
+      "text": "Implementation Example"
+    },
+    {
+      "type": "code",
+      "code": "curl -X POST https://api.wakeupdev.com/v1/alert \\\n  -H \\\"x-api-key: YOUR_KEY\\\" \\\n  -H \\\"Content-Type: application/json\\\" \\\n  -d '{\n    \\\"message\\\": \\\"Database latency spike detected\\\",\n    \\\"severity\\\": \\\"critical\\\",\n    \\\"source\\\": \\\"grafana\\\",\n    \\\"metadata\\\": {\n      \\\"alert_id\\\": \\\"db-latency-42\\\"\n    }\n  }'"
+    },
+    {
+      "type": "p",
+      "text": "When Grafana fires an alert, the webhook payload is forwarded to WakeUp Dev, which then initiates a voice call to the on‑call rotation. The responder can ACK by pressing 1, ending the call instantly."
+    },
+    {
+      "type": "h2",
+      "text": "ROI & Savings"
+    },
+    {
+      "type": "p",
+      "text": "A typical 30‑person team that receives 5 k alerts per month can cut its on‑call budget from $4,800 (20 × $240) to roughly $100 (5 k × $0.02). The savings grow as alert volume rises, while the unlimited‑seat model keeps staffing flexible."
+    },
+    {
+      "type": "p",
+      "text": "WakeUp Dev’s pay‑per‑alert pricing aligns cost with actual usage, giving SREs a clear financial incentive to optimize alert rules and reduce noise."
+    },
+    {
+      "type": "discussion",
+      "text": "**Peer Question:** How do you balance the trade‑off between alert volume and cost when scaling your on‑call model?"
+    }
+  ]
+}
